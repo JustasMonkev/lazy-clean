@@ -15,7 +15,7 @@ function filterSkillBodyForMode(body, mode) {
   // on instructions meant for a human.
   const withoutFrontmatter = String(body || '')
     .replace(/^---[\s\S]*?---\s*/, '')
-    .replace(/<!--[\s\S]*?-->\n?/g, '');
+    .replace(/<!--[\s\S]*?-->\r?\n?/g, '');
 
   // Only the intensity table rows and worked examples are mode-specific, and
   // both are keyed by a mode name (lite/full/ultra). A bullet whose label is

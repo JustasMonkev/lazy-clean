@@ -17,7 +17,7 @@
  * code.
  */
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { extname, isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -824,7 +824,10 @@ function collectFiles(entry, scan) {
   if (!SOURCE_EXTENSIONS.has(suffix) || entry.toLowerCase().endsWith(".d.ts")) return;
   // The same file can arrive twice (listed explicitly and again via its
   // directory); linting it twice would double every finding and the count.
-  const key = resolve(entry);
+  // Case-folded on the platforms where the filesystem is: otherwise
+  // `check.mjs src/a.ts SRC/A.TS` lints one file twice on Windows and macOS.
+  const resolved = resolve(entry);
+  const key = process.platform === "win32" || process.platform === "darwin" ? resolved.toLowerCase() : resolved;
   if (scan.seen.has(key)) return;
   scan.seen.add(key);
   scan.files.push(entry);
@@ -936,6 +939,21 @@ function main() {
   else process.exitCode = findings.length > 0 ? 1 : 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Node realpaths the main module, so comparing against the raw argv fails for
+// any path with a symlinked component — /tmp on macOS, a junction on Windows,
+// a symlinked plugin directory anywhere. The CLI then did nothing at all and
+// exited 0, which reads exactly like "clean".
+function isMainModule() {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  if (import.meta.url === pathToFileURL(entry).href) return true;
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(entry)).href;
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule()) {
   main();
 }

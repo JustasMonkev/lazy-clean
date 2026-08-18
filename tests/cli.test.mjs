@@ -165,6 +165,19 @@ check("--since reports a bad ref instead of passing silently", () => {
   assert.match(result.stderr, /cannot diff against no-such-ref/u);
 });
 
+check("runs when invoked through a symlinked path", () => {
+  const link = join(root, "checker-link.mjs");
+  try {
+    symlinkSync(CHECKER, link, "file");
+  } catch {
+    console.log("skip symlink invocation (symlinks unavailable)");
+    return;
+  }
+  const result = spawnSync(process.execPath, [link, "slop.ts"], { cwd: root, encoding: "utf8" });
+  assert.equal(result.status, 1, `silent no-op through a symlink: ${JSON.stringify(result.stdout)}`);
+  assert.match(result.stdout, /require-safety-comment-for-type-assertion/u);
+});
+
 check("a symlink loop terminates instead of hanging", () => {
   const loop = join(root, "loop");
   mkdirSync(loop, { recursive: true });
