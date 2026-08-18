@@ -220,6 +220,59 @@ expectRule(
   "no-boolean-literal-compare",
 );
 
+// --- tokenizer defects -------------------------------------------------------
+
+expectNoRule(
+  "does not read a URL in JSX text as a comment",
+  "const docs = <p>See https://example.com/docs for now.</p>;",
+  "no-filler-comments",
+  "sample.tsx",
+);
+expectRule(
+  "still sees code on a line whose JSX text holds a URL",
+  "const docs = <p>https://example.com {raw as any}</p>;",
+  "no-any",
+  "sample.tsx",
+);
+expectRule(
+  "an apostrophe in JSX text does not blank the rest of the line",
+  "const note = <p>We don't validate {JSON.parse(JSON.stringify(raw))}</p>;",
+  "no-json-clone",
+  "sample.tsx",
+);
+expectRule(
+  "a lone backtick does not blank the rest of the file",
+  'const help = <p>Press the ` key</p>;\nconst clone = JSON.parse(JSON.stringify(config));',
+  "no-json-clone",
+  "sample.tsx",
+);
+expectNoRule(
+  "an identifier ending in a keyword is not a regex position",
+  'const share = metrics.opt_in / metrics.total + " ratio a/b: any values";',
+  "no-any",
+);
+expectRule(
+  "division after ++ is not a regex",
+  "const rate = index++ / (raw as Config) / scale;",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "a leading BOM does not hide the file",
+  "\uFEFFconst value: any = 1;",
+  "no-any",
+);
+
+assert.deepEqual(
+  lintSource("\uFEFFconst value: any = 1;", "sample.ts"),
+  lintSource("const value: any = 1;", "sample.ts"),
+  "a BOM must not shift line 1 columns",
+);
+console.log("ok   a leading BOM does not shift columns");
+
+const shebang = lintSource("\uFEFF#!/usr/bin/env node\nconst value: any = 1;\n", "sample.ts");
+assert.deepEqual(shebang.map((finding) => finding.line), [2]);
+console.log("ok   a BOM before a shebang still skips the shebang");
+
 const positioned = lintSource("const ok = 1;\nconst copy = JSON.parse(JSON.stringify(ok));\n", "sample.ts");
 assert.equal(positioned.length, 1);
 assert.equal(positioned[0].line, 2);

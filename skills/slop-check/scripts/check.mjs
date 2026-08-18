@@ -63,9 +63,12 @@ function maskSource(source) {
 
   const precededByKeyword = (index) => {
     let end = index;
-    while (end >= 0 && /[\s]/.test(out[end])) end -= 1;
+    while (end >= 0 && /\s/.test(out[end])) end -= 1;
     let start = end;
-    while (start >= 0 && /[A-Za-z]/.test(out[start])) start -= 1;
+    while (start >= 0 && /[\w$]/.test(out[start])) start -= 1;
+    // `opt_in`, `count_of`, `gen.return`: a keyword only counts when it is the
+    // whole identifier, not its tail, and never a property name.
+    if (out[start] === "." || out[start] === "#") return false;
     return REGEX_PRECEDING_KEYWORDS.has(out.slice(start + 1, end + 1).join(""));
   };
 
@@ -97,7 +100,9 @@ function maskSource(source) {
 
   while (i < n) {
     const c = source[i];
-    if (c === "/" && source[i + 1] === "/") {
+    const schemeSlashes = c === "/" && source[i + 1] === "/" &&
+      source[i - 1] === ":" && /[A-Za-z]/u.test(source[i - 2] ?? "");
+    if (c === "/" && source[i + 1] === "/" && !schemeSlashes) {
       let j = i;
       while (j < n && source[j] !== "\n") j += 1;
       comments.push({ start: i, end: j, kind: "line", text: source.slice(i, j) });
@@ -120,11 +125,19 @@ function maskSource(source) {
         if (source[j] === c || source[j] === "\n") break;
         j += 1;
       }
-      blank(i + 1, Math.min(j, n));
-      i = Math.min(j, n) + 1;
+      if (j >= n || source[j] === "\n") {
+        i += 1;
+        continue;
+      }
+      blank(i + 1, j);
+      i = j + 1;
       continue;
     }
     if (c === "`") {
+      if (source.indexOf("`", i + 1) === -1 && !source.slice(i + 1).includes("${")) {
+        i += 1;
+        continue;
+      }
       i = consumeTemplateBody(i + 1);
       continue;
     }
@@ -146,12 +159,15 @@ function maskSource(source) {
     if (c === "/") {
       const prev = lastCodeChar(i - 1);
       const prevChar = prev?.char ?? null;
-      const arrowBefore = prevChar === ">" && prev !== null && out[prev.index - 1] === "=";
-      const startsRegex =
+      const prevPrevChar = prev === null ? null : out[prev.index - 1];
+      const arrowBefore = prevChar === ">" && prev !== null && prevPrevChar === "=";
+      const updateOperator =
+        (prevChar === "+" && prevPrevChar === "+") || (prevChar === "-" && prevPrevChar === "-");
+      const startsRegex = !updateOperator && (
         prev === null ||
         "([{,;=:!&|?+*%^~".includes(prevChar) ||
         arrowBefore ||
-        (/[A-Za-z]/.test(prevChar) && precededByKeyword(prev.index));
+        (/[A-Za-z]/.test(prevChar) && precededByKeyword(prev.index)));
       if (startsRegex) {
         let j = i + 1;
         let inClass = false;
@@ -576,8 +592,11 @@ function* iterateCommentFindings(ctx) {
   }
 }
 
-export function lintSource(source, filePath) {
+export function lintSource(rawSource, filePath) {
   const extension = extname(filePath);
+  // A leading BOM is not part of line 1: it defeats the shebang skip and shifts
+  // every column on that line by one.
+  const source = rawSource.charCodeAt(0) === 0xfeff ? rawSource.slice(1) : rawSource;
   const { masked, comments } = maskSource(source);
   const declaredNames = new Set();
   for (const match of masked.matchAll(SLOP_DECLARATION_PATTERN)) declaredNames.add(match[1]);
