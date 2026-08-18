@@ -36,7 +36,8 @@ function setMode(mode) {
 }
 
 function clearMode() {
-  try { fs.unlinkSync(statePath); } catch (e) {}
+  // Already absent is the state we wanted; nothing to report.
+  try { fs.unlinkSync(statePath); } catch (e) { /* no flag to clear */ }
 }
 
 // Live mode written by activate/mode-tracker. Absent flag = lazy off.
@@ -47,6 +48,7 @@ function readMode() {
     // holding escape sequences printed them straight into the prompt.
     return normalizePersistedMode(fs.readFileSync(statePath, 'utf8').trim());
   } catch (e) {
+    // No flag file means lazy is off, which is a level, not a failure.
     return null;
   }
 }

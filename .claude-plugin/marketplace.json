@@ -1,0 +1,1 @@
+{"name":"lazy-clean","owner":{"name":"JustasMonkev"},"description":"One plugin: a lazy-senior-dev ruleset while writing, and an AI-slop checker after.","plugins":[{"name":"lazy-clean","source":"./","description":"lazy senior dev mode plus a slop checker that runs after every TS/JS edit."}]}

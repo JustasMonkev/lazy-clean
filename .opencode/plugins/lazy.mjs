@@ -19,7 +19,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // The shared instruction builder is CommonJS; bridge to it from this ES module.
 const require = createRequire(import.meta.url);
 const { getLazyInstructions } = require('../../hooks/lazy-instructions');
-const { getDefaultMode, normalizePersistedMode } = require('../../hooks/lazy-config');
+const { getDefaultMode, normalizeMode, writeDefaultMode } = require('../../hooks/lazy-config');
 const { parseCommandFile } = require('./lazy-frontmatter.cjs');
 
 // OpenCode has no flag-file convention of its own; keep mode beside its config.
@@ -31,7 +31,7 @@ const statePath = path.join(
 
 function readMode() {
   try {
-    return normalizePersistedMode(fs.readFileSync(statePath, 'utf8').trim()) || getDefaultMode();
+    return normalizeMode(fs.readFileSync(statePath, 'utf8').trim()) || getDefaultMode();
   } catch (e) {
     return getDefaultMode();
   }
@@ -44,7 +44,7 @@ function writeMode(mode) {
 
 export default async ({ client } = {}) => {
   const log = (level, message) => {
-    try { client && client.app && client.app.log({ body: { service: 'lazy', level, message } }); } catch (e) {}
+    try { client && client.app && client.app.log({ body: { service: 'lazy', level, message } }); } catch (e) { /* logging must never break a turn */ }
   };
 
   const lazySkillsDir = path.resolve(__dirname, '../../skills');
@@ -60,7 +60,10 @@ export default async ({ client } = {}) => {
           const parsed = parseCommandFile(path.join(commandDir, file));
           if (parsed) config.command[name] = parsed;
         }
-      } catch (e) {}
+      } catch (e) {
+        // No command directory in this install; the skills path below still
+        // registers, so lazy stays usable without slash commands.
+      }
 
       config.skills = config.skills || {};
       config.skills.paths = config.skills.paths || [];
@@ -87,10 +90,34 @@ export default async ({ client } = {}) => {
     // synchronous store if same-turn switching ever matters.
     'command.execute.before': async (input) => {
       if (!input || input.command !== 'lazy') return;
+      const args = String(input.arguments || '').trim().split(/\s+/).filter(Boolean);
+
+      // `/lazy default <level>` persists across sessions, same as the Claude
+      // hook. Without this the documented command silently did nothing here.
+      if (args[0] === 'default') {
+        const persisted = normalizeMode(args[1]);
+        log('info', persisted
+          ? 'lazy default ' + (writeDefaultMode(persisted) || persisted)
+          : 'lazy: "' + (args[1] || '') + '" is not a default level (off|lite|full|ultra)');
+        return;
+      }
+
+      // Bare `/lazy` reports; it must not overwrite the live level with the
+      // config default the way it used to.
+      if (args.length === 0) {
+        log('info', 'lazy ' + readMode());
+        return;
+      }
+
+      // normalizeMode, not normalizePersistedMode: `review` is a session-only
+      // mode elsewhere, and persisting it here pinned every future turn to a
+      // level documented nowhere.
       // `off` is persisted like any mode; the transform reads it and stays silent.
-      const args = String(input.arguments || '').trim();
-      const mode = args ? normalizePersistedMode(args) : getDefaultMode();
-      if (!mode) return;
+      const mode = normalizeMode(args[0]);
+      if (!mode) {
+        log('info', 'lazy: unknown level "' + args[0] + '" — use lite|full|ultra|off');
+        return;
+      }
       writeMode(mode);
       log('info', 'lazy ' + mode);
     },

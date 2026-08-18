@@ -143,6 +143,8 @@ expectRule("flags ?? undefined", "const value = input ?? undefined;", "no-redund
 expectNoRule("allows || undefined", "const company = input.company || undefined;", "no-redundant-fallback");
 expectRule("flags === true", "if (enabled === true) { run(); }", "no-boolean-literal-compare");
 expectNoRule("allows !== true tri-state", "if (flag !== true) { run(); }", "no-boolean-literal-compare");
+expectNoRule("allows normalizing an untyped value", "config.hideStatus = hide === true;", "no-boolean-literal-compare");
+expectNoRule("allows comparing a parsed property", "if (parsed.enabled === true) run();", "no-boolean-literal-compare");
 expectRule("flags if (!!x)", "if (!!user) { greet(user); }", "no-double-negation-condition");
 expectNoRule("allows !! in assignment", "const hasUser = !!user;", "no-double-negation-condition");
 expectRule("flags boolean literal ternary", "const ready = count > 0 ? true : false;", "no-boolean-literal-ternary");

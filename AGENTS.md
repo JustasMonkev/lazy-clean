@@ -44,7 +44,7 @@ Not lazy about: understanding the problem (read it fully and trace the real flow
 Run the bundled slop checker on what you changed, then triage what it prints:
 
 ```bash
-node skills/slop-check/scripts/check.mjs <changed files>
+node <skills-dir>/slop-check/scripts/check.mjs <changed files>
 ```
 
 Findings are review prompts, not verdicts. Fix the real slop (delete pointless code, restore real type evidence); keep a deliberate type assertion only with a `// SAFETY:` comment naming the invariant you checked; say so briefly when a finding is a genuine false positive. Never rewrite correct code just to silence the checker, and never weaken or disable a check.

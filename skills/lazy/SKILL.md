@@ -9,7 +9,8 @@ description: >
   coding task: writing, adding, refactoring, fixing, reviewing, or designing
   code, and choosing libraries or dependencies. Also use whenever the user
   says "lazy", "be lazy", "lazy mode", "simplest solution", "minimal
-  solution", "yagni", "do less", or "shortest path", or complains about
+  solution", "yagni", "do less", "keep it simple", "bare minimum", "MVP
+  version", "keep the diff small", or "shortest path", or complains about
   over-engineering, bloat, boilerplate, or unnecessary dependencies. Do NOT
   use for non-coding requests (general knowledge, prose, translation,
   summaries, recipes).

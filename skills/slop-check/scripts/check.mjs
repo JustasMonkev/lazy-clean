@@ -252,7 +252,7 @@ const SLOP_NAME_PATTERN =
 const VERSIONED_NAME_PATTERN = /^(.+?)(?:Final|Updated|Fixed|New|Old|Copy|Temp|V\d+|_v\d+)$/u;
 
 // "shape" is the domain in geometry, canvas, and tensor code.
-const SHAPE_DOMAIN_PATTERN =
+const GEOMETRY_CONTEXT_PATTERN =
   /\b(?:radius|width|height|circle|rect|rectangle|polygon|polyline|path|point|vertex|vertices|svg|canvas|geometry|bbox|tensor|dims?|draw|render)\b/iu;
 
 const FILLER_COMMENT_PATTERN = new RegExp(
@@ -384,7 +384,11 @@ const LINE_RULES = [
   },
   {
     name: "no-boolean-literal-compare",
-    pattern: /(?:^|[^!<>=])===?\s*true\b/u,
+    // `flag = value === true` normalizes an untyped value; the comparison has
+    // to be the whole right-hand side, or a comparison anywhere on an
+    // assignment line escapes.
+    skipLine: /=\s*[\w$.[\]]+\s*===?\s*true\s*;?\s*$/u,
+    pattern: /(?:^|[^!<>=.\w$])[\w$]+\s*===?\s*true\b/u,
     message: "`x === true` restates the boolean. Use the value directly, or fix the type if it is not actually boolean.",
   },
   {
@@ -448,7 +452,7 @@ function* iterateLineFindings(ctx) {
           message: `"${name}" is named after the edit, not the domain. Rename it for its role and delete the version it replaced.`,
         };
       }
-      if (name.toLowerCase().includes("shape") && !SHAPE_DOMAIN_PATTERN.test(line)) {
+      if (name.toLowerCase().includes("shape") && !GEOMETRY_CONTEXT_PATTERN.test(line)) {
         yield {
           line: lineNumber,
           column: match.index + match[0].indexOf(name) + 1,

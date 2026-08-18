@@ -13,18 +13,19 @@ description: >
 Display this scoreboard when invoked. One-shot: do NOT change mode, write flag
 files, or persist anything.
 
-The figures are the published benchmark medians (5 everyday tasks: email
-validator, debounce, CSV sum, countdown timer, rate limiter; three models:
-Haiku, Sonnet, Opus). They are measured, not computed from the current repo.
-Source: `benchmarks/` and the README.
+The figures are the upstream project's published benchmark medians (5 everyday
+tasks: email validator, debounce, CSV sum, countdown timer, rate limiter; three
+models: Haiku, Sonnet, Opus). They were measured upstream and have NOT been
+reproduced in this fork, which ships no benchmark data — say so when you present
+them, and never present them as this package's own measurements.
 
 ## Scoreboard
 
-Render plain ASCII bars. The bar length shows the measured range; the label
+Render the text bars below. The bar length shows the measured range; the label
 carries the exact figure:
 
 ```
-  lazy gain                     benchmark median · 5 tasks · 3 models
+  lazy gain              upstream benchmark median · 5 tasks · 3 models
 
   Lines of code   no-skill  ████████████████████  100%
                   lazy  ██▌·················    6–20%   ▼ 80–94%
@@ -38,7 +39,8 @@ carries the exact figure:
 
 ## Honesty boundary
 
-These are benchmark medians, not this repo. NEVER print a per-repo savings
+These are upstream benchmark medians, not this repo, and not reproduced here.
+NEVER print a per-repo savings
 number ("you saved X lines/tokens here"): the unbuilt version was never
 written, so there is no real baseline to subtract from in a live repo. The
 only real per-repo figures come from `/lazy-debt` (a counted ledger), and

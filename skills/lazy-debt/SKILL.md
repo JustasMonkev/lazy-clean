@@ -5,7 +5,8 @@ description: >
   deliberate shortcuts and deferrals lazy leaves behind get tracked instead
   of rotting into "later means never". Use when the user says "lazy debt",
   "/lazy-debt", "what did lazy defer", "list the shortcuts", "lazy
-  ledger", or "what did we mark to do later". One-shot report, changes nothing.
+  ledger", "tech debt ledger", or "what did we mark to do later". It tracks
+  `lazy:` markers only, not generic TODOs. One-shot report, changes nothing.
 ---
 
 Every deliberate lazy shortcut is marked with a `lazy:` comment naming

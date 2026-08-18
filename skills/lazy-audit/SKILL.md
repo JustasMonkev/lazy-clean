@@ -5,8 +5,8 @@ description: >
   entire codebase instead of a diff: a ranked list of what to delete, simplify,
   or replace with stdlib/native equivalents. Use when the user says "audit this
   codebase", "audit for over-engineering", "what can I delete from this repo",
-  "find bloat", "lazy-audit", or "/lazy-audit". One-shot report, does
-  not apply fixes.
+  "find bloat", "find dead code", "which dependencies can we drop",
+  "lazy-audit", or "/lazy-audit". One-shot report, does not apply fixes.
 ---
 
 lazy-review, repo-wide. Scan the whole tree instead of a diff. Rank

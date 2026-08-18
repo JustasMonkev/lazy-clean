@@ -65,10 +65,10 @@ Resolution: env var > config file > `full`.
 
 ## Update
 
-Enable auto-update once: open `/plugin`, go to Marketplaces, pick lazy, Enable auto-update. Claude Code then pulls new versions at startup (run `/reload-plugins` when it prompts). Manual refresh: `/plugin marketplace update lazy` then `/reload-plugins`.
+Installed from a checkout (`claude --plugin-dir` or `claude plugin marketplace add`): `git pull` in that checkout, then `/reload-plugins`. Installed skills-only: re-copy `skills/*` into `~/.claude/skills/`.
 
 If `/plugin` is not recognized, your Claude Code is out of date. Update it (`npm install -g @anthropic-ai/claude-code@latest`, or `brew upgrade claude-code`) and restart. Other hosts use their own update flow.
 
 ## More
 
-Full docs + examples: https://github.com/DietrichGebert/lazy
+Full docs: https://github.com/JustasMonkev/lazy-clean

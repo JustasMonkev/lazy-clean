@@ -115,6 +115,8 @@ function getQuietStartup() {
     const config = JSON.parse(fs.readFileSync(getConfigPath(), 'utf8').replace(/^\uFEFF/, ''));
     return config.quietStartup === true;
   } catch (_) {
+    // No config, no preference: the toast shows. Absence is a real answer here,
+    // not a swallowed failure.
     return false;
   }
 }
@@ -132,6 +134,7 @@ function getHideStatus() {
     const config = JSON.parse(fs.readFileSync(getConfigPath(), 'utf8').replace(/^\uFEFF/, ''));
     return config.hideStatus === true;
   } catch (_) {
+    // No config, no preference: the badge shows.
     return false;
   }
 }
@@ -147,7 +150,10 @@ function writeDefaultMode(mode) {
   try {
     config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
     if (!config || typeof config !== 'object' || Array.isArray(config)) config = {};
-  } catch (_) {}
+  } catch (_) {
+    // No config yet, or an unreadable one: start from an empty object rather
+    // than refuse to record the preference.
+  }
   config.defaultMode = normalized;
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
   return normalized;
@@ -162,7 +168,10 @@ function writeHideStatus(hide) {
   try {
     config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
     if (!config || typeof config !== 'object' || Array.isArray(config)) config = {};
-  } catch (_) {}
+  } catch (_) {
+    // Same as writeDefaultMode: a missing or corrupt config is replaced, not
+    // a reason to drop the setting.
+  }
   config.hideStatus = hide === true;
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
   return config.hideStatus;

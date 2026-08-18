@@ -129,7 +129,7 @@ function finish() {
         // First prompt in session — initialize from config/env default
         currentMode = getDefaultMode();
         if (currentMode !== 'off') {
-          try { setMode(currentMode); } catch (e) {}
+          try { setMode(currentMode); } catch (e) { /* best-effort: the ruleset below still goes out */ }
         }
       }
       if (currentMode && currentMode !== 'off') {
