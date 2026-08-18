@@ -171,6 +171,11 @@ expectNoRule("allows a versioned API name", "interface PaymentV2 { id: string }"
 expectNoRule("allows currentTemp", "let currentTemp = 20;", "no-slop-symbol-names");
 expectRule("flags shape in names", "const userShape = build();", "no-shape-in-symbol-names");
 expectNoRule("allows shape as the domain", "interface Shape { radius: number }", "no-shape-in-symbol-names");
+expectNoRule(
+  "reads geometry context from the whole file, not one line",
+  "export type Shape =\n  | { kind: 'circle'; radius: number }\n  | { kind: 'rect'; width: number };",
+  "no-shape-in-symbol-names",
+);
 
 // --- comment rules -----------------------------------------------------------
 

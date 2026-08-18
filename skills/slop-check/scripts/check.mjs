@@ -618,7 +618,7 @@ function* iterateLineFindings(ctx) {
           message: `"${name}" is named after the edit, not the domain. Rename it for its role and delete the version it replaced.`,
         };
       }
-      if (name.toLowerCase().includes("shape") && !GEOMETRY_CONTEXT_PATTERN.test(line)) {
+      if (name.toLowerCase().includes("shape") && !ctx.isGeometry) {
         yield {
           line: lineNumber,
           column: match.index + match[0].indexOf(name) + 1,
@@ -936,11 +936,15 @@ export function lintSource(rawSource, filePath) {
   // every column on that line by one.
   const source = rawSource.charCodeAt(0) === 0xfeff ? rawSource.slice(1) : rawSource;
   const { masked, comments } = maskSource(source, { jsx: JSX_EXTENSIONS.has(extension) });
+  // Whole-file, not per-line: `export type Shape =` carries no geometry words
+  // on its own line, but the union below it does.
+  const isGeometry = GEOMETRY_CONTEXT_PATTERN.test(masked);
   const declaredNames = new Set();
   for (const match of masked.matchAll(SLOP_DECLARATION_PATTERN)) declaredNames.add(match[1]);
   const ctx = {
     path: filePath,
     declaredNames,
+    isGeometry,
     isTypeScript: TYPESCRIPT_EXTENSIONS.has(extension),
     masked,
     maskedLines: masked.split("\n"),
