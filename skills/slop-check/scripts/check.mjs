@@ -5,14 +5,18 @@
  *
  * Runs with plain `node`. No npm packages, no config files, no installation.
  *
- *   node check.mjs [paths...] [--json]
+ *   node check.mjs [paths...] [--json] [--summary] [--since=<git-ref>]
  *
- * With no paths it scans the current directory recursively. Exit code 1 when
- * findings exist, 2 when a path could not be read, 0 when clean. Findings are
+ * With no paths it scans the current directory recursively. `--since=<ref>`
+ * keeps only findings on lines the diff against <ref> added, which is how an
+ * existing codebase adopts the checker without a baseline file: `--since=HEAD`
+ * before a commit, `--since=origin/main` in CI. Exit code 1 when findings
+ * exist, 2 when a path could not be read, 0 when clean. Findings are
  * heuristic review prompts, not verdicts: fix real slop, and leave genuine
  * false positives alone with a short justification instead of contorting the
  * code.
  */
+import { execFileSync } from "node:child_process";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { extname, isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -475,6 +479,12 @@ function* iterateBlockFindings(ctx) {
   }
 }
 
+// `import {` / `export {` opening a specifier list that continues on later
+// lines. Anything with a paren is a declaration (`export function f() {`), not
+// a specifier list — treating those as one skipped the whole function body.
+const SPECIFIER_LIST_OPEN = /^\s*(?:import|export)\b[^(){}]*\{[^}]*$/u;
+const MODULE_STATEMENT = /^\s*import\b|^\s*export\s*(?:type\s+)?[{*]/u;
+
 // `as` followed by something type-shaped and then a real terminator. Without
 // the terminator, English prose in JSX text ("served as static assets") and
 // every multi-word sentence containing "as" was reported as a type assertion.
@@ -511,10 +521,11 @@ function* iterateAssertionFindings(ctx) {
       if (line.includes("}")) inSpecifierList = false;
       continue;
     }
-    if (/^\s*(?:import|export)\b/u.test(line)) {
-      if (/\{[^}]*$/u.test(line)) inSpecifierList = true;
+    if (SPECIFIER_LIST_OPEN.test(line)) {
+      inSpecifierList = true;
       continue;
     }
+    if (MODULE_STATEMENT.test(line)) continue;
     const match = TYPE_ASSERTION_PATTERN.exec(line);
     if (!match) continue;
     const operand = match[1];
@@ -592,6 +603,17 @@ function* iterateCommentFindings(ctx) {
   }
 }
 
+// A mechanical finding has one correct fix and needs no judgment. A review
+// finding is a heuristic prompt where "this is deliberate, leaving it" is a
+// legitimate answer — the distinction the flat list used to hide, which pushed
+// agents into rewriting correct code to clear the list.
+const MECHANICAL_RULES = new Set([
+  "no-redundant-fallback", "no-boolean-literal-ternary", "no-double-negation-condition",
+  "no-await-promise-resolve", "no-useless-rethrow", "no-json-clone", "no-emoji",
+  "no-typed-jsdoc", "no-narration-comments", "no-change-note-comments",
+  "no-chained-type-assertions",
+]);
+
 export function lintSource(rawSource, filePath) {
   const extension = extname(filePath);
   // A leading BOM is not part of line 1: it defeats the shebang skip and shifts
@@ -616,7 +638,11 @@ export function lintSource(rawSource, filePath) {
     ...iterateCommentFindings(ctx),
   ];
   findings.sort((a, b) => a.line - b.line || a.column - b.column || a.rule.localeCompare(b.rule));
-  return findings.map((finding) => ({ path: filePath, ...finding }));
+  return findings.map((finding) => ({
+    path: filePath,
+    ...finding,
+    severity: MECHANICAL_RULES.has(finding.rule) ? "fix" : "review",
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -657,35 +683,98 @@ function displayPath(file) {
   return isAbsolute(file) ? file : relative(process.cwd(), file) || file;
 }
 
+// Line numbers the diff against `ref` added, per absolute path. Git already
+// stores the baseline, so adopting the checker on an existing repo needs no
+// baseline file to generate, refresh, or drift.
+function addedLines(ref) {
+  const git = (args) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 64e6 });
+  const root = git(["rev-parse", "--show-toplevel"]).trim();
+  const byFile = new Map();
+  let lines = null;
+  for (const line of git(["diff", "-U0", "--no-color", ref, "--"]).split("\n")) {
+    if (line.startsWith("+++ ")) {
+      const target = line.slice(4);
+      lines = target === "/dev/null" ? null : new Set();
+      if (lines) byFile.set(resolve(root, target.replace(/^b\//u, "")), lines);
+      continue;
+    }
+    const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/u.exec(line);
+    if (!hunk || !lines) continue;
+    const start = Number(hunk[1]);
+    const count = hunk[2] === undefined ? 1 : Number(hunk[2]);
+    for (let k = 0; k < count; k += 1) lines.add(start + k);
+  }
+  return byFile;
+}
+
+function renderTally(findings) {
+  const counts = new Map();
+  for (const finding of findings) counts.set(finding.rule, (counts.get(finding.rule) ?? 0) + 1);
+  return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([rule, count]) => `  ${count} ${rule}`).join("\n");
+}
+
 function main() {
   const args = process.argv.slice(2);
   const json = args.includes("--json");
+  const summaryOnly = args.includes("--summary");
+  const since = args.find((arg) => arg.startsWith("--since="))?.slice("--since=".length);
   const targets = args.filter((arg) => !arg.startsWith("-"));
   for (const arg of args) {
-    if (arg.startsWith("-") && arg !== "--json") console.error(`slop-check: ignoring unknown option ${arg}`);
+    if (arg.startsWith("-") && !["--json", "--summary"].includes(arg) && !arg.startsWith("--since=")) {
+      console.error(`slop-check: ignoring unknown option ${arg}`);
+    }
   }
+
+  let added = null;
+  if (since !== undefined) {
+    try {
+      added = addedLines(since);
+    } catch (error) {
+      console.error(`slop-check: cannot diff against ${since} (${error.message.trim().split("\n")[0]})`);
+      process.exitCode = 2;
+      return;
+    }
+  }
+
   const scan = { files: [], seen: new Set(), unreadable: 0 };
-  for (const target of targets.length > 0 ? targets : ["."]) {
+  for (const target of targets.length > 0 ? targets : added ? [...added.keys()] : ["."]) {
     collectFiles(target, scan);
   }
   const { files } = scan;
 
   const findings = [];
   for (const file of files) {
-    findings.push(...lintSource(readFileSync(file, "utf8"), displayPath(file)));
+    const changed = added?.get(resolve(file));
+    if (added && !changed) continue;
+    const fileFindings = lintSource(readFileSync(file, "utf8"), displayPath(file));
+    findings.push(...(changed ? fileFindings.filter((finding) => changed.has(finding.line)) : fileFindings));
   }
+
+  const scanned = added ? findings.length > 0 || files.length : files.length;
+  const summary = findings.length === 0
+    ? `slop-check: clean (${scanned} file${scanned === 1 ? "" : "s"} checked)`
+    : `slop-check: ${findings.length} finding${findings.length === 1 ? "" : "s"} in ${new Set(findings.map((finding) => finding.path)).size} file${new Set(findings.map((finding) => finding.path)).size === 1 ? "" : "s"}`;
 
   if (json) {
     console.log(JSON.stringify(findings, null, 2));
+  } else if (summaryOnly) {
+    if (findings.length > 0) console.log(renderTally(findings));
+    console.log(summary);
   } else {
-    for (const finding of findings) {
-      console.log(`${finding.path}:${finding.line}:${finding.column} ${finding.rule} — ${finding.message}`);
+    for (const [severity, heading] of [
+      ["fix", "Fix (mechanical, one correct answer):"],
+      ["review", 'Review (heuristic — "deliberate, leaving it" is a valid answer):'],
+    ]) {
+      const group = findings.filter((finding) => finding.severity === severity);
+      if (group.length === 0) continue;
+      console.log(heading);
+      for (const finding of group) {
+        console.log(`  ${finding.path}:${finding.line}:${finding.column} ${finding.rule} — ${finding.message}`);
+      }
     }
-    console.log(
-      findings.length === 0
-        ? `slop-check: clean (${files.length} file${files.length === 1 ? "" : "s"} checked)`
-        : `slop-check: ${findings.length} finding${findings.length === 1 ? "" : "s"} in ${files.length} file${files.length === 1 ? "" : "s"}`,
-    );
+    if (findings.length >= 10) console.log(renderTally(findings));
+    console.log(summary);
   }
   // 2 = the scan itself failed, so "no findings" is not a clean bill of health.
   if (scan.unreadable > 0) process.exitCode = 2;

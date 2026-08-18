@@ -4,6 +4,7 @@
 // skills/slop-check/scripts/check.test.mjs never exercise.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -75,7 +76,7 @@ check("the same file listed twice is linted once", () => {
 
 check("a directory scan skips node_modules, .d.ts, and non-source files", () => {
   const result = run(["."]);
-  const paths = [...result.stdout.matchAll(/^(\S+?):\d+:\d+ /gmu)].map((match) => match[1]);
+  const paths = [...result.stdout.matchAll(/^\s+(\S+?):\d+:\d+ /gmu)].map((match) => match[1]);
   assert.deepEqual([...new Set(paths)].sort(), ["nested/deep/slop.ts", "slop.ts"]);
 });
 
@@ -91,7 +92,24 @@ check("--json emits parseable findings and stays quiet otherwise", () => {
   assert.equal(findings.length, 1);
   assert.equal(findings[0].rule, "require-safety-comment-for-type-assertion");
   assert.equal(findings[0].line, 1);
+  assert.equal(findings[0].severity, "review");
   assert.doesNotMatch(result.stdout, /slop-check:/u);
+});
+
+check("findings are grouped by whether the fix needs judgment", () => {
+  write("mixed.ts", "const copy = JSON.parse(JSON.stringify(state));\nconst user = payload as User;\n");
+  const result = run(["mixed.ts"]);
+  const fix = result.stdout.indexOf("Fix (mechanical");
+  const review = result.stdout.indexOf("Review (heuristic");
+  assert.ok(fix >= 0 && review > fix, result.stdout);
+  assert.ok(result.stdout.indexOf("no-json-clone") < review, "mechanical findings come first");
+});
+
+check("--summary prints only the per-rule tally", () => {
+  const result = run(["mixed.ts", "--summary"]);
+  assert.match(result.stdout, /1 no-json-clone/u);
+  assert.doesNotMatch(result.stdout, /disables the type system|lossy, slow clone/u);
+  assert.equal(result.status, 1);
 });
 
 check("--json on a clean file is an empty array", () => {
@@ -109,7 +127,42 @@ check("an unknown option is reported, not treated as a path", () => {
 
 check("a file outside cwd keeps its absolute path", () => {
   const result = run([join(root, "slop.ts")], "/");
-  assert.match(result.stdout, new RegExp(`^${join(root, "slop.ts")}:1:22 `, "mu"));
+  assert.match(result.stdout, new RegExp(`^\\s+${join(root, "slop.ts")}:1:22 `, "mu"));
+});
+
+check("--since keeps only findings on lines the diff added", () => {
+  const repo = join(root, "repo");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", args, { cwd: repo, encoding: "utf8" });
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+  } catch {
+    console.log("skip --since (git unavailable)");
+    return;
+  }
+  writeFileSync(join(repo, "app.ts"), "const first = payload as User;\n");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+
+  const full = run(["app.ts"], repo);
+  assert.equal(full.status, 1, "the committed assertion is still a finding on a full scan");
+
+  const unchanged = run(["--since=HEAD"], repo);
+  assert.equal(unchanged.status, 0, unchanged.stdout);
+
+  writeFileSync(join(repo, "app.ts"), "const first = payload as User;\nconst copy = JSON.parse(JSON.stringify(first));\n");
+  const since = run(["--since=HEAD"], repo);
+  assert.equal(since.status, 1);
+  assert.match(since.stdout, /no-json-clone/u);
+  assert.doesNotMatch(since.stdout, /require-safety-comment/u, "pre-existing findings stay out of scope");
+});
+
+check("--since reports a bad ref instead of passing silently", () => {
+  const result = run(["--since=no-such-ref"], join(root, "repo"));
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /cannot diff against no-such-ref/u);
 });
 
 check("a symlink loop terminates instead of hanging", () => {

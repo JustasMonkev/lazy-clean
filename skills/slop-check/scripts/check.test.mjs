@@ -97,6 +97,16 @@ expectNoRule(
   'import {\n  readFile as read,\n  writeFile as write,\n} from "node:fs/promises";',
   "require-safety-comment-for-type-assertion",
 );
+expectRule(
+  "sees an assertion inside an exported function",
+  "export function load(raw: string) {\n  const parsed = JSON.parse(raw) as Config;\n  return parsed;\n}",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "sees an assertion on an export declaration",
+  "export const user = payload as User;",
+  "require-safety-comment-for-type-assertion",
+);
 expectNoRule(
   "allows narrowing a catch binding",
   'try { read(); } catch (cause) {\n  const error = cause as NodeJS.ErrnoException;\n  if (error.code === "ENOENT") return;\n}',
