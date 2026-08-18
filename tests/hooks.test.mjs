@@ -150,9 +150,13 @@ function runHookNoEof(script, payload, extraEnv = {}) {
 }
 
 function parses(text) {
-  // The failure IS the answer here: this predicate asks whether the text is
-  // parseable, so a throw means false, not a swallowed error.
-  try { JSON.parse(text); return true; } catch { return false; }
+  try {
+    JSON.parse(text);
+    return true;
+  } catch {
+    // The throw IS the answer: this predicate asks whether the text parses.
+    return false;
+  }
 }
 
 // --- lazy-config -------------------------------------------------------------
