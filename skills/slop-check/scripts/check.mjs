@@ -29,13 +29,17 @@ const SKIPPED_DIRECTORIES = new Set([
  ".agent", ".agents", ".claude", ".codex", ".continue", ".cursor",
   ".opencode", ".pi", ".roo", ".windsurf",
 ]);
+// Only the extensions where `<` unambiguously means JSX. A `.js` `<` is a
+// comparison and a `.ts` `<T>value` is a cast, so neither opts in.
+const JSX_EXTENSIONS = new Set([".jsx", ".tsx"]);
+
 const MAX_FILE_BYTES = 1_000_000;
 
 // ---------------------------------------------------------------------------
 // Masking tokenizer: blanks out string contents, template-literal text, regex
-// literal bodies, and comments so rule patterns only ever match real code.
-// Line and column positions are preserved because every masked character is
-// replaced with a space and newlines are kept.
+// literal bodies, JSX text children, and comments so rule patterns only ever
+// match real code. Line and column positions are preserved because every
+// masked character is replaced with a space and newlines are kept.
 // ---------------------------------------------------------------------------
 
 const REGEX_PRECEDING_KEYWORDS = new Set([
@@ -43,13 +47,53 @@ const REGEX_PRECEDING_KEYWORDS = new Set([
   "else", "instanceof", "yield", "await", "throw",
 ]);
 
-function maskSource(source) {
+// `if (ready) /^y/.test(answer)` is a regex, not a division: the only tokens a
+// `)` can be followed by a regex after are the heads of these statements.
+const CONTROL_PAREN_KEYWORDS = new Set(["if", "while", "for", "with"]);
+
+// A `<` opens a JSX element only in expression position. Same shape as the
+// regex heuristic: after an operator, an opener, or a statement keyword.
+const JSX_PRECEDING_PUNCTUATION = "([{,;=:?&|}>";
+
+// JSX text is prose, not code, and it is the only place a bare English sentence
+// reaches the rules. `jsx` is set per file extension by the caller.
+function maskSource(source, { jsx = false } = {}) {
   const out = source.split("");
   const comments = [];
   const n = source.length;
   let i = 0;
   let braceDepth = 0;
-  const templateHoleDepths = [];
+  // Template holes (`${...}`) and JSX holes (`{...}` between tags) both suspend
+  // a text region until the `}` that matches the brace depth they opened at.
+  // One stack keeps them ordered when they nest inside each other.
+  const holes = [];
+  // Number of JSX elements whose children we are currently inside. Saved and
+  // reset on entering a hole, because a hole is expression context again.
+  let jsxElementDepth = 0;
+  // >= 0 while scanning between `<` and the `>` that ends a tag; counts nested
+  // `<...>` so a generic like `<Select<Option> ...>` does not end the tag early.
+  let jsxTagAngles = -1;
+  let jsxTagBraceDepth = 0;
+  let jsxTagClosing = false;
+  // True for exactly one iteration: the `<` we stopped JSX text at is a tag.
+  let jsxTextPending = false;
+  // Whether the tag currently being scanned has children at all.
+  let jsxTagNests = false;
+  let closingTagNames = null;
+
+  // Safety valve for malformed JSX: an element with no closing tag anywhere in
+  // the file must not open a children region, because everything below it would
+  // then be masked as text. Collected in one pass on the first tag seen, so a
+  // file without JSX never pays for it.
+  const hasClosingTag = (name) => {
+    if (closingTagNames === null) {
+      closingTagNames = new Set();
+      for (const match of source.matchAll(/<\/([A-Za-z_$][\w$.:-]*)?/gu)) {
+        closingTagNames.add(match[1] ?? "");
+      }
+    }
+    return closingTagNames.has(name);
+  };
 
   const blank = (start, end) => {
     for (let k = start; k < end && k < n; k += 1) {
@@ -65,15 +109,31 @@ function maskSource(source) {
     return null;
   };
 
-  const precededByKeyword = (index) => {
+  const wordEndingAt = (index) => {
     let end = index;
     while (end >= 0 && /\s/.test(out[end])) end -= 1;
     let start = end;
     while (start >= 0 && /[\w$]/.test(out[start])) start -= 1;
     // `opt_in`, `count_of`, `gen.return`: a keyword only counts when it is the
     // whole identifier, not its tail, and never a property name.
-    if (out[start] === "." || out[start] === "#") return false;
-    return REGEX_PRECEDING_KEYWORDS.has(out.slice(start + 1, end + 1).join(""));
+    if (out[start] === "." || out[start] === "#") return "";
+    return out.slice(start + 1, end + 1).join("");
+  };
+
+  const precededByKeyword = (index) => REGEX_PRECEDING_KEYWORDS.has(wordEndingAt(index));
+
+  // Walk back from a `)` to its own `(` and report the keyword in front of it.
+  const closesControlParen = (index) => {
+    let depth = 0;
+    for (let k = index; k >= 0; k -= 1) {
+      const ch = out[k];
+      if (ch === ")") depth += 1;
+      else if (ch === "(") {
+        depth -= 1;
+        if (depth === 0) return CONTROL_PAREN_KEYWORDS.has(wordEndingAt(k - 1));
+      }
+    }
+    return false;
   };
 
   // Consume a template literal body starting after a backtick or after the `}`
@@ -86,13 +146,71 @@ function maskSource(source) {
       if (ch === "`") { blank(start, j); return j + 1; }
       if (ch === "$" && source[j + 1] === "{") {
         blank(start, j);
-        templateHoleDepths.push(braceDepth);
+        holes.push({ depth: braceDepth, kind: "template", elementDepth: jsxElementDepth });
+        jsxElementDepth = 0;
         return j + 2;
       }
       j += 1;
     }
     blank(start, n);
     return n;
+  };
+
+  // Consume the raw text between an element's tags. Stops at the next tag and
+  // at a `{` hole, exactly like a template body stops at `${`.
+  const consumeJsxText = (start) => {
+    let j = start;
+    while (j < n) {
+      const ch = source[j];
+      if (ch === "<") {
+        blank(start, j);
+        jsxTextPending = true;
+        return j;
+      }
+      if (ch === "{") {
+        blank(start, j);
+        holes.push({ depth: braceDepth, kind: "jsx", elementDepth: jsxElementDepth });
+        jsxElementDepth = 0;
+        return j + 1;
+      }
+      j += 1;
+    }
+    blank(start, n);
+    return n;
+  };
+
+  const resumeAfterHole = (hole, index) => {
+    jsxElementDepth = hole.elementDepth;
+    if (hole.kind === "template") return consumeTemplateBody(index);
+    return jsxElementDepth > 0 ? consumeJsxText(index) : index;
+  };
+
+  // `index` points at the `>` that ends a tag.
+  const endJsxTag = (index) => {
+    const beforeAngle = lastCodeChar(index - 1);
+    const selfClosing = beforeAngle !== null && beforeAngle.char === "/";
+    if (jsxTagClosing) jsxElementDepth = Math.max(0, jsxElementDepth - 1);
+    else if (!selfClosing && jsxTagNests) jsxElementDepth += 1;
+    jsxTagAngles = -1;
+    jsxTagClosing = false;
+    return jsxElementDepth > 0 ? consumeJsxText(index + 1) : index + 1;
+  };
+
+  // End of the tag name that starts at `start` (the first character after `<`
+  // or `</`), or -1 when what follows `<` cannot be a tag name.
+  const jsxTagNameEnd = (start) => {
+    if (!/[A-Za-z_$]/u.test(source[start] ?? "")) return -1;
+    let j = start;
+    while (j < n && /[\w$.:-]/u.test(source[j])) j += 1;
+    return j;
+  };
+
+  // `<T,>(x) => x`, `<T extends B>(x) => x` and `type F = <T>(x: T) => T` are
+  // the only ways a `<` in expression position is not JSX in a .tsx file.
+  const opensTypeParameters = (nameEnd) => {
+    if (source[nameEnd] === ",") return true;
+    if (source[nameEnd] === ">" && source[nameEnd + 1] === "(") return true;
+    return /^\s+extends\b/u.test(source.slice(nameEnd, nameEnd + 12));
   };
 
   if (source.startsWith("#!")) {
@@ -104,6 +222,8 @@ function maskSource(source) {
 
   while (i < n) {
     const c = source[i];
+    const atJsxChild = jsxTextPending;
+    jsxTextPending = false;
     const schemeSlashes = c === "/" && source[i + 1] === "/" &&
       source[i - 1] === ":" && /[A-Za-z]/u.test(source[i - 2] ?? "");
     if (c === "/" && source[i + 1] === "/" && !schemeSlashes) {
@@ -138,7 +258,7 @@ function maskSource(source) {
       continue;
     }
     if (c === "`") {
-      if (source.indexOf("`", i + 1) === -1 && !source.slice(i + 1).includes("${")) {
+      if (source.indexOf("`", i + 1) === -1 && source.indexOf("${", i + 1) === -1) {
         i += 1;
         continue;
       }
@@ -151,14 +271,60 @@ function maskSource(source) {
       continue;
     }
     if (c === "}") {
-      if (templateHoleDepths.length > 0 && braceDepth === templateHoleDepths[templateHoleDepths.length - 1]) {
-        templateHoleDepths.pop();
-        i = consumeTemplateBody(i + 1);
+      if (holes.length > 0 && braceDepth === holes[holes.length - 1].depth) {
+        i = resumeAfterHole(holes.pop(), i + 1);
       } else {
         braceDepth -= 1;
         i += 1;
       }
       continue;
+    }
+    if (jsx && jsxTagAngles >= 0 && braceDepth === jsxTagBraceDepth) {
+      if (c === "<") { jsxTagAngles += 1; i += 1; continue; }
+      if (c === ">") {
+        if (jsxTagAngles > 0) { jsxTagAngles -= 1; i += 1; continue; }
+        i = endJsxTag(i);
+        continue;
+      }
+      // Never read the `/` of `/>` or `</` as a regex or a comment opener.
+      if (c === "/") { i += 1; continue; }
+    }
+    if (jsx && c === "<" && jsxTagAngles < 0) {
+      if (source[i + 1] === ">") {
+        if (!hasClosingTag("")) { i += 2; continue; }
+        jsxElementDepth += 1;
+        i = consumeJsxText(i + 2);
+        continue;
+      }
+      if (source[i + 1] === "/" && source[i + 2] === ">") {
+        jsxElementDepth = Math.max(0, jsxElementDepth - 1);
+        i = jsxElementDepth > 0 ? consumeJsxText(i + 3) : i + 3;
+        continue;
+      }
+      const closing = source[i + 1] === "/";
+      const nameEnd = jsxTagNameEnd(i + (closing ? 2 : 1));
+      if (nameEnd !== -1) {
+        const prev = lastCodeChar(i - 1);
+        const prevChar = prev?.char ?? null;
+        const inExpressionPosition =
+          prev === null ||
+          JSX_PRECEDING_PUNCTUATION.includes(prevChar) ||
+          (prevChar === ">" && out[prev.index - 1] === "=") ||
+          (/[A-Za-z]/u.test(prevChar) && precededByKeyword(prev.index));
+        if (atJsxChild || (!closing && inExpressionPosition && !opensTypeParameters(nameEnd))) {
+          jsxTagAngles = 0;
+          jsxTagBraceDepth = braceDepth;
+          jsxTagClosing = closing;
+          jsxTagNests = closing || hasClosingTag(source.slice(i + 1, nameEnd));
+          i = nameEnd;
+          continue;
+        }
+      }
+      if (atJsxChild) {
+        // A stray `<` in text (invalid JSX, but do not fall out of text mode).
+        i = consumeJsxText(i + 1);
+        continue;
+      }
     }
     if (c === "/") {
       const prev = lastCodeChar(i - 1);
@@ -171,6 +337,7 @@ function maskSource(source) {
         prev === null ||
         "([{,;=:!&|?+*%^~".includes(prevChar) ||
         arrowBefore ||
+        (prevChar === ")" && closesControlParen(prev.index)) ||
         (/[A-Za-z]/.test(prevChar) && precededByKeyword(prev.index)));
       if (startsRegex) {
         let j = i + 1;
@@ -197,7 +364,6 @@ function maskSource(source) {
 
   return { masked: out.join(""), comments };
 }
-
 // ---------------------------------------------------------------------------
 // Rule engine
 // ---------------------------------------------------------------------------
@@ -769,7 +935,7 @@ export function lintSource(rawSource, filePath) {
   // A leading BOM is not part of line 1: it defeats the shebang skip and shifts
   // every column on that line by one.
   const source = rawSource.charCodeAt(0) === 0xfeff ? rawSource.slice(1) : rawSource;
-  const { masked, comments } = maskSource(source);
+  const { masked, comments } = maskSource(source, { jsx: JSX_EXTENSIONS.has(extension) });
   const declaredNames = new Set();
   for (const match of masked.matchAll(SLOP_DECLARATION_PATTERN)) declaredNames.add(match[1]);
   const ctx = {
@@ -950,6 +1116,8 @@ function isMainModule() {
   try {
     return import.meta.url === pathToFileURL(realpathSync(entry)).href;
   } catch {
+    // An unresolvable argv[0] means this is not the entry point; importers
+    // (the hook, the tests) must not trigger a scan.
     return false;
   }
 }

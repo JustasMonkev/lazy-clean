@@ -293,6 +293,75 @@ expectRule("flags a this-function doc comment", "/**\n * This function returns t
 expectNoRule("allows a doc comment that adds information", "/** Aggregates rows into per-name totals, dropping zero-count rows. */\nexport function summarize(rows) {}", "no-obvious-doc-comments");
 expectNoRule("allows an informative this-function note", "// This function is used recursively from IndexedSourceMapConsumer.\nfunction sourceContentFor(source) {}", "no-obvious-doc-comments");
 
+
+// --- JSX text is prose, not code ---------------------------------------------
+
+expectNoRule(
+  "does not read JSX prose as a type assertion",
+  "function Hint() {\n  return <p>Treat the number as guidance, not a target.</p>;\n}",
+  "require-safety-comment-for-type-assertion",
+  "sample.tsx",
+);
+expectNoRule(
+  "does not read a repeated 'as' in JSX prose as chained assertions",
+  "const help = <p>Retry as soon as the network returns.</p>;",
+  "no-chained-type-assertions",
+  "sample.tsx",
+);
+expectRule(
+  "still sees code inside a JSX hole",
+  "const el = <div>{payload as User}</div>;",
+  "require-safety-comment-for-type-assertion",
+  "sample.tsx",
+);
+expectRule(
+  "still sees code in a JSX attribute",
+  "const el = <div title={value as any} />;",
+  "no-any",
+  "sample.tsx",
+);
+expectRule(
+  "still sees a JSX comment",
+  "const el = <div>{/* placeholder for now */}</div>;",
+  "no-filler-comments",
+  "sample.tsx",
+);
+expectRule(
+  "still sees code after a JSX element closes",
+  "const el = <p>Some prose here</p>;\nconst leak = payload as any;",
+  "no-any",
+  "sample.tsx",
+);
+expectRule(
+  "an arrow generic is not a JSX element",
+  "const identity = <T,>(value: T): T => value as any;",
+  "no-any",
+  "sample.tsx",
+);
+expectRule(
+  "a less-than comparison is not a JSX element",
+  "const ok = fn(a < b, c) && (payload as any);",
+  "no-any",
+  "sample.tsx",
+);
+expectRule(
+  "an unclosed tag does not blank the code below it",
+  "const broken = <div><span>oops</div>;\nconst leak = payload as any;",
+  "no-any",
+  "sample.tsx",
+);
+
+expectNoRule(
+  "a regex after an if condition is not code",
+  "if (enabled) /: any/.test(input);",
+  "no-any",
+);
+expectRule(
+  "division after a plain call is still division",
+  "const ratio = compute(a) / (raw as any) / 2;",
+  "no-any",
+);
+
 // --- masking correctness -----------------------------------------------------
 
 expectNoRule("ignores patterns inside strings", 'const doc = "catch {} and JSON.parse(JSON.stringify(x))";', "no-empty-catch");
