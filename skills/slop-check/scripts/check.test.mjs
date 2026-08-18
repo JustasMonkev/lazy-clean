@@ -218,6 +218,79 @@ expectNoRule("allows a two-word section header", "// Public API\nexport const pu
 expectNoRule("allows a comment naming a transform", "// Union to intersection converter\ntype UnionToIntersection<U> = U;", "no-restating-comments");
 expectNoRule("allows informative comment", "// Milliseconds; the upstream API rejects sub-second precision.\nconst timeout = 30000;", "no-restating-comments");
 
+
+// --- error-handling slop -----------------------------------------------------
+
+expectRule("flags log-and-rethrow", "try { run(); } catch (error) { console.error(error); throw error; }", "no-log-and-rethrow");
+expectRule("flags logger log-and-rethrow", "try { run(); } catch (err) { logger.warn('failed', err); throw err; }", "no-log-and-rethrow");
+expectNoRule("allows logging a handled error", "try { run(); } catch (error) { console.error(error); return null; }", "no-log-and-rethrow");
+expectNoRule("allows logging separate context before a rethrow", "try { run(); } catch (error) { log.error('dist-tag ls', spec); throw error; }", "no-log-and-rethrow");
+
+expectRule("flags message-only rethrow", "try { run(); } catch (error) { throw new Error(error.message); }", "no-message-only-rethrow");
+expectRule("flags interpolated message-only rethrow", "try { run(); } catch (e) { throw new TypeError(`load failed: ${e.message}`); }", "no-message-only-rethrow");
+expectNoRule("allows wrapping with cause", "try { run(); } catch (error) { throw new Error(`load failed: ${error.message}`, { cause: error }); }", "no-message-only-rethrow");
+expectNoRule("allows a fresh error", "try { run(); } catch (error) { throw new ConfigError('config is unreadable'); }", "no-message-only-rethrow");
+
+// --- pointless control flow --------------------------------------------------
+
+expectRule("flags boolean return branches", "function ok(x) { if (x > 0) { return true; } else { return false; } }", "no-boolean-return-branches");
+expectRule("flags braceless boolean return branches", "function ok(x) { if (x) return false; else return true; }", "no-boolean-return-branches");
+expectNoRule("allows a guard clause before a loop result", "function ok(xs) { for (const x of xs) { if (x.bad) return false; }\n  return true; }", "no-boolean-return-branches");
+expectNoRule("allows returning values from both branches", "function pick(x) { if (x) { return 'on'; } else { return 'off'; } }", "no-boolean-return-branches");
+
+expectRule("flags let assigned in both branches", "let label;\nif (flag) {\n  label = 'on';\n} else {\n  label = 'off';\n}", "no-let-if-else-assign");
+expectRule("flags annotated let assigned in both branches", "let label: string;\nif (flag) label = 'on';\nelse label = 'off';", "no-let-if-else-assign");
+expectNoRule("allows a branch that does more than assign", "let n;\nif (isRange) {\n  n = split(body);\n} else {\n  n = parse(body);\n  n = n.map(embrace);\n}", "no-let-if-else-assign");
+expectNoRule("allows an accumulator loop", "let total = 0;\nfor (const value of values) total += value;", "no-let-if-else-assign");
+
+// --- promise slop ------------------------------------------------------------
+
+expectRule("flags promise constructor wrapper", "export function wrap(value) { return new Promise((resolve) => resolve(value)); }", "no-promise-constructor-wrapper");
+expectRule("flags block-bodied promise wrapper", "const p = new Promise<number>((resolve) => { resolve(compute()); });", "no-promise-constructor-wrapper");
+expectNoRule("allows a real promise adapter", "const p = new Promise((resolve, reject) => { worker.once('message', resolve); worker.once('error', reject); });", "no-promise-constructor-wrapper");
+
+expectRule("flags a hard-coded sleep", "await new Promise((resolve) => setTimeout(resolve, 500));", "no-arbitrary-sleep");
+expectNoRule("allows a parameterised sleep helper", "export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));", "no-arbitrary-sleep");
+expectNoRule("allows a justified sleep", "// The vendor API rejects bursts inside a 200ms window.\nawait new Promise((resolve) => setTimeout(resolve, 200));", "no-arbitrary-sleep");
+
+// --- collection slop ---------------------------------------------------------
+
+expectRule("flags forEach push", "const ids = [];\nrows.forEach((row) => ids.push(row.id));", "no-foreach-push");
+expectRule("flags block-bodied forEach push", "tokens.forEach((token) => {\n  table.push([token.id, token.created]);\n});", "no-foreach-push");
+expectNoRule("allows forEach with more than a push", "rows.forEach((row) => {\n  const name = row.name.trim();\n  if (name) out.push(name);\n});", "no-foreach-push");
+expectNoRule("allows a for-of push", "for (const row of rows) ids.push(row.id);", "no-foreach-push");
+
+// --- type and config slop ----------------------------------------------------
+
+expectRule("flags empty interface", "interface Options {}", "no-empty-type-declaration");
+expectRule("flags empty type alias", "type Extra = {};", "no-empty-type-declaration");
+expectNoRule("allows an extending interface", "interface Props extends React.HTMLAttributes<HTMLDivElement> {}", "no-empty-type-declaration");
+expectNoRule("allows a populated interface", "interface Options { retries: number }", "no-empty-type-declaration");
+
+expectRule("flags a secret default", "const token = process.env.API_SECRET || 'dev-secret';", "no-env-secret-fallback");
+expectRule("flags an empty key default", "const key = process.env.STRIPE_KEY ?? '';", "no-env-secret-fallback");
+expectNoRule("allows a non-secret default", "const env = process.env.NODE_ENV || 'development';", "no-env-secret-fallback");
+expectNoRule("allows a key-prefix default", "const prefix = process.env.CACHE_KEY_PREFIX ?? 'app';", "no-env-secret-fallback");
+
+// --- test slop ---------------------------------------------------------------
+
+expectRule("flags tautological assertion", "it('works', () => { expect(true).toBe(true); });", "no-tautological-assertion");
+expectRule("flags tautological equality", "expect(false).toEqual(false);", "no-tautological-assertion");
+expectNoRule("allows asserting a computed boolean", "expect(isPaid(invoice)).toBe(true);", "no-tautological-assertion");
+expectNoRule("allows asserting a number", "expect(totalItems(state)).toBe(4);", "no-tautological-assertion");
+
+// --- suppression and doc slop ------------------------------------------------
+
+expectRule("flags bare ts-ignore", "// @ts-ignore\nconst parsed = legacyParse(input);", "no-unjustified-suppression");
+expectRule("flags ts-expect-error without a reason", "// @ts-expect-error broken\nconst parsed = legacyParse(input);", "no-unjustified-suppression");
+expectNoRule("allows an explained suppression", "// @ts-expect-error the vendored declaration is missing the strict option\nconst parsed = legacyParse(input, { strict: true });", "no-unjustified-suppression");
+expectNoRule("allows an ordinary comment", "// Parses the vendored payload.\nconst parsed = legacyParse(input);", "no-unjustified-suppression");
+
+expectRule("flags a Constructor doc comment", "/** Constructor */\nexport class AuthClient {}", "no-obvious-doc-comments");
+expectRule("flags a this-function doc comment", "/**\n * This function returns the current token.\n */\ngetToken() { return this.token; }", "no-obvious-doc-comments");
+expectNoRule("allows a doc comment that adds information", "/** Aggregates rows into per-name totals, dropping zero-count rows. */\nexport function summarize(rows) {}", "no-obvious-doc-comments");
+expectNoRule("allows an informative this-function note", "// This function is used recursively from IndexedSourceMapConsumer.\nfunction sourceContentFor(source) {}", "no-obvious-doc-comments");
+
 // --- masking correctness -----------------------------------------------------
 
 expectNoRule("ignores patterns inside strings", 'const doc = "catch {} and JSON.parse(JSON.stringify(x))";', "no-empty-catch");

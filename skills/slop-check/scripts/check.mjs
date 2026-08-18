@@ -398,6 +398,22 @@ const LINE_RULES = [
     message: "`cond ? true : false` restates the condition. Use the condition (or its negation) directly.",
   },
   {
+    name: "no-empty-type-declaration",
+    tsOnly: true,
+    pattern: /\binterface\s+[\w$]+(?:<[^>]*>)?\s*\{\s*\}|\btype\s+[\w$]+(?:<[^>]*>)?\s*=\s*\{\s*\}/u,
+    message: "An empty interface or `{}` alias carries no contract and accepts almost anything. Declare the real fields or delete the declaration.",
+  },
+  {
+    name: "no-env-secret-fallback",
+    pattern: /\bprocess\s*\.\s*env\s*\.\s*[A-Z0-9_$]*(?:SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIALS?|PRIVATE_KEY|APIKEY|API_KEY|_KEY|_KEYS)\s*(?:\|\||\?\?)\s*["'`]/u,
+    message: "Defaulting a credential to a literal turns a missing secret into a silent misconfiguration. Fail fast when the variable is absent.",
+  },
+  {
+    name: "no-tautological-assertion",
+    pattern: /\bexpect\s*\(\s*(true|false|\d+)\s*\)\s*\.\s*(?:toBe|toEqual|toStrictEqual|toBeTruthy|toBeFalsy)\s*\(\s*\1?\s*\)/u,
+    message: "Asserting a literal against itself passes no matter what the code does. Assert on the value under test, or delete the test.",
+  },
+  {
     name: "no-await-promise-resolve",
     pattern: /\bawait\s+Promise\s*\.\s*resolve\s*\(/u,
     message: "`await Promise.resolve(x)` is `x` with extra steps. Await the real async value or drop the wrapper.",
@@ -491,6 +507,103 @@ const MODULE_STATEMENT = /^\s*import\b|^\s*export\s*(?:type\s+)?[{*]/u;
 const TYPE_ASSERTION_PATTERN =
   /([\w$]+)?\s*\bas\s+(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<[^<>]*>)?(?:\[\])*\s*(?=[;,)\]}=&|?:]|$)/u;
 
+
+// Multi-line shapes matched against the masked source. Each was measured
+// against 651 files of third-party JavaScript before landing; anything that
+// fired on human-written code was tightened or dropped.
+function* iterateCandidateFindings(ctx) {
+  const { masked, lineStarts, comments } = ctx;
+  const commentLines = new Set();
+  for (const comment of comments) {
+    const start = offsetToPosition(lineStarts, comment.start).line;
+    const end = offsetToPosition(lineStarts, Math.max(comment.start, comment.end - 1)).line;
+    for (let l = start; l <= end; l += 1) commentLines.add(l);
+  }
+  const justifiedNear = (line) =>
+    commentLines.has(line) || commentLines.has(line - 1) || commentLines.has(line - 2);
+
+  // A literal delay only: `setTimeout(resolve, ms)` in a sleep helper is fine.
+  for (const match of masked.matchAll(
+    /\bnew\s+Promise\s*(?:<[^>]*>)?\s*\(\s*\(?\s*([\w$]+)\s*\)?\s*=>\s*setTimeout\s*\(\s*\1\s*,\s*\d/gu,
+  )) {
+    const position = offsetToPosition(lineStarts, match.index);
+    if (justifiedNear(position.line)) continue;
+    yield {
+      ...position,
+      rule: "no-arbitrary-sleep",
+      message: "A hard-coded sleep guesses at timing instead of waiting for the event. Await the real signal, or name the delay as a policy and say why.",
+    };
+  }
+
+  // The log call has to mention the caught error; logging separate context
+  // before a rethrow is deliberate.
+  for (const match of masked.matchAll(
+    /\bcatch\s*\(\s*([\w$]+)\s*(?::[^)]*)?\)\s*\{\s*(?:console|logger|log)\s*\.\s*[\w$]+\s*\(([^;{}]*)\)\s*;?\s*throw\s+\1\s*;?\s*\}/gu,
+  )) {
+    if (!new RegExp(String.raw`\b${match[1]}\b`, "u").test(match[2])) continue;
+    yield {
+      ...offsetToPosition(lineStarts, match.index),
+      rule: "no-log-and-rethrow",
+      message: "Logging and rethrowing reports the same failure at every frame. Let it propagate, or attach context with `cause` and log once at the boundary.",
+    };
+  }
+
+  for (const match of masked.matchAll(
+    /\bcatch\s*\(\s*([\w$]+)\s*(?::[^)]*)?\)\s*\{\s*throw\s+new\s+[\w$.]*Error\s*\(([^;]*?)\)\s*;?\s*\}/gu,
+  )) {
+    if (!new RegExp(String.raw`\b${match[1]}\s*(?:\?\.|\.)\s*message\b`, "u").test(match[2])) continue;
+    if (/\bcause\b/u.test(match[2])) continue;
+    yield {
+      ...offsetToPosition(lineStarts, match.index),
+      rule: "no-message-only-rethrow",
+      message: "Rebuilding an error from its message throws away the stack and the original type. Rethrow it, or wrap it with `{ cause }`.",
+    };
+  }
+
+  for (const match of masked.matchAll(
+    /\bif\s*\((?:[^()]|\([^()]*\))*\)\s*\{?\s*return\s+(true|false)\s*;?\s*\}?\s*else\b\s*\{?\s*return\s+(true|false)\s*;?/gu,
+  )) {
+    if (match[1] === match[2]) continue;
+    yield {
+      ...offsetToPosition(lineStarts, match.index),
+      rule: "no-boolean-return-branches",
+      message: "Branching to return `true` or `false` restates the condition. Return the condition itself.",
+    };
+  }
+
+  // Each branch must be exactly one assignment; a branch that does more is a
+  // real branch, not a conditional expression written long.
+  for (const match of masked.matchAll(
+    /\blet\s+([\w$]+)\s*(?::[^=;]+)?;\s*if\s*\((?:[^()]|\([^()]*\))*\)\s*(?:\{\s*\1\s*=\s*[^;{}]+;\s*\}|\1\s*=\s*[^;{}]+;)\s*else\b\s*(?:\{\s*\1\s*=\s*[^;{}]+;\s*\}|\1\s*=\s*[^;{}]+;)/gu,
+  )) {
+    yield {
+      ...offsetToPosition(lineStarts, match.index),
+      rule: "no-let-if-else-assign",
+      message: "A `let` declared only to be assigned in both branches hides a single expression. Use `const` with a conditional expression.",
+    };
+  }
+
+  for (const match of masked.matchAll(
+    /\bnew\s+Promise\s*(?:<[^>]*>)?\s*\(\s*\(?\s*([\w$]+)\s*\)?\s*=>\s*\{?\s*\1\s*\([^;{}]*\)\s*;?\s*\}?\s*\)/gu,
+  )) {
+    yield {
+      ...offsetToPosition(lineStarts, match.index),
+      rule: "no-promise-constructor-wrapper",
+      message: "Wrapping a value in `new Promise` to resolve it immediately is `Promise.resolve` with extra steps. Return the value from an async function.",
+    };
+  }
+
+  for (const match of masked.matchAll(
+    /\.\s*forEach\s*\(\s*\(?\s*[\w$,\s]*\)?\s*=>\s*\{?\s*([\w$.]+)\s*\.\s*push\s*\([^;{}]*\)\s*;?\s*\}?\s*\)/gu,
+  )) {
+    yield {
+      ...offsetToPosition(lineStarts, match.index),
+      rule: "no-foreach-push",
+      message: "A `forEach` whose whole body pushes into an array is a `map` written the long way. Use `map` (or `flatMap`) and bind the result.",
+    };
+  }
+}
+
 function* iterateAssertionFindings(ctx) {
   if (!ctx.isTypeScript) return;
   const { maskedLines, comments, lineStarts } = ctx;
@@ -545,6 +658,29 @@ function* iterateAssertionFindings(ctx) {
   }
 }
 
+// Only the type-checker directives. eslint's `--` reason convention is not
+// widely adopted, so the same rule over eslint-disable fired on 279 of 651
+// real-world files — it would drown the signal it is looking for.
+const SUPPRESSION_DIRECTIVE_PATTERN = /@ts-(?:ignore|expect-error|nocheck)\b|\bbiome-ignore\b/u;
+
+const OBVIOUS_DOC_COMMENT_PATTERN = new RegExp(
+  [
+    String.raw`^\s*(?:the\s+)?(?:constructor|getter|setter|default export|main entry point)\.?\s*$`,
+    String.raw`^\s*(?:getter|setter) for\b`,
+    String.raw`^\s*this (?:function|method|class|component|hook|module|file|helper|utility) (?:takes|returns|will|does|handles|creates|gets|sets|adds|removes|checks|converts|simply|just)\b`,
+  ].join("|"),
+  "iu",
+);
+
+function suppressionIsJustified(body) {
+  const match = SUPPRESSION_DIRECTIVE_PATTERN.exec(body);
+  if (!match) return true;
+  const rest = body.slice(match.index + match[0].length);
+  if (rest.includes("--")) return true;
+  const reason = rest.replace(/[\w@$][\w@$/.]*[-/][\w@$/.-]*/gu, " ");
+  return (reason.match(/[A-Za-z]/gu) ?? []).length >= 10;
+}
+
 const TEST_FILE_PATTERN = /(?:^|[\\/])(?:__tests__|__mocks__|test|tests|fixtures)[\\/]|\.(?:test|spec)\.[cm]?[jt]sx?$/u;
 
 function* iterateCommentFindings(ctx) {
@@ -582,6 +718,15 @@ function* iterateCommentFindings(ctx) {
       continue;
     }
 
+    if (SUPPRESSION_DIRECTIVE_PATTERN.test(body) && !suppressionIsJustified(body)) {
+      yield { ...position, rule: "no-unjustified-suppression", message: "A type-checker suppression with no stated reason hides the problem instead of the noise. State why the checker is wrong on the same line, or fix what it reported." };
+      continue;
+    }
+    if (OBVIOUS_DOC_COMMENT_PATTERN.test(body)) {
+      yield { ...position, rule: "no-obvious-doc-comments", message: "This doc comment restates the declaration below it. Say why the code exists, or delete the comment." };
+      continue;
+    }
+
     if (comment.kind !== "line") continue;
     const maskedBefore = maskedLines[position.line - 1]?.slice(0, position.column - 1) ?? "";
     if (maskedBefore.trim()) continue;
@@ -611,7 +756,8 @@ const MECHANICAL_RULES = new Set([
   "no-redundant-fallback", "no-boolean-literal-ternary", "no-double-negation-condition",
   "no-await-promise-resolve", "no-useless-rethrow", "no-json-clone", "no-emoji",
   "no-typed-jsdoc", "no-narration-comments", "no-change-note-comments",
-  "no-chained-type-assertions",
+  "no-chained-type-assertions", "no-boolean-return-branches", "no-let-if-else-assign",
+  "no-promise-constructor-wrapper", "no-obvious-doc-comments",
 ]);
 
 export function lintSource(rawSource, filePath) {
@@ -634,6 +780,7 @@ export function lintSource(rawSource, filePath) {
   const findings = [
     ...iterateLineFindings(ctx),
     ...iterateBlockFindings(ctx),
+    ...iterateCandidateFindings(ctx),
     ...iterateAssertionFindings(ctx),
     ...iterateCommentFindings(ctx),
   ];
