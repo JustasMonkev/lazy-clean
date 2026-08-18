@@ -30,7 +30,11 @@ function finish() {
       prompt = ('/' + nameTag[1] + ' ' + (argsTag ? argsTag[1] : '')).trim();
     }
 
-    // Match /lazy commands
+    // One JSON object per invocation. Every branch records what it wants to
+    // say and exactly one write happens at the end: writing from the branches
+    // emitted two concatenated objects on Qoder, where the ruleset below is
+    // also written, and neither could be parsed.
+    let notice = null;
     let modeSwitched = false;
     let deactivated = false;
     if (/^[/@$]lazy/.test(prompt)) {
@@ -56,12 +60,12 @@ function finish() {
             // worked until the next session starts in the old mode.
             try {
               writeDefaultMode(dmode);
-              writeHookOutput('UserPromptSubmit', dmode, 'LAZY DEFAULT SET — new sessions start in ' + dmode + '.');
+              notice = 'LAZY DEFAULT SET — new sessions start in ' + dmode + '.';
             } catch (e) {
-              writeHookOutput('UserPromptSubmit', readMode(), 'LAZY: could not write the default (' + e.message + ').');
+              notice = 'LAZY: could not write the default (' + e.message + ').';
             }
           } else {
-            writeHookOutput('UserPromptSubmit', readMode(), 'LAZY: ' + (dmode ? '"' + dmode + '" is not' : 'a default level is required —') + ' one of off|lite|full|ultra.');
+            notice = 'LAZY: ' + (dmode ? '"' + dmode + '" is not' : 'a default level is required —') + ' one of off|lite|full|ultra.';
           }
           handled = true; // don't fall through to the session-mode switch
         } else if (arg === 'lite') mode = 'lite';
@@ -74,40 +78,27 @@ function finish() {
           // so the model believed lazy was on and every subagent saw it off.
           isReportOnly = true;
           mode = readMode();
-        } else if (!handled) {
+        } else {
           // An unrecognized level used to fall back to the default, silently
           // downgrading an ultra session — or turning lazy off outright when
           // the default was off.
-          writeHookOutput('UserPromptSubmit', readMode(), 'LAZY: unknown level "' + arg + '" — use lite|full|ultra|off.');
+          notice = 'LAZY: unknown level "' + arg + '" — use lite|full|ultra|off.';
           handled = true;
         }
       }
 
       if (handled) {
-        modeSwitched = false;
+        // The branch above already said what happened.
       } else if (isReportOnly) {
-        writeHookOutput(
-          'UserPromptSubmit',
-          mode || 'off',
-          mode ? 'LAZY MODE ACTIVE — level: ' + mode : 'LAZY MODE OFF — start with /lazy lite|full|ultra.',
-        );
+        notice = mode ? 'LAZY MODE ACTIVE — level: ' + mode : 'LAZY MODE OFF — start with /lazy lite|full|ultra.';
       } else if (mode && mode !== 'off') {
         setMode(mode);
         modeSwitched = true;
-        // lazy: Qoder needs the full ruleset every turn, so when a mode
-        // switch happens we fold the confirmation into the ruleset output
-        // below (one JSON on stdout) instead of emitting two separate writes.
-        if (!isQoder) {
-          writeHookOutput(
-            'UserPromptSubmit',
-            mode,
-            'LAZY MODE CHANGED — level: ' + mode,
-          );
-        }
+        notice = 'LAZY MODE CHANGED — level: ' + mode;
       } else if (mode === 'off') {
         clearMode();
         deactivated = true;
-        writeHookOutput('UserPromptSubmit', 'off', 'LAZY MODE OFF');
+        notice = 'LAZY MODE OFF';
       }
     }
 
@@ -115,7 +106,7 @@ function finish() {
     if (!modeSwitched && !deactivated && isDeactivationCommand(prompt)) {
       clearMode();
       deactivated = true;
-      writeHookOutput('UserPromptSubmit', 'off', 'LAZY MODE OFF');
+      notice = 'LAZY MODE OFF';
     }
 
     // Qoder has no SessionStart event, so UserPromptSubmit does double duty:
@@ -133,14 +124,13 @@ function finish() {
         }
       }
       if (currentMode && currentMode !== 'off') {
-        // lazy: one JSON per invocation — mode-switch confirmation is
-        // folded into the ruleset header so Qoder gets both in one write.
-        const header = modeSwitched
-          ? 'LAZY MODE CHANGED — level: ' + currentMode + '\n\n'
-          : '';
-        writeHookOutput('UserPromptSubmit', currentMode, header + getLazyInstructions(currentMode));
+        writeHookOutput('UserPromptSubmit', currentMode,
+          [notice, getLazyInstructions(currentMode)].filter(Boolean).join('\n\n'));
+        return;
       }
     }
+
+    if (notice) writeHookOutput('UserPromptSubmit', readMode() || 'off', notice);
   } catch (e) {
     // Silent fail
   }

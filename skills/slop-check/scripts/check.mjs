@@ -931,7 +931,7 @@ const MECHANICAL_RULES = new Set([
 ]);
 
 export function lintSource(rawSource, filePath) {
-  const extension = extname(filePath);
+  const extension = extname(filePath).toLowerCase();
   // A leading BOM is not part of line 1: it defeats the shebang skip and shifts
   // every column on that line by one.
   const source = rawSource.charCodeAt(0) === 0xfeff ? rawSource.slice(1) : rawSource;

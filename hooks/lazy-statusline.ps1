@@ -34,14 +34,13 @@ try {
 }
 
 # The flag file is hand-editable; anything that is not a level is not one.
-if ($Mode -eq "off") { exit 0 }
-if ($Mode -cnotin @("lite", "full", "ultra", "review")) { $Mode = "" }
+if ($Mode -cnotin @("lite", "full", "ultra", "review")) { exit 0 }
 
 $Esc = [char]27
 # ultra is the high-intensity mode; flag it amber so it stands out from the
 # default green. The level is still in the text, so color is a redundant cue.
 $Color = if ($Mode -ceq "ultra") { "173" } else { "108" }
-if ([string]::IsNullOrEmpty($Mode) -or $Mode -ceq "full") {
+if ($Mode -ceq "full") {
     [Console]::Write("${Esc}[38;5;${Color}m[LAZY]${Esc}[0m")
 } else {
     $Suffix = $Mode.ToUpperInvariant()

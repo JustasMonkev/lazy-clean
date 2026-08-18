@@ -46,8 +46,7 @@ try {
 // subagent spawn.
 if (!matcherRe) {
   inject();
-  process.exit(0);
-}
+} else {
 
 // Matcher set → read agent_type from stdin and skip only on a definite
 // mismatch. Missing/unparseable agent_type, a stdin error, or the timeout all
@@ -72,12 +71,13 @@ function finish() {
   inject();
 }
 
-process.stdin.on('data', chunk => {
-  input += chunk;
-  // Bound stdin: no real hook payload approaches 32MB; a runaway pipe would OOM the string.
-  if (input.length > 32e6) { finish(); process.stdin.destroy(); }
-});
-process.stdin.on('end', finish);
-// Never block the session (#443): recover on stdin error or a short fallback.
-process.stdin.on('error', () => { finish(); process.stdin.destroy(); });
-setTimeout(() => { finish(); process.stdin.destroy(); }, 1000).unref();
+  process.stdin.on('data', chunk => {
+    input += chunk;
+    // Bound stdin: no real hook payload approaches 32MB; a runaway pipe would OOM the string.
+    if (input.length > 32e6) { finish(); process.stdin.destroy(); }
+  });
+  process.stdin.on('end', finish);
+  // Never block the session (#443): recover on stdin error or a short fallback.
+  process.stdin.on('error', () => { finish(); process.stdin.destroy(); });
+  setTimeout(() => { finish(); process.stdin.destroy(); }, 1000).unref();
+}

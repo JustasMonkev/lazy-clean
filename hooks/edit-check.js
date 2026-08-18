@@ -10,6 +10,9 @@ const CHECKER = path.join(__dirname, '..', 'skills', 'slop-check', 'scripts', 'c
 const EXTS = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs']);
 // Block rules report at the `catch`/`try` above the body that was edited.
 const PAD = 1;
+// A findings list past this is not review context, it is a wall. The file is
+// still there to scan in full if the agent wants the rest.
+const MAX_REPORTED = 40;
 
 let input = '';
 let done = false;
@@ -82,10 +85,13 @@ function finish() {
     const mine = ranges ? all.filter(f => ranges.some(([a, b]) => f.line >= a && f.line <= b)) : all;
     if (mine.length === 0) return;
 
+    const shown = mine.slice(0, MAX_REPORTED);
+    const truncated = mine.length - shown.length;
     const elsewhere = all.length - mine.length;
     const context =
       'slop-check findings for the lines you just wrote (heuristic — triage per slop-check SKILL.md, do not blindly silence):\n' +
-      render(mine) +
+      render(shown) +
+      (truncated > 0 ? `\n(${truncated} more on these lines, not listed.)` : '') +
       (elsewhere > 0
         ? `\n(${elsewhere} further finding${elsewhere === 1 ? '' : 's'} elsewhere in this file predate${elsewhere === 1 ? 's' : ''} this edit — out of scope, leave them alone.)`
         : '');
