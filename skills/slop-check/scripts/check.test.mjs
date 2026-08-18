@@ -37,22 +37,33 @@ expectNoRule("skips any in plain JS", "const value = x; // : any is not a JS con
 expectNoRule("ignores any inside strings", 'const message = "cast to any";', "no-any");
 
 expectRule("flags chained assertions", "const user = value as unknown as User;", "no-chained-type-assertions");
-expectRule("flags unknown return", "function parse(input: string): unknown { return input; }", "no-unknown-in-signatures");
-expectRule("flags unknown parameter", "function accept(value: unknown, other: string) {}", "no-unknown-in-signatures");
-expectRule("flags unknown alias", "type Payload = unknown;", "no-unknown-in-signatures");
-expectNoRule("allows unknown in catch", "try { run(); } catch (error: unknown) { log(error); }", "no-unknown-in-signatures");
+expectRule("flags unknown alias", "type Payload = unknown;", "no-unknown-alias");
+// `unknown` in a signature is the type no-any tells you to reach for: the
+// canonical type guard, the parse boundary, the error handler.
+expectNoRule("allows unknown return at a parse boundary", "function parse(input: string): unknown { return JSON.parse(input); }", "no-unknown-alias");
+expectNoRule("allows unknown parameter in a type guard", "function isUser(value: unknown): value is User { return true; }", "no-unknown-alias");
+expectNoRule("allows unknown error parameter", "app.use((cause: unknown, res: Response) => report(cause));", "no-unknown-alias");
+expectNoRule("allows unknown in catch", "try { run(); } catch (error: unknown) { log(error); }", "no-unknown-alias");
 
 expectRule("flags object parameter", "function accept(value: object) {}", "no-object-type");
+expectNoRule("allows a schema builder call", "const schema = { address: object(addressSchema) };", "no-object-type");
 expectRule("flags Record<string, any>", "const cache: Record<string, any> = {};", "no-unsafe-dictionary-type");
 expectRule("flags index signature any", "interface Bag { [key: string]: any }", "no-unsafe-dictionary-type");
+expectNoRule("allows Record<string, unknown>", "function log(message: string, context?: Record<string, unknown>) {}", "no-unsafe-dictionary-type");
 expectNoRule("allows typed Record", "const cache: Record<UserId, User> = init();", "no-unsafe-dictionary-type");
 
 expectRule("flags literal widening", 'const name: string = "claude";', "no-known-value-widening");
 expectRule("flags number widening", "let retries: number = 3;", "no-known-value-widening");
 expectNoRule("allows inferred literal", 'const name = "claude";', "no-known-value-widening");
 expectNoRule("allows non-literal annotation", "const name: string = compute();", "no-known-value-widening");
+expectNoRule("allows an annotated exported constant", "const DEFAULT_CONCURRENCY: number = 4;", "no-known-value-widening");
 
 expectRule("flags Reflect.get", "const value = Reflect.get(target, key);", "no-reflect");
+expectNoRule(
+  "allows Reflect in a Proxy trap",
+  "const handler = { get(target, key, receiver) { return Reflect.get(target, key, receiver); } };",
+  "no-reflect",
+);
 expectRule("flags vi.mock", 'vi.mock("./database");', "no-module-mocking");
 expectRule("flags jest.mock", 'jest.mock("./database");', "no-module-mocking", "sample.js");
 
@@ -63,14 +74,34 @@ expectRule(
 );
 expectNoRule("allows plain spread", "const options = { ...defaults, ...overrides };", "no-conditional-empty-object-spread");
 
-expectRule("flags runtime typeof", 'if (typeof value === "string") { use(value); }', "no-runtime-typeof");
-expectNoRule(
-  "allows typeof in type guard",
-  'function isName(value: string | number): value is string {\n  return typeof value === "string";\n}',
-  "no-runtime-typeof",
-);
+// no-runtime-typeof was removed: narrowing a union with `typeof` is the
+// idiomatic TypeScript, `typeof x === "undefined"` is the only environment
+// probe there is, and plain JS has no static type to fix. Nothing separated
+// those from defensive slop without a type checker, and two corpus runs put the
+// rule's precision at zero. These pin the removal.
+expectNoRule("allows union narrowing", 'if (typeof value === "string") { use(value); }', "no-runtime-typeof");
+expectNoRule("allows environment detection", 'const isBrowser = typeof window !== "undefined";', "no-runtime-typeof");
+expectNoRule("allows optional callback detection", 'if (typeof onDone === "function") onDone();', "no-runtime-typeof");
 
 expectRule("flags bare assertion", "const user = payload as User;", "require-safety-comment-for-type-assertion");
+// Prose is not code: JSX text nodes are not string literals, so every sentence
+// containing "as" used to read as a type assertion.
+expectNoRule(
+  "allows English prose in JSX",
+  "const help = <p>Files are stored as blobs and served as static assets</p>;",
+  "require-safety-comment-for-type-assertion",
+  "sample.tsx",
+);
+expectNoRule(
+  "allows aliases in a multi-line import list",
+  'import {\n  readFile as read,\n  writeFile as write,\n} from "node:fs/promises";',
+  "require-safety-comment-for-type-assertion",
+);
+expectNoRule(
+  "allows narrowing a catch binding",
+  'try { read(); } catch (cause) {\n  const error = cause as NodeJS.ErrnoException;\n  if (error.code === "ENOENT") return;\n}',
+  "require-safety-comment-for-type-assertion",
+);
 expectNoRule(
   "allows assertion with SAFETY comment",
   "// SAFETY: payload was validated by the schema above.\nconst user = payload as User;",
@@ -97,6 +128,9 @@ expectNoRule(
 
 expectRule("flags JSON clone", "const copy = JSON.parse(JSON.stringify(state));", "no-json-clone");
 expectRule("flags ?? undefined", "const value = input ?? undefined;", "no-redundant-fallback");
+// `|| undefined` maps "" and 0 to undefined; that is how an optional field gets
+// omitted from a payload, not a no-op.
+expectNoRule("allows || undefined", "const company = input.company || undefined;", "no-redundant-fallback");
 expectRule("flags === true", "if (enabled === true) { run(); }", "no-boolean-literal-compare");
 expectNoRule("allows !== true tri-state", "if (flag !== true) { run(); }", "no-boolean-literal-compare");
 expectRule("flags if (!!x)", "if (!!user) { greet(user); }", "no-double-negation-condition");
@@ -104,16 +138,40 @@ expectNoRule("allows !! in assignment", "const hasUser = !!user;", "no-double-ne
 expectRule("flags boolean literal ternary", "const ready = count > 0 ? true : false;", "no-boolean-literal-ternary");
 expectRule("flags await Promise.resolve", "const value = await Promise.resolve(compute());", "no-await-promise-resolve");
 
-expectRule("flags V2 name", "function parseConfigV2(input: string) {}", "no-slop-symbol-names");
+expectRule(
+  "flags V2 name beside the version it replaced",
+  "function parseConfig(input: string) {}\nfunction parseConfigV2(input: string) {}",
+  "no-slop-symbol-names",
+);
 expectRule("flags enhanced prefix", "const enhancedFetch = wrap(fetch);", "no-slop-symbol-names");
-expectRule("flags New suffix", "class UserServiceNew {}", "no-slop-symbol-names");
+expectRule("flags Enhanced suffix", "class UserServiceEnhanced {}", "no-slop-symbol-names");
+expectRule(
+  "flags New suffix beside the class it replaced",
+  "class UserService {}\nclass UserServiceNew {}",
+  "no-slop-symbol-names",
+);
 expectNoRule("allows newUser", "const newUser = createUser();", "no-slop-symbol-names");
+// The suffix is only an edit artifact when the thing it was cloned from is
+// still in the file. On its own it is an ordinary name.
+expectNoRule("allows lastUpdated", "const lastUpdated = new Date();", "no-slop-symbol-names");
+expectNoRule("allows deepCopy", "function deepCopy<T>(value: T): T { return structuredClone(value); }", "no-slop-symbol-names");
+expectNoRule("allows a versioned API name", "interface PaymentV2 { id: string }", "no-slop-symbol-names");
+expectNoRule("allows currentTemp", "let currentTemp = 20;", "no-slop-symbol-names");
 expectRule("flags shape in names", "const userShape = build();", "no-shape-in-symbol-names");
+expectNoRule("allows shape as the domain", "interface Shape { radius: number }", "no-shape-in-symbol-names");
 
 // --- comment rules -----------------------------------------------------------
 
 expectRule("flags in-a-real-app comment", "// In a real app, fetch this from the API\nconst users = [];", "no-filler-comments");
 expectRule("flags simulate comment", "// Simulate network latency\nawait delay(100);", "no-filler-comments");
+expectNoRule("allows simulating a physical system", "// Simulate one fixed timestep of the rigid-body solver.\nstep(dt);", "no-filler-comments");
+expectNoRule("allows documenting a placeholder prop", "/** Placeholder text for the search box. */\nplaceholder?: string;", "no-filler-comments");
+expectNoRule(
+  "allows mock vocabulary in a test file",
+  "// Mock response captured from the billing sandbox.\nconst body = load();",
+  "no-filler-comments",
+  "billing.test.ts",
+);
 expectRule("flags truncation ellipsis comment", "// ...\nrun();", "no-filler-comments");
 expectRule("flags rest-of-code comment", "// rest of the implementation unchanged\nrun();", "no-filler-comments");
 expectRule("flags not-implemented comment", "// not implemented\nrun();", "no-filler-comments");
@@ -122,8 +180,18 @@ expectRule("flags narration comment", "// First, we validate the input\nvalidate
 expectRule("flags lets comment", "// Let's set up the router\nconst router = createRouter();", "no-narration-comments");
 expectRule("flags change-note comment", "// Added this to make the linter happy\nconst unused = 1;", "no-change-note-comments");
 expectRule("flags as-requested comment", "// Renamed as requested\nconst total = sum(items);", "no-change-note-comments");
+expectNoRule("allows citing a spec", "// Fields are numbered as per RFC 8949 section 3.1.\nconst tag = 0;", "no-change-note-comments");
 expectRule("flags backcompat comment", "// kept for backwards compatibility\nexport const oldName = newName;", "no-backcompat-comments");
+expectNoRule(
+  "allows the @deprecated JSDoc tag",
+  "/** @deprecated Use `createSession` instead. */\nexport function create() {}",
+  "no-backcompat-comments",
+);
+expectNoRule("allows kept-for prose", "// The retry budget is kept for the lifetime of the connection.\nrun();", "no-backcompat-comments");
 expectRule("flags emoji comment", "// ✅ validation passed\nrun();", "no-emoji");
+expectNoRule("allows a text-presentation check mark", "// ✓ marks a passing row in the summary table.\nrun();", "no-emoji");
+expectNoRule("allows a text-presentation warning sign", "// ⚠ Callers must hold the write lock here.\nrun();", "no-emoji");
+expectRule("flags an emoji-presentation warning sign", "// ⚠️ this path is slow\nrun();", "no-emoji");
 expectRule(
   "flags typed jsdoc in TS",
   "/**\n * @param {string} name - the name\n */\nfunction greet(name: string) {}",
@@ -136,6 +204,8 @@ expectNoRule(
   "sample.js",
 );
 expectRule("flags restating comment", "// get the user name\nconst value = getUserName(user);", "no-restating-comments");
+expectNoRule("allows a two-word section header", "// Public API\nexport const publicApi = { version: 1 };", "no-restating-comments");
+expectNoRule("allows a comment naming a transform", "// Union to intersection converter\ntype UnionToIntersection<U> = U;", "no-restating-comments");
 expectNoRule("allows informative comment", "// Milliseconds; the upstream API rejects sub-second precision.\nconst timeout = 30000;", "no-restating-comments");
 
 // --- masking correctness -----------------------------------------------------

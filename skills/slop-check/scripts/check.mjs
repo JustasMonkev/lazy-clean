@@ -221,16 +221,27 @@ function splitIdentifierWords(line) {
   return words;
 }
 
+// Unconditional: no domain word ends in "Enhanced"/"Refactored" and nothing is
+// legitimately named `improvedFetch`.
 const SLOP_NAME_PATTERN =
-  /(?:Enhanced|Improved|Optimized|Refactored|Better|Final|Updated|Fixed|New|Old|Copy|Temp)$|^(?:enhanced|improved|optimized|refactored|better)[A-Z_]|(?:V|_v)\d+$/u;
+  /(?:Enhanced|Improved|Optimized|Refactored)$|^(?:enhanced|improved|optimized|refactored|better)[A-Z_]/u;
+
+// Conditional: `lastUpdated`, `deepCopy`, `isNew`, `currentTemp` and `uuidV4`
+// are ordinary names. What makes the suffix an edit artifact is the thing it
+// was cloned from still sitting in the same file, so require that sibling.
+const VERSIONED_NAME_PATTERN = /^(.+?)(?:Final|Updated|Fixed|New|Old|Copy|Temp|V\d+|_v\d+)$/u;
+
+// "shape" is the domain in geometry, canvas, and tensor code.
+const SHAPE_DOMAIN_PATTERN =
+  /\b(?:radius|width|height|circle|rect|rectangle|polygon|polyline|path|point|vertex|vertices|svg|canvas|geometry|bbox|tensor|dims?|draw|render)\b/iu;
 
 const FILLER_COMMENT_PATTERN = new RegExp(
   [
     String.raw`\bin a real(?:istic)? (?:app|application|implementation|project|scenario|world)\b`,
     String.raw`\bin production,? (?:you|we|this)\b`,
     String.raw`\bfor (?:now|simplicity|brevity|demonstration|this example)\b`,
-    String.raw`\bplaceholder\b`,
-    String.raw`\bsimulat(?:e|es|ed|ing)\b`,
+    String.raw`\b(?:this is |just |only )?a placeholder\b|\bplaceholder (?:for now|implementation|value|until)\b`,
+    String.raw`\bsimulat(?:e|es|ed|ing) (?:a |an |the )?(?:network|api|latency|delay|response|error|failure|request|backend|db|database|server|user)\b`,
     String.raw`\bmock (?:data|implementation|response|result)\b`,
     String.raw`(?<!\()\bnot implemented\b`,
     String.raw`\bimplement(?:ation)? (?:this |details? )?(?:later|here|goes here)\b`,
@@ -252,10 +263,10 @@ const NARRATION_COMMENT_PATTERN =
 const CHANGE_NOTE_COMMENT_PATTERN = new RegExp(
   [
     String.raw`\bas requested\b`,
-    String.raw`\bas per\b`,
+    String.raw`\bas per (?:your|our|the) (?:request|instructions?|feedback|comment)\b`,
     String.raw`\bper (?:your|the) (?:request|instructions?)\b`,
     String.raw`\bas discussed\b`,
-    String.raw`\bas mentioned\b`,
+    String.raw`\bas (?:you )?mentioned (?:above|earlier|before|in (?:your|the) (?:message|request|comment))\b`,
     String.raw`\bto (?:make|keep) (?:the )?(?:linter|lint|tests?|typescript|compiler|type checker|ci) (?:happy|pass|passing|quiet)\b`,
     String.raw`\bto satisfy (?:the )?(?:linter|lint|compiler|typescript|type checker)\b`,
     String.raw`^\s*(?:NEW|UPDATED|CHANGED|ADDED|MODIFIED|FIXED)[:!]`,
@@ -264,9 +275,14 @@ const CHANGE_NOTE_COMMENT_PATTERN = new RegExp(
 );
 
 const BACKCOMPAT_COMMENT_PATTERN =
-  /backwards?[- ]compat|\bfor compatibility\b|\bkept for\b|\bdeprecated,? use\b/iu;
+  /backwards?[- ]compat|\bonly for compatibility\b|\bkept for (?:backwards?|legacy|compat|the old)\b|^\s*deprecated,? use\b/iu;
 
-const EMOJI_PATTERN = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u;
+const TEXT_PRESENTATION_SYMBOLS = "\u2713\u2714\u2717\u2718\u26A0\u2022\u2026";
+const SYMBOL_RANGES = "\\u{2600}-\\u{27BF}\\u{2B00}-\\u{2BFF}";
+const EMOJI_PATTERN = new RegExp(
+  `[\\u{1F000}-\\u{1FAFF}]|[${SYMBOL_RANGES}]\\u{FE0F}|(?![${TEXT_PRESENTATION_SYMBOLS}])[${SYMBOL_RANGES}]`,
+  "u",
+);
 
 // Each line rule runs against masked code, line by line.
 // `tsOnly` rules are skipped for plain JavaScript files.
@@ -284,32 +300,43 @@ const LINE_RULES = [
     message: "Chained assertions (`as X as Y`) fabricate evidence. Parse or validate the value instead.",
   },
   {
-    name: "no-unknown-in-signatures",
+    // Only the bare alias. `(value: unknown)` is the canonical type-guard and
+    // error-handler signature and `): unknown` is the correct return for a
+    // parse boundary — flagging them contradicted no-any, whose own message
+    // tells you to use `unknown` plus parsing at the boundary.
+    name: "no-unknown-alias",
     tsOnly: true,
-    pattern: /\)\s*:\s*unknown\b|[(,]\s*[\w$]+\s*:\s*unknown\s*[,)=]|\btype\s+[\w$]+(?:<[^=]*>)?\s*=\s*unknown\b/u,
-    skipLine: /\bcatch\b/u,
-    message: "`unknown` in a signature or alias defers the real type. Name the owner contract and parse at the boundary.",
+    pattern: /\btype\s+[\w$]+(?:<[^=]*>)?\s*=\s*unknown\s*;?\s*$/u,
+    message: "A type alias for `unknown` names nothing. Declare the shape the owner actually guarantees.",
   },
   {
     name: "no-object-type",
     tsOnly: true,
-    pattern: /:\s*object\b/u,
+    pattern: /:\s*object\b(?!\s*\()/u,
     message: "The `object` type says almost nothing. Declare the specific shape callers must provide.",
   },
   {
     name: "no-unsafe-dictionary-type",
     tsOnly: true,
-    pattern: /\bRecord\s*<\s*string\s*,\s*(?:any|unknown)\s*>|\{\s*\[\s*[\w$]+\s*:\s*string\s*\]\s*:\s*(?:any|unknown)\b/u,
-    message: "String-keyed `any`/`unknown` dictionaries erase key and value evidence. Model the actual keys and values.",
+    // Only the `any` form. `Record<string, unknown>` is the safe idiom no-any
+    // points at, and structured-log context genuinely has no fixed key set.
+    pattern: /\bRecord\s*<\s*string\s*,\s*any\s*>|\{\s*\[\s*[\w$]+\s*:\s*string\s*\]\s*:\s*any\b/u,
+    message: "A string-keyed `any` dictionary erases key and value evidence. Model the actual keys and values.",
   },
   {
     name: "no-known-value-widening",
     tsOnly: true,
+    // A SCREAMING_SNAKE constant is annotated on purpose: the widened type is
+    // the published contract, and the literal type would be the wrong one.
+    skipLine: /\b(?:const|let)\s+[A-Z][A-Z0-9_]*\s*:/u,
     pattern: /\b(?:const|let)\s+[\w$]+\s*:\s*(?:string\s*=\s*["'`]|number\s*=\s*-?\d|boolean\s*=\s*(?:true|false)\b)/u,
     message: "Annotating a literal with its primitive type discards the known value. Let inference keep the literal, or use `as const`.",
   },
   {
     name: "no-reflect",
+    // Inside a Proxy trap, Reflect.get/apply forwarding the receiver is the
+    // documented correct implementation; direct access breaks getter `this`.
+    skipLine: /\breceiver\b|\bthisArg\b|\bnew Proxy\b/u,
     pattern: /\bReflect\s*\.\s*(?:get|apply)\s*\(/u,
     message: "`Reflect.get`/`Reflect.apply` bypass typed access. Use direct property access or a typed call.",
   },
@@ -330,8 +357,10 @@ const LINE_RULES = [
   },
   {
     name: "no-redundant-fallback",
-    pattern: /\?\?\s*undefined\b|\|\|\s*undefined\b/u,
-    message: "`?? undefined` / `|| undefined` is a no-op. Delete the fallback.",
+    // `|| undefined` is NOT a no-op: it maps "" and 0 to undefined, which is
+    // how optional fields get omitted from a payload. Only `??` is redundant.
+    pattern: /\?\?\s*undefined\b/u,
+    message: "`?? undefined` is a no-op — the value is already undefined when nullish. Delete the fallback.",
   },
   {
     name: "no-boolean-literal-compare",
@@ -374,7 +403,8 @@ function* iterateLineFindings(ctx) {
 
     for (const match of line.matchAll(SLOP_DECLARATION_PATTERN)) {
       const name = match[1];
-      if (SLOP_NAME_PATTERN.test(name)) {
+      const versioned = VERSIONED_NAME_PATTERN.exec(name);
+      if (SLOP_NAME_PATTERN.test(name) || (versioned && ctx.declaredNames.has(versioned[1]))) {
         yield {
           line: lineNumber,
           column: match.index + match[0].indexOf(name) + 1,
@@ -382,7 +412,7 @@ function* iterateLineFindings(ctx) {
           message: `"${name}" is named after the edit, not the domain. Rename it for its role and delete the version it replaced.`,
         };
       }
-      if (name.toLowerCase().includes("shape")) {
+      if (name.toLowerCase().includes("shape") && !SHAPE_DOMAIN_PATTERN.test(line)) {
         yield {
           line: lineNumber,
           column: match.index + match[0].indexOf(name) + 1,
@@ -392,24 +422,7 @@ function* iterateLineFindings(ctx) {
       }
     }
 
-    const typeofMatch = /\btypeof\s+[\w$.[\]]+\s*[!=]==?\s*["'`]/u.exec(line);
-    if (typeofMatch && !isInsideTypeGuard(ctx, index)) {
-      yield {
-        line: lineNumber,
-        column: typeofMatch.index + 1,
-        rule: "no-runtime-typeof",
-        message: "Runtime `typeof` checks outside a type guard patch over missing type evidence. Fix the type or parse at the boundary.",
-      };
-    }
   }
-}
-
-function isInsideTypeGuard(ctx, lineIndex) {
-  const lookBack = Math.max(0, lineIndex - 30);
-  for (let k = lineIndex; k >= lookBack; k -= 1) {
-    if (/\)\s*:\s*[\w$.[\]\s]*\bis\s+[\w$]/u.test(ctx.maskedLines[k])) return true;
-  }
-  return false;
 }
 
 function* iterateBlockFindings(ctx) {
@@ -446,9 +459,25 @@ function* iterateBlockFindings(ctx) {
   }
 }
 
+// `as` followed by something type-shaped and then a real terminator. Without
+// the terminator, English prose in JSX text ("served as static assets") and
+// every multi-word sentence containing "as" was reported as a type assertion.
+const TYPE_ASSERTION_PATTERN =
+  /([\w$]+)?\s*\bas\s+(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<[^<>]*>)?(?:\[\])*\s*(?=[;,)\]}=&|?:]|$)/u;
+
 function* iterateAssertionFindings(ctx) {
   if (!ctx.isTypeScript) return;
   const { maskedLines, comments, lineStarts } = ctx;
+
+  // Since TS 4.4 a catch binding is `unknown`, so narrowing it with `as Error`
+  // is the only way to read `.code`/`.message`. Demanding a SAFETY: comment on
+  // every catch block is noise, not evidence.
+  const catchBindings = new Map();
+  for (let index = 0; index < maskedLines.length; index += 1) {
+    const binding = /\bcatch\s*\(\s*([\w$]+)/u.exec(maskedLines[index]);
+    if (binding && !catchBindings.has(binding[1])) catchBindings.set(binding[1], index);
+  }
+
   const commentLines = new Set();
   for (const comment of comments) {
     if (/\bSAFETY\s*:/u.test(comment.text)) {
@@ -457,11 +486,23 @@ function* iterateAssertionFindings(ctx) {
       for (let l = line; l <= endLine; l += 1) commentLines.add(l);
     }
   }
+  // `import { readFile as read, ... }` spans lines; skipping only the line the
+  // keyword sits on left every aliased specifier below it flagged.
+  let inSpecifierList = false;
   for (let index = 0; index < maskedLines.length; index += 1) {
     const line = maskedLines[index];
-    if (/^\s*(?:import|export)\b/u.test(line)) continue;
-    const match = /\bas\s+(?!const\b|any\b|unknown\b)[A-Za-z_$]/u.exec(line);
+    if (inSpecifierList) {
+      if (line.includes("}")) inSpecifierList = false;
+      continue;
+    }
+    if (/^\s*(?:import|export)\b/u.test(line)) {
+      if (/\{[^}]*$/u.test(line)) inSpecifierList = true;
+      continue;
+    }
+    const match = TYPE_ASSERTION_PATTERN.exec(line);
     if (!match) continue;
+    const operand = match[1];
+    if (operand && catchBindings.has(operand) && catchBindings.get(operand) <= index) continue;
     const lineNumber = index + 1;
     const hasSafetyComment =
       commentLines.has(lineNumber) || commentLines.has(lineNumber - 1) ||
@@ -469,7 +510,7 @@ function* iterateAssertionFindings(ctx) {
     if (!hasSafetyComment) {
       yield {
         line: lineNumber,
-        column: match.index + 1,
+        column: match.index + (match[0].length - match[0].replace(/^\s*[\w$]*\s*/u, "").length) + 1,
         rule: "require-safety-comment-for-type-assertion",
         message: "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion, or remove it.",
       };
@@ -477,12 +518,18 @@ function* iterateAssertionFindings(ctx) {
   }
 }
 
+const TEST_FILE_PATTERN = /(?:^|[\\/])(?:__tests__|__mocks__|test|tests|fixtures)[\\/]|\.(?:test|spec)\.[cm]?[jt]sx?$/u;
+
 function* iterateCommentFindings(ctx) {
   const { comments, lineStarts, maskedLines, isTypeScript } = ctx;
+  const inTestFile = TEST_FILE_PATTERN.test(ctx.path);
   for (const comment of comments) {
     const position = offsetToPosition(lineStarts, comment.start);
     const body = comment.text.replace(/^\/\/+\s?|^\/\*+|\*+\/$/gu, "").replace(/^\s*\*\s?/gmu, "");
 
+    if (inTestFile && /\bmock\b/iu.test(body) && !/\b(?:placeholder|not implemented|TODO)\b/iu.test(body)) {
+      continue;
+    }
     if (FILLER_COMMENT_PATTERN.test(body)) {
       yield { ...position, rule: "no-filler-comments", message: "Filler comment: placeholder, simulation, or \"in a real app\" hand-waving. Ship the real thing or delete the comment and the code it excuses." };
       continue;
@@ -495,7 +542,7 @@ function* iterateCommentFindings(ctx) {
       yield { ...position, rule: "no-change-note-comments", message: "This comment describes the edit or appeases a tool, not the code. It is noise the moment the change lands; delete it." };
       continue;
     }
-    if (BACKCOMPAT_COMMENT_PATTERN.test(body)) {
+    if (BACKCOMPAT_COMMENT_PATTERN.test(body) && !/@deprecated/u.test(comment.text)) {
       yield { ...position, rule: "no-backcompat-comments", message: "Compatibility shims nobody asked for are dead code with a caption. Update the call sites and delete the alias, or justify why it must stay." };
       continue;
     }
@@ -514,13 +561,13 @@ function* iterateCommentFindings(ctx) {
     const words = (body.match(/[A-Za-z]{3,}/gu) ?? [])
       .map((word) => word.toLowerCase())
       .filter((word) => !IDENTIFIER_STOP_WORDS.has(word));
-    if (words.length < 2) continue;
+    if (words.length < 3) continue;
     for (let next = position.line; next < Math.min(position.line + 3, maskedLines.length); next += 1) {
       const codeLine = maskedLines[next];
       if (!codeLine?.trim() || /^\s*\/\//u.test(codeLine)) continue;
       const identifierWords = splitIdentifierWords(codeLine);
       const matched = words.filter((word) => identifierWords.has(word)).length;
-      const required = words.length <= 2 ? words.length : Math.max(2, words.length - 1);
+      const required = words.length;
       if (matched >= required) {
         yield { ...position, rule: "no-restating-comments", message: "This comment restates the identifiers on the next line. It adds no information; delete it." };
       }
@@ -532,8 +579,11 @@ function* iterateCommentFindings(ctx) {
 export function lintSource(source, filePath) {
   const extension = extname(filePath);
   const { masked, comments } = maskSource(source);
+  const declaredNames = new Set();
+  for (const match of masked.matchAll(SLOP_DECLARATION_PATTERN)) declaredNames.add(match[1]);
   const ctx = {
     path: filePath,
+    declaredNames,
     isTypeScript: TYPESCRIPT_EXTENSIONS.has(extension),
     masked,
     maskedLines: masked.split("\n"),
