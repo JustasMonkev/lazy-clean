@@ -46,5 +46,5 @@ this card points there instead of inventing one.
 
 ## Boundaries
 
-One-shot display. Edits nothing, changes no mode.
-"stop lazy" or "normal mode": revert.
+One-shot display. Edits nothing, changes no mode — and dismissing it does not
+turn lazy off; the active level is untouched.

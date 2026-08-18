@@ -13,7 +13,7 @@ write flag files, or persist anything.
 
 ## Levels
 
-| Level | Trigger | What change |
+| Level | Trigger | What changes |
 |-------|---------|-------------|
 | **Lite** | `/lazy lite` | Build what's asked, name the lazier alternative in one line. |
 | **Full** | `/lazy` | The ladder enforced: YAGNI → stdlib → native → one line → minimum. Default. |
@@ -31,10 +31,13 @@ Level sticks until changed or session end.
 | **lazy-debt** | `/lazy-debt` | Harvest `lazy:` shortcut comments into a tracked ledger. |
 | **lazy-gain** | `/lazy-gain` | Measured-impact scoreboard: less code, less cost, more speed. |
 | **lazy-help** | `/lazy-help` | This card. |
+| **lazy-clean** | `/lazy-clean` | Both passes on one change: the ladder while writing, the checker after. |
+| **slop-check** | `/slop-check` | Delete AI slop in TS/JS: bundled checker plus a manual checklist. |
 
-Codex uses `@lazy`, `@lazy-review`, and `@lazy-help`; Claude Code
-and OpenCode use the slash-command forms above (OpenCode ships all six as
-slash commands).
+Codex uses `@lazy`, `@lazy-review`, and `@lazy-help`; Claude Code uses the
+slash-command forms above. OpenCode ships the six `/lazy*` commands as slash
+commands; `lazy-clean` and `slop-check` are skills, invoked by name or
+description.
 
 ## Deactivate
 

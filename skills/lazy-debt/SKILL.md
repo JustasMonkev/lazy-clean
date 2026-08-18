@@ -17,7 +17,7 @@ can't quietly become permanent.
 Grep the repo for comment markers, skipping `node_modules`, `.git`, and build
 output:
 
-`grep -rnE '(#|//) ?lazy:' .`  (add other comment prefixes if your stack uses them)
+`grep -rnE --exclude-dir={node_modules,.git,dist,build,out,coverage} '(#|//|/\*|<!--|--) ?lazy:' .`
 
 Each hit is one ledger row. The comment prefix keeps prose that merely mentions
 the convention out of the ledger.
@@ -40,5 +40,5 @@ End with `<N> markers, <M> with no trigger.` Nothing found: `No lazy: debt. Clea
 ## Boundaries
 
 Reads and reports only, changes nothing. To persist it, ask and it writes the
-ledger to a file (e.g. `LAZY-DEBT.md`). One-shot. "stop lazy-debt" or
-"normal mode" to revert.
+ledger to a file (e.g. `LAZY-DEBT.md`) in the same row format as the report.
+One-shot — it sets no mode, so there is nothing to revert.

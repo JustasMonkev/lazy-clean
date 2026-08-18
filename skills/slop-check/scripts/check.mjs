@@ -8,12 +8,13 @@
  *   node check.mjs [paths...] [--json]
  *
  * With no paths it scans the current directory recursively. Exit code 1 when
- * findings exist, 0 when clean. Findings are heuristic review prompts, not
- * verdicts: fix real slop, and leave genuine false positives alone with a
- * short justification instead of contorting the code.
+ * findings exist, 2 when a path could not be read, 0 when clean. Findings are
+ * heuristic review prompts, not verdicts: fix real slop, and leave genuine
+ * false positives alone with a short justification instead of contorting the
+ * code.
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { extname, join, relative } from "node:path";
+import { extname, isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"]);
@@ -553,38 +554,56 @@ export function lintSource(source, filePath) {
 // CLI
 // ---------------------------------------------------------------------------
 
-function collectFiles(entry, files) {
+function collectFiles(entry, scan) {
   let stats;
   try {
     stats = statSync(entry);
   } catch {
     console.error(`slop-check: cannot read ${entry}`);
+    scan.unreadable += 1;
     return;
   }
   if (stats.isDirectory()) {
     for (const name of readdirSync(entry)) {
       if (SKIPPED_DIRECTORIES.has(name)) continue;
-      collectFiles(join(entry, name), files);
+      collectFiles(join(entry, name), scan);
     }
     return;
   }
   if (!stats.isFile() || stats.size > MAX_FILE_BYTES) return;
   if (!SOURCE_EXTENSIONS.has(extname(entry)) || entry.endsWith(".d.ts")) return;
-  files.push(entry);
+  // The same file can arrive twice (listed explicitly and again via its
+  // directory); linting it twice would double every finding and the count.
+  const key = resolve(entry);
+  if (scan.seen.has(key)) return;
+  scan.seen.add(key);
+  scan.files.push(entry);
+}
+
+// The printed path mirrors what the caller passed in: absolute stays absolute.
+// Rewriting every path relative to cwd turned /tmp/x.ts into tmp/x.ts when run
+// from /, and ../../x.ts for anything outside cwd — neither is what the caller
+// (often a hook passing an absolute file path) asked about.
+function displayPath(file) {
+  return isAbsolute(file) ? file : relative(process.cwd(), file) || file;
 }
 
 function main() {
   const args = process.argv.slice(2);
   const json = args.includes("--json");
-  const targets = args.filter((arg) => !arg.startsWith("--"));
-  const files = [];
-  for (const target of targets.length > 0 ? targets : ["."]) {
-    collectFiles(target, files);
+  const targets = args.filter((arg) => !arg.startsWith("-"));
+  for (const arg of args) {
+    if (arg.startsWith("-") && arg !== "--json") console.error(`slop-check: ignoring unknown option ${arg}`);
   }
+  const scan = { files: [], seen: new Set(), unreadable: 0 };
+  for (const target of targets.length > 0 ? targets : ["."]) {
+    collectFiles(target, scan);
+  }
+  const { files } = scan;
 
   const findings = [];
   for (const file of files) {
-    findings.push(...lintSource(readFileSync(file, "utf8"), relative(process.cwd(), file) || file));
+    findings.push(...lintSource(readFileSync(file, "utf8"), displayPath(file)));
   }
 
   if (json) {
@@ -599,7 +618,9 @@ function main() {
         : `slop-check: ${findings.length} finding${findings.length === 1 ? "" : "s"} in ${files.length} file${files.length === 1 ? "" : "s"}`,
     );
   }
-  process.exitCode = findings.length > 0 ? 1 : 0;
+  // 2 = the scan itself failed, so "no findings" is not a clean bill of health.
+  if (scan.unreadable > 0) process.exitCode = 2;
+  else process.exitCode = findings.length > 0 ? 1 : 0;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
