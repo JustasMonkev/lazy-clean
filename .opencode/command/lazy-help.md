@@ -1,0 +1,5 @@
+---
+description: Quick reference for lazy levels, skills, and commands
+---
+
+Show the lazy quick reference. One shot, change nothing: do not switch mode, write flag files, or persist anything. Levels: /lazy lite (build what's asked, name the lazier alternative in one line), /lazy (full, the default ladder: YAGNI then stdlib then native then one line then minimum), /lazy ultra (deletion before addition, challenges the requirement before building). Commands: /lazy-review (over-engineering review of the current changes), /lazy-audit (whole-repo over-engineering audit), /lazy-debt (harvest lazy: comments into a tracked ledger), /lazy-gain (measured-impact scoreboard from the benchmark), /lazy-help (this card). Deactivate with 'stop lazy', 'normal mode', or /lazy off; resume anytime with /lazy. Default mode is full; change it with the LAZY_DEFAULT_MODE environment variable (off|lite|full|ultra) or a config file at ~/.config/lazy/config.json (Windows: %APPDATA%\lazy\config.json) with {"defaultMode": "lite"}. Resolution order: env var, then config file, then full.
