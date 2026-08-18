@@ -813,7 +813,11 @@ function collectFiles(entry, scan) {
     return;
   }
   if (!stats.isFile() || stats.size > MAX_FILE_BYTES) return;
-  if (!SOURCE_EXTENSIONS.has(extname(entry)) || entry.endsWith(".d.ts")) return;
+  // Case-insensitive: on a case-insensitive filesystem the PostToolUse hook
+  // accepts PROBE.TS and spawns the checker, which then silently scanned
+  // nothing and reported clean.
+  const suffix = extname(entry).toLowerCase();
+  if (!SOURCE_EXTENSIONS.has(suffix) || entry.toLowerCase().endsWith(".d.ts")) return;
   // The same file can arrive twice (listed explicitly and again via its
   // directory); linting it twice would double every finding and the count.
   const key = resolve(entry);

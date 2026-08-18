@@ -104,10 +104,10 @@ function finish() {
 process.stdin.on('data', chunk => {
   input += chunk;
   // Bound stdin: a hook payload can carry a whole Write, never 32MB+.
-  if (input.length > 32e6) { finish(); process.exit(0); }
+  if (input.length > 32e6) { finish(); process.stdin.destroy(); }
 });
 // No exit() after the write: stdout to a pipe is async, exit() would truncate it.
 process.stdin.on('end', finish);
 // Never hang the session: same never-block contract as the lazy hooks.
-process.stdin.on('error', () => { finish(); process.exit(0); });
-setTimeout(() => { if (!done) { finish(); process.exit(0); } }, 1000).unref();
+process.stdin.on('error', () => { finish(); process.stdin.destroy(); });
+setTimeout(() => { if (!done) { finish(); process.stdin.destroy(); } }, 1000).unref();

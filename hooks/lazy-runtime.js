@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { getClaudeDir, getConfigDir } = require('./lazy-config');
+const { getClaudeDir, getConfigDir, normalizePersistedMode } = require('./lazy-config');
 
 const STATE_FILE = '.lazy-active';
 
@@ -42,7 +42,10 @@ function clearMode() {
 // Live mode written by activate/mode-tracker. Absent flag = lazy off.
 function readMode() {
   try {
-    return fs.readFileSync(statePath, 'utf8').trim() || null;
+    // The flag file is on disk and hand-editable; anything that is not a level
+    // is not a level. It used to reach the statusline verbatim, so a file
+    // holding escape sequences printed them straight into the prompt.
+    return normalizePersistedMode(fs.readFileSync(statePath, 'utf8').trim());
   } catch (e) {
     return null;
   }

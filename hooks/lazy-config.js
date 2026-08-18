@@ -48,7 +48,10 @@ function isDeactivationCommand(text) {
 // to manual setup instead. Allows : \ / for normal Windows and POSIX paths. Full
 // per-shell escaper only if a real need appears.
 function isShellSafe(p) {
-  return typeof p === 'string' && /^[A-Za-z0-9 _.\-:/\\~]+$/.test(p);
+  // Accented and CJK usernames are ordinary path characters, not shell
+  // metacharacters; the ASCII-only allowlist sent most non-English-locale
+  // installs down the manual-setup branch.
+  return typeof p === 'string' && /^[\p{L}\p{N} _.\-:/\\~]+$/u.test(p);
 }
 
 function getConfigDir() {
@@ -75,7 +78,7 @@ function getClaudeDir() {
 
 function getDefaultMode() {
   // 1. Environment variable (highest priority)
-  const envMode = process.env.LAZY_DEFAULT_MODE;
+  const envMode = (process.env.LAZY_DEFAULT_MODE || '').trim();
   // lazy: a default must be a runtime level (off/lite/full/ultra); review is
   // a session-only mode, never a valid default (#377). Validate against
   // RUNTIME_MODES so a stray env var or config can't make review the default.

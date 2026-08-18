@@ -40,6 +40,7 @@ function finish() {
 
       let mode = null;
       let isReportOnly = false;
+      let handled = false;
 
       if (cmd === '/lazy-review' || cmd === '/lazy:lazy-review') {
         mode = 'review';
@@ -51,28 +52,44 @@ function finish() {
         if (arg === 'default') {
           const dmode = parts[2];
           if (dmode === 'off' || dmode === 'lite' || dmode === 'full' || dmode === 'ultra') {
-            writeDefaultMode(dmode);
-            writeHookOutput('UserPromptSubmit', dmode, 'LAZY DEFAULT SET — new sessions start in ' + dmode + '.');
+            // A failed write must say so: silently doing nothing looks like it
+            // worked until the next session starts in the old mode.
+            try {
+              writeDefaultMode(dmode);
+              writeHookOutput('UserPromptSubmit', dmode, 'LAZY DEFAULT SET — new sessions start in ' + dmode + '.');
+            } catch (e) {
+              writeHookOutput('UserPromptSubmit', readMode(), 'LAZY: could not write the default (' + e.message + ').');
+            }
+          } else {
+            writeHookOutput('UserPromptSubmit', readMode(), 'LAZY: ' + (dmode ? '"' + dmode + '" is not' : 'a default level is required —') + ' one of off|lite|full|ultra.');
           }
-          return; // don't fall through to the session-mode switch
-        }
-        if (arg === 'lite') mode = 'lite';
+          handled = true; // don't fall through to the session-mode switch
+        } else if (arg === 'lite') mode = 'lite';
         else if (arg === 'full') mode = 'full';
         else if (arg === 'ultra') mode = 'ultra';
         else if (arg === 'off') mode = 'off';
         else if (arg === '') {
+          // Report what is live, never what the config would start. Reporting
+          // the default said "ACTIVE — level: full" while the flag was absent,
+          // so the model believed lazy was on and every subagent saw it off.
           isReportOnly = true;
-          mode = readMode() || getDefaultMode();
-        } else {
-          mode = getDefaultMode();
+          mode = readMode();
+        } else if (!handled) {
+          // An unrecognized level used to fall back to the default, silently
+          // downgrading an ultra session — or turning lazy off outright when
+          // the default was off.
+          writeHookOutput('UserPromptSubmit', readMode(), 'LAZY: unknown level "' + arg + '" — use lite|full|ultra|off.');
+          handled = true;
         }
       }
 
-      if (isReportOnly) {
+      if (handled) {
+        modeSwitched = false;
+      } else if (isReportOnly) {
         writeHookOutput(
           'UserPromptSubmit',
-          mode,
-          'LAZY MODE ACTIVE — level: ' + mode,
+          mode || 'off',
+          mode ? 'LAZY MODE ACTIVE — level: ' + mode : 'LAZY MODE OFF — start with /lazy lite|full|ultra.',
         );
       } else if (mode && mode !== 'off') {
         setMode(mode);
@@ -132,7 +149,7 @@ function finish() {
 process.stdin.on('data', chunk => {
   input += chunk;
   // Bound stdin: no real hook payload approaches 32MB; a runaway pipe would OOM the string.
-  if (input.length > 32e6) { finish(); process.exit(0); }
+  if (input.length > 32e6) { finish(); process.stdin.destroy(); }
 });
 process.stdin.on('end', finish);
 
@@ -143,5 +160,5 @@ process.stdin.on('end', finish);
 // mode if data came without EOF) and exit. unref() keeps the timer from adding
 // latency to the normal path, where 'end' fires first. Mirrors the best-effort,
 // never-block contract the other lifecycle hooks already follow.
-process.stdin.on('error', () => { finish(); process.exit(0); });
-setTimeout(() => { finish(); process.exit(0); }, 1000).unref();
+process.stdin.on('error', () => { finish(); process.stdin.destroy(); });
+setTimeout(() => { finish(); process.stdin.destroy(); }, 1000).unref();
