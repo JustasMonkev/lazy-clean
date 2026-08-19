@@ -1117,8 +1117,37 @@ for (const [name, body] of [["an empty", ""], ["an invalid", "nonsense"]]) {
   const state = path.join(box.env.XDG_CONFIG_HOME, "opencode", ".lazy-active");
   fs.mkdirSync(path.dirname(state), { recursive: true });
   fs.writeFileSync(state, "ultra");
-  opencodeCommand("default lite", box.env.XDG_CONFIG_HOME);
-  eq("/lazy default leaves a valid session level alone", fs.readFileSync(state, "utf8"), "ultra");
+  const res = opencodeCommand("default lite", box.env.XDG_CONFIG_HOME);
+  // The stored level is CLEARED. statePath is one global file with no session
+  // boundary, so a level stored by any chat, ever, outranked the config from
+  // then on -- `/lazy default` saved a value that could never take effect.
+  // readFileSync here would throw and abort the whole suite, so existsSync.
+  ok("/lazy default clears a stored level so the default can apply",
+    !fs.existsSync(state), fs.existsSync(state) ? fs.readFileSync(state, "utf8") : "");
+  ok("/lazy default says which level it cleared",
+    Array.isArray(res.logs) && res.logs.some((l) => /cleared the stored ultra level/.test(l.message)),
+    JSON.stringify(res.logs));
+}
+
+// The whole point, end to end: an explicit level in one chat must not make the
+// default unreachable in every later one.
+{
+  const box = freshHome("opencode-default-reachable");
+  fs.mkdirSync(path.join(box.env.XDG_CONFIG_HOME, "lazy"), { recursive: true });
+  fs.writeFileSync(path.join(box.env.XDG_CONFIG_HOME, "lazy", "config.json"), JSON.stringify({ defaultMode: "full" }));
+  opencodeCommand("lite", box.env.XDG_CONFIG_HOME);
+  opencodeCommand("default ultra", box.env.XDG_CONFIG_HOME);
+  const later = spawnSync(process.execPath, ["--input-type=module", "-e", `
+    import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, ".opencode", "plugins", "lazy.mjs")).href)};
+    const hooks = await plugin({ client: { app: { log: async () => {} } } });
+    const out = { system: [] };
+    await hooks["experimental.chat.system.transform"]({}, out);
+    console.log(JSON.stringify(out.system.join("\\n")));
+  `], { encoding: "utf8", env: baseEnv(box.env), timeout: 20000 });
+  const injected = later.status === 0 ? JSON.parse(later.stdout.trim()) : "";
+  ok("a later chat reaches the new default after an explicit level was set",
+    /level: ultra/.test(injected) && !/level: lite/.test(injected),
+    later.stderr.slice(0, 200) || injected.slice(0, 200));
 }
 
 // `/lazy default` is about later sessions. With no state file, readMode()
@@ -1183,15 +1212,20 @@ ok("a failed default write leaves no state file behind",
   !fs.existsSync(ocBlockedState),
   fs.existsSync(ocBlockedState) ? fs.readFileSync(ocBlockedState, "utf8") : "<no state file>");
 
-// An explicit level is the user's choice for this session; leave it be.
+// A stored level cannot be attributed to the chat running the command -- the
+// global file does not record who wrote it -- so `/lazy default` clears it and
+// reports that, rather than preserving an unattributable level at the price of
+// the command never taking effect.
 const ocPinned = freshHome("opencode-pinned");
 const ocPinnedState = path.join(ocPinned.env.XDG_CONFIG_HOME, "opencode", ".lazy-active");
 fs.mkdirSync(path.dirname(ocPinnedState), { recursive: true });
 fs.writeFileSync(ocPinnedState, "lite");
 const ocHeld = opencodeCommand("default ultra", ocPinned.env.XDG_CONFIG_HOME);
-eq("/lazy default does not overwrite an explicit session level", fs.readFileSync(ocPinnedState, "utf8"), "lite");
-ok("/lazy default does not claim to move a chat holding its own level",
-  Array.isArray(ocHeld.logs) && ocHeld.logs.some((l) => l.message === "lazy default ultra"),
+ok("/lazy default clears the stored level rather than being shadowed by it",
+  !fs.existsSync(ocPinnedState),
+  fs.existsSync(ocPinnedState) ? fs.readFileSync(ocPinnedState, "utf8") : "");
+ok("/lazy default names the level it cleared",
+  Array.isArray(ocHeld.logs) && ocHeld.logs.some((l) => /cleared the stored lite level/.test(l.message)),
   JSON.stringify(ocHeld.logs));
 
 // A file whose name starts with `-` is an unknown option to the checker, which

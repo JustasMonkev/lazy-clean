@@ -735,9 +735,10 @@ const LINE_RULES = [
     // the reference -- telling an agent to rewrite correct code, which is the
     // worst thing this checker can do. Distinguishing the reference from a type
     // needs scope analysis; noticing that the file binds the name at all does
-    // not. Such a file loses `no-any` coverage, which is the cheaper mistake:
+    // not -- as a declaration, or as a PARAMETER, which declaredNames alone
+    // does not see. Such a file loses `no-any` coverage, which is the cheaper mistake:
     // one where the rule stays quiet rather than one where it is wrong.
-    skipFile: (ctx) => ctx.declaredNames.has("any"),
+    skipFile: (ctx) => ctx.bindsAny,
     pattern: /(?<![\w$.#])any(?![\w$])(?!\s*[(:])/u,
     message: "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
   },
@@ -894,13 +895,17 @@ const LINE_RULES = [
     // The matcher is captured because polarity decides the answer for the
     // argumentless ones: `expect(false).toBeTruthy()` is not a tautology, it is
     // a test that always FAILS — a different defect, and not this rule's.
-    pattern: /\bexpect\s*\(\s*(true|false|\d+|"[^"\n]*"|'[^'\n]*')\s*\)\s*\.\s*(toBe|toEqual|toStrictEqual|toBeTruthy|toBeFalsy)\s*\(\s*(\1)?\s*\)/du,
+    // `-1` and `1.5` are ordinary numeric literals and were not in the class,
+    // so `expect(-1).toBe(-1)` was reported clean while `expect(4).toBe(4)`
+    // was reported. The backreference does the comparing, so widening the
+    // literal cannot make two DIFFERENT numbers look tautological.
+    pattern: /\bexpect\s*\(\s*(true|false|-?\d+(?:\.\d+)?|"[^"\n]*"|'[^'\n]*')\s*\)\s*\.\s*(toBe|toEqual|toStrictEqual|toBeTruthy|toBeFalsy)\s*\(\s*(\1)?\s*\)/du,
     verify: (match, rawLine) => {
       const literal = rawLine.slice(...match.indices[1]);
       if (match[2] === "toBeTruthy" || match[2] === "toBeFalsy") {
         // Only a literal, so its truthiness is decidable here: an empty string,
         // `0` and `false` are the falsy ones this rule can see.
-        const truthy = !(literal === "false" || /^0+(?:\.0+)?$/u.test(literal) || /^(["'])\1$/u.test(literal));
+        const truthy = !(literal === "false" || /^-?0+(?:\.0+)?$/u.test(literal) || /^(["'])\1$/u.test(literal));
         return truthy === (match[2] === "toBeTruthy");
       }
       return match.indices[3] !== undefined &&
@@ -915,6 +920,14 @@ const LINE_RULES = [
   },
 ];
 
+// `any` bound as a PARAMETER. Two shapes, and the split is what keeps a generic
+// argument out: after `(`, where a type argument cannot be, or anywhere with a
+// `:` after it, which a type argument never has. Accepting `,` on both sides
+// silenced a whole file over `MakeMatchers<Promise<R>, any, Extended>` -- a
+// middle type argument has commas either side, exactly like a later parameter.
+// The residual gap is an untyped later parameter (`f(a, any)`), which loses
+// nothing: it silences less, never more.
+const PARAMETER_ANY = /\(\s*any\s*(?=[:,)=])|[(,]\s*any\s*(?=:)/u;
 const SLOP_DECLARATION_PATTERN = /\b(?:function|const|let|var|class|interface|type|enum)\s+([\w$]+)/gu;
 
 function* iterateLineFindings(ctx) {
@@ -1132,6 +1145,14 @@ function typeEnd(text, pos) {
     // the parameter list and the terminator check would reject the whole thing.
     const arrow = at(ARROW_AT, text, closed);
     return arrow === -1 ? closed : typeEnd(text, arrow);
+  }
+  // A template-literal type: `raw as `user:${string}``. Masking blanks the text
+  // but keeps both backticks, and a `${...}` hole stays code, so the closing
+  // backtick is still findable -- the type just ends at it. Without this the
+  // scan found no type at all and the assertion went unreported.
+  if (text[k] === "`") {
+    const close = text.indexOf("`", k + 1);
+    return close === -1 ? -1 : close + 1;
   }
   // Masking blanks a string's contents but keeps its quotes, so `as "ready"`
   // still has the shape of a literal type here.
@@ -1675,9 +1696,15 @@ export function lintSource(rawSource, filePath) {
   const { masked, comments } = maskSource(source, { jsx: JSX_EXTENSIONS.has(extension) });
   const declaredNames = new Set();
   for (const match of masked.matchAll(SLOP_DECLARATION_PATTERN)) declaredNames.add(match[1]);
+  // `any` bound as a VALUE somewhere in this file: after a declaration keyword,
+  // or as a parameter. `function pick(any: number)` is a legal binding and the
+  // declaration-keyword set does not cover parameter lists, so the reference in
+  // its body was still reported as the type.
+  const bindsAny = declaredNames.has("any") || PARAMETER_ANY.test(masked);
   const ctx = {
     path: filePath,
     declaredNames,
+    bindsAny,
     isTypeScript: TYPESCRIPT_EXTENSIONS.has(extension),
     // TS but not TSX: in a .tsx file `<User>` opens an element, not an assertion.
     angleAssertions: TYPESCRIPT_EXTENSIONS.has(extension) && !JSX_EXTENSIONS.has(extension),

@@ -441,6 +441,41 @@ expectNoRule(
   'const { PORT = "3000", DEBUG = "1" } = process.env;',
   "no-env-secret-fallback",
 );
+// A template-literal TYPE. Masking blanks the text but keeps both backticks,
+// so the type ends at the closing one; without this the scan found no type at
+// all and the assertion went unreported.
+expectRule(
+  "flags an assertion to a template-literal type",
+  "const key = raw as `user:${string}`;",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "flags an assertion to a plain template-literal type",
+  "const key = raw as `fixed`;",
+  "require-safety-comment-for-type-assertion",
+);
+// A runtime template is still not a type assertion.
+expectNoRule(
+  "a runtime template after as-shaped prose is not an assertion",
+  "const msg = `served as static assets`;",
+  "require-safety-comment-for-type-assertion",
+);
+
+// A PARAMETER named `any` is a value binding too. declaredNames only collects
+// names after a declaration keyword, so the reference in the body was reported
+// as the type -- the same false positive as `const any`, one binding form over.
+expectNoRule("a parameter named any silences the rule for the file", "function pick(any: number) { return any + 1; }", "no-any");
+expectNoRule("an arrow parameter named any counts too", "const f = (any: number) => any + 1;", "no-any");
+// ...and a generic argument is not a parameter binding, so coverage stays.
+expectRule("a later generic argument is not a parameter binding", "type Cache = Map<string, any>;", "no-any");
+expectRule("an annotation is still reported beside ordinary parameters", "function pick(value: any) { return value; }", "no-any");
+
+// `-1` and `1.5` are ordinary numeric literals. The backreference does the
+// comparing, so widening the class cannot make two different numbers tautological.
+expectRule("flags a negative tautological assertion", "expect(-1).toBe(-1);", "no-tautological-assertion", "sample.test.ts");
+expectRule("flags a decimal tautological assertion", "expect(1.5).toEqual(1.5);", "no-tautological-assertion", "sample.test.ts");
+expectNoRule("two different numbers are not tautological", "expect(-1).toBe(-2);", "no-tautological-assertion", "sample.test.ts");
+expectRule("a negative zero is still falsy for toBeFalsy", "expect(-0).toBeFalsy();", "no-tautological-assertion", "sample.test.ts");
 expectRule("flags a string-literal type assertion", 'const a = payload as "ready";', "require-safety-comment-for-type-assertion");
 expectRule("flags a numeric-literal type assertion", "const a = payload as 42;", "require-safety-comment-for-type-assertion");
 expectRule('flags an indexed-access assertion', 'const a = payload as User["id"];', "require-safety-comment-for-type-assertion");
