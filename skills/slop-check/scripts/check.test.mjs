@@ -171,6 +171,25 @@ expectNoRule(
 // Object and tuple types nest, and a literal type has no name at all.
 expectRule("flags a nested object-literal assertion", "const a = payload as { user: { id: string } };", "require-safety-comment-for-type-assertion");
 expectRule("flags a nested tuple assertion", "const a = payload as [string, [number, number]];", "require-safety-comment-for-type-assertion");
+// An argumentless matcher is a tautology only in one polarity:
+// `expect(false).toBeTruthy()` always FAILS, which is a different defect.
+expectNoRule("allows a failing truthiness assertion", "expect(false).toBeTruthy();", "no-tautological-assertion", "sample.test.ts");
+expectNoRule("allows a failing falsiness assertion", "expect(true).toBeFalsy();", "no-tautological-assertion", "sample.test.ts");
+expectNoRule("allows a failing zero truthiness assertion", "expect(0).toBeTruthy();", "no-tautological-assertion", "sample.test.ts");
+expectRule("flags a passing truthiness assertion", "expect(true).toBeTruthy();", "no-tautological-assertion", "sample.test.ts");
+expectRule("flags a passing falsiness assertion", "expect(0).toBeFalsy();", "no-tautological-assertion", "sample.test.ts");
+// A file caught mid-edit: the text after an unterminated quote is still string
+// contents, and leaving it bare invented an assertion the file does not have.
+expectNoRule(
+  "does not read an unterminated string as code",
+  'const message = "value as User',
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "still checks the code below an unterminated string",
+  'const message = "value as User\nconst real = payload as User;',
+  "require-safety-comment-for-type-assertion",
+);
 expectRule("flags a string-literal type assertion", 'const a = payload as "ready";', "require-safety-comment-for-type-assertion");
 expectRule("flags a numeric-literal type assertion", "const a = payload as 42;", "require-safety-comment-for-type-assertion");
 expectRule('flags an indexed-access assertion', 'const a = payload as User["id"];', "require-safety-comment-for-type-assertion");
@@ -789,6 +808,16 @@ const nullish = lintSource("const value = input ?? undefined;", "sample.ts");
 assert.equal(nullish[0].severity, "review");
 assert.match(nullish[0].message, /can be `null`/u);
 console.log("ok   ?? undefined is a review finding, not a mechanical one");
+
+// structuredClone THROWS on a function where the JSON round-trip silently drops
+// it, so the message must not read as "swap this in and keep everything".
+{
+  const clone = lintSource("const copy = JSON.parse(JSON.stringify(state));", "sample.ts")
+    .find((f) => f.rule === "no-json-clone");
+  assert.match(clone.message, /THROWS on a function/u);
+  assert.doesNotMatch(clone.message, /keeps those/u);
+  console.log("ok   no-json-clone does not promise structuredClone keeps functions");
+}
 
 // The mechanical tier means "this exact replacement preserves behaviour". Three
 // rules were sure the code was wrong but could not name such a replacement, and

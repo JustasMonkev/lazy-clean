@@ -44,65 +44,86 @@ else
             *) config="$HOME/.config/lazy/config.json" ;;
         esac
     fi
-    # Root-level only, and a real scan rather than a substring match: a nested
-    # `{"nested":{"hideStatus":true}}`, or the same bytes inside a string value,
-    # used to hide a badge that getHideStatus() — which reads only
-    # `config.hideStatus` — leaves showing. awk keeps the no-node-per-prompt
-    # property the grep was there for.
+    # A real JSON validator, not a scan for the key: getHideStatus() hides the
+    # badge only when JSON.parse SUCCEEDS and `config.hideStatus` is exactly
+    # true, so anything less than full validation disagrees somewhere. Three
+    # passes of partial checks each left another hole — a nested key, a value
+    # with trailing garbage, then leading garbage — so this parses the document
+    # and rejects whatever is not JSON. awk keeps the no-node-per-prompt
+    # property the original grep was there for.
     #
-    # It has to agree with JSON.parse on the ways a file can be wrong, not just
-    # on where the key sits: a value that is not followed by `,` or `}` means the
-    # document does not parse (`{"hideStatus":true garbage}`), unbalanced braces
-    # or an unterminated string mean the same, and a duplicated root key resolves
-    # to the LAST one, as JSON.parse does. Anything invalid shows the badge,
-    # which is the direction that cannot hide a badge the user never hid.
+    # Failing to parse shows the badge, matching getHideStatus()'s own catch,
+    # and that is the safe direction: it cannot hide a badge nobody hid.
     if [ -f "$config" ]; then
         hidden=$(awk 'BEGIN { RS = "\x01" }
-            {
-                n = length($0); depth = 0; i = 1; result = 0; invalid = 0; seenRoot = 0
-                while (i <= n) {
-                    c = substr($0, i, 1)
-                    if (c == "\"") {
-                        j = i + 1; tok = ""; closed = 0
-                        while (j <= n) {
-                            d = substr($0, j, 1)
-                            if (d == "\\") { j += 2; tok = tok "\\"; continue }
-                            if (d == "\"") { closed = 1; break }
-                            tok = tok d; j++
-                        }
-                        if (!closed) { invalid = 1; break }
-                        if (depth == 1 && tok == "hideStatus") {
-                            k = j + 1
-                            while (k <= n && substr($0, k, 1) ~ /[ \t\r\n]/) k++
-                            if (substr($0, k, 1) == ":") {
-                                k++
-                                while (k <= n && substr($0, k, 1) ~ /[ \t\r\n]/) k++
-                                seenRoot = 1
-                                if (substr($0, k, 4) == "true") {
-                                    k += 4
-                                    while (k <= n && substr($0, k, 1) ~ /[ \t\r\n]/) k++
-                                    e = substr($0, k, 1)
-                                    if (e != "," && e != "}") { invalid = 1; break }
-                                    result = 1; i = k; continue
-                                }
-                                result = 0
-                            }
-                        }
-                        i = j + 1; continue
-                    }
-                    if (c == "{" || c == "[") depth++
-                    else if (c == "}" || c == "]") { depth--; if (depth < 0) { invalid = 1; break } }
-                    else if (c == ",") {
-                        # A trailing comma is not JSON, and JSON.parse rejects
-                        # the whole document over it.
-                        k = i + 1
-                        while (k <= n && substr($0, k, 1) ~ /[ \t\r\n]/) k++
-                        e = substr($0, k, 1)
-                        if (e == "}" || e == "]" || e == "") { invalid = 1; break }
-                    }
-                    i++
+            function ws() { while (i <= n && substr(s, i, 1) ~ /[ \t\r\n]/) i++ }
+            function str(   j, out, d) {
+                j = i + 1; out = ""
+                while (j <= n) {
+                    d = substr(s, j, 1)
+                    if (d == "\\") { out = out substr(s, j, 2); j += 2; continue }
+                    if (d == "\"") { i = j + 1; tok = out; return 1 }
+                    if (d == "\n") return 0
+                    out = out d; j++
                 }
-                if (!invalid && depth == 0 && seenRoot && result) print "hide"
+                return 0
+            }
+            function scalar(   j) {
+                if (substr(s, i, 1) == "\"") return str()
+                if (substr(s, i, 4) == "true")  { i += 4; lit = "true";  return 1 }
+                if (substr(s, i, 5) == "false") { i += 5; lit = "false"; return 1 }
+                if (substr(s, i, 4) == "null")  { i += 4; lit = "null";  return 1 }
+                j = i
+                if (substr(s, j, 1) == "-") j++
+                if (substr(s, j, 1) !~ /[0-9]/) return 0
+                while (j <= n && substr(s, j, 1) ~ /[0-9.eE+-]/) j++
+                i = j; lit = "num"; return 1
+            }
+            function value(   c) {
+                c = substr(s, i, 1)
+                if (c == "{") return object(0)
+                if (c == "[") return array()
+                lit = ""
+                return scalar()
+            }
+            function array(   c) {
+                i++; ws()
+                if (substr(s, i, 1) == "]") { i++; return 1 }
+                while (1) {
+                    ws(); if (!value()) return 0
+                    ws(); c = substr(s, i, 1)
+                    if (c == ",") { i++; continue }
+                    if (c == "]") { i++; return 1 }
+                    return 0
+                }
+            }
+            function object(root,   c, key) {
+                i++; ws()
+                if (substr(s, i, 1) == "}") { i++; return 1 }
+                while (1) {
+                    ws()
+                    if (substr(s, i, 1) != "\"") return 0
+                    if (!str()) return 0
+                    key = tok
+                    ws(); if (substr(s, i, 1) != ":") return 0
+                    i++; ws()
+                    if (!value()) return 0
+                    # Root only, and the LAST occurrence wins, as JSON.parse does.
+                    if (root && key == "hideStatus") result = (lit == "true")
+                    ws(); c = substr(s, i, 1)
+                    if (c == ",") { i++; continue }
+                    if (c == "}") { i++; return 1 }
+                    return 0
+                }
+            }
+            {
+                s = $0; n = length(s); i = 1; result = 0
+                ws()
+                if (substr(s, i, 1) != "{") exit
+                if (!object(1)) exit
+                ws()
+                if (i <= n) exit        # trailing anything means it is not one document
+                if (result) print "hide"
             }' "$config" 2>/dev/null)
         [ "$hidden" = "hide" ] && exit 0
     fi

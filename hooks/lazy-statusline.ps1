@@ -31,10 +31,15 @@ if ($null -ne $env:LAZY_HIDE_STATUS) {
     $Config = Join-Path (Join-Path $ConfigDir "lazy") "config.json"
     if (Test-Path -LiteralPath $Config) {
         try {
+            # PowerShell member access is case-INsensitive, so `.hideStatus`
+            # answered for a `HideStatus` key that getHideStatus() ignores. Match
+            # the property name with -ceq instead, and take the last if a
+            # document somehow carries two.
+            $Parsed = Get-Content -LiteralPath $Config -Raw -ErrorAction Stop | ConvertFrom-Json
+            $Prop = $Parsed.PSObject.Properties | Where-Object { $_.Name -ceq 'hideStatus' } | Select-Object -Last 1
             # -is [bool] first: PowerShell's -eq coerces, so the string "true"
             # would hide the badge where getHideStatus() requires strictly true.
-            $Hide = (Get-Content -LiteralPath $Config -Raw -ErrorAction Stop | ConvertFrom-Json).hideStatus
-            if ($Hide -is [bool] -and $Hide) { exit 0 }
+            if ($null -ne $Prop -and $Prop.Value -is [bool] -and $Prop.Value) { exit 0 }
         } catch {
             # Unreadable or invalid config: show the badge rather than vanish.
         }

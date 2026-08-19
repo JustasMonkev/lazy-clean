@@ -113,8 +113,14 @@ export default async ({ client } = {}) => {
         // switch off the session that ran it — a command about later sessions
         // silently changed this one.
         const live = readMode();
+        // Not existsSync: readMode() falls back to the default for an empty or
+        // invalid file just as it does for a missing one, so those need the pin
+        // too. The question is whether a valid level is persisted, not whether
+        // a file is there.
+        let persistedLevel = null;
+        try { persistedLevel = normalizeMode(fs.readFileSync(statePath, 'utf8').trim()); } catch (e) { /* no state yet */ }
         try {
-          if (!fs.existsSync(statePath)) writeMode(live);
+          if (!persistedLevel) writeMode(live);
         } catch (e) {
           // Writing the default anyway would move this session's level, which is
           // the one thing the pin exists to prevent — and the state directory

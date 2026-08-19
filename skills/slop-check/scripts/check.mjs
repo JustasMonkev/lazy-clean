@@ -299,7 +299,14 @@ function maskSource(source, { jsx = false } = {}) {
         j += 1;
       }
       if (j >= n || source[j] === "\n") {
-        i += 1;
+        // Unterminated on this line — a file caught mid-edit. Its contents are
+        // still string contents, so mask to the newline rather than stepping
+        // over the quote: leaving them bare made `const m = "value as User`
+        // report a type assertion the file does not contain, and inventing
+        // findings for half-typed code is worse than missing them. Scanning
+        // resumes on the next line, so real code below is still checked.
+        blank(i + 1, j);
+        i = j;
         continue;
       }
       blank(i + 1, j);
@@ -620,7 +627,7 @@ const LINE_RULES = [
   {
     name: "no-json-clone",
     pattern: /\bJSON\s*\.\s*parse\s*\(\s*JSON\s*\.\s*stringify\b/u,
-    message: "`JSON.parse(JSON.stringify(...))` is a lossy, slow clone: it drops undefined and functions, and turns a Date into a string. `structuredClone` keeps those — check that is what you want before swapping — or copy the fields you need.",
+    message: "`JSON.parse(JSON.stringify(...))` is a lossy, slow clone: it drops undefined and functions, and turns a Date into a string. `structuredClone` keeps the Date but THROWS on a function, so it is not a drop-in — copy the fields you need, or confirm the value holds none before swapping.",
   },
   {
     name: "no-redundant-fallback",
@@ -687,10 +694,21 @@ const LINE_RULES = [
     // Masking keeps a literal's quotes and width but blanks its contents, so
     // `"ok"` and `"no"` are indistinguishable here — `verify` compares the raw
     // source text of the two spans before this is called a tautology.
-    pattern: /\bexpect\s*\(\s*(true|false|\d+|"[^"\n]*"|'[^'\n]*')\s*\)\s*\.\s*(?:toBe|toEqual|toStrictEqual|toBeTruthy|toBeFalsy)\s*\(\s*(\1)?\s*\)/du,
-    verify: (match, rawLine) =>
-      match.indices[2] === undefined ||
-      rawLine.slice(...match.indices[1]) === rawLine.slice(...match.indices[2]),
+    // The matcher is captured because polarity decides the answer for the
+    // argumentless ones: `expect(false).toBeTruthy()` is not a tautology, it is
+    // a test that always FAILS — a different defect, and not this rule's.
+    pattern: /\bexpect\s*\(\s*(true|false|\d+|"[^"\n]*"|'[^'\n]*')\s*\)\s*\.\s*(toBe|toEqual|toStrictEqual|toBeTruthy|toBeFalsy)\s*\(\s*(\1)?\s*\)/du,
+    verify: (match, rawLine) => {
+      const literal = rawLine.slice(...match.indices[1]);
+      if (match[2] === "toBeTruthy" || match[2] === "toBeFalsy") {
+        // Only a literal, so its truthiness is decidable here: an empty string,
+        // `0` and `false` are the falsy ones this rule can see.
+        const truthy = !(literal === "false" || /^0+(?:\.0+)?$/u.test(literal) || /^(["'])\1$/u.test(literal));
+        return truthy === (match[2] === "toBeTruthy");
+      }
+      return match.indices[3] !== undefined &&
+        literal === rawLine.slice(...match.indices[3]);
+    },
     message: "Asserting a literal against itself passes no matter what the code does. Assert on the value under test, or delete the test.",
   },
   {

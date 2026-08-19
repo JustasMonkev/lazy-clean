@@ -1016,6 +1016,28 @@ eq("a bare /lazy leaves the live level alone", fs.readFileSync(ocState, "utf8"),
     res.status === 0 && res.stdout.includes("SURVIVED"), `${res.status} ${res.stdout.slice(0, 120)}`);
 }
 
+// readMode() falls back to the default for an EMPTY or invalid state file just
+// as it does for a missing one, so file presence was the wrong pin condition.
+for (const [name, body] of [["an empty", ""], ["an invalid", "nonsense"]]) {
+  const box = freshHome(`opencode-${name.replace(/\W/gu, "")}-state`);
+  fs.mkdirSync(path.join(box.env.XDG_CONFIG_HOME, "lazy"), { recursive: true });
+  fs.writeFileSync(path.join(box.env.XDG_CONFIG_HOME, "lazy", "config.json"), JSON.stringify({ defaultMode: "lite" }));
+  const state = path.join(box.env.XDG_CONFIG_HOME, "opencode", ".lazy-active");
+  fs.mkdirSync(path.dirname(state), { recursive: true });
+  fs.writeFileSync(state, body);
+  opencodeCommand("default ultra", box.env.XDG_CONFIG_HOME);
+  eq(`/lazy default pins the live level over ${name} state file`, fs.readFileSync(state, "utf8"), "lite");
+}
+// A valid level is the user's choice for this session and is left alone.
+{
+  const box = freshHome("opencode-valid-state");
+  const state = path.join(box.env.XDG_CONFIG_HOME, "opencode", ".lazy-active");
+  fs.mkdirSync(path.dirname(state), { recursive: true });
+  fs.writeFileSync(state, "ultra");
+  opencodeCommand("default lite", box.env.XDG_CONFIG_HOME);
+  eq("/lazy default leaves a valid session level alone", fs.readFileSync(state, "utf8"), "ultra");
+}
+
 // `/lazy default` is about later sessions. With no state file, readMode()
 // derives the live level from the config default, so `/lazy default off` used
 // to switch the running session off as a side effect.
@@ -1106,6 +1128,11 @@ ok("a findings-heavy file still gets a capped report",
 {
   const ps1 = fs.readFileSync(path.join(ROOT, "hooks", "lazy-statusline.ps1"), "utf8");
   ok("the PowerShell statusline requires a boolean hideStatus", /-is \[bool\]/.test(ps1));
+  // PowerShell member access is case-insensitive, so `.hideStatus` answered for
+  // a `HideStatus` key that getHideStatus() ignores. Static guard: there is no
+  // pwsh in CI, so this asserts the source shape rather than the behaviour.
+  ok("the PowerShell statusline matches the key case-sensitively",
+    /-ceq 'hideStatus'/.test(ps1) && !/\)\.hideStatus/.test(ps1), ps1.slice(0, 200));
 }
 
 // The OpenCode template is what /lazy-debt actually runs there, so it has to
@@ -1290,6 +1317,14 @@ if (!canRunBash) {
     '{"hideStatus":false,"hideStatus":true}',
     '{"defaultMode":"lite","hideStatus":true}',
     '{"list":[1,2],"hideStatus":true}',
+    // Anything around the document is not the document: JSON.parse rejects it.
+    'garbage {"hideStatus":true}',
+    '{"hideStatus":true} trailing',
+    // And a validator has to accept what IS valid, not only reject what is not.
+    '{"deep":{"a":{"b":[1,{"c":2}]}},"hideStatus":true}',
+    '{"n":-1.5e3,"hideStatus":true}',
+    '{"esc":"a\\"b","hideStatus":true}',
+    '{}',
   ]) {
     writeConfig(sl, body);
     const hidden = statusline("ultra").out === "";
