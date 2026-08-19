@@ -272,6 +272,36 @@ expectNoRule(
   "const message = `line one\nvalue as User\nconst v: any = 1;",
   "no-any",
 );
+// `any` in a LATER type argument disables checking exactly as completely as in
+// the first, and `Map<string, any>` is the shape people actually write.
+expectRule("flags any as a second type argument", "type Cache = Map<string, any>;", "no-any");
+expectRule("flags any as a third type argument", "type T = Fn<A, B, any>;", "no-any");
+expectRule("flags any as the first type argument", "type C = Map<any, string>;", "no-any");
+// The angle-bracket assertion form goes through the same scanner as `as`, so
+// its depth is not capped either.
+expectRule(
+  "flags a deep angle-bracket assertion",
+  "const value = <Promise<Array<Map<string, Set<User>>>>>payload;",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule("flags a plain angle-bracket assertion", "const value = <User>payload;", "require-safety-comment-for-type-assertion");
+// Still not an assertion: a generic arrow function, and a comparison.
+expectNoRule("a generic arrow function is not an angle assertion", "const identity = <T>(value: T) => value;", "require-safety-comment-for-type-assertion");
+expectNoRule("a comparison is not an angle assertion", "const ok = a < b && c > d;", "require-safety-comment-for-type-assertion");
+// A closing tag inside a STRING is not the element's closer. Believing it was
+// opened a children region that ran past the code below it.
+expectNoRule(
+  "a closing tag inside a JSX expression string does not open a children region",
+  'const el = <div>{"</div>"}\nconst value: any = 1;',
+  "no-nothing",
+  "sample.tsx",
+);
+expectRule(
+  "code after an unfinished element with a quoted closing tag is still checked",
+  'const el = <div>{"</div>"}\nconst value: any = 1;',
+  "no-any",
+  "sample.tsx",
+);
 expectRule("flags a string-literal type assertion", 'const a = payload as "ready";', "require-safety-comment-for-type-assertion");
 expectRule("flags a numeric-literal type assertion", "const a = payload as 42;", "require-safety-comment-for-type-assertion");
 expectRule('flags an indexed-access assertion', 'const a = payload as User["id"];', "require-safety-comment-for-type-assertion");

@@ -105,6 +105,16 @@ function getDefaultMode() {
 // Hide the status-bar indicator while keeping lazy active (#324).
 // LAZY_HIDE_STATUS=1 (or any truthy value; 0/false/empty mean "don't hide")
 // takes precedence, else config.hideStatus === true.
+// The statusline re-reads and re-validates this file on EVERY prompt render,
+// and `hideStatus` cannot be trusted until the whole document parses. A config
+// far larger than the handful of keys lazy stores is a mistake rather than a
+// preference, and reading it stalls the prompt -- 1MB measured at ~30s in the
+// shell parser. Above the cap the file is not read and the badge shows, which
+// is the same direction an unparseable config already takes. The cap is applied
+// in the shell and PowerShell statuslines too: it is part of the answer, so all
+// three have to share it or they disagree.
+const CONFIG_SIZE_LIMIT = 65536;
+
 function getHideStatus() {
   const env = process.env.LAZY_HIDE_STATUS;
   if (env !== undefined) {
@@ -112,7 +122,9 @@ function getHideStatus() {
     return v !== '' && v !== '0' && v !== 'false' && v !== 'no';
   }
   try {
-    const config = JSON.parse(fs.readFileSync(getConfigPath(), 'utf8').replace(/^\uFEFF/, ''));
+    const configPath = getConfigPath();
+    if (fs.statSync(configPath).size > CONFIG_SIZE_LIMIT) return false;
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
     return config.hideStatus === true;
   } catch (_) {
     // No config, no preference: the badge shows.
@@ -159,6 +171,7 @@ function writeHideStatus(hide) {
 }
 
 module.exports = {
+  CONFIG_SIZE_LIMIT,
   DEFAULT_MODE,
   VALID_MODES,
   RUNTIME_MODES,

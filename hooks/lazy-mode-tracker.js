@@ -34,6 +34,25 @@ function finish() {
     // say and exactly one write happens at the end: writing from the branches
     // emitted two concatenated objects on Qoder, where the ruleset below is
     // also written, and neither could be parsed.
+    // On Claude Code and Codex an absent flag IS off, because lazy-activate.js
+    // rewrites it at SessionStart. Qoder has no SessionStart, so this hook
+    // derives the level from the config default whenever no flag exists — which
+    // made "absent" mean BOTH "the user turned lazy off" and "this session has
+    // not started yet". `/lazy off` therefore lasted exactly one prompt: the
+    // next one re-derived `full` and turned lazy back on, and `/lazy default`
+    // re-enabled it the same way. Qoder gets an explicit `off` on disk; the
+    // other hosts keep the absent-is-off contract.
+    const turnOff = () => {
+      if (!isQoder) return clearMode();
+      try {
+        return setMode('off');
+      } catch (e) {
+        // Unwritable state: fall back to the absent-is-off contract rather than
+        // leave the previous level in place.
+        return clearMode();
+      }
+    };
+
     let notice = null;
     let modeSwitched = false;
     let deactivated = false;
@@ -124,7 +143,7 @@ function finish() {
         modeSwitched = true;
         notice = 'LAZY MODE CHANGED — level: ' + mode;
       } else if (mode === 'off') {
-        clearMode();
+        turnOff();
         deactivated = true;
         notice = 'LAZY MODE OFF';
       }
@@ -132,7 +151,7 @@ function finish() {
 
     // Detect deactivation
     if (!modeSwitched && !deactivated && isDeactivationCommand(prompt)) {
-      clearMode();
+      turnOff();
       deactivated = true;
       notice = 'LAZY MODE OFF';
     }

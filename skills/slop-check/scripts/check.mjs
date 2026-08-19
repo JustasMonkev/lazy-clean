@@ -99,10 +99,63 @@ function maskSource(source, { jsx = false } = {}) {
   // when it actually opens a children region, and the next opener has to find
   // another.
   const claimedThrough = new Map();
+  // Spans of the raw source that cannot hold a real closing tag. The
+  // closing-tag index below is built by scanning ahead of the masker, so it
+  // reads bytes nothing has classified yet: `const el = <div>{"</div>"}` made
+  // the string contents answer for the element, which then opened a children
+  // region that swallowed the code after it.
+  //
+  // Deliberately only DOUBLE-quoted strings that close on their own line, and
+  // block comments. A pre-pass cannot know whether it is in code or in JSX
+  // text, and the wider version of this was wrong in both directions: an
+  // apostrophe in prose ("don't") read as a string, a URL in text read as a
+  // line comment, a lone backtick swallowing the file. Prose carries those
+  // three constantly and balanced double quotes almost never, so this covers
+  // the reported shape without inventing spans in text. A closer inside a
+  // single-quoted string or a template is still counted.
+  const literalSpans = () => {
+    const spans = [];
+    for (let k = 0; k < n; k += 1) {
+      const ch = source[k];
+      if (ch === "/" && source[k + 1] === "*") {
+        const close = source.indexOf("*/", k + 2);
+        if (close === -1) break;
+        spans.push([k, close + 2]);
+        k = close + 1;
+        continue;
+      }
+      if (ch !== '"') continue;
+      let j = k + 1;
+      while (j < n && source[j] !== '"' && source[j] !== "\n") {
+        if (source[j] === "\\") j += 1;
+        j += 1;
+      }
+      // Unterminated on its line: not a string, so claim nothing.
+      if (j >= n || source[j] === "\n") continue;
+      spans.push([k, j + 1]);
+      k = j;
+    }
+    return spans;
+  };
+  let literal = null;
+  // Ascending and non-overlapping by construction, so this is a binary search.
+  const insideLiteral = (offset) => {
+    if (literal === null) literal = literalSpans();
+    let low = 0;
+    let high = literal.length;
+    while (low < high) {
+      const mid = (low + high) >> 1;
+      if (literal[mid][1] <= offset) low = mid + 1;
+      else high = mid;
+    }
+    return low < literal.length && offset > literal[low][0] && offset < literal[low][1];
+  };
+
   const findClosingTag = (name, after) => {
     if (closingTagNames === null) {
       closingTagNames = new Map();
       for (const match of source.matchAll(/<\/([A-Za-z_$][\w$.:-]*)?/gu)) {
+        if (insideLiteral(match.index)) continue;
         const key = match[1] ?? "";
         const positions = closingTagNames.get(key);
         if (positions) positions.push(match.index);
@@ -618,8 +671,11 @@ const LINE_RULES = [
     tsOnly: true,
     // `type Payload = any` and `A | any` disable checking as completely as an
     // annotation does; the rule only knew the positions where `any` follows a
-    // colon, `as`, a generic delimiter, or precedes `[]`.
-    pattern: /:\s*any\b|\bas\s+any\b|<\s*any\s*[,>]|\bany\s*\[\]|\btype\s+[\w$]+(?:<(?:[^<>]|<[^<>]*>)*>)?\s*=\s*any\b|[|&]\s*any\b/u,
+    // colon, `as`, a generic delimiter, or precedes `[]`. `[<,]` and not `<`:
+    // `Map<string, any>` is the SECOND type argument, and matching only the
+    // first meant the common shape of this defect was reported clean while
+    // `Map<any, string>` was reported.
+    pattern: /:\s*any\b|\bas\s+any\b|[<,]\s*any\s*[,>]|\bany\s*\[\]|\btype\s+[\w$]+(?:<(?:[^<>]|<[^<>]*>)*>)?\s*=\s*any\b|[|&]\s*any\b/u,
     message: "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
   },
   {
@@ -1030,14 +1086,34 @@ function* matchAssertions(text) {
 // `<User>payload`, the pre-`as` assertion syntax. The `<` has to be in
 // expression position — after an operator, an opener, `return` or `=>` — which
 // is what separates it from `Array<User>` and from `a < b`.
-const ANGLE_ASSERTION_PATTERN = new RegExp(
-  // The operand may not start with `(`: `const identity = <T>(value: T) => value`
-  // is a generic arrow function, and reading its type-parameter list as an
-  // assertion put a finding on ordinary type-safe code. A parenthesized operand
-  // (`<User>(payload)`) is given up with it — the far rarer of the two.
-  String.raw`(?:^|[=(,[:]|=>|\breturn)\s*<\s*(?:${NAMED_TYPE}|${OBJECT_TYPE}|${TUPLE_TYPE})\s*>\s*(?=[\w$[])`,
-  "gmu",
-);
+// The type is scanned, not pattern-matched, for the same reason `as` is: a
+// fixed nesting depth meant one level past it slipped through, and
+// `<Promise<Array<Map<string, Set<User>>>>>payload` is a valid assertion.
+const ANGLE_PREFIX = /(?:^|[=(,[:]|=>|\breturn)\s*(?=<)/gmu;
+// The operand may not start with `(`: `const identity = <T>(value: T) => value`
+// is a generic arrow function, and reading its type-parameter list as an
+// assertion put a finding on ordinary type-safe code. A parenthesized operand
+// (`<User>(payload)`) is given up with it — the far rarer of the two.
+const ANGLE_OPERAND = /^[\w$[]/u;
+
+function* matchAngleAssertions(text) {
+  ANGLE_PREFIX.lastIndex = 0;
+  for (let m = ANGLE_PREFIX.exec(text); m !== null; m = ANGLE_PREFIX.exec(text)) {
+    const open = m.index + m[0].length;
+    const closed = balancedEnd(text, open);
+    if (closed === -1) continue;
+    // The angle brackets have to hold a TYPE, not an arbitrary comparison:
+    // `a < b, c > d` balances too. typeEnd over the interior, with the closing
+    // `>` as its terminator, is the same test the `as` form applies.
+    const inner = typeEnd(text, open + 1);
+    if (inner === -1) continue;
+    let after = inner;
+    while (after < closed - 1 && /\s/u.test(text[after])) after += 1;
+    if (after !== closed - 1) continue;
+    if (!ANGLE_OPERAND.test(text.slice(closed, closed + 1))) continue;
+    yield { 0: text.slice(m.index, closed), index: m.index, open };
+  }
+}
 
 // A name captured from source, made safe to interpolate into a pattern. `$` is
 // both a legal identifier character and a regex anchor, so it has to be escaped
@@ -1353,8 +1429,8 @@ function* iterateAssertionFindings(ctx) {
   // caller decides via `angleAssertions`, because a .tsx file has to be excluded
   // even though it is TypeScript.
   if (ctx.angleAssertions) {
-    for (const candidate of masked.matchAll(ANGLE_ASSERTION_PATTERN)) {
-      const at = unjustified(candidate.index + candidate[0].indexOf("<"));
+    for (const candidate of matchAngleAssertions(masked)) {
+      const at = unjustified(candidate.open);
       if (!at) continue;
       yield {
         ...at,

@@ -54,7 +54,13 @@ else
     #
     # Failing to parse shows the badge, matching getHideStatus()'s own catch,
     # and that is the safe direction: it cannot hide a badge nobody hid.
-    if [ -f "$config" ]; then
+    # Same 65536-byte cap as getHideStatus(): this runs on every prompt render
+    # and the whole document has to validate before hideStatus can be trusted,
+    # so an oversized config would stall the prompt (1MB measured at ~30s here).
+    # Skipping it shows the badge, which is where an unparseable config already
+    # lands. The two must cap at the same size or they disagree about a file
+    # between the caps.
+    if [ -f "$config" ] && [ "$(wc -c < "$config")" -le 65536 ]; then
         hidden=$(awk 'BEGIN {
                 # awk has no chr() and does not read "0x53" as a number, so the
                 # table is keyed by the four hex digits of the escape. ASCII only:

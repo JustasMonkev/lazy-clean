@@ -29,7 +29,11 @@ if ($null -ne $env:LAZY_HIDE_STATUS) {
         Join-Path $HOME ".config"
     }
     $Config = Join-Path (Join-Path $ConfigDir "lazy") "config.json"
-    if (Test-Path -LiteralPath $Config) {
+    # Same 65536-byte cap as getHideStatus() and the Bash statusline. All three
+    # answer the same question on every prompt render, so a file between two
+    # different caps would make them disagree.
+    if ((Test-Path -LiteralPath $Config) -and
+        ((Get-Item -LiteralPath $Config).Length -le 65536)) {
         try {
             # PowerShell member access is case-INsensitive, so `.hideStatus`
             # answered for a `HideStatus` key that getHideStatus() ignores. Match

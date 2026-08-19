@@ -790,8 +790,30 @@ ok("qoder folds the switch confirmation into one JSON write",
   JSON.parse(r.stdout).hookSpecificOutput.additionalContext
     .startsWith("LAZY MODE CHANGED — level: ultra\n\nLAZY MODE ACTIVE — level: ultra"));
 r = track({ prompt: "stop lazy" }, { env: qoder });
+// `off` is written, not cleared. On Claude Code and Codex an absent flag IS
+// off, because lazy-activate.js rewrites it at SessionStart. Qoder has no
+// SessionStart and derives the level from the config default whenever no flag
+// exists, so absent meant BOTH "turned off" and "not started yet" — and the
+// next prompt re-derived the default and turned lazy back on.
 eq("qoder emits no ruleset after deactivation", [r.flag, JSON.parse(r.stdout)],
-  [null, { hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: "LAZY MODE OFF" } }]);
+  ["off", { hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: "LAZY MODE OFF" } }]);
+
+// The leak this closes, in the order it happens: off, then an ordinary prompt,
+// then `/lazy default`, then another ordinary prompt. Every step must stay off.
+{
+  const box = { flag: null, config: JSON.stringify({ defaultMode: "full" }), env: qoder };
+  let step = track({ prompt: "/lazy off" }, box);
+  eq("qoder /lazy off records an explicit off", step.flag, "off");
+  step = track({ prompt: "fix the parser" }, { ...box, flag: step.flag });
+  eq("qoder stays off on the next ordinary prompt", [step.flag, step.stdout], ["off", ""]);
+  step = track({ prompt: "/lazy default ultra" }, { ...box, flag: step.flag });
+  ok("qoder /lazy default does not re-enable an off session",
+    step.flag === "off" && !/# Lazy/.test(step.stdout), JSON.stringify([step.flag, step.stdout.slice(0, 120)]));
+  step = track({ prompt: "fix the parser" }, { ...box, flag: step.flag, config: JSON.stringify({ defaultMode: "ultra" }) });
+  eq("qoder stays off after the default moved", [step.flag, step.stdout], ["off", ""]);
+  step = track({ prompt: "/lazy full" }, { ...box, flag: step.flag });
+  eq("qoder can be switched back on after an explicit off", step.flag, "full");
+}
 
 // One JSON object per invocation. Every branch used to write its own, and the
 // Qoder ruleset block then wrote a second, so stdout carried two concatenated
@@ -1214,6 +1236,15 @@ ok("a findings-heavy file still gets a capped report",
 {
   const ps1 = fs.readFileSync(path.join(ROOT, "hooks", "lazy-statusline.ps1"), "utf8");
   ok("the PowerShell statusline requires a boolean hideStatus", /-is \[bool\]/.test(ps1));
+  // All three answer the same question on every render, so a file sized between
+  // two different caps would make them disagree about the badge.
+  {
+    const limit = String(config.CONFIG_SIZE_LIMIT);
+    ok("the PowerShell statusline caps the config size at the shared limit",
+      ps1.includes(limit), limit);
+    ok("the Bash statusline caps the config size at the shared limit",
+      fs.readFileSync(path.join(HOOKS, "lazy-statusline.sh"), "utf8").includes(limit), limit);
+  }
   // PowerShell member access is case-insensitive, so `.hideStatus` answered for
   // a `HideStatus` key that getHideStatus() ignores. Static guard: there is no
   // pwsh in CI, so this asserts the source shape rather than the behaviour.
@@ -1436,6 +1467,11 @@ if (!canRunBash) {
     '{"hideStatus":false}\u0001{"hideStatus":true}',
     '{"hideStatus":true}\u0001garbage',
     '{"hideStatus":true}\n{"hideStatus":true}',
+    // The size cap: the statusline validates the WHOLE document on every prompt
+    // render, so an oversized config is skipped rather than parsed. Just under
+    // the cap still hides, which is what makes the cap the reason above it.
+    `{"pad":"${"x".repeat(60_000)}","hideStatus":true}`,
+    `{"pad":"${"x".repeat(70_000)}","hideStatus":true}`,
   ]) {
     writeConfig(sl, body);
     const hidden = statusline("ultra").out === "";
