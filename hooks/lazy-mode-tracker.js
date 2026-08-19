@@ -2,7 +2,7 @@
 // lazy — UserPromptSubmit hook to track which lazy mode is active
 // Inspects user input for /lazy commands and writes mode to flag file
 
-const { getDefaultMode, isDeactivationCommand, writeDefaultMode } = require('./lazy-config');
+const { getDefaultMode, isDeactivationCommand, normalizeMode, writeDefaultMode } = require('./lazy-config');
 const { clearMode, isQoder, readMode, setMode, writeHookOutput } = require('./lazy-runtime');
 const { getLazyInstructions } = require('./lazy-instructions');
 
@@ -79,7 +79,15 @@ function finish() {
             if (pinned) {
               try {
                 writeDefaultMode(dmode);
-                notice = 'LAZY DEFAULT SET — new sessions start in ' + dmode + '.';
+                // LAZY_DEFAULT_MODE outranks the config file getDefaultMode()
+                // reads, so with it set to something else the write lands and
+                // changes nothing anyone will see. Saying "new sessions start
+                // in ultra" there is simply false.
+                const override = normalizeMode(process.env.LAZY_DEFAULT_MODE);
+                notice = override && override !== dmode
+                  ? 'LAZY: default saved as ' + dmode + ', but LAZY_DEFAULT_MODE=' + override +
+                    ' overrides it — new sessions start in ' + override + ' until that variable is unset.'
+                  : 'LAZY DEFAULT SET — new sessions start in ' + dmode + '.';
               } catch (e) {
                 notice = 'LAZY: could not write the default (' + e.message + ').';
               }

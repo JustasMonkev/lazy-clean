@@ -437,7 +437,9 @@ function stateFileFor(env) {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const p = path.join(dir, entry.name);
       if (entry.isDirectory()) walk(p);
-      else if (entry.name === ".lazy-active") found.push(path.relative(box.home, p));
+      // Qoder appends its session id, so match the prefix rather than the exact
+      // name — otherwise this sweep silently finds nothing and asserts nothing.
+      else if (entry.name.startsWith(".lazy-active")) found.push(path.relative(box.home, p));
     }
   };
   walk(box.home);
@@ -449,7 +451,14 @@ eq("state file: codex lives in PLUGIN_DATA", stateFileFor({ PLUGIN_DATA: "<HOME>
 eq("state file: copilot lives in COPILOT_PLUGIN_DATA", stateFileFor({ COPILOT_PLUGIN_DATA: "<HOME>/copilotdata" }), [path.join("copilotdata", ".lazy-active")]);
 eq("state file: vscode copilot falls back to the claude dir",
   stateFileFor({ CLAUDE_PLUGIN_ROOT: "/x/.vscode/agent-plugins/l" }), [path.join(".claude", ".lazy-active")]);
-eq("state file: qoder lives in ~/.qoder", stateFileFor({ QODER_SESSION_ID: "q" }), [path.join(".qoder", ".lazy-active")]);
+// Keyed by session id, unlike every other host: the others get a SessionStart
+// event that clears the flag, and Qoder does not, so a shared file made every
+// level permanent.
+eq("state file: qoder lives in ~/.qoder, keyed by session",
+  stateFileFor({ QODER_SESSION_ID: "q" }), [path.join(".qoder", ".lazy-active-q")]);
+// The id reaches a filename; a path separator in it must not escape the dir.
+eq("state file: a qoder session id cannot escape its directory",
+  stateFileFor({ QODER_SESSION_ID: "../../etc/x" }), [path.join(".qoder", ".lazy-active-.._.._etc_x")]);
 
 // setMode / readMode / clearMode round-trip and read failure modes. readMode
 // validates: the flag file is hand-editable, so anything that is not a level
@@ -518,7 +527,11 @@ for (const [name, env] of [["codex", { PLUGIN_DATA: codexDir }], ["qoder", { QOD
 const mt = freshHome("tracker");
 function track(prompt, { flag, config: cfg, env } = {}) {
   // Qoder keeps its state in ~/.qoder, not the claude dir.
-  const target = env && env.QODER_SESSION_ID ? path.join(mt.home, ".qoder", ".lazy-active") : mt.flag;
+  // Qoder state is keyed by session id, so that a level set in one session does
+  // not leak into the next — the same reason the file is not just .lazy-active.
+  const target = env && env.QODER_SESSION_ID
+    ? path.join(mt.home, ".qoder", `.lazy-active-${env.QODER_SESSION_ID}`)
+    : mt.flag;
   fs.mkdirSync(path.dirname(target), { recursive: true });
   if (flag === null) fs.rmSync(target, { force: true });
   else if (flag !== undefined) fs.writeFileSync(target, flag);
@@ -680,6 +693,40 @@ ok("/lazy default off on qoder still injects the live ruleset",
   JSON.parse(r.stdout).hookSpecificOutput.additionalContext
     .startsWith("LAZY DEFAULT SET — new sessions start in off."),
   r.stdout.slice(0, 160));
+
+// LAZY_DEFAULT_MODE outranks the config file getDefaultMode() reads, so the
+// write lands and changes nothing anyone will see. Claiming success there is
+// simply false.
+r = track({ prompt: "/lazy default ultra" },
+  { config: null, env: { LAZY_DEFAULT_MODE: "lite" } });
+eq("/lazy default still records the request when the env shadows it", r.config, { defaultMode: "ultra" });
+ok("/lazy default reports the env override instead of claiming success",
+  /LAZY_DEFAULT_MODE=lite overrides it/.test(r.stdout) && !/LAZY DEFAULT SET/.test(r.stdout), r.stdout);
+r = track({ prompt: "/lazy default ultra" }, { config: null, env: { LAZY_DEFAULT_MODE: "ultra" } });
+ok("an env override that agrees is not reported as a conflict",
+  /LAZY DEFAULT SET/.test(r.stdout), r.stdout);
+
+// Qoder has no SessionStart, so nothing clears its flag at a session boundary:
+// the level pinned by `/lazy default` stayed pinned for every later session,
+// which is the opposite of what the command promises.
+{
+  const box = freshHome("qoder-session-scope");
+  const cfg = path.join(box.env.XDG_CONFIG_HOME, "lazy", "config.json");
+  fs.mkdirSync(path.dirname(cfg), { recursive: true });
+  fs.writeFileSync(cfg, JSON.stringify({ defaultMode: "off" }));
+  const inSession = (id, prompt) => runHook("lazy-mode-tracker.js", JSON.stringify({ prompt }),
+    { ...box.env, QODER_SESSION_ID: id });
+  const stateOf = (id) => {
+    const file = path.join(box.home, ".qoder", `.lazy-active-${id}`);
+    return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;
+  };
+  inSession("sessionA", "/lazy default ultra");
+  eq("the pin is scoped to the session that ran the command", stateOf("sessionA"), "off");
+  const later = inSession("sessionB", "hello");
+  ok("a later qoder session adopts the new default",
+    /LAZY MODE ACTIVE — level: ultra/.test(later.stdout), later.stdout.slice(0, 160));
+  eq("the later session pins its own state", stateOf("sessionB"), "ultra");
+}
 
 // The state directory and the config directory fail independently here too, and
 // the pin has to happen BEFORE the default moves: pinning afterwards left a
@@ -1184,7 +1231,18 @@ if (!canRunBash) {
 
   // JSON allows the key and value on separate lines; a line-based match could
   // not see that, so the badge showed for a user who had hidden it.
-  for (const body of ['{\n  "hideStatus":\n  true\n}', '{"hideStatus":true}', '{ "hideStatus" : true }', '{"hideStatus":false}']) {
+  // The later cases are why the substring match had to go: getHideStatus() reads
+  // `config.hideStatus` and nothing else, so a nested key, the same bytes inside
+  // a string, a non-boolean, and an unparseable file all leave the badge showing.
+  for (const body of [
+    '{\n  "hideStatus":\n  true\n}', '{"hideStatus":true}', '{ "hideStatus" : true }', '{"hideStatus":false}',
+    '{"nested":{"hideStatus":true}}',
+    '{"hideStatus":false,"nested":{"hideStatus":true}}',
+    '{"note":"hideStatus:true"}',
+    '{"hideStatus":"true"}',
+    '{"list":["hideStatus",true]}',
+    '{"hideStatus":tru',
+  ]) {
     writeConfig(sl, body);
     const hidden = statusline("ultra").out === "";
     ok(`statusline agrees with getHideStatus on ${JSON.stringify(body)}`,

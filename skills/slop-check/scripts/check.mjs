@@ -812,11 +812,21 @@ const NAMED_TYPE = String.raw`(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A
 // because an unbounded `*` over two whitespace-led alternatives is the shape
 // that backtracks, and this runs after every edit.
 const TYPE_OPERATOR = String.raw`(?:(?:keyof|typeof)\s+){0,3}`;
+// An object or tuple type nests: `{ user: { id: string } }` and
+// `[string, [number, number]]` are ordinary shapes, and a one-level pattern saw
+// neither. Two levels, and each pair of branches is disjoint on its first
+// character, so none of these can backtrack.
+const OBJECT_TYPE = String.raw`\{(?:[^{}]|\{[^{}]*\})*\}`;
+const TUPLE_TYPE = String.raw`\[(?:[^[\]]|\[[^[\]]*\])*\]`;
+// A literal type. Masking blanks a string's contents but keeps its quotes, so
+// `as "ready"` still has the shape of one here.
+const LITERAL_TYPE = String.raw`"[^"\n]*"|'[^'\n]*'|-?\d[\w.]*|true\b|false\b|null\b`;
 const ASSERTED_TYPE = [
   // Function type first, so `as (a: A) => B` reports at the whole type rather
   // than stopping at the parenthesized-type alternative below.
-  String.raw`\((?:[^()]*)\)\s*=>\s*(?:${NAMED_TYPE}|\{[^{}]*\})`,
-  String.raw`${TYPE_OPERATOR}(?:${NAMED_TYPE}|\{[^{}]*\}|\[[^[\]]*\])`,
+  String.raw`\((?:[^()]*)\)\s*=>\s*(?:${NAMED_TYPE}|${OBJECT_TYPE})`,
+  String.raw`${TYPE_OPERATOR}(?:${NAMED_TYPE}|${OBJECT_TYPE}|${TUPLE_TYPE})`,
+  LITERAL_TYPE,
   // A parenthesized type: `as (User & Admin)`. One nesting level, and the two
   // branches are disjoint on their first character, so it cannot backtrack.
   String.raw`\((?:[^()]|\([^()]*\))*\)`,

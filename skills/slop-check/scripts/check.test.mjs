@@ -159,6 +159,11 @@ expectNoRule(
   "type Getters<T> = { [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K] };",
   "require-safety-comment-for-type-assertion",
 );
+// Object and tuple types nest, and a literal type has no name at all.
+expectRule("flags a nested object-literal assertion", "const a = payload as { user: { id: string } };", "require-safety-comment-for-type-assertion");
+expectRule("flags a nested tuple assertion", "const a = payload as [string, [number, number]];", "require-safety-comment-for-type-assertion");
+expectRule("flags a string-literal type assertion", 'const a = payload as "ready";', "require-safety-comment-for-type-assertion");
+expectRule("flags a numeric-literal type assertion", "const a = payload as 42;", "require-safety-comment-for-type-assertion");
 expectRule('flags an indexed-access assertion', 'const a = payload as User["id"];', "require-safety-comment-for-type-assertion");
 expectRule("flags a keyed indexed-access assertion", "const a = payload as T[keyof T];", "require-safety-comment-for-type-assertion");
 expectRule("flags a keyof type assertion", "const a = payload as keyof User;", "require-safety-comment-for-type-assertion");

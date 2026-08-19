@@ -119,7 +119,13 @@ export default async ({ client } = {}) => {
         // An unwritable config directory threw straight into OpenCode's hook
         // runner; the Claude tracker already catches this case and reports it.
         try {
-          log('info', 'lazy default ' + (writeDefaultMode(persisted) || persisted));
+          const saved = writeDefaultMode(persisted) || persisted;
+          // Same as the Claude hook: LAZY_DEFAULT_MODE outranks the config file
+          // getDefaultMode() reads, so reporting plain success there is false.
+          const override = normalizeMode(process.env.LAZY_DEFAULT_MODE);
+          log('info', override && override !== saved
+            ? 'lazy: default saved as ' + saved + ', but LAZY_DEFAULT_MODE=' + override + ' overrides it'
+            : 'lazy default ' + saved);
         } catch (e) {
           log('error', 'lazy: could not write the default (' + e.message + ')');
         }

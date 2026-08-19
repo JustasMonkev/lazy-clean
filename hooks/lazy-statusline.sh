@@ -44,8 +44,45 @@ else
             *) config="$HOME/.config/lazy/config.json" ;;
         esac
     fi
+    # Root-level only, and a real scan rather than a substring match: a nested
+    # `{"nested":{"hideStatus":true}}`, or the same bytes inside a string value,
+    # used to hide a badge that getHideStatus() — which reads only
+    # `config.hideStatus` — leaves showing. awk keeps the no-node-per-prompt
+    # property the grep was there for. Depth counts both `{` and `[`, so a key
+    # at depth 1 is a root key; anything that is not literally `true` shows the
+    # badge, which is also what an unparseable file does.
     if [ -f "$config" ]; then
-        tr -d '[:space:]' < "$config" | grep -q '"hideStatus":true' && exit 0
+        hidden=$(awk 'BEGIN { RS = "\x01" }
+            {
+                n = length($0); depth = 0; i = 1
+                while (i <= n) {
+                    c = substr($0, i, 1)
+                    if (c == "\"") {
+                        j = i + 1; tok = ""
+                        while (j <= n) {
+                            d = substr($0, j, 1)
+                            if (d == "\\") { j += 2; tok = tok "\\"; continue }
+                            if (d == "\"") break
+                            tok = tok d; j++
+                        }
+                        if (depth == 1 && tok == "hideStatus") {
+                            k = j + 1
+                            while (k <= n && substr($0, k, 1) ~ /[ \t\r\n]/) k++
+                            if (substr($0, k, 1) == ":") {
+                                k++
+                                while (k <= n && substr($0, k, 1) ~ /[ \t\r\n]/) k++
+                                if (substr($0, k, 4) == "true") print "hide"
+                                exit
+                            }
+                        }
+                        i = j + 1; continue
+                    }
+                    if (c == "{" || c == "[") depth++
+                    else if (c == "}" || c == "]") depth--
+                    i++
+                }
+            }' "$config" 2>/dev/null)
+        [ "$hidden" = "hide" ] && exit 0
     fi
 fi
 

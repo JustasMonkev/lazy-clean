@@ -28,11 +28,37 @@ if (isCodex) stateDir = process.env.PLUGIN_DATA;
 if (isCopilot) stateDir = process.env.COPILOT_PLUGIN_DATA || getClaudeDir();
 if (isQoder) stateDir = path.join(os.homedir(), '.qoder');
 
-const statePath = path.join(stateDir, STATE_FILE);
+// Qoder has no SessionStart event, so nothing clears this file at a session
+// boundary: a level written in one session was still there in the next. Keying
+// it by QODER_SESSION_ID is what makes the documented "sticks until session
+// end" true there — and it is what lets `/lazy default` pin the level THIS
+// session is running at without freezing every later session at that level too.
+// The id reaches a filename, so anything that is not a plain name is replaced.
+const stateFile = isQoder
+  ? `${STATE_FILE}-${String(process.env.QODER_SESSION_ID).replace(/[^\w.-]/gu, '_').slice(0, 64)}`
+  : STATE_FILE;
+const statePath = path.join(stateDir, stateFile);
+// Per-session files are never read again once their session ends, and nothing
+// else would ever delete them. Best-effort, and only on a write, which happens
+// on a mode switch rather than on every prompt.
+const STALE_STATE_MS = 7 * 24 * 60 * 60 * 1000;
+function pruneStaleSessionState() {
+  if (!isQoder) return;
+  try {
+    for (const name of fs.readdirSync(stateDir)) {
+      if (!name.startsWith(`${STATE_FILE}-`) || name === stateFile) continue;
+      const sibling = path.join(stateDir, name);
+      if (Date.now() - fs.statSync(sibling).mtimeMs > STALE_STATE_MS) fs.unlinkSync(sibling);
+    }
+  } catch (e) {
+    // A missing or unreadable state directory is not worth failing a switch for.
+  }
+}
 
 function setMode(mode) {
   fs.mkdirSync(path.dirname(statePath), { recursive: true });
   fs.writeFileSync(statePath, mode);
+  pruneStaleSessionState();
 }
 
 function clearMode() {
