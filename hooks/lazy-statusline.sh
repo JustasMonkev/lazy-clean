@@ -48,39 +48,61 @@ else
     # `{"nested":{"hideStatus":true}}`, or the same bytes inside a string value,
     # used to hide a badge that getHideStatus() — which reads only
     # `config.hideStatus` — leaves showing. awk keeps the no-node-per-prompt
-    # property the grep was there for. Depth counts both `{` and `[`, so a key
-    # at depth 1 is a root key; anything that is not literally `true` shows the
-    # badge, which is also what an unparseable file does.
+    # property the grep was there for.
+    #
+    # It has to agree with JSON.parse on the ways a file can be wrong, not just
+    # on where the key sits: a value that is not followed by `,` or `}` means the
+    # document does not parse (`{"hideStatus":true garbage}`), unbalanced braces
+    # or an unterminated string mean the same, and a duplicated root key resolves
+    # to the LAST one, as JSON.parse does. Anything invalid shows the badge,
+    # which is the direction that cannot hide a badge the user never hid.
     if [ -f "$config" ]; then
         hidden=$(awk 'BEGIN { RS = "\x01" }
             {
-                n = length($0); depth = 0; i = 1
+                n = length($0); depth = 0; i = 1; result = 0; invalid = 0; seenRoot = 0
                 while (i <= n) {
                     c = substr($0, i, 1)
                     if (c == "\"") {
-                        j = i + 1; tok = ""
+                        j = i + 1; tok = ""; closed = 0
                         while (j <= n) {
                             d = substr($0, j, 1)
                             if (d == "\\") { j += 2; tok = tok "\\"; continue }
-                            if (d == "\"") break
+                            if (d == "\"") { closed = 1; break }
                             tok = tok d; j++
                         }
+                        if (!closed) { invalid = 1; break }
                         if (depth == 1 && tok == "hideStatus") {
                             k = j + 1
                             while (k <= n && substr($0, k, 1) ~ /[ \t\r\n]/) k++
                             if (substr($0, k, 1) == ":") {
                                 k++
                                 while (k <= n && substr($0, k, 1) ~ /[ \t\r\n]/) k++
-                                if (substr($0, k, 4) == "true") print "hide"
-                                exit
+                                seenRoot = 1
+                                if (substr($0, k, 4) == "true") {
+                                    k += 4
+                                    while (k <= n && substr($0, k, 1) ~ /[ \t\r\n]/) k++
+                                    e = substr($0, k, 1)
+                                    if (e != "," && e != "}") { invalid = 1; break }
+                                    result = 1; i = k; continue
+                                }
+                                result = 0
                             }
                         }
                         i = j + 1; continue
                     }
                     if (c == "{" || c == "[") depth++
-                    else if (c == "}" || c == "]") depth--
+                    else if (c == "}" || c == "]") { depth--; if (depth < 0) { invalid = 1; break } }
+                    else if (c == ",") {
+                        # A trailing comma is not JSON, and JSON.parse rejects
+                        # the whole document over it.
+                        k = i + 1
+                        while (k <= n && substr($0, k, 1) ~ /[ \t\r\n]/) k++
+                        e = substr($0, k, 1)
+                        if (e == "}" || e == "]" || e == "") { invalid = 1; break }
+                    }
                     i++
                 }
+                if (!invalid && depth == 0 && seenRoot && result) print "hide"
             }' "$config" 2>/dev/null)
         [ "$hidden" = "hide" ] && exit 0
     fi

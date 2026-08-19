@@ -577,16 +577,6 @@ const LINE_RULES = [
     message: "Chained assertions (`as X as Y`) fabricate evidence. Parse or validate the value instead.",
   },
   {
-    // Only the bare alias. `(value: unknown)` is the canonical type-guard and
-    // error-handler signature and `): unknown` is the correct return for a
-    // parse boundary — flagging them contradicted no-any, whose own message
-    // tells you to use `unknown` plus parsing at the boundary.
-    name: "no-unknown-alias",
-    tsOnly: true,
-    pattern: /\btype\s+[\w$]+(?:<[^=]*>)?\s*=\s*unknown\s*;?\s*$/u,
-    message: "A type alias for `unknown` names nothing. Declare the shape the owner actually guarantees.",
-  },
-  {
     name: "no-object-type",
     tsOnly: true,
     pattern: /:\s*object\b(?!\s*\()/u,
@@ -887,6 +877,22 @@ function* iterateCandidateFindings(ctx) {
       rule: "no-arbitrary-sleep",
       message: "A hard-coded sleep guesses at timing instead of waiting for the event. Await the real signal, or name the delay as a policy and say why.",
     };
+  }
+
+  // `type Payload =\n  unknown;` is ordinary formatter output, and a line-scoped
+  // pattern never saw the declaration — the same gap the empty-type rule had.
+  // Only the bare alias: `(value: unknown)` is the canonical type-guard and
+  // error-handler signature and `): unknown` is the correct return for a parse
+  // boundary — flagging them contradicted no-any, whose own message tells you to
+  // use `unknown` plus parsing at the boundary.
+  if (ctx.isTypeScript) {
+    for (const match of masked.matchAll(/\btype\s+[\w$]+(?:<(?:[^<>]|<[^<>]*>)*>)?\s*=\s*unknown\s*(?=;|$)/gmu)) {
+      yield {
+        ...matchSpan(lineStarts, match),
+        rule: "no-unknown-alias",
+        message: "A type alias for `unknown` names nothing. Declare the shape the owner actually guarantees.",
+      };
+    }
   }
 
   // `interface Marker {\n}` is what a formatter produces, and a line-at-a-time

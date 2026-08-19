@@ -43,6 +43,15 @@ expectNoRule("ignores any inside strings", 'const message = "cast to any";', "no
 
 expectRule("flags chained assertions", "const user = value as unknown as User;", "no-chained-type-assertions");
 expectRule("flags unknown alias", "type Payload = unknown;", "no-unknown-alias");
+// A formatter splits the declaration, which a line-scoped pattern never saw.
+expectRule("flags a multiline unknown alias", "type Payload =\n  unknown;", "no-unknown-alias");
+expectRule(
+  "flags a multiline unknown alias with a generic parameter",
+  "type Boxed<T extends Record<string, unknown>> =\n  unknown;",
+  "no-unknown-alias",
+);
+expectNoRule("allows an unknown type-guard parameter", "function isUser(value: unknown): value is User { return true; }", "no-unknown-alias");
+expectNoRule("allows an unknown return at a parse boundary", "function parse(raw: string): unknown { return JSON.parse(raw); }", "no-unknown-alias");
 // `unknown` in a signature is the type no-any tells you to reach for: the
 // canonical type guard, the parse boundary, the error handler.
 expectNoRule("allows unknown return at a parse boundary", "function parse(input: string): unknown { return JSON.parse(input); }", "no-unknown-alias");

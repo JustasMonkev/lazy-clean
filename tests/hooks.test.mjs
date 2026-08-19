@@ -706,6 +706,23 @@ r = track({ prompt: "/lazy default ultra" }, { config: null, env: { LAZY_DEFAULT
 ok("an env override that agrees is not reported as a conflict",
   /LAZY DEFAULT SET/.test(r.stdout), r.stdout);
 
+// Session state is never deleted by age: a Qoder session open or resumed past
+// any age still owns its level, so mtime is not a liveness signal. Pruning by it
+// meant another session's write silently reset a live one to the default.
+{
+  const box = freshHome("qoder-longlived");
+  const stale = path.join(box.home, ".qoder", ".lazy-active-longlived");
+  fs.mkdirSync(path.dirname(stale), { recursive: true });
+  fs.writeFileSync(stale, "ultra");
+  const monthAgo = Date.now() / 1000 - 30 * 24 * 60 * 60;
+  fs.utimesSync(stale, monthAgo, monthAgo);
+  runHook("lazy-mode-tracker.js", JSON.stringify({ prompt: "/lazy lite" }),
+    { ...box.env, QODER_SESSION_ID: "other" });
+  ok("another session's write leaves long-lived session state alone",
+    fs.existsSync(stale) && fs.readFileSync(stale, "utf8") === "ultra",
+    fs.existsSync(stale) ? fs.readFileSync(stale, "utf8") : "<deleted>");
+}
+
 // Qoder has no SessionStart, so nothing clears its flag at a session boundary:
 // the level pinned by `/lazy default` stayed pinned for every later session,
 // which is the opposite of what the command promises.
@@ -981,6 +998,24 @@ const bareLazy = opencodeCommand("", ocLive.env.XDG_CONFIG_HOME);
 eq("a bare /lazy reports the live level", bareLazy.logs, [{ service: "lazy", level: "info", message: "lazy lite" }]);
 eq("a bare /lazy leaves the live level alone", fs.readFileSync(ocState, "utf8"), "lite");
 
+// client.app.log is asynchronous, so try/catch covers only a synchronous throw.
+// A rejection nobody observes is an unhandled rejection, which can take the
+// plugin host down over a log line.
+{
+  const rejecting = `
+    import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, ".opencode", "plugins", "lazy.mjs")).href)};
+    process.on("unhandledRejection", (e) => { process.stdout.write("UNHANDLED:" + e); process.exit(3); });
+    const hooks = await plugin({ client: { app: { log: async () => { throw new Error("connection closed"); } } } });
+    await hooks["command.execute.before"]({ command: "lazy", arguments: "default ultra" });
+    await new Promise((r) => setTimeout(r, 50));
+    process.stdout.write("SURVIVED");
+  `;
+  const res = spawnSync(process.execPath, ["--input-type=module", "-e", rejecting],
+    { encoding: "utf8", env: baseEnv(freshHome("opencode-log-reject").env), timeout: 20000 });
+  ok("a rejecting OpenCode log does not become an unhandled rejection",
+    res.status === 0 && res.stdout.includes("SURVIVED"), `${res.status} ${res.stdout.slice(0, 120)}`);
+}
+
 // `/lazy default` is about later sessions. With no state file, readMode()
 // derives the live level from the config default, so `/lazy default off` used
 // to switch the running session off as a side effect.
@@ -1242,6 +1277,19 @@ if (!canRunBash) {
     '{"hideStatus":"true"}',
     '{"list":["hideStatus",true]}',
     '{"hideStatus":tru',
+    // The shell side has to agree on the ways a file is WRONG too, not just on
+    // where the key sits: JSON.parse rejects each of these outright.
+    '{"hideStatus":true garbage}',
+    '{"hideStatus":true,}',
+    '{"hideStatus":true',
+    '{"hideStatus":true}}',
+    '{"note":"x,"hideStatus":true}',
+    '{"a":[1,],"hideStatus":true}',
+    // A duplicated root key resolves to the LAST one, both sides.
+    '{"hideStatus":true,"hideStatus":false}',
+    '{"hideStatus":false,"hideStatus":true}',
+    '{"defaultMode":"lite","hideStatus":true}',
+    '{"list":[1,2],"hideStatus":true}',
   ]) {
     writeConfig(sl, body);
     const hidden = statusline("ultra").out === "";

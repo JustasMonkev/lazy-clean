@@ -44,7 +44,14 @@ function writeMode(mode) {
 
 export default async ({ client } = {}) => {
   const log = (level, message) => {
-    try { client && client.app && client.app.log({ body: { service: 'lazy', level, message } }); } catch (e) { /* logging must never break a turn */ }
+    try {
+      const sent = client && client.app && client.app.log({ body: { service: 'lazy', level, message } });
+      // The client is asynchronous, so try/catch only covers a synchronous
+      // throw. A rejection nobody observes — the server connection closing
+      // mid-turn is the ordinary way to get one — is an unhandled rejection,
+      // which can take the plugin host down over a log line.
+      if (sent && typeof sent.then === 'function') sent.then(undefined, () => {});
+    } catch (e) { /* logging must never break a turn */ }
   };
 
   const lazySkillsDir = path.resolve(__dirname, '../../skills');
