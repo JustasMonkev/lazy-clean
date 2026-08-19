@@ -850,7 +850,10 @@ const MODULE_STATEMENT = /^\s*import\b|^\s*export\s*(?:type\s+)?[{*]/u;
 
 // A type name: `User`, `A.B`, `Map<string, User>`. `as const` and the two
 // top types are excluded — they are assertions the rule does not ask about.
-const NAMED_TYPE = String.raw`(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<(?:[^<>]|<[^<>]*>)*>)?`;
+// Three levels of generic nesting, not one: `Promise<Array<Map<string, User>>>`
+// is an ordinary assertion target. Each level's branches are disjoint on their
+// first character, so the nesting cannot backtrack.
+const NAMED_TYPE = String.raw`(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<(?:[^<>]|<(?:[^<>]|<[^<>]*>)*>)*>)?`;
 // The anonymous type forms. Requiring a name meant `payload as { id: string }`,
 // `as [string, number]`, `as () => void` and `as typeof User` were all missed,
 // which are exactly the shapes hand-written narrowing reaches for. `typeof`
@@ -899,7 +902,11 @@ const TYPE_ASSERTION_PATTERN = new RegExp(
 // expression position — after an operator, an opener, `return` or `=>` — which
 // is what separates it from `Array<User>` and from `a < b`.
 const ANGLE_ASSERTION_PATTERN = new RegExp(
-  String.raw`(?:^|[=(,[:]|=>|\breturn)\s*<\s*(?:${NAMED_TYPE}|${OBJECT_TYPE}|${TUPLE_TYPE})\s*>\s*(?=[\w$([])`,
+  // The operand may not start with `(`: `const identity = <T>(value: T) => value`
+  // is a generic arrow function, and reading its type-parameter list as an
+  // assertion put a finding on ordinary type-safe code. A parenthesized operand
+  // (`<User>(payload)`) is given up with it — the far rarer of the two.
+  String.raw`(?:^|[=(,[:]|=>|\breturn)\s*<\s*(?:${NAMED_TYPE}|${OBJECT_TYPE}|${TUPLE_TYPE})\s*>\s*(?=[\w$[])`,
   "gmu",
 );
 
@@ -1150,7 +1157,11 @@ function* iterateAssertionFindings(ctx) {
     // Every assertion on the line, not just the first: exempting the catch
     // narrowing in `const a = error as Error, b = payload as User;` used to
     // exempt the whole line, and the second assertion escaped with it.
-    let match = null;
+    // One comment justifies one assertion. `const a = first as A, b = second as
+    // B; // SAFETY: first was parsed` says nothing about `second`, so the
+    // evidence is spent on the first assertion and the rest of the line needs
+    // its own — which in practice means splitting the line.
+    let evidence = commentLines.has(lineNumber) || commentLines.has(lineNumber - 1);
     for (const candidate of line.matchAll(TYPE_ASSERTION_PATTERN)) {
       // The operand's own offset in the file, not the line's: lineStarts is
       // built over the masked source, which shares every offset with the raw.
@@ -1161,29 +1172,24 @@ function* iterateAssertionFindings(ctx) {
       // before this `as`, is that header and nothing else.
       const asAt = candidate.index + /\bas\s/u.exec(candidate[0]).index;
       if (/\[[^\]]*\bin\b[^\]]*$/u.test(line.slice(0, asAt))) continue;
-      match = candidate;
-      break;
-    }
-    if (!match) continue;
-    // Attached to THIS assertion: on its line, or on the line directly above.
-    // Every line of a multi-line comment is in commentLines, so the line above
-    // is its last line and a `/** SAFETY: ... */` block still counts. The old
-    // three-line window was a blanket: one comment exempted every assertion
-    // within three lines of it, including ones it says nothing about.
-    const hasSafetyComment = commentLines.has(lineNumber) || commentLines.has(lineNumber - 1);
-    if (!hasSafetyComment) {
+      if (evidence) { evidence = false; continue; }
       yield {
         line: lineNumber,
         // Point at the `as` itself: the operand is optional in the pattern, so
         // measuring from the match start moved the column onto the type name
         // for `foo.bar as Baz`, where the operand is not captured.
-        column: match.index + /\bas\s/u.exec(match[0]).index + 1,
+        column: asAt + 1,
         rule: "require-safety-comment-for-type-assertion",
         message: "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion, or remove it.",
       };
     }
   }
 
+  // Attached to THIS assertion: on its line, or on the line directly above.
+  // Every line of a multi-line comment is in commentLines, so the line above is
+  // its last line and a `/** SAFETY: ... */` block still counts. The old
+  // three-line window was a blanket: one comment exempted every assertion
+  // within three lines of it, including ones it says nothing about.
   const unjustified = (offset) => {
     const { line, column } = offsetToPosition(lineStarts, offset);
     if (skippedLines.has(line)) return null;

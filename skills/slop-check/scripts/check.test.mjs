@@ -213,6 +213,25 @@ expectRule("flags a keyed indexed-access assertion", "const a = payload as T[key
   assert.equal(once.length, 1, `reported ${once.length} times`);
   console.log("ok   a single-line assertion is reported exactly once");
 }
+// A generic arrow function is not an assertion — the type-parameter list is
+// followed by a signature, not an operand.
+expectNoRule("does not read a generic arrow as an assertion", "const identity = <T>(value: T) => value;", "require-safety-comment-for-type-assertion");
+expectNoRule("does not read a constrained generic arrow as an assertion", "const f = <T extends object>(x: T) => x;", "require-safety-comment-for-type-assertion");
+expectNoRule("does not read a trailing-comma generic arrow as an assertion", "const g = <T,>(x: T) => x;", "require-safety-comment-for-type-assertion");
+// Standard containers compose deeper than two levels.
+expectRule("flags a deeply nested generic assertion", "const p = payload as Promise<Array<Map<string, User>>>;", "require-safety-comment-for-type-assertion");
+// One comment justifies one assertion, so the rest of the line needs its own.
+expectRule(
+  "a same-line SAFETY comment does not justify a second assertion",
+  "const a = first as A, b = second as B; // SAFETY: first was parsed by schema",
+  "require-safety-comment-for-type-assertion",
+);
+{
+  const both = lintSource("const a = first as A, b = second as B;", "sample.ts")
+    .filter((f) => f.rule === "require-safety-comment-for-type-assertion");
+  assert.equal(both.length, 2, `reported ${both.length}, expected both assertions`);
+  console.log("ok   both unjustified assertions on a line are reported");
+}
 expectRule("flags an angle-bracket assertion", "const user = <User>payload;", "require-safety-comment-for-type-assertion");
 expectRule("flags an angle-bracket assertion in a call", "send(<User>payload);", "require-safety-comment-for-type-assertion");
 expectNoRule("does not read a generic annotation as an assertion", "const list: Array<User> = [];", "require-safety-comment-for-type-assertion");

@@ -55,13 +55,45 @@ else
     # Failing to parse shows the badge, matching getHideStatus()'s own catch,
     # and that is the safe direction: it cannot hide a badge nobody hid.
     if [ -f "$config" ]; then
-        hidden=$(awk 'BEGIN { RS = "\x01" }
+        hidden=$(awk 'BEGIN {
+                RS = "\x01"
+                # awk has no chr() and does not read "0x53" as a number, so the
+                # table is keyed by the four hex digits of the escape. ASCII only:
+                # nothing above it can appear in the key being compared.
+                for (c = 1; c < 128; c++) {
+                    CHAR[sprintf("%04x", c)] = sprintf("%c", c)
+                    CHAR[sprintf("%04X", c)] = sprintf("%c", c)
+                }
+            }
             function ws() { while (i <= n && substr(s, i, 1) ~ /[ \t\r\n]/) i++ }
-            function str(   j, out, d) {
+            # Escapes are DECODED, not carried through: `{"hide\\u0053tatus":true}`
+            # is a valid document whose root key is `hideStatus`, and comparing
+            # the raw bytes missed it. An escape outside the JSON set fails the
+            # parse, as JSON.parse does.
+            function str(   j, out, d, e, hex) {
                 j = i + 1; out = ""
                 while (j <= n) {
                     d = substr(s, j, 1)
-                    if (d == "\\") { out = out substr(s, j, 2); j += 2; continue }
+                    if (d == "\\") {
+                        e = substr(s, j + 1, 1)
+                        if (e == "u") {
+                            hex = substr(s, j + 2, 4)
+                            if (hex !~ /^[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]$/) return 0
+                            # Only the ASCII range is turned back into a character;
+                            # anything above it cannot appear in the key we compare
+                            # against, so a marker that matches nothing is right.
+                            out = out (hex in CHAR ? CHAR[hex] : "\001")
+                            j += 6; continue
+                        }
+                        if (e == "" || index("\"\\/bfnrt", e) == 0) return 0
+                        if (e == "b") out = out "\b"
+                        else if (e == "f") out = out "\f"
+                        else if (e == "n") out = out "\n"
+                        else if (e == "r") out = out "\r"
+                        else if (e == "t") out = out "\t"
+                        else out = out e
+                        j += 2; continue
+                    }
                     if (d == "\"") { i = j + 1; tok = out; return 1 }
                     if (d == "\n") return 0
                     out = out d; j++
@@ -134,7 +166,11 @@ else
                 }
             }
             {
-                s = $0; n = length(s); i = 1; result = 0
+                s = $0
+                # getHideStatus() strips a UTF-8 BOM before parsing, so a config
+                # saved with one is honoured there and has to be here too.
+                sub(/^\357\273\277/, "", s)
+                n = length(s); i = 1; result = 0
                 ws()
                 if (substr(s, i, 1) != "{") exit
                 if (!object(1)) exit

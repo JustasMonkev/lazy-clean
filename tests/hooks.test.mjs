@@ -1098,6 +1098,19 @@ fs.writeFileSync(ocPinnedState, "lite");
 opencodeCommand("default ultra", ocPinned.env.XDG_CONFIG_HOME);
 eq("/lazy default does not overwrite an explicit session level", fs.readFileSync(ocPinnedState, "utf8"), "lite");
 
+// A file whose name starts with `-` is an unknown option to the checker, which
+// exits 2 — so the hook reported nothing for a file the CLI can scan after `--`.
+{
+  // The RELATIVE name, with cwd set: an absolute path never starts with `-`, so
+  // passing one would test nothing.
+  write("-dash.ts", "const value: any = 1;\n");
+  const res = runHook("edit-check.js",
+    JSON.stringify({ tool_name: "Edit", tool_input: { file_path: "-dash.ts", new_string: "const value: any = 1;" } }),
+    {}, { cwd: files });
+  ok("a dash-leading filename still reports findings through the hook",
+    res.stdout.includes("no-any"), res.stdout.slice(0, 200) || "<no output>");
+}
+
 // One drift guard over every command template, not just /lazy: the help card
 // carried the same stale claim that an omitted level means full, which sent the
 // agent to work at full while the transform injected the persisted level. Both
@@ -1344,6 +1357,16 @@ if (!canRunBash) {
     '{"n":-1.5e3,"hideStatus":true}',
     '{"esc":"a\\"b","hideStatus":true}',
     '{}',
+    // Escapes are part of the format: `\\u0053` IS an `S`, and getHideStatus()
+    // strips a BOM before parsing, so both have to be honoured here too.
+    '{"hide\\u0053tatus":true}',
+    '\uFEFF{"hideStatus":true}',
+    '{"a":"x\\ty","hideStatus":true}',
+    '{"a":"s\\/p","hideStatus":true}',
+    '{"a":"\\u0041","hideStatus":true}',
+    // ...and an escape outside the JSON set is not one.
+    '{"a":"\\q","hideStatus":true}',
+    '{"a":"\\u00zz","hideStatus":true}',
   ]) {
     writeConfig(sl, body);
     const hidden = statusline("ultra").out === "";

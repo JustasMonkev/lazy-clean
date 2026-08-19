@@ -77,7 +77,10 @@ function finish() {
     // maxBuffer: the default 1MB is ~3,000 findings of JSON. Overrunning it
     // ends the child with a null status, which read as "the checker broke" and
     // dropped the report for exactly the files that needed it most.
-    const res = spawnSync(process.execPath, [CHECKER, file, '--json'], { encoding: 'utf8', timeout: 20000, maxBuffer: 64e6 });
+    // `--` before the path: a file whose name starts with `-` is an unknown
+    // option to the checker, which exits 2, and this hook then reports nothing
+    // for a file the manual CLI can scan perfectly well after the same marker.
+    const res = spawnSync(process.execPath, [CHECKER, '--json', '--', file], { encoding: 'utf8', timeout: 20000, maxBuffer: 64e6 });
     if (res.status !== 1 || !res.stdout) return; // 0 = clean, anything else = checker broke
     const all = JSON.parse(res.stdout);
     if (all.length === 0) return;
