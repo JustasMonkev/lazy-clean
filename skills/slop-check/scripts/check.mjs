@@ -530,6 +530,14 @@ const EMOJI_PATTERN = new RegExp(
 
 // Each line rule runs against masked code, line by line.
 // `tsOnly` rules are skipped for plain JavaScript files.
+// An env var whose name says it holds a credential. Shared because the dot and
+// bracket lookups are two spellings of one rule, and the name list drifting
+// between them would leave one spelling quietly weaker than the other.
+const CREDENTIAL_NAME_FRAGMENT = String.raw`[A-Z0-9_$]*(?:SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIALS?|PRIVATE_KEY|APIKEY|API_KEY|_KEY|_KEYS)`;
+const CREDENTIAL_NAME = new RegExp(String.raw`^${CREDENTIAL_NAME_FRAGMENT}$`, "u");
+const ENV_SECRET_FALLBACK_MESSAGE =
+  "Defaulting a credential to a literal turns a missing secret into a silent misconfiguration. Fail fast when the variable is absent.";
+
 const LINE_RULES = [
   {
     name: "no-any",
@@ -629,19 +637,34 @@ const LINE_RULES = [
     message: "`cond ? true : false` restates the condition. Use the condition (or its negation) directly, wrapped in `Boolean(...)` when the condition is not already boolean.",
   },
   {
-    name: "no-empty-type-declaration",
-    tsOnly: true,
-    pattern: /\binterface\s+[\w$]+(?:<[^>]*>)?\s*\{\s*\}|\btype\s+[\w$]+(?:<[^>]*>)?\s*=\s*\{\s*\}/u,
-    message: "An empty interface or `{}` alias carries no contract and accepts almost anything. Declare the real fields or delete the declaration.",
+    // new RegExp, not a literal: the pattern interpolates the shared credential
+    // name list, and a backtick in the quote class cannot live in String.raw.
+    name: "no-env-secret-fallback",
+    pattern: new RegExp(
+      "\\bprocess\\s*\\.\\s*env\\s*\\.\\s*" + CREDENTIAL_NAME_FRAGMENT + "\\s*(?:\\|\\||\\?\\?)\\s*[\"'`]",
+      "u",
+    ),
+    message: ENV_SECRET_FALLBACK_MESSAGE,
   },
   {
+    // `process.env["API_TOKEN"]` is the same lookup, and generated or
+    // lint-constrained code writes it this way. Masking blanks the key, so the
+    // structure matches here and `verify` reads the real name off the raw line.
     name: "no-env-secret-fallback",
-    pattern: /\bprocess\s*\.\s*env\s*\.\s*[A-Z0-9_$]*(?:SECRET|TOKEN|PASSWORD|PASSWD|CREDENTIALS?|PRIVATE_KEY|APIKEY|API_KEY|_KEY|_KEYS)\s*(?:\|\||\?\?)\s*["'`]/u,
-    message: "Defaulting a credential to a literal turns a missing secret into a silent misconfiguration. Fail fast when the variable is absent.",
+    pattern: /\bprocess\s*\.\s*env\s*\[\s*(["'])([^\n]*?)\1\s*\]\s*(?:\|\||\?\?)\s*["'`]/du,
+    verify: (match, rawLine) => CREDENTIAL_NAME.test(rawLine.slice(...match.indices[2])),
+    message: ENV_SECRET_FALLBACK_MESSAGE,
   },
   {
     name: "no-tautological-assertion",
-    pattern: /\bexpect\s*\(\s*(true|false|\d+)\s*\)\s*\.\s*(?:toBe|toEqual|toStrictEqual|toBeTruthy|toBeFalsy)\s*\(\s*\1?\s*\)/u,
+    // String literals too: `expect("ok").toBe("ok")` protects nothing either.
+    // Masking keeps a literal's quotes and width but blanks its contents, so
+    // `"ok"` and `"no"` are indistinguishable here — `verify` compares the raw
+    // source text of the two spans before this is called a tautology.
+    pattern: /\bexpect\s*\(\s*(true|false|\d+|"[^"\n]*"|'[^'\n]*')\s*\)\s*\.\s*(?:toBe|toEqual|toStrictEqual|toBeTruthy|toBeFalsy)\s*\(\s*(\1)?\s*\)/du,
+    verify: (match, rawLine) =>
+      match.indices[2] === undefined ||
+      rawLine.slice(...match.indices[1]) === rawLine.slice(...match.indices[2]),
     message: "Asserting a literal against itself passes no matter what the code does. Assert on the value under test, or delete the test.",
   },
   {
@@ -654,7 +677,7 @@ const LINE_RULES = [
 const SLOP_DECLARATION_PATTERN = /\b(?:function|const|let|var|class|interface|type|enum)\s+([\w$]+)/gu;
 
 function* iterateLineFindings(ctx) {
-  const { maskedLines, isTypeScript } = ctx;
+  const { maskedLines, rawLines, isTypeScript } = ctx;
   const isGeometryFile = maskedLines.some((line) => GEOMETRY_CONTEXT_PATTERN.test(line));
   for (let index = 0; index < maskedLines.length; index += 1) {
     const line = maskedLines[index];
@@ -669,7 +692,10 @@ function* iterateLineFindings(ctx) {
         ? line.replace(rule.exempt, (matched) => " ".repeat(matched.length))
         : line;
       const match = rule.pattern.exec(probe);
-      if (match) {
+      // `verify` gets the unmasked line: masking preserves every offset, so a
+      // rule can match structure on the masked line and still read the literal
+      // text it needs to tell two same-shaped literals apart.
+      if (match && (!rule.verify || rule.verify(match, rawLines[index]))) {
         yield { line: lineNumber, column: match.index + 1, rule: rule.name, message: rule.message };
       }
     }
@@ -794,7 +820,9 @@ function* iterateCandidateFindings(ctx) {
 
   // A literal delay only: `setTimeout(resolve, ms)` in a sleep helper is fine.
   for (const match of masked.matchAll(
-    /\bnew\s+Promise\s*(?:<[^>]*>)?\s*\(\s*\(?\s*([\w$]+)\s*\)?\s*=>\s*setTimeout\s*\(\s*\1\s*,\s*\d/gu,
+    // `{?` for the block-bodied executor: `new Promise(r => { setTimeout(r, 1000); })`
+    // is the same hard-coded sleep, and formatting one should not clear it.
+    /\bnew\s+Promise\s*(?:<[^>]*>)?\s*\(\s*\(?\s*([\w$]+)\s*\)?\s*=>\s*\{?\s*setTimeout\s*\(\s*\1\s*,\s*\d/gu,
   )) {
     const position = matchSpan(lineStarts, match);
     if (justifiedNear(position.line)) continue;
@@ -803,6 +831,25 @@ function* iterateCandidateFindings(ctx) {
       rule: "no-arbitrary-sleep",
       message: "A hard-coded sleep guesses at timing instead of waiting for the event. Await the real signal, or name the delay as a policy and say why.",
     };
+  }
+
+  // `interface Marker {\n}` is what a formatter produces, and a line-at-a-time
+  // pattern never saw both braces — so the normal spelling of the defect was the
+  // one that got through. Matched against the whole masked source instead.
+  if (ctx.isTypeScript) {
+    for (const match of masked.matchAll(
+      // The generic list has to be balanced. `<[^>]*>` stopped at the first `>`,
+      // so `type R<O extends Partial<X> = {}> = ...` ended at `Partial<X>` and
+      // the DEFAULT VALUE of a type parameter read as an empty alias — a false
+      // positive the one-line version could never reach.
+      /\binterface\s+[\w$]+(?:<(?:[^<>]|<[^<>]*>)*>)?\s*\{\s*\}|\btype\s+[\w$]+(?:<(?:[^<>]|<[^<>]*>)*>)?\s*=\s*\{\s*\}/gu,
+    )) {
+      yield {
+        ...matchSpan(lineStarts, match),
+        rule: "no-empty-type-declaration",
+        message: "An empty interface or `{}` alias carries no contract and accepts almost anything. Declare the real fields or delete the declaration.",
+      };
+    }
   }
 
   // The log call has to mention the caught error; logging separate context
@@ -819,7 +866,11 @@ function* iterateCandidateFindings(ctx) {
   }
 
   for (const match of masked.matchAll(
-    /\bcatch\s*\(\s*([\w$]+)\s*(?::[^)]*)?\)\s*\{\s*throw\s+new\s+[\w$.]*Error\s*\(([^;]*?)\)\s*;?\s*\}/gu,
+    // The built-in error constructors are callable without `new`, and
+    // `throw Error(e.message)` loses the stack exactly like `throw new Error(...)`.
+    // Only the built-ins are accepted bare: `new` is what proves construction,
+    // so without it `throw toError(e.message)` would read as one too.
+    /\bcatch\s*\(\s*([\w$]+)\s*(?::[^)]*)?\)\s*\{\s*throw\s+(?:new\s+[\w$.]*Error|(?:Error|TypeError|RangeError|SyntaxError|EvalError|ReferenceError|URIError|AggregateError))\s*\(([^;]*?)\)\s*;?\s*\}/gu,
   )) {
     if (!new RegExp(`${IDENT_BEFORE}${escapeForRegExp(match[1])}\\s*(?:\\?\\.|\\.)\\s*message\\b`, "u").test(match[2])) continue;
     if (/\bcause\b/u.test(match[2])) continue;
@@ -927,17 +978,17 @@ function* iterateAssertionFindings(ctx) {
       const end = isArrowBlock || isCatchBlock
         ? closeBrace.get(brace) ?? masked.length
         : argsEnd;
-      const range = [
-        offsetToPosition(lineStarts, binding.index).line,
-        offsetToPosition(lineStarts, end).line,
-      ];
+      // Offsets, not line numbers: rounding the handler out to whole lines put
+      // everything else on its line inside it, so `promise.catch(e => f(e));
+      // const user = error as User;` exempted the assertion after the call.
+      const range = [binding.index, end];
       const ranges = catchBindings.get(binding[1]);
       if (ranges) ranges.push(range);
       else catchBindings.set(binding[1], [range]);
     }
   }
-  const inCatchBlock = (name, lineNumber) =>
-    (catchBindings.get(name) ?? []).some(([from, to]) => from <= lineNumber && lineNumber <= to);
+  const inCatchBlock = (name, offset) =>
+    (catchBindings.get(name) ?? []).some(([from, to]) => from <= offset && offset <= to);
 
   const commentLines = new Set();
   for (const comment of comments) {
@@ -968,7 +1019,9 @@ function* iterateAssertionFindings(ctx) {
     // exempt the whole line, and the second assertion escaped with it.
     let match = null;
     for (const candidate of line.matchAll(TYPE_ASSERTION_PATTERN)) {
-      if (candidate[1] && inCatchBlock(candidate[1], lineNumber)) continue;
+      // The operand's own offset in the file, not the line's: lineStarts is
+      // built over the masked source, which shares every offset with the raw.
+      if (candidate[1] && inCatchBlock(candidate[1], lineStarts[index] + candidate.index)) continue;
       match = candidate;
       break;
     }
@@ -1125,6 +1178,7 @@ export function lintSource(rawSource, filePath) {
     isTypeScript: TYPESCRIPT_EXTENSIONS.has(extension),
     masked,
     maskedLines: masked.split("\n"),
+    rawLines: source.split("\n"),
     comments,
     lineStarts: buildLineStarts(masked),
   };

@@ -130,7 +130,12 @@ function finish() {
         // as changing what LATER sessions start at, so it must not decide this
         // one's level.
         currentMode = defaultBeforeCommand ?? getDefaultMode();
-        if (currentMode !== 'off') {
+        // `off` is normally left unwritten — no flag IS off, and writing one
+        // would make every session start by creating state. But when this
+        // prompt moved the default, the absent flag stops meaning "off" and
+        // starts meaning "derive from the new default", so the NEXT prompt
+        // activated what this one only scheduled. Pin it in that case.
+        if (currentMode !== 'off' || defaultBeforeCommand !== null) {
           try { setMode(currentMode); } catch (e) { /* best-effort: the ruleset below still goes out */ }
         }
       }

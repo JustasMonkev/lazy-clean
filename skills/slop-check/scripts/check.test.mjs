@@ -232,6 +232,63 @@ expectRule(
   "try { run(); } catch (err$) { console.error(err$); throw err$; }",
   "no-log-and-rethrow",
 );
+// Formatting the executor is not a fix: the block-bodied form is the same sleep.
+expectRule(
+  "flags a block-bodied hard-coded sleep",
+  "const wait = new Promise(resolve => { setTimeout(resolve, 1000); });",
+  "no-arbitrary-sleep",
+);
+// The built-in error constructors are callable without `new`, and lose the
+// stack the same way. A helper whose name merely ends in Error is not one.
+expectRule(
+  "flags a callable Error rethrow",
+  "try { run(); } catch (error) { throw Error(error.message); }",
+  "no-message-only-rethrow",
+);
+expectNoRule(
+  "does not read a helper call as an error constructor",
+  "try { run(); } catch (error) { throw toError(error.message); }",
+  "no-message-only-rethrow",
+);
+// A formatter splits an empty declaration across lines, which is the spelling a
+// line-at-a-time pattern could never see.
+expectRule(
+  "flags an empty interface written across lines",
+  "interface Marker {\n}",
+  "no-empty-type-declaration",
+);
+expectRule("flags an empty type alias across lines", "type Marker = {\n};", "no-empty-type-declaration");
+// `= {}` after a type parameter is its DEFAULT, not an empty alias. Reachable
+// only once the rule crossed lines, and it fired on real eslint source.
+expectNoRule(
+  "does not read a default type parameter as an empty alias",
+  "export type R<O extends Partial<X> = {}> = Custom<O>;",
+  "no-empty-type-declaration",
+);
+expectNoRule("allows an interface with fields", "interface Shape {\n  width: number;\n}", "no-empty-type-declaration");
+// Masking keeps a literal's width and offsets but blanks its contents, so these
+// two are indistinguishable on the masked line and only the raw text separates
+// a tautology from a real assertion.
+expectRule("flags a string asserted against itself", 'expect("ok").toBe("ok");', "no-tautological-assertion", "sample.test.ts");
+expectNoRule("allows a string asserted against a different one", 'expect("ok").toBe("different");', "no-tautological-assertion", "sample.test.ts");
+// Bracket access is the same lookup; the key is masked, so the rule has to read
+// it off the raw line to tell a credential from a port number.
+expectRule(
+  "flags a bracket-form credential fallback",
+  'const token = process.env["API_TOKEN"] || "development-token";',
+  "no-env-secret-fallback",
+);
+expectNoRule(
+  "allows a bracket-form fallback for a non-credential",
+  'const port = process.env["PORT"] || "3000";',
+  "no-env-secret-fallback",
+);
+// The handler ends at its call, not at the end of its line.
+expectRule(
+  "an expression-bodied handler does not exempt the rest of its own line",
+  "promise.catch(error => handle(error)); const user = error as User;",
+  "require-safety-comment-for-type-assertion",
+);
 expectRule("flags useless rethrow", "try { run(); } catch (error) { throw error; }", "no-useless-rethrow");
 expectNoRule("allows wrapping rethrow", "try { run(); } catch (error) { throw new AppError(error); }", "no-useless-rethrow");
 

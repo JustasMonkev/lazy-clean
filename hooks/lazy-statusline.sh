@@ -29,14 +29,24 @@ if [ -n "${LAZY_HIDE_STATUS+set}" ]; then
         *) exit 0 ;;
     esac
 else
-    # getConfigDir() reads exactly ONE directory, so stop at the first config
-    # that exists instead of letting a second one override it: bash cannot see
-    # process.platform, and $APPDATA is only that directory on Windows.
-    for config in "${XDG_CONFIG_HOME:-$HOME/.config}/lazy/config.json" "${APPDATA:+$APPDATA/lazy/config.json}"; do
-        [ -n "$config" ] && [ -f "$config" ] || continue
+    # getConfigDir() reads exactly ONE directory, chosen before any file is
+    # looked at — so pick the same one here rather than trying paths in turn.
+    # Iterating made $HOME/.config outrank %APPDATA% on Windows, where a stale
+    # Unix-style config could override the one the hooks actually write.
+    # $OSTYPE is bash's stand-in for process.platform: msys/cygwin/win32 are the
+    # Windows shells, and WSL reports linux, which is what a node process there
+    # reports too.
+    if [ -n "${XDG_CONFIG_HOME:-}" ]; then
+        config="$XDG_CONFIG_HOME/lazy/config.json"
+    else
+        case "${OSTYPE:-}" in
+            msys*|cygwin*|win32*) config="${APPDATA:-$HOME/AppData/Roaming}/lazy/config.json" ;;
+            *) config="$HOME/.config/lazy/config.json" ;;
+        esac
+    fi
+    if [ -f "$config" ]; then
         tr -d '[:space:]' < "$config" | grep -q '"hideStatus":true' && exit 0
-        break
-    done
+    fi
 fi
 
 # The whole file, not its first line: readMode() trims the whole file and

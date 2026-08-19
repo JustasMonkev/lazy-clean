@@ -664,7 +664,10 @@ eq("a bare /lazy with an off default reports off and writes nothing",
 // announce "new sessions start in ultra" and start ultra in this one.
 r = track({ prompt: "/lazy default ultra" }, { flag: null, config: JSON.stringify({ defaultMode: "off" }), env: qoder });
 eq("/lazy default on qoder records the new default", r.config, { defaultMode: "ultra" });
-eq("/lazy default on qoder does not activate it in this session", r.flag, null);
+// Explicitly `off`, not absent: absent means "derive from the default", which
+// is the value this very command just changed, so the next prompt would have
+// activated ultra. Pinning off is what makes the answer survive the turn.
+eq("/lazy default on qoder does not activate it in this session", r.flag, "off");
 eq("/lazy default on qoder says only that new sessions are affected",
   JSON.parse(r.stdout).hookSpecificOutput.additionalContext,
   "LAZY DEFAULT SET — new sessions start in ultra.");
@@ -677,6 +680,11 @@ ok("/lazy default off on qoder still injects the live ruleset",
   JSON.parse(r.stdout).hookSpecificOutput.additionalContext
     .startsWith("LAZY DEFAULT SET — new sessions start in off."),
   r.stdout.slice(0, 160));
+
+// One invocation is not the test: the leak showed up on the NEXT prompt, which
+// re-derived the level from the default the command had already replaced.
+r = track({ prompt: "fix the parser" }, { flag: "off", config: JSON.stringify({ defaultMode: "ultra" }), env: qoder });
+eq("a pinned off survives later prompts on qoder", [r.flag, r.stdout], ["off", ""]);
 
 r = track({ prompt: "/lazy ultra" }, { env: qoder });
 ok("qoder folds the switch confirmation into one JSON write",
@@ -947,6 +955,15 @@ eq("/lazy default does not overwrite an explicit session level", fs.readFileSync
     const equated = template.match(/\/lazy\s*\((?:lite|full|ultra|off)\b/i);
     ok(`${file} does not equate a bare /lazy with a level`, !equated, equated && equated[0]);
   }
+  // Provenance is the one claim in these templates that can mislead a reader
+  // about this package rather than merely about a level: the benchmark figures
+  // are upstream's and were never reproduced here. The skill body said so and
+  // the OpenCode template did not, so the same command answered differently
+  // depending on the host.
+  const gain = parseCommandFile(path.join(commandDir, "lazy-gain.md")).template;
+  ok("the OpenCode gain card attributes the figures upstream", /\bupstream\b/i.test(gain), gain.slice(0, 200));
+  ok("the OpenCode gain card says they are not reproduced here",
+    /\bnot been reproduced\b/i.test(gain), gain.slice(0, 200));
 }
 
 // A comment finding reports at the `/**`, so an edit deeper inside the comment
