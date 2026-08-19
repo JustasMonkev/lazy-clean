@@ -15,6 +15,7 @@ import os from "node:os";
 import path from "node:path";
 import vm from "node:vm";
 import { spawn, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -91,6 +92,14 @@ function freshHome(name) {
     config: path.join(home, ".config", "lazy", "config.json"),
     settings: path.join(home, ".claude", "settings.json"),
   };
+}
+
+// Mirrors lazy-runtime's naming: a readable prefix plus a digest of the WHOLE
+// id, because sanitizing alone let `a/b` and `a:b` share one file.
+function qoderStateFile(id) {
+  const readable = String(id).replace(/[^\w.-]/gu, "_").slice(0, 32);
+  const digest = createHash("sha256").update(String(id)).digest("hex").slice(0, 16);
+  return `.lazy-active-${readable}-${digest}`;
 }
 
 function writeConfig(box, text) {
@@ -455,10 +464,20 @@ eq("state file: vscode copilot falls back to the claude dir",
 // event that clears the flag, and Qoder does not, so a shared file made every
 // level permanent.
 eq("state file: qoder lives in ~/.qoder, keyed by session",
-  stateFileFor({ QODER_SESSION_ID: "q" }), [path.join(".qoder", ".lazy-active-q")]);
+  stateFileFor({ QODER_SESSION_ID: "q" }), [path.join(".qoder", qoderStateFile("q"))]);
 // The id reaches a filename; a path separator in it must not escape the dir.
 eq("state file: a qoder session id cannot escape its directory",
-  stateFileFor({ QODER_SESSION_ID: "../../etc/x" }), [path.join(".qoder", ".lazy-active-.._.._etc_x")]);
+  stateFileFor({ QODER_SESSION_ID: "../../etc/x" }), [path.join(".qoder", qoderStateFile("../../etc/x"))]);
+ok("state file: a qoder session id stays inside .qoder",
+  !qoderStateFile("../../etc/x").includes("/") && !qoderStateFile("../../etc/x").includes("\\"),
+  qoderStateFile("../../etc/x"));
+// Sanitizing alone collided: `a/b` and `a:b` both became `a_b`, which put two
+// sessions back on one file — the leak this naming exists to prevent.
+ok("state file: ids that sanitize alike do not collide",
+  qoderStateFile("a/b") !== qoderStateFile("a:b"), qoderStateFile("a/b"));
+ok("state file: ids sharing a long prefix do not collide",
+  qoderStateFile(`${"x".repeat(64)}A`) !== qoderStateFile(`${"x".repeat(64)}B`), "prefix collision");
+eq("state file: the same id is always the same file", qoderStateFile("sess"), qoderStateFile("sess"));
 
 // setMode / readMode / clearMode round-trip and read failure modes. readMode
 // validates: the flag file is hand-editable, so anything that is not a level
@@ -530,7 +549,7 @@ function track(prompt, { flag, config: cfg, env } = {}) {
   // Qoder state is keyed by session id, so that a level set in one session does
   // not leak into the next — the same reason the file is not just .lazy-active.
   const target = env && env.QODER_SESSION_ID
-    ? path.join(mt.home, ".qoder", `.lazy-active-${env.QODER_SESSION_ID}`)
+    ? path.join(mt.home, ".qoder", qoderStateFile(env.QODER_SESSION_ID))
     : mt.flag;
   fs.mkdirSync(path.dirname(target), { recursive: true });
   if (flag === null) fs.rmSync(target, { force: true });
@@ -734,7 +753,7 @@ ok("an env override that agrees is not reported as a conflict",
   const inSession = (id, prompt) => runHook("lazy-mode-tracker.js", JSON.stringify({ prompt }),
     { ...box.env, QODER_SESSION_ID: id });
   const stateOf = (id) => {
-    const file = path.join(box.home, ".qoder", `.lazy-active-${id}`);
+    const file = path.join(box.home, ".qoder", qoderStateFile(id));
     return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;
   };
   inSession("sessionA", "/lazy default ultra");
@@ -1448,7 +1467,7 @@ const asyncBox = freshHome("noeof");
     child.stdout.on("data", (d) => (stdout += d));
     child.stdin.on("error", () => {});
     const killer = setTimeout(() => child.kill("SIGKILL"), 15000);
-    child.stdin.write("x".repeat(40e6), () => { try { child.stdin.end(); } catch { /* destroyed */ } });
+    child.stdin.write("x".repeat(40e6), () => { try { child.stdin.end(); } catch { /* the child already exited and closed the pipe */ } });
     child.on("close", (status) => { clearTimeout(killer); resolve({ status, stdout }); });
   });
   ok("a 40MB subagent payload exits 0 and fails open", res.status === 0 && parses(res.stdout));

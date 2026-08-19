@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const crypto = require('crypto');
 const { getClaudeDir, getConfigDir, normalizePersistedMode } = require('./lazy-config');
 
 const STATE_FILE = '.lazy-active';
@@ -33,14 +34,21 @@ if (isQoder) stateDir = path.join(os.homedir(), '.qoder');
 // it by QODER_SESSION_ID is what makes the documented "sticks until session
 // end" true there — and it is what lets `/lazy default` pin the level THIS
 // session is running at without freezing every later session at that level too.
-// The id reaches a filename, so anything that is not a plain name is replaced.
+// The id reaches a filename, so it is sanitized — but sanitizing alone collides
+// (`a/b` and `a:b` both became `a_b`, and two ids sharing a truncated prefix
+// collided too), and a collision puts two sessions back on one file, which is
+// the leak this naming exists to prevent. The readable part is for humans; the
+// digest of the WHOLE id is what makes it unique.
 // These files are never cleaned up, deliberately: mtime is not a liveness
 // signal — a session open or resumed past any age still owns its level — so
 // deleting by age silently reset live sessions to the default. Each file is a
 // handful of bytes, which is the cheaper thing to leave lying around.
-const stateFile = isQoder
-  ? `${STATE_FILE}-${String(process.env.QODER_SESSION_ID).replace(/[^\w.-]/gu, '_').slice(0, 64)}`
-  : STATE_FILE;
+function sessionStateFile(id) {
+  const readable = String(id).replace(/[^\w.-]/gu, '_').slice(0, 32);
+  const digest = crypto.createHash('sha256').update(String(id)).digest('hex').slice(0, 16);
+  return `${STATE_FILE}-${readable}-${digest}`;
+}
+const stateFile = isQoder ? sessionStateFile(process.env.QODER_SESSION_ID) : STATE_FILE;
 const statePath = path.join(stateDir, stateFile);
 function setMode(mode) {
   fs.mkdirSync(path.dirname(statePath), { recursive: true });

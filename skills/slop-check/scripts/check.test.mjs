@@ -37,6 +37,15 @@ function expectNoRule(description, source, rule, filePath = "sample.ts") {
 
 expectRule("flags any annotation", "function f(value: any) { return value; }", "no-any");
 expectRule("flags any generic", "const items: Array<any> = [];", "no-any");
+// A bare alias and a union member disable checking as completely as an
+// annotation, and neither position was recognized.
+expectRule("flags a bare any alias", "type Payload = any;", "no-any");
+expectRule("flags any in a union", "type Maybe = string | any;", "no-any");
+expectNoRule("allows an ordinary alias", "type Ok = string;", "no-any");
+// A regex after a statement block is a regex, not division: leaving its body
+// unmasked linted the pattern's contents as code.
+expectNoRule("does not lint inside a regex following a block", "if (ready) {}\n/x: any/.test(text);", "no-any");
+expectRule("still lints after an object literal divided by something", "const ratio = {a:1}.a / total;\nconst v: any = 1;", "no-any");
 expectNoRule("allows words containing any", "const company: Company = load();", "no-any");
 expectNoRule("skips any in plain JS", "const value = x; // : any is not a JS concept", "no-any", "sample.js");
 expectNoRule("ignores any inside strings", 'const message = "cast to any";', "no-any");
@@ -194,6 +203,46 @@ expectRule("flags a string-literal type assertion", 'const a = payload as "ready
 expectRule("flags a numeric-literal type assertion", "const a = payload as 42;", "require-safety-comment-for-type-assertion");
 expectRule('flags an indexed-access assertion', 'const a = payload as User["id"];', "require-safety-comment-for-type-assertion");
 expectRule("flags a keyed indexed-access assertion", "const a = payload as T[keyof T];", "require-safety-comment-for-type-assertion");
+// `<User>payload` is the other assertion syntax, and was not recognized at all.
+// The multi-line pass must not re-report what the per-line pass already found:
+// `\s*` before the terminator swallows a trailing newline, which made every
+// single-line assertion look like it spanned lines.
+{
+  const once = lintSource("const a = payload as User;\n", "sample.ts")
+    .filter((f) => f.rule === "require-safety-comment-for-type-assertion");
+  assert.equal(once.length, 1, `reported ${once.length} times`);
+  console.log("ok   a single-line assertion is reported exactly once");
+}
+expectRule("flags an angle-bracket assertion", "const user = <User>payload;", "require-safety-comment-for-type-assertion");
+expectRule("flags an angle-bracket assertion in a call", "send(<User>payload);", "require-safety-comment-for-type-assertion");
+expectNoRule("does not read a generic annotation as an assertion", "const list: Array<User> = [];", "require-safety-comment-for-type-assertion");
+expectNoRule("does not read a generic call as an assertion", "const call = parse<User>(raw);", "require-safety-comment-for-type-assertion");
+expectNoRule("does not read a comparison as an assertion", "const smaller = a < b;", "require-safety-comment-for-type-assertion");
+// In TSX the same characters open an element.
+expectNoRule("does not read a JSX element as an assertion", "const el = <div>hi</div>;", "require-safety-comment-for-type-assertion", "sample.tsx");
+// A formatter splits the type across lines, which the per-line pass cannot see.
+expectRule(
+  "flags an assertion whose type spans lines",
+  "const user = payload as {\n  id: string;\n};",
+  "require-safety-comment-for-type-assertion",
+);
+// A `SAFETY:` comment justifies the assertion it is attached to, not every
+// assertion within three lines of it.
+expectRule(
+  "a SAFETY comment does not justify an unrelated later assertion",
+  "// SAFETY: checked upstream\nconst x = a as Foo;\n\nconst y = b as Bar;",
+  "require-safety-comment-for-type-assertion",
+);
+expectNoRule(
+  "a SAFETY comment justifies the assertion directly below it",
+  "// SAFETY: checked upstream\nconst x = a as Foo;",
+  "require-safety-comment-for-type-assertion",
+);
+expectNoRule(
+  "a multi-line SAFETY block justifies the assertion below it",
+  "/**\n * SAFETY: validated at the boundary\n */\nconst x = a as Foo;",
+  "require-safety-comment-for-type-assertion",
+);
 expectRule("flags a keyof type assertion", "const a = payload as keyof User;", "require-safety-comment-for-type-assertion");
 expectRule("flags a stacked keyof typeof assertion", "const a = payload as keyof typeof config;", "require-safety-comment-for-type-assertion");
 expectRule("flags a parenthesized type assertion", "const a = payload as (User & Admin);", "require-safety-comment-for-type-assertion");
@@ -367,6 +416,16 @@ expectNoRule("allows wrapping rethrow", "try { run(); } catch (error) { throw ne
 expectRule("flags empty catch", "try { run(); } catch {}", "no-empty-catch");
 expectNoRule("allows justified empty catch", "try { run(); } catch { /* best-effort cleanup */ }", "no-empty-catch");
 
+// A bare marker justifies nothing: the comment that ADMITS the debt was
+// silencing the rule that reports it.
+expectRule("a TODO does not justify an empty catch", "try { run(); } catch { /* TODO */ }", "no-empty-catch");
+expectRule("a TODO with a task does not justify one either", "try { run(); } catch { /* TODO: fix */ }", "no-empty-catch");
+expectNoRule(
+  "a reason carrying a TODO still justifies it",
+  "try { run(); } catch { /* TODO: the cache is advisory, a miss is fine */ }",
+  "no-empty-catch",
+);
+expectRule("a TODO does not justify fake success", "try { return load(); } catch { /* TODO */ return null; }", "no-catch-fake-success");
 expectRule("flags catch returning null", "try { return load(); } catch { return null; }", "no-catch-fake-success");
 expectRule("flags catch returning empty array", "try { return load(); } catch (error) { return []; }", "no-catch-fake-success");
 expectNoRule(

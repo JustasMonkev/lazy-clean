@@ -58,7 +58,7 @@ if (!isCodex && !isCopilot) try {
   // session start turns a helpful hint into a nag.
   const nudgeFlagPath = path.join(claudeDir, '.lazy-statusline-nudged');
   if (!hasStatusline && !fs.existsSync(nudgeFlagPath)) {
-    try { fs.writeFileSync(nudgeFlagPath, ''); } catch (e) { /* best-effort */ }
+    try { fs.writeFileSync(nudgeFlagPath, ''); } catch (e) { /* best-effort: without the flag the hint simply shows again */ }
     const isWindows = process.platform === 'win32';
     const scriptName = isWindows ? 'lazy-statusline.ps1' : 'lazy-statusline.sh';
     const scriptPath = path.join(__dirname, scriptName);

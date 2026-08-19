@@ -73,17 +73,34 @@ else
                 if (substr(s, i, 4) == "true")  { i += 4; lit = "true";  return 1 }
                 if (substr(s, i, 5) == "false") { i += 5; lit = "false"; return 1 }
                 if (substr(s, i, 4) == "null")  { i += 4; lit = "null";  return 1 }
+                # The JSON number grammar, not a run of numeric punctuation:
+                # `1e` and `01` are not numbers, and JSON.parse rejects the whole
+                # document over either.
                 j = i
                 if (substr(s, j, 1) == "-") j++
-                if (substr(s, j, 1) !~ /[0-9]/) return 0
-                while (j <= n && substr(s, j, 1) ~ /[0-9.eE+-]/) j++
+                if (substr(s, j, 1) == "0") j++
+                else if (substr(s, j, 1) ~ /[1-9]/) { while (substr(s, j, 1) ~ /[0-9]/) j++ }
+                else return 0
+                if (substr(s, j, 1) == ".") {
+                    j++
+                    if (substr(s, j, 1) !~ /[0-9]/) return 0
+                    while (substr(s, j, 1) ~ /[0-9]/) j++
+                }
+                if (substr(s, j, 1) ~ /[eE]/) {
+                    j++
+                    if (substr(s, j, 1) ~ /[+-]/) j++
+                    if (substr(s, j, 1) !~ /[0-9]/) return 0
+                    while (substr(s, j, 1) ~ /[0-9]/) j++
+                }
                 i = j; lit = "num"; return 1
             }
             function value(   c) {
                 c = substr(s, i, 1)
-                if (c == "{") return object(0)
-                if (c == "[") return array()
-                lit = ""
+                # `lit` is set AFTER the recursion, not before: a nested scalar
+                # left its own value behind, so `{"hideStatus":{"enabled":true}}`
+                # read as a root `true`.
+                if (c == "{") { if (!object(0)) return 0; lit = "object"; return 1 }
+                if (c == "[") { if (!array()) return 0; lit = "array"; return 1 }
                 return scalar()
             }
             function array(   c) {

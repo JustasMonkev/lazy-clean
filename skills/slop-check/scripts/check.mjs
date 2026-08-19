@@ -158,6 +158,27 @@ function maskSource(source, { jsx = false } = {}) {
 
   const precededByKeyword = (index) => REGEX_PRECEDING_KEYWORDS.has(wordEndingAt(index));
 
+  // `if (ready) {}` then a regex on the next line: a `}` closing a STATEMENT
+  // block is a regex predecessor, while one closing an object literal means
+  // division. The difference is what opened it — an object literal's `{` sits in
+  // expression position, a block's does not. Without this the regex body stayed
+  // unmasked and its contents were linted as code.
+  const closesStatementBlock = (index) => {
+    let depth = 0;
+    for (let k = index; k >= 0; k -= 1) {
+      const ch = out[k];
+      if (ch === "}") depth += 1;
+      else if (ch === "{") {
+        depth -= 1;
+        if (depth === 0) {
+          const before = lastCodeChar(k - 1);
+          return before === null || !"=([{,:".includes(before.char);
+        }
+      }
+    }
+    return false;
+  };
+
   // Walk back from a `)` to its own `(` and report the keyword in front of it.
   const closesControlParen = (index) => {
     let depth = 0;
@@ -413,6 +434,7 @@ function maskSource(source, { jsx = false } = {}) {
         "([{,;=:!&|?+*%^~".includes(prevChar) ||
         arrowBefore ||
         (prevChar === ")" && closesControlParen(prev.index)) ||
+        (prevChar === "}" && closesStatementBlock(prev.index)) ||
         (/[A-Za-z]/.test(prevChar) && precededByKeyword(prev.index)));
       if (startsRegex) {
         let j = i + 1;
@@ -574,7 +596,10 @@ const LINE_RULES = [
   {
     name: "no-any",
     tsOnly: true,
-    pattern: /:\s*any\b|\bas\s+any\b|<\s*any\s*[,>]|\bany\s*\[\]/u,
+    // `type Payload = any` and `A | any` disable checking as completely as an
+    // annotation does; the rule only knew the positions where `any` follows a
+    // colon, `as`, a generic delimiter, or precedes `[]`.
+    pattern: /:\s*any\b|\bas\s+any\b|<\s*any\s*[,>]|\bany\s*\[\]|\btype\s+[\w$]+(?:<(?:[^<>]|<[^<>]*>)*>)?\s*=\s*any\b|[|&]\s*any\b/u,
     message: "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
   },
   {
@@ -770,8 +795,23 @@ function* iterateLineFindings(ctx) {
 
 function* iterateBlockFindings(ctx) {
   const { masked, lineStarts, comments } = ctx;
+  // A comment is only justification if it justifies something. `/* TODO */` in
+  // a swallowed catch explains nothing about why losing the error is safe, and
+  // accepting it let the marker that ADMITS the debt silence the rule that
+  // reports it. A leading marker is stripped before counting, so `TODO: fix` is
+  // still nothing while `TODO: the cache is advisory` is a reason that happens
+  // to carry one. Two words is the bar — `best-effort cleanup` is terse but
+  // real, and no bare marker survives the strip with two words left.
+  const isJustification = (comment) => {
+    const body = comment.text
+      .replace(/^\/\/+|^\/\*+|\*+\/$/gu, "")
+      .replace(/^\s*\*\s?/gmu, "")
+      .replace(/^\s*(?:todo|fixme|xxx|hack|note|wip)\b[\s:!-]*/iu, "")
+      .trim();
+    return body.split(/\s+/u).filter(Boolean).length >= 2;
+  };
   const hasCommentInRange = (start, end) =>
-    comments.some((comment) => comment.start >= start && comment.start < end);
+    comments.some((comment) => comment.start >= start && comment.start < end && isJustification(comment));
 
   for (const match of masked.matchAll(/\bcatch\s*\(\s*([\w$]+)\s*(?::[^)]*)?\)\s*\{\s*throw\s+\1\s*;?\s*\}/gu)) {
     yield {
@@ -854,6 +894,14 @@ const TYPE_ASSERTION_PATTERN = new RegExp(
   "gu",
 );
 
+
+// `<User>payload`, the pre-`as` assertion syntax. The `<` has to be in
+// expression position — after an operator, an opener, `return` or `=>` — which
+// is what separates it from `Array<User>` and from `a < b`.
+const ANGLE_ASSERTION_PATTERN = new RegExp(
+  String.raw`(?:^|[=(,[:]|=>|\breturn)\s*<\s*(?:${NAMED_TYPE}|${OBJECT_TYPE}|${TUPLE_TYPE})\s*>\s*(?=[\w$([])`,
+  "gmu",
+);
 
 // A name captured from source, made safe to interpolate into a pattern. `$` is
 // both a legal identifier character and a regex anchor, so it has to be escaped
@@ -1081,18 +1129,23 @@ function* iterateAssertionFindings(ctx) {
   // `import { readFile as read, ... }` spans lines; skipping only the line the
   // keyword sits on left every aliased specifier below it flagged.
   let inSpecifierList = false;
+  // Lines the per-line pass declined to look at, so the multi-line pass below
+  // declines the same ones rather than re-deriving the rule.
+  const skippedLines = new Set();
   for (let index = 0; index < maskedLines.length; index += 1) {
     const line = maskedLines[index];
     if (!line.trim()) continue;
     if (inSpecifierList) {
       if (line.includes("}")) inSpecifierList = false;
+      skippedLines.add(index + 1);
       continue;
     }
     if (SPECIFIER_LIST_OPEN.test(line)) {
       inSpecifierList = true;
+      skippedLines.add(index + 1);
       continue;
     }
-    if (MODULE_STATEMENT.test(line)) continue;
+    if (MODULE_STATEMENT.test(line)) { skippedLines.add(index + 1); continue; }
     const lineNumber = index + 1;
     // Every assertion on the line, not just the first: exempting the catch
     // narrowing in `const a = error as Error, b = payload as User;` used to
@@ -1112,9 +1165,12 @@ function* iterateAssertionFindings(ctx) {
       break;
     }
     if (!match) continue;
-    const hasSafetyComment =
-      commentLines.has(lineNumber) || commentLines.has(lineNumber - 1) ||
-      commentLines.has(lineNumber - 2) || commentLines.has(lineNumber - 3);
+    // Attached to THIS assertion: on its line, or on the line directly above.
+    // Every line of a multi-line comment is in commentLines, so the line above
+    // is its last line and a `/** SAFETY: ... */` block still counts. The old
+    // three-line window was a blanket: one comment exempted every assertion
+    // within three lines of it, including ones it says nothing about.
+    const hasSafetyComment = commentLines.has(lineNumber) || commentLines.has(lineNumber - 1);
     if (!hasSafetyComment) {
       yield {
         line: lineNumber,
@@ -1122,6 +1178,51 @@ function* iterateAssertionFindings(ctx) {
         // measuring from the match start moved the column onto the type name
         // for `foo.bar as Baz`, where the operand is not captured.
         column: match.index + /\bas\s/u.exec(match[0]).index + 1,
+        rule: "require-safety-comment-for-type-assertion",
+        message: "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion, or remove it.",
+      };
+    }
+  }
+
+  const unjustified = (offset) => {
+    const { line, column } = offsetToPosition(lineStarts, offset);
+    if (skippedLines.has(line)) return null;
+    if (commentLines.has(line) || commentLines.has(line - 1)) return null;
+    return { line, column };
+  };
+
+  // An assertion whose TYPE spans lines — `payload as {\n  id: string;\n}` is
+  // what a formatter produces — cannot be seen by the per-line pass at all.
+  // Only matches that actually cross a newline are taken here, so nothing the
+  // loop above already reported can arrive twice.
+  for (const candidate of masked.matchAll(TYPE_ASSERTION_PATTERN)) {
+    // The TYPE has to span lines, not just the whitespace after it: `\s*` before
+    // the terminator swallows the trailing newline, so testing the raw match
+    // reported single-line assertions here a second time.
+    if (!candidate[0].replace(/\s+$/u, "").includes("\n")) continue;
+    const asAt = candidate.index + /\bas\s/u.exec(candidate[0]).index;
+    if (candidate[1] && inCatchBlock(candidate[1], candidate.index)) continue;
+    const lineStart = lineStarts[offsetToPosition(lineStarts, asAt).line - 1];
+    if (/\[[^\]]*\bin\b[^\]]*$/u.test(masked.slice(lineStart, asAt))) continue;
+    const at = unjustified(asAt);
+    if (!at) continue;
+    yield {
+      ...at,
+      rule: "require-safety-comment-for-type-assertion",
+      message: "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion, or remove it.",
+    };
+  }
+
+  // `<User>payload` is the other assertion syntax, and it was not recognized at
+  // all. TS only and never TSX, where the same characters open an element — the
+  // caller decides via `angleAssertions`, because a .tsx file has to be excluded
+  // even though it is TypeScript.
+  if (ctx.angleAssertions) {
+    for (const candidate of masked.matchAll(ANGLE_ASSERTION_PATTERN)) {
+      const at = unjustified(candidate.index + candidate[0].indexOf("<"));
+      if (!at) continue;
+      yield {
+        ...at,
         rule: "require-safety-comment-for-type-assertion",
         message: "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion, or remove it.",
       };
@@ -1262,6 +1363,8 @@ export function lintSource(rawSource, filePath) {
     path: filePath,
     declaredNames,
     isTypeScript: TYPESCRIPT_EXTENSIONS.has(extension),
+    // TS but not TSX: in a .tsx file `<User>` opens an element, not an assertion.
+    angleAssertions: TYPESCRIPT_EXTENSIONS.has(extension) && !JSX_EXTENSIONS.has(extension),
     masked,
     maskedLines: masked.split("\n"),
     rawLines: source.split("\n"),
