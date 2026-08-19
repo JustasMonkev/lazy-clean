@@ -927,6 +927,14 @@ const LINE_RULES = [
 // middle type argument has commas either side, exactly like a later parameter.
 // The residual gap is an untyped later parameter (`f(a, any)`), which loses
 // nothing: it silences less, never more.
+// A DESTRUCTURED binding named `any`: `function pick({ any }: { any: number })`.
+// In a destructuring pattern a name followed by `:` is a property KEY and not a
+// binding -- `{ any: renamed }` binds `renamed` -- so the lookahead excludes it,
+// which is the same thing that keeps an ordinary object type (`{ any: number }`)
+// from counting. `]` is deliberately NOT a terminator: array destructuring of a
+// binding called `any` is vanishingly rare and `[string, any]` is an ordinary
+// tuple type, which would have silenced every finding in its file.
+const DESTRUCTURED_ANY = /[{,]\s*any\s*(?=[,}]|=(?!>))/u;
 const PARAMETER_ANY = /\(\s*any\s*(?=[:,)=])|[(,]\s*any\s*(?=:)/u;
 const SLOP_DECLARATION_PATTERN = /\b(?:function|const|let|var|class|interface|type|enum)\s+([\w$]+)/gu;
 
@@ -1382,7 +1390,12 @@ function* iterateCandidateFindings(ctx) {
   // The log call has to mention the caught error; logging separate context
   // before a rethrow is deliberate.
   for (const match of masked.matchAll(
-    /\bcatch\s*\(\s*([\w$]+)\s*(?::[^)]*)?\)\s*\{\s*(?:console|logger|log)\s*\.\s*[\w$]+\s*\(([^;{}]*)\)\s*;?\s*throw\s+\1\s*;?\s*\}/gu,
+    // The argument list has to admit BRACES: structured logging spells this as
+    // `logger.error({ err: e }, "failed")`, and rejecting the object made the
+    // most common form of the defect the one that reported clean. Two levels,
+    // each pair of branches disjoint on its first character, so it cannot
+    // backtrack.
+    /\bcatch\s*\(\s*([\w$]+)\s*(?::[^)]*)?\)\s*\{\s*(?:console|logger|log)\s*\.\s*[\w$]+\s*\(((?:[^;{}]|\{(?:[^{}]|\{[^{}]*\})*\})*)\)\s*;?\s*throw\s+\1\s*;?\s*\}/gu,
   )) {
     if (!new RegExp(`${IDENT_BEFORE}${escapeForRegExp(match[1])}${IDENT_AFTER}`, "u").test(match[2])) continue;
     yield {
@@ -1645,11 +1658,22 @@ const SUPPRESSION_DIRECTIVE_PATTERN = /@ts-(?:ignore|expect-error|nocheck)\b|\bb
 const OBVIOUS_DOC_COMMENT_PATTERN = new RegExp(
   [
     String.raw`^\s*(?:the\s+)?(?:constructor|getter|setter|default export|main entry point)\.?\s*$`,
-    String.raw`^\s*(?:getter|setter) for\b`,
     String.raw`^\s*this (?:function|method|class|component|hook|module|file|helper|utility) (?:takes|returns|will|does|handles|creates|gets|sets|adds|removes|checks|converts|simply|just)\b`,
   ].join("|"),
   "iu",
 );
+
+// The restatement only: `Getter for the value.` A clause separator or a second
+// sentence means the comment carries something the declaration does not --
+// `Getter for the cached value; invalidated after every write.` documents an
+// invalidation contract, and this rule prints as a mechanical "delete the
+// comment". Tested against the body with JSDoc TAG lines removed, because a tag
+// is not prose: eslint's `Getter for package version.` followed by `@static`
+// and `@returns` is still only the restatement, and requiring the body to END
+// at the sentence let those tags stand in for information.
+const ACCESSOR_DOC_PATTERN = /^\s*(?:getter|setter) for\b[^.;:,!?]*\.?\s*$/iu;
+const JSDOC_TAG_LINE = /^\s*@\w+\b.*$/gmu;
+const accessorDocOnlyRestates = (body) => ACCESSOR_DOC_PATTERN.test(body.replace(JSDOC_TAG_LINE, "").trim());
 
 function suppressionIsJustified(body) {
   const match = SUPPRESSION_DIRECTIVE_PATTERN.exec(body);
@@ -1667,7 +1691,7 @@ const TEST_FILE_PATTERN = /(?:^|[\\/])(?:__tests__|__mocks__|test|tests|fixtures
 function* iterateCommentFindings(ctx) {
   const { comments, lineStarts, maskedLines, isTypeScript } = ctx;
   const inTestFile = TEST_FILE_PATTERN.test(ctx.path);
-  for (const comment of comments) {
+  for (const [index, comment] of comments.entries()) {
     const start = offsetToPosition(lineStarts, comment.start);
     const endLine = offsetToPosition(lineStarts, Math.max(comment.start, comment.end - 1)).line;
     // Multi-line comments carry their span for the same reason block rules do:
@@ -1704,11 +1728,28 @@ function* iterateCommentFindings(ctx) {
       continue;
     }
 
-    if (SUPPRESSION_DIRECTIVE_PATTERN.test(body) && !suppressionIsJustified(body)) {
+    // TypeScript requires the directive on the line directly above the error,
+    // so the reason often sits in the comment above THAT, where it does not
+    // disturb the placement. That is the reason being stated, not missing --
+    // asking for it to be repeated on the directive line is the rule failing to
+    // read what is already there. A preceding directive does not count: two
+    // bare suppressions in a row justify nothing.
+    const previous = comments[index - 1];
+    const explainedAbove = previous !== undefined
+      && offsetToPosition(lineStarts, Math.max(previous.start, previous.end - 1)).line === start.line - 1
+      // A LINE comment only. TypeScript's placement rule is what pushes the
+      // reason onto the line above, and that is how people write it; a `/** */`
+      // block above documents the DECLARATION. Prettier's `@param`/`@returns`
+      // block sitting over `// @ts-expect-error: fine` explains the function's
+      // types and says nothing about why the checker is wrong.
+      && previous.kind === "line"
+      && !SUPPRESSION_DIRECTIVE_PATTERN.test(previous.text)
+      && isJustification(previous);
+    if (SUPPRESSION_DIRECTIVE_PATTERN.test(body) && !suppressionIsJustified(body) && !explainedAbove) {
       yield { ...position, rule: "no-unjustified-suppression", message: "A type-checker suppression with no stated reason hides the problem instead of the noise. State why the checker is wrong on the same line, or fix what it reported." };
       continue;
     }
-    if (OBVIOUS_DOC_COMMENT_PATTERN.test(body)) {
+    if (OBVIOUS_DOC_COMMENT_PATTERN.test(body) || accessorDocOnlyRestates(body)) {
       yield { ...position, rule: "no-obvious-doc-comments", message: "This doc comment restates the declaration below it. Say why the code exists, or delete the comment." };
       continue;
     }
@@ -1770,7 +1811,7 @@ export function lintSource(rawSource, filePath) {
   // or as a parameter. `function pick(any: number)` is a legal binding and the
   // declaration-keyword set does not cover parameter lists, so the reference in
   // its body was still reported as the type.
-  const bindsAny = declaredNames.has("any") || PARAMETER_ANY.test(masked);
+  const bindsAny = declaredNames.has("any") || PARAMETER_ANY.test(masked) || DESTRUCTURED_ANY.test(masked);
   const ctx = {
     path: filePath,
     declaredNames,

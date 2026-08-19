@@ -10,19 +10,44 @@ flag="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.lazy-active"
 # `[:space:]` is NOT that set. JavaScript trim() removes 25 code points, 19 of
 # them non-ASCII, and under the C locale a bracket class matches ASCII only --
 # so an NBSP-padded ` false ` stayed truthy here and hid the badge while
-# getHideStatus() trimmed it to `false` and showed it. The class is spelled out
-# to match trim() exactly: the ASCII six, then U+00A0, U+1680, U+2000-200A,
-# U+2028, U+2029, U+202F, U+205F, U+3000 and U+FEFF.
+# getHideStatus() trimmed it to `false` and showed it.
 #
-# Under a UTF-8 locale bash compares characters and this is exact. Under the C
-# locale it compares bytes, so a trailing byte that merely appears inside one of
-# those UTF-8 sequences is also trimmed -- reachable only with invalid UTF-8,
-# which is not a level either way.
-TRIM_SET=$'\t\n\v\f\r \302\240\341\232\200\342\201\202\203\204\205\206\207\210\211\212\250\251\257\237\343\357\273\277'
+# Whole UTF-8 SEQUENCES, not a bracket class of their bytes. A class cannot
+# express a multi-byte sequence: under the C locale bash compares bytes, so a
+# class holding the bytes of U+2000-U+200A also matched any other character
+# built from the same bytes. U+2042 (E2 81 82) was one, and trim() keeps it --
+# `\u2042ultra\u2042` painted [LAZY:ULTRA] off a file readMode() rejects as
+# invalid, which is the badge lying about whether lazy is on.
+#
+# The ASCII six, then U+00A0, U+1680, U+2000-200A, U+2028, U+2029, U+202F,
+# U+205F, U+3000 and U+FEFF.
+TRIM_CHARS=(
+    $'\t' $'\n' $'\v' $'\f' $'\r' ' '
+    $'\302\240' $'\341\232\200'
+    $'\342\200\200' $'\342\200\201' $'\342\200\202' $'\342\200\203'
+    $'\342\200\204' $'\342\200\205' $'\342\200\206' $'\342\200\207'
+    $'\342\200\210' $'\342\200\211' $'\342\200\212'
+    $'\342\200\250' $'\342\200\251' $'\342\200\257' $'\342\201\237'
+    $'\343\200\200' $'\357\273\277'
+)
 normalize() {
-    local value="$1"
-    value="${value#"${value%%[!$TRIM_SET]*}"}"
-    value="${value%"${value##*[!$TRIM_SET]}"}"
+    local value="$1" char stripped=1
+    # Repeats until a full pass strips nothing: the padding can mix code points,
+    # and one pass in a fixed order would leave whatever sits behind the last
+    # one it removed.
+    while [ "$stripped" = 1 ]; do
+        stripped=0
+        for char in "${TRIM_CHARS[@]}"; do
+            while [ "${value#"$char"}" != "$value" ]; do
+                value="${value#"$char"}"
+                stripped=1
+            done
+            while [ "${value%"$char"}" != "$value" ]; do
+                value="${value%"$char"}"
+                stripped=1
+            done
+        done
+    done
     printf '%s' "$value" | tr '[:upper:]' '[:lower:]'
 }
 

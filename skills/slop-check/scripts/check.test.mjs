@@ -928,6 +928,16 @@ const invertedBranches = lintSource("function ok(xs) { if (xs.length) return fal
 assert.match(invertedBranches[0].message, /Return its negation, wrapped in `Boolean/u);
 console.log("ok   boolean return branches keep the coercion and the polarity");
 
+// Structured logging is the common spelling: rejecting braces in the argument
+// list made `logger.error({ err: e }, "failed")` report clean while the
+// positional form reported.
+expectRule("flags a structured log and rethrow", 'try { run(); } catch (e) { logger.error({ err: e }, "failed"); throw e; }', "no-log-and-rethrow");
+expectRule("flags a nested structured log and rethrow", 'try { run(); } catch (e) { logger.error({ ctx: { err: e } }, "failed"); throw e; }', "no-log-and-rethrow");
+expectRule("still flags the positional form", 'try { run(); } catch (e) { logger.error(e, "failed"); throw e; }', "no-log-and-rethrow");
+// The log still has to MENTION the caught error: separate context before a
+// rethrow is deliberate, and the braces must not have loosened that.
+expectNoRule("allows a structured log that does not mention the error", 'try { run(); } catch (e) { logger.error({ url: target }, "failed"); throw e; }', "no-log-and-rethrow");
+
 expectRule("flags let assigned in both branches", "let label;\nif (flag) {\n  label = 'on';\n} else {\n  label = 'off';\n}", "no-let-if-else-assign");
 expectRule("flags annotated let assigned in both branches", "let label: string;\nif (flag) label = 'on';\nelse label = 'off';", "no-let-if-else-assign");
 expectNoRule("allows a branch that does more than assign", "let n;\nif (isRange) {\n  n = split(body);\n} else {\n  n = parse(body);\n  n = n.map(embrace);\n}", "no-let-if-else-assign");
@@ -935,6 +945,21 @@ expectNoRule("allows an accumulator loop", "let total = 0;\nfor (const value of 
 // A write after the branches means the variable is not declared only for them,
 // and this rule prints under "one correct answer": the `const` it prescribes
 // would not compile, because the later line reassigns it.
+// A DESTRUCTURED parameter binding named `any` is a value, not the type. This
+// rule fires from a PostToolUse hook, so a finding here tells an agent to
+// rewrite type-safe code.
+expectNoRule("allows a destructured parameter binding named any", "function pick({ any }: { any: number }) { return any + 1; }", "no-any");
+expectNoRule("allows a destructured binding named any in an arrow", "const f = ({ any }: Props) => any + 1;", "no-any");
+expectNoRule("allows a destructured binding named any with a default", "function pick({ any = 1 }) { return any; }", "no-any");
+// `{ any: renamed }` binds `renamed`, not `any` -- the name before a `:` is a
+// property key, so the file has no value called `any` and the type still counts.
+expectRule("a renamed destructured property does not bind any", "function f({ any: renamed }) { const x: any = 1; return renamed; }", "no-any");
+// The guard is file-wide, so a shape it wrongly accepted would silence every
+// finding in the file. `]` is not a terminator for exactly this reason.
+expectRule("a tuple type containing any is not a binding", "const pair: [string, any] = [\"a\", 1];", "no-any");
+expectRule("a Record value type of any is not a binding", "const map: Record<string, any> = {};", "no-any");
+expectRule("a function type parameter of any is not a binding", "const fn: (a: string, b: any) => void = noop;", "no-any");
+
 expectNoRule("allows a let written again after the branches", "let value;\nif (flag) value = first;\nelse value = second;\nvalue = third;", "no-let-if-else-assign");
 expectNoRule("allows a let compound-assigned after the branches", "let value;\nif (flag) value = first;\nelse value = second;\nvalue += extra;", "no-let-if-else-assign");
 expectNoRule("allows a let incremented after the branches", "let value;\nif (flag) value = first;\nelse value = second;\nvalue++;", "no-let-if-else-assign");
@@ -1001,6 +1026,66 @@ expectRule("flags a Constructor doc comment", "/** Constructor */\nexport class 
 expectRule("flags a this-function doc comment", "/**\n * This function returns the current token.\n */\ngetToken() { return this.token; }", "no-obvious-doc-comments");
 expectNoRule("allows a doc comment that adds information", "/** Aggregates rows into per-name totals, dropping zero-count rows. */\nexport function summarize(rows) {}", "no-obvious-doc-comments");
 expectNoRule("allows an informative this-function note", "// This function is used recursively from IndexedSourceMapConsumer.\nfunction sourceContentFor(source) {}", "no-obvious-doc-comments");
+// This rule prints as a mechanical "delete the comment", so an accessor doc
+// that carries a contract the declaration does not state cannot be swept up
+// with the ones that only restate the name.
+expectRule("flags a bare getter doc comment", "/** Getter for the value. */\nget value() { return this.v; }", "no-obvious-doc-comments");
+expectNoRule("allows a getter doc with a second clause", "/** Getter for the cached value; invalidated after every write. */\nget value() { return this.v; }", "no-obvious-doc-comments");
+expectNoRule("allows a getter doc with a second sentence", "/** Getter for the value. Returns undefined when empty. */\nget value() { return this.v; }", "no-obvious-doc-comments");
+expectNoRule("allows a getter doc with a qualifying clause", "/** Getter for the value, which is recomputed lazily. */\nget value() { return this.v; }", "no-obvious-doc-comments");
+// The bare forms are a separate alternative and must be unaffected.
+expectRule("still flags a bare Getter doc comment", "/** Getter. */\nget value() { return this.v; }", "no-obvious-doc-comments");
+// From the corpus: eslint's version getter. JSDoc TAGS are not prose, and the
+// first cut of this fix lost the finding because the body did not end at the
+// sentence -- `@static` and `@returns` were standing in for information.
+expectRule(
+  "a restating getter doc followed by JSDoc tags is still flagged",
+  "/**\n * Getter for package version.\n * @static\n * @returns {string} The version from package.json.\n */\nstatic get version() { return pkg.version; }",
+  "no-obvious-doc-comments",
+  // JavaScript, as the corpus file is: in TypeScript the typed-JSDoc rule
+  // claims this comment first, which is a different finding on the same text.
+  "sample.js",
+);
+
+// TypeScript requires the directive on the line directly above the error, so
+// the reason usually sits above THAT. Demanding it on the directive line is the
+// rule failing to read a reason that is already written down.
+expectNoRule(
+  "allows a suppression explained in the comment directly above it",
+  "// The upstream types omit this export, tracked in vendor issue 91.\n// @ts-expect-error\nimport { thing } from \"vendor\";",
+  "no-unjustified-suppression",
+);
+expectRule(
+  "still flags a bare suppression with nothing above it",
+  "const gap = 1;\n// @ts-expect-error\nimport { thing } from \"vendor\";",
+  "no-unjustified-suppression",
+);
+// Two bare directives in a row justify nothing, and a one-word comment is not
+// a reason -- isJustification() wants at least two words.
+expectRule(
+  "a directive above another directive does not justify it",
+  "// @ts-expect-error\n// @ts-expect-error\nimport { thing } from \"vendor\";",
+  "no-unjustified-suppression",
+);
+expectRule(
+  "a one-word comment above does not justify it",
+  "// ok\n// @ts-expect-error\nimport { thing } from \"vendor\";",
+  "no-unjustified-suppression",
+);
+// From the corpus: prettier's `// @ts-expect-error: fine` under a `@param` /
+// `@returns` block. A `/** */` block above documents the DECLARATION -- it says
+// nothing about why the checker is wrong -- and the first cut of this fix
+// accepted it and dropped three real findings.
+expectRule(
+  "a JSDoc block above does not justify a suppression",
+  "/**\n * @param {Error} error\n * @returns {Error}\n */\n// @ts-expect-error: fine\nfunction wrap(error) { return error; }",
+  "no-unjustified-suppression",
+);
+expectRule(
+  "an explanation separated by code does not justify it",
+  "// The reason, but with a statement below it.\nconst spaced = 2;\n// @ts-expect-error\nimport { thing } from \"vendor\";",
+  "no-unjustified-suppression",
+);
 
 
 // --- JSX text is prose, not code ---------------------------------------------

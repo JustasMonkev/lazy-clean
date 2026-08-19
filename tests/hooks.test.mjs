@@ -504,6 +504,22 @@ withEnv(stateBox.env, () => {
     fs.writeFileSync(stateBox.flag, content);
     eq(`readMode(${JSON.stringify(content)})`, rt.readMode(), expected);
   }
+  // Bounded like both statuslines already were. This runs on every subagent
+  // start, and reading a bloated hand-edited file cost 1.1s and 400MB of RSS
+  // before rejecting it as invalid anyway. 4096 is the same number they use.
+  fs.writeFileSync(stateBox.flag, " ".repeat(4090) + "ultra");
+  eq("readMode still reads a file just under the cap", rt.readMode(), "ultra");
+  fs.writeFileSync(stateBox.flag, "ultra" + " ".repeat(8192));
+  const started = Date.now();
+  eq("readMode rejects a file over the cap without reading it", rt.readMode(), null);
+  fs.writeFileSync(stateBox.flag, "x".repeat(64 * 1024 * 1024));
+  const bigStarted = Date.now();
+  const bigResult = rt.readMode();
+  const bigElapsed = Date.now() - bigStarted;
+  eq("readMode rejects a 64MB flag file", bigResult, null);
+  ok(`readMode does not allocate a 64MB flag file (${bigElapsed}ms)`, bigElapsed < 250, `${bigElapsed}ms`);
+  ok("the over-cap rejection is not slow either", Date.now() - started < 2000);
+
   rt.setMode("ultra");
   rt.clearMode();
   eq("clearMode removes the flag", rt.readMode(), null);
@@ -1478,6 +1494,26 @@ if (!canRunBash) {
   ok("statusline prints [LAZY:LITE] for lite", statusline("lite").out.includes("[LAZY:LITE]"));
   ok("statusline prints [LAZY:REVIEW] for review", statusline("review").out.includes("[LAZY:REVIEW]"));
   ok("statusline normalizes case and padding", statusline("  ULTRA  ").out.includes("[LAZY:ULTRA]"));
+  // The trim set is whole UTF-8 SEQUENCES, not a class of their bytes. As a
+  // byte class, the bytes of U+2000-U+200A also matched U+2042 (E2 81 82),
+  // which JS trim() keeps -- so the badge painted ULTRA off a file readMode()
+  // rejects, which is the badge lying about whether lazy is on.
+  ok("statusline does not trim a character built from whitespace bytes",
+    statusline("\u2042ultra\u2042").out === "",
+    JSON.stringify(statusline("\u2042ultra\u2042").out));
+  ok("statusline agrees with trim() there",
+    config.normalizePersistedMode("\u2042ultra\u2042".trim()) === null);
+  // Every code point trim() DOES remove still has to be trimmed here, or the
+  // fix would have been "stop trimming".
+  for (const [name, pad] of [
+    ["U+2000", "\u2000"], ["U+200A", "\u200a"], ["NBSP", "\u00a0"], ["U+1680", "\u1680"],
+    ["U+2028", "\u2028"], ["U+202F", "\u202f"], ["U+205F", "\u205f"], ["U+3000", "\u3000"],
+    ["BOM", "\ufeff"],
+  ]) {
+    ok(`statusline still trims ${name}`, statusline(`${pad}ultra${pad}`).out.includes("[LAZY:ULTRA]"));
+  }
+  ok("statusline trims a mix of them in one file",
+    statusline("\u3000\u2028ultra\ufeff\u00a0").out.includes("[LAZY:ULTRA]"));
   // readMode() rejects `ultra\nsecond line` (the whole file has to be a level),
   // so the badge must not paint one either — it used to read only line 1.
   eq("a multi-line flag prints nothing, matching readMode", statusline("ultra\nsecond line"), { status: 0, out: "", err: "" });

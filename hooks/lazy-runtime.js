@@ -60,9 +60,18 @@ function clearMode() {
   try { fs.unlinkSync(statePath); } catch (e) { /* no flag to clear */ }
 }
 
+// The same 4096 bytes both statuslines already bound their read to. A level is
+// at most five characters, so anything past this is not one -- and the file is
+// hand-editable and read on every subagent start, where a bloated one cost
+// 1.1s and 400MB of RSS before being rejected as invalid anyway.
+const STATE_SIZE_LIMIT = 4096;
+
 // Live mode written by activate/mode-tracker. Absent flag = lazy off.
 function readMode() {
   try {
+    // Stat before read: the size is the cheap question, and asking it second
+    // means the allocation has already happened.
+    if (fs.statSync(statePath).size > STATE_SIZE_LIMIT) return null;
     // The flag file is on disk and hand-editable; anything that is not a level
     // is not a level. It used to reach the statusline verbatim, so a file
     // holding escape sequences printed them straight into the prompt.
