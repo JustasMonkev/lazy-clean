@@ -1301,7 +1301,19 @@ function* iterateCandidateFindings(ctx) {
         else writes.set(written, [write.index]);
       }
     }
-    return (writes.get(name) ?? []).find((index) => index >= from);
+    // Binary search, not a scan from the start: the offsets are ascending, and
+    // a file where one name is redeclared in 4,000 blocks holds 8,000 of them,
+    // which a linear find would walk once per finding.
+    const found = writes.get(name);
+    if (!found) return undefined;
+    let low = 0;
+    let high = found.length;
+    while (low < high) {
+      const mid = (low + high) >> 1;
+      if (found[mid] < from) low = mid + 1;
+      else high = mid;
+    }
+    return found[low];
   };
   // Lines covered by a comment that actually justifies something. Presence was
   // the old test, so a bare `// TODO` above a hard-coded sleep cleared it --
