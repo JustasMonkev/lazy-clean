@@ -908,6 +908,14 @@ eq("a bare /lazy leaves the live level alone", fs.readFileSync(ocState, "utf8"),
   }
 }
 
+// A comment finding reports at the `/**`, so an edit deeper inside the comment
+// used to fall outside the range entirely once it passed the headroom.
+const deepDocTs = write("deepdoc.ts",
+  "/**\n * A\n * B\n * C\n * D\n * E\n * @param {number} a first\n */\nexport function add(a: number) { return a; }\n");
+e = editCheck({ tool_name: "Edit", tool_input: { file_path: deepDocTs, old_string: "x", new_string: " * @param {number} a first" } });
+ok("an Edit deep inside a comment reports the comment finding it created",
+  e.stdout.includes("deepdoc.ts:1") && e.stdout.includes("no-typed-jsdoc"), e.stdout.slice(0, 200));
+
 // A findings-heavy file overran spawnSync's default 1MB buffer: the child ended
 // with a null status, which read as "the checker broke", and the hook dropped
 // the report for exactly the file that needed it most.

@@ -231,7 +231,10 @@ function maskSource(source, { jsx = false } = {}) {
     const c = source[i];
     const atJsxChild = jsxTextPending;
     jsxTextPending = false;
-    const schemeSlashes = c === "/" && source[i + 1] === "/" &&
+    // Only inside JSX text, where a URL is prose. In ordinary code
+    // `http://example.com ...` is a `http:` label followed by a real comment,
+    // and exempting it left the comment body unmasked for every rule to match.
+    const schemeSlashes = jsxElementDepth > 0 && c === "/" && source[i + 1] === "/" &&
       source[i - 1] === ":" && /[A-Za-z]/u.test(source[i - 2] ?? "");
     if (c === "/" && source[i + 1] === "/" && !schemeSlashes) {
       let j = i;
@@ -581,9 +584,11 @@ const LINE_RULES = [
   {
     name: "no-redundant-fallback",
     // `|| undefined` is NOT a no-op: it maps "" and 0 to undefined, which is
-    // how optional fields get omitted from a payload. Only `??` is redundant.
+    // how optional fields get omitted from a payload. `?? undefined` is only a
+    // no-op when the value cannot be null — it maps null to undefined, and
+    // JSON.stringify drops an undefined property while keeping a null one.
     pattern: /\?\?\s*undefined\b/u,
-    message: "`?? undefined` is a no-op — the value is already undefined when nullish. Delete the fallback.",
+    message: "`?? undefined` does nothing unless the value can be `null`, where it normalizes null to undefined. Delete it, or keep it and say which you meant.",
   },
   {
     name: "no-boolean-literal-compare",
@@ -723,7 +728,7 @@ const MODULE_STATEMENT = /^\s*import\b|^\s*export\s*(?:type\s+)?[{*]/u;
 // spent 9s on one long line, which this runs on after every edit.
 // Global: every assertion on the line is examined, not just the first.
 const TYPE_ASSERTION_PATTERN =
-  /(?:(?<![\w$.])([\w$]+)\s+)?\bas\s+(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<(?:[^<>]|<[^<>]*>)*>)?(?:\[\])*\s*(?=[;,)\]}=&|?:]|$)/gu;
+  /(?:(?<![\w$.])([\w$]+)\s+)?\bas\s+(?:readonly\s+)?(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<(?:[^<>]|<[^<>]*>)*>)?(?:\[\])*\s*(?=[;,)\]}=&|?:]|$)/gu;
 
 
 // Multi-line shapes matched against the masked source. Each was measured
@@ -947,7 +952,12 @@ function* iterateCommentFindings(ctx) {
   const { comments, lineStarts, maskedLines, isTypeScript } = ctx;
   const inTestFile = TEST_FILE_PATTERN.test(ctx.path);
   for (const comment of comments) {
-    const position = offsetToPosition(lineStarts, comment.start);
+    const start = offsetToPosition(lineStarts, comment.start);
+    const endLine = offsetToPosition(lineStarts, Math.max(comment.start, comment.end - 1)).line;
+    // Multi-line comments carry their span for the same reason block rules do:
+    // the finding is reported at the opener, but the text that triggered it can
+    // sit many lines below, and both --since and the hook scope by written line.
+    const position = endLine > start.line ? { ...start, endLine } : start;
     const body = comment.text.replace(/^\/\/+\s?|^\/\*+|\*+\/$/gu, "").replace(/^\s*\*\s?/gmu, "");
 
     if (inTestFile && /\bmock\b/iu.test(body) && !/\b(?:placeholder|not implemented|TODO)\b/iu.test(body)) {
@@ -1013,7 +1023,7 @@ function* iterateCommentFindings(ctx) {
 // legitimate answer — the distinction the flat list used to hide, which pushed
 // agents into rewriting correct code to clear the list.
 const MECHANICAL_RULES = new Set([
-  "no-redundant-fallback", "no-boolean-literal-ternary", "no-double-negation-condition",
+  "no-boolean-literal-ternary", "no-double-negation-condition",
   "no-await-promise-resolve", "no-useless-rethrow", "no-json-clone", "no-emoji",
   "no-typed-jsdoc", "no-narration-comments", "no-change-note-comments",
   "no-chained-type-assertions", "no-boolean-return-branches", "no-let-if-else-assign",

@@ -154,6 +154,11 @@ expectNoRule(
   "// SAFETY: payload was validated by the schema above.\nconst user = payload as User;",
   "require-safety-comment-for-type-assertion",
 );
+expectRule(
+  "flags an assertion to a readonly array",
+  "const users = payload as readonly User[];",
+  "require-safety-comment-for-type-assertion",
+);
 expectNoRule("allows as const", "const modes = ['a', 'b'] as const;", "require-safety-comment-for-type-assertion");
 expectNoRule("allows import alias", 'import { readFile as read } from "node:fs";', "require-safety-comment-for-type-assertion");
 
@@ -464,6 +469,13 @@ expectRule(
 
 // --- tokenizer defects -------------------------------------------------------
 
+// `http://example.com ...` in ordinary code is a `http:` label followed by a
+// real comment; only JSX text gets the scheme exemption.
+expectNoRule(
+  "a URL label in ordinary code is still a comment",
+  "http://example.com served as User;\nconst ok = 1;",
+  "require-safety-comment-for-type-assertion",
+);
 expectNoRule(
   "does not read a URL in JSX text as a comment",
   "const docs = <p>See https://example.com/docs for now.</p>;",
@@ -572,6 +584,25 @@ for (const [label, source] of [
   assert.ok(elapsed < REDOS_BUDGET_MS, `${label} took ${elapsed}ms, over the ${REDOS_BUDGET_MS}ms budget`);
   console.log(`ok   ${label} does not backtrack (${elapsed}ms)`);
 }
+
+// It is only a no-op when the value cannot be null: `null ?? undefined` is
+// undefined, and JSON.stringify drops an undefined property while keeping null.
+// So it needs judgment, and must not print as a mechanical one-answer fix.
+const nullish = lintSource("const value = input ?? undefined;", "sample.ts");
+assert.equal(nullish[0].severity, "review");
+assert.match(nullish[0].message, /can be `null`/u);
+console.log("ok   ?? undefined is a review finding, not a mechanical one");
+
+// A comment finding is reported at the opener, but the text that triggered it
+// can sit many lines below — both --since and the hook scope by written line.
+const spanned = lintSource(
+  "/**\n * A\n * B\n * C\n * D\n * @param {number} a first\n */\nexport function add(a: number) { return a; }",
+  "sample.ts",
+);
+assert.equal(spanned[0].rule, "no-typed-jsdoc");
+assert.equal(spanned[0].line, 1);
+assert.ok(spanned[0].endLine >= 6, `expected a span past the trigger line, got ${spanned[0].endLine}`);
+console.log("ok   a multi-line comment finding carries its span");
 
 const positioned = lintSource("const ok = 1;\nconst copy = JSON.parse(JSON.stringify(ok));\n", "sample.ts");
 assert.equal(positioned.length, 1);
