@@ -10,7 +10,12 @@ const SKILL_PATH = path.join(__dirname, '..', 'skills', 'lazy', 'SKILL.md');
 
 function filterSkillBodyForMode(body, mode) {
   const effectiveMode = normalizeMode(mode) || DEFAULT_MODE;
-  const withoutFrontmatter = String(body || '').replace(/^---[\s\S]*?---\s*/, '');
+  // HTML comments in SKILL.md are notes to whoever edits the file (e.g. the
+  // warning that this very function filters it); injecting them spends context
+  // on instructions meant for a human.
+  const withoutFrontmatter = String(body || '')
+    .replace(/^---[\s\S]*?---\s*/, '')
+    .replace(/<!--[\s\S]*?-->\r?\n?/g, '');
 
   // Only the intensity table rows and worked examples are mode-specific, and
   // both are keyed by a mode name (lite/full/ultra). A bullet whose label is
@@ -95,6 +100,9 @@ function getFallbackInstructions(mode) {
 
 function getLazyInstructions(mode) {
   const configuredMode = normalizePersistedMode(mode) || DEFAULT_MODE;
+  // `off` filtered down to a header, an empty intensity table, and an example
+  // with no examples. There is nothing to instruct when lazy is off.
+  if (configuredMode === 'off') return '';
 
   if (INDEPENDENT_MODES.has(configuredMode)) {
     return 'LAZY MODE ACTIVE — level: ' + configuredMode + '. Behavior defined by /lazy-' + configuredMode + ' skill.';
@@ -118,6 +126,7 @@ function getLazyInstructions(mode) {
 // never uses.
 function getSubagentInstructions(mode) {
   const configuredMode = normalizePersistedMode(mode) || DEFAULT_MODE;
+  if (configuredMode === 'off') return '';
 
   if (INDEPENDENT_MODES.has(configuredMode)) {
     return 'LAZY MODE ACTIVE — level: ' + configuredMode + '. Behavior defined by /lazy-' + configuredMode + ' skill.';

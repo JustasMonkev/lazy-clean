@@ -9,18 +9,19 @@ One skill package for coding agents: write the least code that works, then delet
 
 ## Works with
 
-Same ruleset, four levels of wiring — pick whatever your agent supports.
+Same ruleset, five levels of wiring — pick whatever your agent supports.
 
 | Tier | Platforms | What you get | Files |
 | --- | --- | --- | --- |
 | Full hooks | Claude Code, Codex | Ruleset injected at session and subagent start, `/lazy` level switching, slop-check auto-run after every Write/Edit | `hooks/lazy-clean.json` via `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` |
-| Plugin | OpenCode | Ruleset injected every turn plus six slash commands | `.opencode/` + `opencode.json` |
+| Plugin | OpenCode | Ruleset injected every turn plus six slash commands | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
 | Rules file | Cursor, Copilot | Always-on ruleset in the editor; run the checker by hand after TS/JS changes | `.cursor/rules/lazy-clean.mdc`, `.github/copilot-instructions.md` |
 | `AGENTS.md` | Everything else that reads it — Codex, Zed, Amp, Jules | The compact ruleset plus the post-edit checker step | `AGENTS.md` |
+| Skills only | Anything that reads `~/.claude/skills` | Every skill on demand, no automation | `skills/` |
 
-Only the Claude Code and Codex tiers run the checker automatically; everywhere else, run `node skills/slop-check/scripts/check.mjs <changed files>` yourself.
+Only the Claude Code and Codex tiers run the checker automatically. Everywhere else run it yourself, from wherever the skills live — `node ~/.claude/skills/slop-check/scripts/check.mjs <changed files>` after the skills-only install below, or `node skills/slop-check/scripts/check.mjs <changed files>` from a checkout.
 
-Upstream also ships adapters this fork deliberately skips (MCP server, pi extension, Hermes, Qoder, Devin, openclaw). Add them from upstream if you need them.
+Qoder and VS Code Copilot are detected by the hooks and get the right output shape, but neither is wired up here as its own tier. Upstream also ships adapters this fork skips (MCP server, pi extension, Hermes, Devin, openclaw). Add them from upstream if you need them.
 
 ## Install — zero-install, skills only
 
@@ -42,9 +43,13 @@ Local checkout:
 claude --plugin-dir /path/to/lazy-clean
 ```
 
-Or add the containing directory as a marketplace and enable it with `/plugin`.
+Or add the checkout as a marketplace and enable it with `/plugin`:
 
-Requires `node` on `PATH`. No dependencies to install.
+```
+claude plugin marketplace add /path/to/lazy-clean
+```
+
+Requires `node` 18+ on `PATH`. No dependencies to install.
 
 ## What runs when
 
@@ -55,7 +60,26 @@ Requires `node` on `PATH`. No dependencies to install.
 | `UserPromptSubmit` | `/lazy …` commands parsed, level flag updated |
 | `PostToolUse` on `Write`/`Edit`/`MultiEdit` | `skills/slop-check/scripts/check.mjs` runs on the edited file |
 
-The checker only looks at `.ts .tsx .mts .cts .js .jsx .mjs .cjs`; anything else is skipped silently. Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. Triage them per `skills/slop-check/SKILL.md`: fix real slop, justify false positives, keep deliberate assertions with a `// SAFETY:` comment.
+The checker only looks at `.ts .tsx .mts .cts .js .jsx .mjs .cjs`; anything else is skipped silently. Files written through `Bash` — heredocs, `sed -i`, codemods — are not seen by the hook at all; run the checker on those yourself.
+
+Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. It reports only findings on the lines that edit wrote, and says how many others in the file predate it, so a small edit never hands back a to-do list for the whole file. Triage them per `skills/slop-check/SKILL.md`: fix real slop, justify false positives, keep deliberate assertions with a `// SAFETY:` comment.
+
+## Running the checker yourself
+
+```
+node skills/slop-check/scripts/check.mjs [paths...] [--json] [--summary] [--since=<ref>]
+```
+
+With no paths it scans the current directory. Exit code 1 means findings, 2 means a path could not be read, 0 means clean — so a failed scan is never mistaken for a clean one.
+
+`--since=<ref>` keeps only findings on lines the diff against `<ref>` added. That is the whole adoption story for an existing codebase: there is no baseline file to generate or refresh, because git already holds the baseline.
+
+```
+node skills/slop-check/scripts/check.mjs --since=HEAD          # before committing
+node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
+```
+
+Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. `--summary` replaces the finding list with the per-rule tally, which is the number that tells you whether a codebase is worth a full pass. The run summary line still prints; `--json` is the machine-readable form.
 
 Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `slop-check`, `lazy-clean` (the main workflow).
 
@@ -68,10 +92,23 @@ Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `
 /lazy          # report current level
 ```
 
-`/lazy default <lite|full|ultra|off>` persists the level across sessions.
+`/lazy default <lite|full|ultra|off>` persists the level across sessions. On OpenCode the session level itself also persists until changed, since there is no session boundary to reset it at.
+
+## Statusline badge
+
+The plugin ships a statusline script that shows the active level (`[LAZY]`, `[LAZY:ULTRA]`). It is not wired up automatically: on first session the hook offers to add a `statusLine` entry to your `settings.json` pointing at `hooks/lazy-statusline.sh` (or `.ps1` on Windows), and it makes that offer at most once.
+
+Hide the badge while keeping lazy active with `LAZY_HIDE_STATUS=1`, or `"hideStatus": true` in `~/.config/lazy/config.json` (`%APPDATA%\lazy\config.json` on Windows).
 
 ## Disable
 
 - Lazy only: `/lazy off` (or say "stop lazy" / "normal mode"). Level resets at session end unless set as default.
 - Slop-check only: remove the `PostToolUse` entry from `hooks/lazy-clean.json`.
 - Everything: disable the plugin in `/plugin`, or drop the `--plugin-dir` flag.
+
+## Developing
+
+```
+npm test              # rule, CLI, and hook suites — no dependencies
+npm run slop-check    # the checker over this repo, which it has to survive
+```

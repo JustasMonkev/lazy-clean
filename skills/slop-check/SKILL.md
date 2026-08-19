@@ -1,6 +1,6 @@
 ---
 name: slop-check
-description: Detect and remove AI slop — pointless, low-evidence, or filler code — in TypeScript and JavaScript. Use after writing or editing code, when reviewing a diff or pull request, or whenever the user asks to check for slop, clean up AI-generated code, or run slop-check. Fully self-contained; runs with plain node and requires no npm packages or project configuration.
+description: Detect and remove AI slop — pointless, low-evidence, or filler code — in TypeScript and JavaScript. Use after writing or editing TypeScript or JavaScript, when reviewing a diff or pull request, or whenever the user asks to check for slop, clean up AI-generated code, or run slop-check. Fully self-contained; runs with plain node and requires no npm packages or project configuration.
 ---
 
 # slop-check
@@ -18,8 +18,10 @@ Everything runs from this skill directory with plain `node`. Do not install any 
    ```
 
    - With no paths it scans the current directory recursively (skipping `node_modules`, build output, and agent tooling directories).
-   - To check only your own changes, pass the changed files: `node <skill-directory>/scripts/check.mjs $(git diff --name-only HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.mts' '*.cts')`.
-   - `--json` prints machine-readable findings. Exit code is 1 when findings exist.
+   - To check only your own changes, pass the changed files: `node <skill-directory>/scripts/check.mjs $(git diff --name-only --diff-filter=d HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.mts' '*.cts')`. `--diff-filter=d` drops deleted paths: without it a deletion-only change hands the checker a pathname that no longer exists, and the run exits 2 as `scan incomplete` with nothing wrong.
+   - `--json` prints machine-readable findings; `--summary` replaces the finding list with the per-rule tally (the run summary line still prints). Exit code 1 means findings exist, 2 means a path could not be read, 0 means clean.
+   - `--since=<git-ref>` keeps only findings on lines the diff against that ref added — `--since=HEAD` before a commit, `--since=origin/main` in CI — which is how an existing codebase adopts the checker without a baseline file.
+   - The checker reads TypeScript and JavaScript only. For any other language skip step 1 and treat the manual checklist below as the whole procedure — never report "clean" on the strength of a scan that read nothing.
 
 2. Triage every finding. The checker is heuristic, so findings are review prompts, not verdicts:
    - Fix real slop by removing the pointless code or restoring real type evidence — prefer inference, `as const`, `satisfies`, named owner contracts, and parsing at the boundary.
@@ -47,8 +49,10 @@ For each item, the question is the same: does this code earn its place, or does 
 
 ## Checker rules
 
-Type evidence: `no-any`, `no-chained-type-assertions`, `no-unknown-in-signatures`, `no-object-type`, `no-unsafe-dictionary-type`, `no-known-value-widening`, `no-runtime-typeof`, `no-reflect`, `require-safety-comment-for-type-assertion`, `no-shape-in-symbol-names`.
+Type evidence: `no-any`, `no-chained-type-assertions`, `no-unknown-alias`, `no-object-type`, `no-unsafe-dictionary-type`, `no-known-value-widening`, `no-empty-type-declaration`, `no-reflect`, `no-shape-in-symbol-names`, `require-safety-comment-for-type-assertion`.
 
-Pointless code: `no-useless-rethrow`, `no-empty-catch`, `no-catch-fake-success`, `no-json-clone`, `no-redundant-fallback`, `no-boolean-literal-compare`, `no-boolean-literal-ternary`, `no-double-negation-condition`, `no-await-promise-resolve`, `no-conditional-empty-object-spread`, `no-module-mocking`, `no-slop-symbol-names`.
+Pointless code: `no-useless-rethrow`, `no-empty-catch`, `no-catch-fake-success`, `no-log-and-rethrow`, `no-message-only-rethrow`, `no-json-clone`, `no-redundant-fallback`, `no-boolean-literal-compare`, `no-boolean-literal-ternary`, `no-boolean-return-branches`, `no-double-negation-condition`, `no-await-promise-resolve`, `no-promise-constructor-wrapper`, `no-conditional-empty-object-spread`, `no-let-if-else-assign`, `no-foreach-push`, `no-slop-symbol-names`.
 
-Comment slop: `no-filler-comments`, `no-narration-comments`, `no-change-note-comments`, `no-backcompat-comments`, `no-restating-comments`, `no-typed-jsdoc`, `no-emoji`.
+Faked behavior and test slop: `no-arbitrary-sleep`, `no-env-secret-fallback`, `no-module-mocking`, `no-tautological-assertion`.
+
+Comment slop: `no-filler-comments`, `no-narration-comments`, `no-change-note-comments`, `no-backcompat-comments`, `no-restating-comments`, `no-obvious-doc-comments`, `no-typed-jsdoc`, `no-unjustified-suppression`, `no-emoji`.

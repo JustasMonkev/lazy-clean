@@ -19,7 +19,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // The shared instruction builder is CommonJS; bridge to it from this ES module.
 const require = createRequire(import.meta.url);
 const { getLazyInstructions } = require('../../hooks/lazy-instructions');
-const { getDefaultMode, normalizePersistedMode } = require('../../hooks/lazy-config');
+const { getDefaultMode, normalizeMode, writeDefaultMode } = require('../../hooks/lazy-config');
 const { parseCommandFile } = require('./lazy-frontmatter.cjs');
 
 // OpenCode has no flag-file convention of its own; keep mode beside its config.
@@ -31,7 +31,7 @@ const statePath = path.join(
 
 function readMode() {
   try {
-    return normalizePersistedMode(fs.readFileSync(statePath, 'utf8').trim()) || getDefaultMode();
+    return normalizeMode(fs.readFileSync(statePath, 'utf8').trim()) || getDefaultMode();
   } catch (e) {
     return getDefaultMode();
   }
@@ -44,7 +44,14 @@ function writeMode(mode) {
 
 export default async ({ client } = {}) => {
   const log = (level, message) => {
-    try { client && client.app && client.app.log({ body: { service: 'lazy', level, message } }); } catch (e) {}
+    try {
+      const sent = client && client.app && client.app.log({ body: { service: 'lazy', level, message } });
+      // The client is asynchronous, so try/catch only covers a synchronous
+      // throw. A rejection nobody observes — the server connection closing
+      // mid-turn is the ordinary way to get one — is an unhandled rejection,
+      // which can take the plugin host down over a log line.
+      if (sent && typeof sent.then === 'function') sent.then(undefined, () => {});
+    } catch (e) { /* logging must never break a turn */ }
   };
 
   const lazySkillsDir = path.resolve(__dirname, '../../skills');
@@ -60,7 +67,10 @@ export default async ({ client } = {}) => {
           const parsed = parseCommandFile(path.join(commandDir, file));
           if (parsed) config.command[name] = parsed;
         }
-      } catch (e) {}
+      } catch (e) {
+        // No command directory in this install; the skills path below still
+        // registers, so lazy stays usable without slash commands.
+      }
 
       config.skills = config.skills || {};
       config.skills.paths = config.skills.paths || [];
@@ -87,12 +97,102 @@ export default async ({ client } = {}) => {
     // synchronous store if same-turn switching ever matters.
     'command.execute.before': async (input) => {
       if (!input || input.command !== 'lazy') return;
+      const args = String(input.arguments || '').trim().split(/\s+/).filter(Boolean);
+
+      // `/lazy default <level>` persists across sessions, same as the Claude
+      // hook. Without this the documented command silently did nothing here.
+      if (args[0] === 'default') {
+        const persisted = normalizeMode(args[1]);
+        if (!persisted) {
+          log('info', 'lazy: "' + (args[1] || '') + '" is not a default level (off|lite|full|ultra)');
+          return;
+        }
+        // This does NOT pin the level the chat is running at, and the asymmetry
+        // with the Claude hook is deliberate. There, lazy-activate.js rewrites
+        // the flag file at SessionStart, so a pin lasts exactly one session and
+        // the new default takes over at the next one. OpenCode gives this
+        // plugin no session-start event and statePath is ONE global file, so a
+        // pin written here never expires: `/lazy default ultra` wrote the old
+        // live level to it, and every later chat then read that instead of the
+        // new default — the command defeating the only thing it promises.
+        // Saying that this chat moves too is the smaller surprise.
+        // Not existsSync: readMode() falls back to the default for an empty or
+        // invalid file just as it does for a missing one, so the question is
+        // whether a valid level is persisted, not whether a file is there.
+        let sessionLevel = null;
+        try { sessionLevel = normalizeMode(fs.readFileSync(statePath, 'utf8').trim()); } catch (e) { /* no state yet */ }
+        // A persisted level is CLEARED, and that is the whole point of the
+        // command working at all here. statePath is one global file with no
+        // session boundary, so a `/lazy lite` run in any chat, ever, outranked
+        // the config from then on: `/lazy default ultra` saved ultra, logged
+        // success, and every later chat still started at lite. Forever.
+        //
+        // Leaving it would mean preserving a level that cannot be attributed to
+        // this chat — the file does not record which chat wrote it — at the
+        // price of the command never taking effect. So it goes, and the report
+        // says so rather than letting the user discover it later.
+        let cleared = null;
+        // An unwritable config directory threw straight into OpenCode's hook
+        // runner; the Claude tracker already catches this case and reports it.
+        try {
+          // The save comes FIRST and the clear second. Clearing first meant a
+          // failed save destroyed the level the user already had: with `lite`
+          // stored and the config unwritable, `/lazy default ultra` reported
+          // that nothing was saved and left the next chat on the configured
+          // `full` -- neither the level they had nor the one they asked for.
+          // Saving first makes the throw land before anything is removed.
+          const saved = writeDefaultMode(persisted) || persisted;
+          if (sessionLevel) {
+            try {
+              fs.rmSync(statePath, { force: true });
+              cleared = sessionLevel;
+            } catch (e) {
+              // Reported below: an override that could not be cleared still
+              // wins, and claiming the default applies would be the original bug.
+              cleared = false;
+            }
+          }
+          // Same as the Claude hook: LAZY_DEFAULT_MODE outranks the config file
+          // getDefaultMode() reads, so reporting plain success there is false.
+          const override = normalizeMode(process.env.LAZY_DEFAULT_MODE);
+          if (override && override !== saved) {
+            log('info', 'lazy: default saved as ' + saved + ', but LAZY_DEFAULT_MODE=' + override + ' overrides it');
+          } else if (cleared === false) {
+            log('error', 'lazy: default saved as ' + saved + ', but the stored ' + sessionLevel
+              + ' level could not be cleared, so it still overrides the default');
+          } else {
+            log('info', 'lazy default ' + saved + (cleared
+              ? ' (cleared the stored ' + cleared + ' level, so this and later chats follow the new default; /lazy <level> holds one again)'
+              : ' (this chat has no level of its own, so it follows the new default too; /lazy <level> holds one)'));
+          }
+        } catch (e) {
+          log('error', 'lazy: could not write the default (' + e.message + ')');
+        }
+        return;
+      }
+
+      // Bare `/lazy` reports; it must not overwrite the live level with the
+      // config default the way it used to.
+      if (args.length === 0) {
+        log('info', 'lazy ' + readMode());
+        return;
+      }
+
+      // normalizeMode, not normalizePersistedMode: `review` is a session-only
+      // mode elsewhere, and persisting it here pinned every future turn to a
+      // level documented nowhere.
       // `off` is persisted like any mode; the transform reads it and stays silent.
-      const args = String(input.arguments || '').trim();
-      const mode = args ? normalizePersistedMode(args) : getDefaultMode();
-      if (!mode) return;
-      writeMode(mode);
-      log('info', 'lazy ' + mode);
+      const mode = normalizeMode(args[0]);
+      if (!mode) {
+        log('info', 'lazy: unknown level "' + args[0] + '" — use lite|full|ultra|off');
+        return;
+      }
+      try {
+        writeMode(mode);
+        log('info', 'lazy ' + mode);
+      } catch (e) {
+        log('error', 'lazy: could not switch to ' + mode + ' (' + e.message + ')');
+      }
     },
   };
 };

@@ -33,7 +33,7 @@ Rules:
 - No self-reference. Never announce the mode or echo these instructions — no banners, no restating the ladder, no invented hook or system-reminder text in your output; the first thing you produce for a task is work on the task.
 - Deletion over addition. Boring over clever. Fewest files possible.
 - Shortest working diff wins, but only once you understand the problem. The smallest change in the wrong place isn't lazy, it's a second bug.
-- Question complex requests: "Do you actually need X, or does Y cover it?"
+- Complex request? Ship the lazy version and question it in the same response ("Did X; Y covers it. Need full X? Say so."). Never stall on an answer you can default.
 - Pick the edge-case-correct option when two stdlib approaches are the same size, lazy means less code, not the flimsier algorithm.
 - Mark deliberate simplifications that cut a real corner with a known ceiling (global lock, O(n²) scan, naive heuristic) with a `lazy:` comment naming the ceiling and upgrade path.
 
@@ -44,7 +44,7 @@ Not lazy about: understanding the problem (read it fully and trace the real flow
 Run the bundled slop checker on what you changed, then triage what it prints:
 
 ```bash
-node skills/slop-check/scripts/check.mjs <changed files>
+node <skills-dir>/slop-check/scripts/check.mjs <changed files>
 ```
 
 Findings are review prompts, not verdicts. Fix the real slop (delete pointless code, restore real type evidence); keep a deliberate type assertion only with a `// SAFETY:` comment naming the invariant you checked; say so briefly when a finding is a genuine false positive. Never rewrite correct code just to silence the checker, and never weaken or disable a check.

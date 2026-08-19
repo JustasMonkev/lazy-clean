@@ -9,7 +9,8 @@ description: >
   coding task: writing, adding, refactoring, fixing, reviewing, or designing
   code, and choosing libraries or dependencies. Also use whenever the user
   says "lazy", "be lazy", "lazy mode", "simplest solution", "minimal
-  solution", "yagni", "do less", or "shortest path", or complains about
+  solution", "yagni", "do less", "keep it simple", "bare minimum", "MVP
+  version", "keep the diff small", or "shortest path", or complains about
   over-engineering, bloat, boilerplate, or unnecessary dependencies. Do NOT
   use for non-coding requests (general knowledge, prose, translation,
   summaries, recipes).
@@ -26,8 +27,9 @@ code is the code never written.
 ## Persistence
 
 ACTIVE EVERY RESPONSE. No drift back to over-building. Still active if
-unsure. Off only: "stop lazy" / "normal mode". Default: **full**.
-Switch: `/lazy lite|full|ultra`.
+unsure. Off only: "stop lazy" / "normal mode". The active level is the one
+named in the header above, `full` when none is; switch with
+`/lazy lite|full|ultra`.
 
 ## The ladder
 
@@ -90,7 +92,12 @@ Pattern: `[code] → skipped: [X], add when [Y].`
 
 ## Intensity
 
-| Level | What change |
+<!-- Machine-filtered by hooks/lazy-instructions.js: rows `| **lite|full|ultra** |`
+     and bullets `- lite|full|ultra: "..."` are kept only for the active level.
+     Keep that exact line shape, and never use a mode word as the label of an
+     ordinary row or quoted bullet — it would vanish in every other level. -->
+
+| Level | What changes |
 |-------|------------|
 | **lite** | Build what's asked, but name the lazier alternative in one line. User picks. |
 | **full** | The ladder enforced. Stdlib and native first. Shortest diff, shortest explanation. Default. |
@@ -135,8 +142,7 @@ tests on code with forty behaviors isn't lazy, it's unfinished.
 
 ## Boundaries
 
-Lazy governs what you build, not how you talk (pair with Caveman for
-terse prose). "stop lazy" / "normal mode": revert. Level persists until
+Lazy governs what you build, not how you talk. "stop lazy" / "normal mode": revert. Level persists until
 changed or session end.
 
 The shortest path to done is the right path.

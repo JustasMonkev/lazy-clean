@@ -1,0 +1,13 @@
+{
+  "name": "lazy-clean",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Write the least code that works, then delete the slop that crept in anyway.",
+  "license": "MIT",
+  "repository": "https://github.com/JustasMonkev/lazy-clean",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test": "node skills/slop-check/scripts/check.test.mjs && node tests/cli.test.mjs && node tests/hooks.test.mjs",
+    "slop-check": "node skills/slop-check/scripts/check.mjs hooks .opencode skills tests/cli.test.mjs tests/hooks.test.mjs"
+  }
+}

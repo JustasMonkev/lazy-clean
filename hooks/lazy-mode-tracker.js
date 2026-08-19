@@ -2,7 +2,7 @@
 // lazy — UserPromptSubmit hook to track which lazy mode is active
 // Inspects user input for /lazy commands and writes mode to flag file
 
-const { getDefaultMode, isDeactivationCommand, writeDefaultMode } = require('./lazy-config');
+const { getDefaultMode, isDeactivationCommand, normalizeMode, writeDefaultMode } = require('./lazy-config');
 const { clearMode, isQoder, readMode, setMode, writeHookOutput } = require('./lazy-runtime');
 const { getLazyInstructions } = require('./lazy-instructions');
 
@@ -30,20 +30,62 @@ function finish() {
       prompt = ('/' + nameTag[1] + ' ' + (argsTag ? argsTag[1] : '')).trim();
     }
 
-    // Match /lazy commands
+    // One JSON object per invocation. Every branch records what it wants to
+    // say and exactly one write happens at the end: writing from the branches
+    // emitted two concatenated objects on Qoder, where the ruleset below is
+    // also written, and neither could be parsed.
+    // On Claude Code and Codex an absent flag IS off, because lazy-activate.js
+    // rewrites it at SessionStart. Qoder has no SessionStart, so this hook
+    // derives the level from the config default whenever no flag exists — which
+    // made "absent" mean BOTH "the user turned lazy off" and "this session has
+    // not started yet". `/lazy off` therefore lasted exactly one prompt: the
+    // next one re-derived `full` and turned lazy back on, and `/lazy default`
+    // re-enabled it the same way. Qoder gets an explicit `off` on disk; the
+    // other hosts keep the absent-is-off contract.
+    // Returns whether lazy is ACTUALLY off now, read back from disk rather than
+    // assumed. Both writes swallow their own failures -- clearMode() ignores a
+    // failed unlink by design -- so a state file that could not be written left
+    // the previous level in place while the hook still answered LAZY MODE OFF,
+    // and the next prompt injected the ruleset again.
+    const turnOff = () => {
+      if (isQoder) {
+        try {
+          setMode('off');
+        } catch (e) { /* checked below, not assumed */ }
+        // On Qoder an absent flag means "derive from the default", not off, so
+        // only an explicit `off` on disk counts as deactivated here.
+        return readMode() === 'off';
+      }
+      clearMode();
+      return readMode() === null;
+    };
+
+    let notice = null;
     let modeSwitched = false;
     let deactivated = false;
+    // Outer scope because Qoder initializes the mode further down and has to
+    // re-answer a bare `/lazy` from the level that initialization produced.
+    let isReportOnly = false;
     if (/^[/@$]lazy/.test(prompt)) {
       const parts = prompt.split(/\s+/);
       const cmd = parts[0].replace(/^[@$]/, '/');
       const arg = parts[1] || '';
 
       let mode = null;
-      let isReportOnly = false;
+      let handled = false;
 
       if (cmd === '/lazy-review' || cmd === '/lazy:lazy-review') {
-        mode = 'review';
-      } else if (cmd === '/lazy' || cmd === '/lazy:lazy') {
+        // One-shot, exactly as skills/lazy-review/SKILL.md promises: "it sets no
+        // mode, so there is nothing to revert". Persisting `review` pinned every
+        // later prompt and every subagent to a level the docs never mention, and
+        // made a bare `/lazy` answer "ACTIVE — level: review" with no documented
+        // way back. The review ruleset goes out for THIS turn and the live level
+        // is untouched -- which is what OpenCode already did, so this is the two
+        // hosts agreeing rather than a new rule.
+        writeHookOutput('UserPromptSubmit', readMode() || 'off', getLazyInstructions('review'));
+        return;
+      }
+      if (cmd === '/lazy' || cmd === '/lazy:lazy') {
         // `/lazy default <mode>` persists the default to config (survives
         // restarts). Plain switches stay session-scoped ("sticks until session
         // end"), so this is the only path that writes config. review is not a
@@ -51,54 +93,91 @@ function finish() {
         if (arg === 'default') {
           const dmode = parts[2];
           if (dmode === 'off' || dmode === 'lite' || dmode === 'full' || dmode === 'ultra') {
-            writeDefaultMode(dmode);
-            writeHookOutput('UserPromptSubmit', dmode, 'LAZY DEFAULT SET — new sessions start in ' + dmode + '.');
+            // On Qoder the live level is derived from the config default
+            // whenever no flag exists, so this session has to be pinned BEFORE
+            // the default moves. Pinning afterwards left a failed pin with the
+            // new default already written, and the next prompt adopted it — the
+            // command changing the one session it promises not to touch.
+            // `off` is pinned like any level: absent means "derive", not "off",
+            // once the value it would derive from has changed.
+            let pinned = true;
+            if (isQoder && !readMode()) {
+              try {
+                setMode(getDefaultMode());
+              } catch (e) {
+                notice = 'LAZY: could not pin the current level, so the default was left unchanged (' + e.message + ').';
+                pinned = false;
+              }
+            }
+            // A failed write must say so: silently doing nothing looks like it
+            // worked until the next session starts in the old mode.
+            if (pinned) {
+              try {
+                writeDefaultMode(dmode);
+                // LAZY_DEFAULT_MODE outranks the config file getDefaultMode()
+                // reads, so with it set to something else the write lands and
+                // changes nothing anyone will see. Saying "new sessions start
+                // in ultra" there is simply false.
+                const override = normalizeMode(process.env.LAZY_DEFAULT_MODE);
+                notice = override && override !== dmode
+                  ? 'LAZY: default saved as ' + dmode + ', but LAZY_DEFAULT_MODE=' + override +
+                    ' overrides it — new sessions start in ' + override + ' until that variable is unset.'
+                  : 'LAZY DEFAULT SET — new sessions start in ' + dmode + '.';
+              } catch (e) {
+                notice = 'LAZY: could not write the default (' + e.message + ').';
+              }
+            }
+          } else {
+            notice = 'LAZY: ' + (dmode ? '"' + dmode + '" is not' : 'a default level is required —') + ' one of off|lite|full|ultra.';
           }
-          return; // don't fall through to the session-mode switch
-        }
-        if (arg === 'lite') mode = 'lite';
+          handled = true; // don't fall through to the session-mode switch
+        } else if (arg === 'lite') mode = 'lite';
         else if (arg === 'full') mode = 'full';
         else if (arg === 'ultra') mode = 'ultra';
         else if (arg === 'off') mode = 'off';
         else if (arg === '') {
+          // Report what is live, never what the config would start. Reporting
+          // the default said "ACTIVE — level: full" while the flag was absent,
+          // so the model believed lazy was on and every subagent saw it off.
           isReportOnly = true;
-          mode = readMode() || getDefaultMode();
+          mode = readMode();
         } else {
-          mode = getDefaultMode();
+          // An unrecognized level used to fall back to the default, silently
+          // downgrading an ultra session — or turning lazy off outright when
+          // the default was off.
+          notice = 'LAZY: unknown level "' + arg + '" — use lite|full|ultra|off.';
+          handled = true;
         }
       }
 
-      if (isReportOnly) {
-        writeHookOutput(
-          'UserPromptSubmit',
-          mode,
-          'LAZY MODE ACTIVE — level: ' + mode,
-        );
+      if (handled) {
+        // The branch above already said what happened.
+      } else if (isReportOnly) {
+        notice = mode ? 'LAZY MODE ACTIVE — level: ' + mode : 'LAZY MODE OFF — start with /lazy lite|full|ultra.';
       } else if (mode && mode !== 'off') {
-        setMode(mode);
-        modeSwitched = true;
-        // lazy: Qoder needs the full ruleset every turn, so when a mode
-        // switch happens we fold the confirmation into the ruleset output
-        // below (one JSON on stdout) instead of emitting two separate writes.
-        if (!isQoder) {
-          writeHookOutput(
-            'UserPromptSubmit',
-            mode,
-            'LAZY MODE CHANGED — level: ' + mode,
-          );
-        }
+        // A failed write must say so, same as the off path below: setMode()
+        // throwing landed in the outer silent catch, so /lazy ultra printed
+        // nothing and the old level stayed live while the user believed it
+        // changed. Read the level back from disk instead of assuming.
+        try { setMode(mode); } catch (e) { /* verified by readMode below */ }
+        modeSwitched = readMode() === mode;
+        notice = modeSwitched
+          ? 'LAZY MODE CHANGED — level: ' + mode
+          : 'LAZY: could not switch to ' + mode + ' — the mode state could not be written, so the previous level is still active.';
       } else if (mode === 'off') {
-        clearMode();
-        deactivated = true;
-        writeHookOutput('UserPromptSubmit', 'off', 'LAZY MODE OFF');
+        deactivated = turnOff();
+        notice = deactivated
+          ? 'LAZY MODE OFF'
+          : 'LAZY: could not turn lazy off — the mode state could not be written, so lazy is still active.';
       }
     }
 
     // Detect deactivation
     if (!modeSwitched && !deactivated && isDeactivationCommand(prompt)) {
-      clearMode();
-      deactivated = true;
-      writeHookOutput('UserPromptSubmit', 'off', 'LAZY MODE OFF');
+      deactivated = turnOff();
+      notice = deactivated
+        ? 'LAZY MODE OFF'
+        : 'LAZY: could not turn lazy off — the mode state could not be written, so lazy is still active.';
     }
 
     // Qoder has no SessionStart event, so UserPromptSubmit does double duty:
@@ -109,21 +188,35 @@ function finish() {
     if (isQoder && !deactivated) {
       let currentMode = readMode();
       if (!currentMode) {
-        // First prompt in session — initialize from config/env default
+        // First prompt in session — initialize from config/env default, or from
+        // the default this very prompt replaced: `/lazy default` is documented
+        // as changing what LATER sessions start at, so it must not decide this
+        // one's level.
         currentMode = getDefaultMode();
+        // `off` is left unwritten here — no flag IS off, and writing one would
+        // make every session start by creating state. The one case that does
+        // need an explicit `off` is `/lazy default`, which pins above before it
+        // moves the value this line reads.
         if (currentMode !== 'off') {
-          try { setMode(currentMode); } catch (e) {}
+          try { setMode(currentMode); } catch (e) { /* best-effort: the ruleset below still goes out */ }
         }
       }
+      // The report-only notice above was computed before this initialization
+      // ran, so a bare `/lazy` on the first Qoder prompt said OFF in the same
+      // message that turned lazy on. Answer from the level that is live now.
+      if (isReportOnly) {
+        notice = currentMode && currentMode !== 'off'
+          ? 'LAZY MODE ACTIVE — level: ' + currentMode
+          : 'LAZY MODE OFF — start with /lazy lite|full|ultra.';
+      }
       if (currentMode && currentMode !== 'off') {
-        // lazy: one JSON per invocation — mode-switch confirmation is
-        // folded into the ruleset header so Qoder gets both in one write.
-        const header = modeSwitched
-          ? 'LAZY MODE CHANGED — level: ' + currentMode + '\n\n'
-          : '';
-        writeHookOutput('UserPromptSubmit', currentMode, header + getLazyInstructions(currentMode));
+        writeHookOutput('UserPromptSubmit', currentMode,
+          [notice, getLazyInstructions(currentMode)].filter(Boolean).join('\n\n'));
+        return;
       }
     }
+
+    if (notice) writeHookOutput('UserPromptSubmit', readMode() || 'off', notice);
   } catch (e) {
     // Silent fail
   }
@@ -132,7 +225,7 @@ function finish() {
 process.stdin.on('data', chunk => {
   input += chunk;
   // Bound stdin: no real hook payload approaches 32MB; a runaway pipe would OOM the string.
-  if (input.length > 32e6) { finish(); process.exit(0); }
+  if (input.length > 32e6) { finish(); process.stdin.destroy(); }
 });
 process.stdin.on('end', finish);
 
@@ -143,5 +236,5 @@ process.stdin.on('end', finish);
 // mode if data came without EOF) and exit. unref() keeps the timer from adding
 // latency to the normal path, where 'end' fires first. Mirrors the best-effort,
 // never-block contract the other lifecycle hooks already follow.
-process.stdin.on('error', () => { finish(); process.exit(0); });
-setTimeout(() => { finish(); process.exit(0); }, 1000).unref();
+process.stdin.on('error', () => { finish(); process.stdin.destroy(); });
+setTimeout(() => { finish(); process.stdin.destroy(); }, 1000).unref();

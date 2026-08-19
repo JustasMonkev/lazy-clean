@@ -1,0 +1,5 @@
+* text=auto
+
+# A CRLF checkout breaks the bash statusline: `exit 0\r` is not a number, and
+# the flag path picks up a trailing carriage return.
+*.sh text eol=lf

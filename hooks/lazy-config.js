@@ -48,7 +48,10 @@ function isDeactivationCommand(text) {
 // to manual setup instead. Allows : \ / for normal Windows and POSIX paths. Full
 // per-shell escaper only if a real need appears.
 function isShellSafe(p) {
-  return typeof p === 'string' && /^[A-Za-z0-9 _.\-:/\\~]+$/.test(p);
+  // Accented and CJK usernames are ordinary path characters, not shell
+  // metacharacters; the ASCII-only allowlist sent most non-English-locale
+  // installs down the manual-setup branch.
+  return typeof p === 'string' && /^[\p{L}\p{N} _.\-:/\\~]+$/u.test(p);
 }
 
 function getConfigDir() {
@@ -75,7 +78,7 @@ function getClaudeDir() {
 
 function getDefaultMode() {
   // 1. Environment variable (highest priority)
-  const envMode = process.env.LAZY_DEFAULT_MODE;
+  const envMode = (process.env.LAZY_DEFAULT_MODE || '').trim();
   // lazy: a default must be a runtime level (off/lite/full/ultra); review is
   // a session-only mode, never a valid default (#377). Validate against
   // RUNTIME_MODES so a stray env var or config can't make review the default.
@@ -88,9 +91,10 @@ function getDefaultMode() {
     const configPath = getConfigPath();
     // Strip UTF-8 BOM (common on Windows-saved files) so JSON.parse doesn't choke
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
-    if (config.defaultMode && RUNTIME_MODES.includes(config.defaultMode.toLowerCase())) {
-      return config.defaultMode.toLowerCase();
-    }
+    // trim() like the env path above: the file is hand-editable, and
+    // " ultra " silently fell back to full.
+    const fileMode = config.defaultMode && String(config.defaultMode).trim().toLowerCase();
+    if (fileMode && RUNTIME_MODES.includes(fileMode)) return fileMode;
   } catch (e) {
     // Config file doesn't exist or is invalid — fall through
   }
@@ -99,26 +103,19 @@ function getDefaultMode() {
   return DEFAULT_MODE;
 }
 
-// Silence the pi "Lazy loaded" startup toast while keeping lazy active.
-// LAZY_QUIET_STARTUP=1 (or any truthy value; 0/false/empty mean "show it")
-// takes precedence, else config.quietStartup === true. Mirrors getHideStatus.
-function getQuietStartup() {
-  const env = process.env.LAZY_QUIET_STARTUP;
-  if (env !== undefined) {
-    const v = env.trim().toLowerCase();
-    return v !== '' && v !== '0' && v !== 'false' && v !== 'no';
-  }
-  try {
-    const config = JSON.parse(fs.readFileSync(getConfigPath(), 'utf8').replace(/^\uFEFF/, ''));
-    return config.quietStartup === true;
-  } catch (_) {
-    return false;
-  }
-}
-
 // Hide the status-bar indicator while keeping lazy active (#324).
 // LAZY_HIDE_STATUS=1 (or any truthy value; 0/false/empty mean "don't hide")
 // takes precedence, else config.hideStatus === true.
+// The statusline re-reads and re-validates this file on EVERY prompt render,
+// and `hideStatus` cannot be trusted until the whole document parses. A config
+// far larger than the handful of keys lazy stores is a mistake rather than a
+// preference, and reading it stalls the prompt -- 1MB measured at ~30s in the
+// shell parser. Above the cap the file is not read and the badge shows, which
+// is the same direction an unparseable config already takes. The cap is applied
+// in the shell and PowerShell statuslines too: it is part of the answer, so all
+// three have to share it or they disagree.
+const CONFIG_SIZE_LIMIT = 65536;
+
 function getHideStatus() {
   const env = process.env.LAZY_HIDE_STATUS;
   if (env !== undefined) {
@@ -126,9 +123,12 @@ function getHideStatus() {
     return v !== '' && v !== '0' && v !== 'false' && v !== 'no';
   }
   try {
-    const config = JSON.parse(fs.readFileSync(getConfigPath(), 'utf8').replace(/^\uFEFF/, ''));
+    const configPath = getConfigPath();
+    if (fs.statSync(configPath).size > CONFIG_SIZE_LIMIT) return false;
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
     return config.hideStatus === true;
   } catch (_) {
+    // No config, no preference: the badge shows.
     return false;
   }
 }
@@ -144,7 +144,10 @@ function writeDefaultMode(mode) {
   try {
     config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
     if (!config || typeof config !== 'object' || Array.isArray(config)) config = {};
-  } catch (_) {}
+  } catch (_) {
+    // No config yet, or an unreadable one: start from an empty object rather
+    // than refuse to record the preference.
+  }
   config.defaultMode = normalized;
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
   return normalized;
@@ -159,13 +162,17 @@ function writeHideStatus(hide) {
   try {
     config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
     if (!config || typeof config !== 'object' || Array.isArray(config)) config = {};
-  } catch (_) {}
+  } catch (_) {
+    // Same as writeDefaultMode: a missing or corrupt config is replaced, not
+    // a reason to drop the setting.
+  }
   config.hideStatus = hide === true;
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
   return config.hideStatus;
 }
 
 module.exports = {
+  CONFIG_SIZE_LIMIT,
   DEFAULT_MODE,
   VALID_MODES,
   RUNTIME_MODES,
@@ -174,7 +181,6 @@ module.exports = {
   getConfigPath,
   getClaudeDir,
   getHideStatus,
-  getQuietStartup,
   isShellSafe,
   normalizeMode,
   normalizeConfigMode,

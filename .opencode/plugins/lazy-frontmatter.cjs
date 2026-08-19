@@ -16,7 +16,10 @@ function parseCommandFile(filePath) {
   // Tolerate CRLF: a Windows checkout (autocrlf) delivers \r\n, npm ships \n.
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   if (!match) return null;
-  const description = match[1].match(/description:\s*(.+)/)?.[1]?.trim();
+  // Strip the YAML quotes a description containing a colon must carry, or
+  // they show up in OpenCode's command list.
+  const description = match[1].match(/description:\s*(.+)/)?.[1]?.trim()
+    ?.replace(/^(['"])([\s\S]*)\1$/u, '$2');
   return { description, template: match[2].trim() };
 }
 

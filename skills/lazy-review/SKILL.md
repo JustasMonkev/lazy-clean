@@ -5,7 +5,7 @@ description: >
   reinvented standard library, unneeded dependencies, speculative abstractions,
   dead flexibility. One line per finding: location, what to cut, what replaces
   it. Use when the user says "review for over-engineering", "what can we
-  delete", "is this over-engineered", "simplify review", or invokes
+  delete from this diff", "is this over-engineered", "simplify review", or invokes
   /lazy-review. Complements correctness-focused review, this one only
   hunts complexity.
 ---
@@ -53,5 +53,6 @@ Scope: over-engineering and complexity only. Correctness bugs, security holes,
 and performance are explicitly out of scope. Route them to a normal review
 pass, not this one. A single smoke test or `assert`-based
 self-check is the lazy minimum, not bloat, never flag it for deletion.
-Does not apply the fixes, only lists them.
-"stop lazy-review" or "normal mode": revert to verbose review style.
+Does not apply the fixes, only lists them — say "apply the findings" and they
+are applied under the lazy ladder and the surgical-changes rule. One-shot: it
+sets no mode, so there is nothing to revert.

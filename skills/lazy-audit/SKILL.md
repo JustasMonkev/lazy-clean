@@ -5,8 +5,8 @@ description: >
   entire codebase instead of a diff: a ranked list of what to delete, simplify,
   or replace with stdlib/native equivalents. Use when the user says "audit this
   codebase", "audit for over-engineering", "what can I delete from this repo",
-  "find bloat", "lazy-audit", or "/lazy-audit". One-shot report, does
-  not apply fixes.
+  "find bloat", "find dead code", "which dependencies can we drop",
+  "lazy-audit", or "/lazy-audit". One-shot report, does not apply fixes.
 ---
 
 lazy-review, repo-wide. Scan the whole tree instead of a diff. Rank
@@ -37,5 +37,6 @@ End with `net: -<N> lines, -<M> deps possible.` Nothing to cut: `Lean already. S
 
 Scope: over-engineering and complexity only. Correctness bugs, security holes,
 and performance are explicitly out of scope. Route them to a normal review
-pass. Lists findings, applies nothing. One-shot.
-"stop lazy-audit" or "normal mode" to revert.
+pass. Lists findings, applies nothing. One-shot — it sets no mode, so there is
+nothing to revert. To act on the list, say "apply the findings"; the fixes then
+follow the lazy ladder and the surgical-changes rule.

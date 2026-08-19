@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { getClaudeDir, getConfigDir } = require('./lazy-config');
+const crypto = require('crypto');
+const { getClaudeDir, getConfigDir, normalizePersistedMode } = require('./lazy-config');
 
 const STATE_FILE = '.lazy-active';
 
@@ -28,22 +29,55 @@ if (isCodex) stateDir = process.env.PLUGIN_DATA;
 if (isCopilot) stateDir = process.env.COPILOT_PLUGIN_DATA || getClaudeDir();
 if (isQoder) stateDir = path.join(os.homedir(), '.qoder');
 
-const statePath = path.join(stateDir, STATE_FILE);
-
+// Qoder has no SessionStart event, so nothing clears this file at a session
+// boundary: a level written in one session was still there in the next. Keying
+// it by QODER_SESSION_ID is what makes the documented "sticks until session
+// end" true there — and it is what lets `/lazy default` pin the level THIS
+// session is running at without freezing every later session at that level too.
+// The id reaches a filename, so it is sanitized — but sanitizing alone collides
+// (`a/b` and `a:b` both became `a_b`, and two ids sharing a truncated prefix
+// collided too), and a collision puts two sessions back on one file, which is
+// the leak this naming exists to prevent. The readable part is for humans; the
+// digest of the WHOLE id is what makes it unique.
+// These files are never cleaned up, deliberately: mtime is not a liveness
+// signal — a session open or resumed past any age still owns its level — so
+// deleting by age silently reset live sessions to the default. Each file is a
+// handful of bytes, which is the cheaper thing to leave lying around.
+function sessionStateFile(id) {
+  const readable = String(id).replace(/[^\w.-]/gu, '_').slice(0, 32);
+  const digest = crypto.createHash('sha256').update(String(id)).digest('hex').slice(0, 16);
+  return `${STATE_FILE}-${readable}-${digest}`;
+}
+const stateFile = isQoder ? sessionStateFile(process.env.QODER_SESSION_ID) : STATE_FILE;
+const statePath = path.join(stateDir, stateFile);
 function setMode(mode) {
   fs.mkdirSync(path.dirname(statePath), { recursive: true });
   fs.writeFileSync(statePath, mode);
 }
 
 function clearMode() {
-  try { fs.unlinkSync(statePath); } catch (e) {}
+  // Already absent is the state we wanted; nothing to report.
+  try { fs.unlinkSync(statePath); } catch (e) { /* no flag to clear */ }
 }
+
+// The same 4096 bytes both statuslines already bound their read to. A level is
+// at most five characters, so anything past this is not one -- and the file is
+// hand-editable and read on every subagent start, where a bloated one cost
+// 1.1s and 400MB of RSS before being rejected as invalid anyway.
+const STATE_SIZE_LIMIT = 4096;
 
 // Live mode written by activate/mode-tracker. Absent flag = lazy off.
 function readMode() {
   try {
-    return fs.readFileSync(statePath, 'utf8').trim() || null;
+    // Stat before read: the size is the cheap question, and asking it second
+    // means the allocation has already happened.
+    if (fs.statSync(statePath).size > STATE_SIZE_LIMIT) return null;
+    // The flag file is on disk and hand-editable; anything that is not a level
+    // is not a level. It used to reach the statusline verbatim, so a file
+    // holding escape sequences printed them straight into the prompt.
+    return normalizePersistedMode(fs.readFileSync(statePath, 'utf8').trim());
   } catch (e) {
+    // No flag file means lazy is off, which is a level, not a failure.
     return null;
   }
 }
