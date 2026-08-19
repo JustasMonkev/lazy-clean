@@ -445,4 +445,33 @@ if (failures > 0) {
   console.error(`\n${failures} test(s) failed`);
   process.exit(1);
 }
+// `--since` skips most of what it collects, so the summary has to count the
+// files that actually reached the linter. One changed file beside one unchanged
+// one reported "clean (2 files checked)" -- overstating coverage is the same
+// class of lie as reporting a failed scan as clean.
+check("--since counts only the files it linted, not the files it collected", () => {
+  const repo = mkdtempSync(join(tmpdir(), "slop-since-count-"));
+  const git = (...args) => spawnSync("git", args, { cwd: repo, encoding: "utf8" });
+  mkdirSync(join(repo, "src"), { recursive: true });
+  git("init", "-q", ".");
+  git("config", "user.email", "t@t");
+  git("config", "user.name", "t");
+  writeFileSync(join(repo, "src", "changed.ts"), "export const a = 1;\n");
+  writeFileSync(join(repo, "src", "unchanged.ts"), "export const b = 2;\n");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  writeFileSync(join(repo, "src", "changed.ts"), "export const a = 1;\nexport const c = 3;\n");
+
+  assert.match(run(["--since=HEAD", "src"], repo).stdout, /clean \(1 file checked\)/u);
+  // A plain scan still counts every file, so this is not "always report 1".
+  assert.match(run(["src"], repo).stdout, /clean \(2 files checked\)/u);
+
+  git("add", "-A");
+  git("commit", "-qm", "settle");
+  const none = run(["--since=HEAD", "src"], repo);
+  assert.match(none.stdout, /clean \(0 files checked\)/u);
+  assert.equal(none.status, 0);
+  rmSync(repo, { recursive: true, force: true });
+});
+
 console.log("\nall slop-check CLI tests passed");

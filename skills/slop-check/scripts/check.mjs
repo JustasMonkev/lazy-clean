@@ -111,8 +111,9 @@ function maskSource(source, { jsx = false } = {}) {
   // "don't" never finds a partner on its line, so it claims nothing, while
   // `{'</div>'}` in an expression hole closes immediately and does. An earlier
   // version claimed a span whether or not the quote closed, and read prose
-  // apostrophes, a URL's `//` and a lone backtick as literals -- so line
-  // comments stay out of this entirely and the pairing test carries the rest.
+  // apostrophes, a URL's `//` and a lone backtick as literals -- the pairing
+  // test fixed the quotes, and a `//` is a comment unless a `:` precedes it,
+  // which is what tells a URL scheme from a comment in prose and code alike.
   // A template that spans lines is given up with them; a closing tag inside one
   // is rarer than the prose this protects.
   const QUOTES = "\"'`";
@@ -125,6 +126,18 @@ function maskSource(source, { jsx = false } = {}) {
         if (close === -1) break;
         spans.push([k, close + 2]);
         k = close + 1;
+        continue;
+      }
+      // A line comment, EXCEPT when the `//` follows a `:` -- that is a URL
+      // scheme, and reading `https://example.com` in JSX text as a comment was
+      // one of the failures that kept line comments out of here at first. The
+      // colon is the whole difference: prose carries URLs, and a `//` with no
+      // colon before it is a comment in code and prose alike.
+      if (ch === "/" && source[k + 1] === "/" && source[k - 1] !== ":") {
+        const close = source.indexOf("\n", k + 2);
+        const end = close === -1 ? n : close;
+        spans.push([k, end]);
+        k = end - 1;
         continue;
       }
       if (!QUOTES.includes(ch)) continue;
@@ -680,7 +693,7 @@ const LINE_RULES = [
     // `Map<any, string>` was reported. A union is matched from BOTH sides for
     // the same reason: `any | null` collapses to `any` exactly as `null | any`
     // does, and operand order is not a property worth being sensitive to.
-    pattern: /:\s*any\b|\bas\s+any\b|[<,]\s*any\s*[,>]|\bany\s*\[\]|\btype\s+[\w$]+(?:<(?:[^<>]|<[^<>]*>)*>)?\s*=\s*any\b|[|&]\s*any\b|\bany\s*[|&]/u,
+    pattern: /:\s*any\b|\bas\s+any\b|[<,[]\s*any\s*[,>\]]|\bany\s*\[\]|\btype\s+[\w$]+(?:<(?:[^<>]|<[^<>]*>)*>)?\s*=\s*any\b|[|&]\s*any\b|\bany\s*[|&]/u,
     message: "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
   },
   {
@@ -792,6 +805,18 @@ const LINE_RULES = [
     name: "no-env-secret-fallback",
     pattern: /\bprocess\s*\.\s*env\s*\[\s*(["'])([^\n]*?)\1\s*\]\s*(?:\|\||\?\?)\s*["'`]/du,
     verify: (match, rawLine) => CREDENTIAL_NAME.test(rawLine.slice(...match.indices[2])),
+    message: ENV_SECRET_FALLBACK_MESSAGE,
+  },
+  {
+    // `const { API_TOKEN = "dev-token" } = process.env` installs the same silent
+    // literal as the dotted form, and it is how the lookup is usually written
+    // when several variables are read at once. The `= process.env` tail is what
+    // makes it this rule rather than any destructuring default; `verify` reads
+    // the real binding name off the raw line, since masking blanks the literal
+    // but keeps its quotes.
+    name: "no-env-secret-fallback",
+    pattern: /\{[^{}]*?(?<![\w$])([A-Za-z_$][\w$]*)\s*(?::\s*[\w$]+\s*)?=\s*["'`][^\n]*?\}\s*=\s*process\s*\.\s*env\b/du,
+    verify: (match, rawLine) => CREDENTIAL_NAME.test(rawLine.slice(...match.indices[1])),
     message: ENV_SECRET_FALLBACK_MESSAGE,
   },
   {
@@ -999,6 +1024,10 @@ function balancedEnd(text, start) {
     const ch = text[k];
     if (ch === "{") braces += 1;
     else if (ch === "}") braces -= 1;
+    // `=>` is one token: the `>` in `as Promise<() => void>` closed the generic
+    // early, so the scan ended mid-type and the terminator check rejected the
+    // whole assertion. Only matters for `<`, where `>` is the closer.
+    if (ch === ">" && text[k - 1] === "=" && close === ">") continue;
     if (ch === open) depth += 1;
     else if (ch === close) {
       depth -= 1;
@@ -1804,6 +1833,11 @@ function main() {
   const { files } = scan;
 
   const findings = [];
+  // Files that actually reached lintSource. With `--since`, the collected list
+  // includes every file under the target and most are skipped, so reporting
+  // `files.length` claimed coverage the scan never had: one changed file beside
+  // one unchanged one said "clean (2 files checked)".
+  let linted = 0;
   for (const file of files) {
     const changed = added?.get(resolve(file));
     if (added && !changed) continue;
@@ -1818,6 +1852,7 @@ function main() {
       scan.unreadable += 1;
       continue;
     }
+    linted += 1;
     const fileFindings = lintSource(source, displayPath(file));
     // Same overlap test the PostToolUse hook uses: a block rule reports at the
     // keyword that opens the block, so testing the anchor line alone dropped
@@ -1831,7 +1866,7 @@ function main() {
     findings.push(...(changed ? fileFindings.filter(touched) : fileFindings));
   }
 
-  const scanned = added ? findings.length > 0 || files.length : files.length;
+  const scanned = linted;
   const summary = findings.length === 0
     ? `slop-check: clean (${scanned} file${scanned === 1 ? "" : "s"} checked)`
     : `slop-check: ${findings.length} finding${findings.length === 1 ? "" : "s"} in ${new Set(findings.map((finding) => finding.path)).size} file${new Set(findings.map((finding) => finding.path)).size === 1 ? "" : "s"}`;

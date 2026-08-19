@@ -1547,6 +1547,26 @@ if (!canRunBash) {
     }
   }
 
+  // An oversized flag is corrupt, not a preference, and both reads of it took
+  // the whole file -- a 20MB flag cost ~6.6s per prompt render. The badge is a
+  // few bytes either way, so this asserts the outcome and the fact that the
+  // ordinary sizes on either side of the cap still behave.
+  {
+    // The defect is COST, so the assertion is a clock. An 8MB flag measured
+    // 1.7s per prompt render before the cap and 10ms after, so 1s is a wide
+    // margin either way -- this fails on the old code by 70% and passes on the
+    // new one by two orders of magnitude, which is what keeps it from being a
+    // flaky timing test.
+    const started = Date.now();
+    const big = statusline("a".repeat(8 * 1024 * 1024));
+    const elapsed = Date.now() - started;
+    ok("an oversized flag does not stall the render", elapsed < 1000, `${elapsed}ms`);
+    ok("an oversized flag prints nothing", big.out === "" && big.err === "", JSON.stringify(big).slice(0, 120));
+    // Not "always reject a long-ish flag": a padded level is still a level.
+    const padded = statusline("ultra".padEnd(200, " "));
+    ok("a merely padded flag still prints", padded.out.includes("[LAZY:ULTRA]"), JSON.stringify(padded).slice(0, 120));
+  }
+
   // getConfigDir() resolves exactly ONE directory, so a config in a directory it
   // did not pick must not override the explicit hideStatus:false in the one it did.
   const appdata = path.join(sl.home, "appdata");

@@ -339,6 +339,53 @@ for (const [label, quoted] of [
     "sample.tsx",
   );
 }
+// A tuple element is a type position: `[any, string]` erases as much as the
+// generic and union forms.
+expectRule("flags any as a tuple element", "type Pair = [any, string];", "no-any");
+expectRule("flags any as a later tuple element", "type T = [string, any];", "no-any");
+// `=>` is one token: counting its `>` as a generic closer ended the type early.
+expectRule(
+  "flags an assertion whose generic holds a function type",
+  "const a = payload as Promise<() => void>;",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "flags an assertion that is a bare function type",
+  "const a = payload as () => void;",
+  "require-safety-comment-for-type-assertion",
+);
+// A closing tag inside a LINE COMMENT is not the element's closer. Believing it
+// was opened a children region that masked the code above the comment.
+expectRule(
+  "code above a commented-out closing tag is still checked",
+  "const el = <div>\nconst value: any = 1;\n// </div>",
+  "no-any",
+  "sample.tsx",
+);
+// ...but a URL in JSX text is not a comment, which is what kept line comments
+// out of the pre-pass until the `:` told the two apart.
+expectNoRule(
+  "a URL in JSX text is not read as a comment",
+  "const el = <p>see https://example.com/x for more</p>;\nconst v = 1;",
+  "no-filler-comments",
+  "sample.tsx",
+);
+// The destructured form installs the same silent literal as the dotted one.
+expectRule(
+  "flags a destructured credential default",
+  'const { API_TOKEN = "dev-token" } = process.env;',
+  "no-env-secret-fallback",
+);
+expectRule(
+  "flags a renamed destructured credential default",
+  'const { API_TOKEN: token = "dev-token" } = process.env;',
+  "no-env-secret-fallback",
+);
+expectNoRule(
+  "an ordinary destructured default is not a credential",
+  'const { PORT = "3000" } = process.env;',
+  "no-env-secret-fallback",
+);
 expectRule("flags a string-literal type assertion", 'const a = payload as "ready";', "require-safety-comment-for-type-assertion");
 expectRule("flags a numeric-literal type assertion", "const a = payload as 42;", "require-safety-comment-for-type-assertion");
 expectRule('flags an indexed-access assertion', 'const a = payload as User["id"];', "require-safety-comment-for-type-assertion");

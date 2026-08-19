@@ -208,19 +208,31 @@ else
     fi
 fi
 
-# A NUL byte makes the flag invalid, and it has to be caught BEFORE command
-# substitution: `$(<file)` silently discards NUL and warns on stderr, so
-# `ul\0tra` normalized to `ultra` and painted an active badge while readMode()
-# kept the byte and rejected the same state as off -- with the warning itself
-# leaking into the prompt. `read -d ""` stops at the first NUL and succeeds only
-# when it finds one, so this is the test with no subprocess on the render path.
-if IFS= read -r -d "" _ < "$flag" 2>/dev/null; then
+# ONE bounded read answers both questions about the raw flag, before any of it
+# reaches a variable the rest of the script trusts.
+#
+# `read -d ""` takes NUL as its delimiter and `-n` caps how much it will read,
+# so it SUCCEEDS in exactly two cases -- it found a NUL, or it hit the cap --
+# and both mean the flag is not a level:
+#   - a NUL makes it corrupt. `$(<file)` discards NUL and warns on stderr, so
+#     `ul\0tra` normalized to `ultra` and painted an active badge while
+#     readMode() kept the byte and read the same state as off, with the warning
+#     itself leaking into the prompt. Testing the value afterwards cannot work:
+#     read stops BEFORE the NUL, and a `$\'\\000\'` pattern is an empty string in
+#     bash, so `case` on it matched every flag and blanked the badge entirely.
+#   - past the cap it is bloated. A valid flag is one word, and reading the
+#     whole file cost ~6.6s per prompt render on a 20MB one.
+# Failure means EOF with no NUL inside the cap -- the ordinary case -- and
+# `flag_head` then holds the whole file, so it is reused below rather than read
+# again. `IFS=` keeps read from trimming, since readMode() trims the file itself.
+# Not `_` as the target: bash reassigns `_` on every command.
+if IFS= read -r -n 4096 -d "" flag_head < "$flag" 2>/dev/null; then
     exit 0
 fi
 # The whole file, not its first line: readMode() trims the whole file and
 # rejects whatever is left over, so `ultra\nanything` is off there and must not
 # paint a badge here either.
-mode=$(normalize "$(<"$flag")")
+mode=$(normalize "$flag_head")
 # The flag file is hand-editable, and its contents used to reach the prompt
 # verbatim — escape sequences and all. Anything that is not a level is not one.
 case "$mode" in
