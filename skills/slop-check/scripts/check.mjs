@@ -335,10 +335,13 @@ function maskSource(source, { jsx = false } = {}) {
       continue;
     }
     if (c === "`") {
-      if (source.indexOf("`", i + 1) === -1 && source.indexOf("${", i + 1) === -1) {
-        i += 1;
-        continue;
-      }
+      // No shortcut for a backtick with no partner ahead of it. That skip left
+      // an unfinished template bare, so `const message = \`value as User`
+      // reported an assertion the file does not contain -- and unlike a string
+      // or a regex, a template CAN span lines, so consumeTemplateBody masks to
+      // the end of the file rather than to the end of the line. Reaching here
+      // means code position: JSX prose goes through consumeJsxText, and string
+      // and comment bodies are already blanked.
       i = consumeTemplateBody(i + 1);
       continue;
     }
@@ -906,13 +909,122 @@ const ASSERTED_TYPE = [
 // whitespace before `as`: written as `([\w$]+)?\s*` it backtracked O(n^2) and
 // spent 9s on one long line, which this runs on after every edit.
 // Global: every assertion on the line is examined, not just the first.
-const TYPE_ASSERTION_PATTERN = new RegExp(
-  // `[...]` rather than `[]`: the suffix covers an array (`User[]`) and an
-  // indexed access (`User["id"]`, `T[keyof T]`) alike. Masking blanks the key
-  // but keeps the brackets, so the shape is intact here.
-  String.raw`(?:(?<![\w$.])([\w$]+)\s+)?\bas\s+(?:readonly\s+)?(?:${ASSERTED_TYPE})(?:\[[^[\]]*\])*\s*(?=[;,)\]}=&|?:]|$)`,
-  "gu",
-);
+// The type after `as`, SCANNED rather than pattern-matched. Nesting in a type
+// is arbitrary — `Promise<Array<Map<string, Set<User>>>>` is an ordinary
+// container composition — and a regex can only balance to a fixed depth, so
+// every added level was another assertion that slipped past unjustified. Three
+// levels of `<>` and two of `{}` were the last limits; counting delimiters has
+// none, and it drops the nested alternations that made the pattern expensive.
+const CLOSER = { "<": ">", "{": "}", "[": "]", "(": ")" };
+// A `;` ends the scan, because a `<` that was really a comparison would
+// otherwise run to the end of the file looking for its `>`. NOT inside braces:
+// an object type separates its members with `;`, so `as {\n id: string;\n}` is
+// the ordinary multi-line shape and bailing there missed it. Type arguments,
+// tuples and parameter lists are comma-separated and hold no `;`.
+// The cap bounds the work per candidate, since this runs from a PostToolUse
+// hook on every edit.
+const SCAN_LIMIT = 4000;
+
+function balancedEnd(text, start) {
+  const open = text[start];
+  const close = CLOSER[open];
+  if (!close) return -1;
+  const statementEnds = open !== "{";
+  const limit = Math.min(text.length, start + SCAN_LIMIT);
+  let depth = 0;
+  for (let k = start; k < limit; k += 1) {
+    const ch = text[k];
+    if (ch === open) depth += 1;
+    else if (ch === close) {
+      depth -= 1;
+      if (depth === 0) return k + 1;
+    } else if (ch === ";" && statementEnds) return -1;
+  }
+  return -1;
+}
+
+// Sticky, so nothing is sliced: on a 56,000-character line, slicing per step is
+// what turns a linear scan quadratic.
+const TYPE_OPERATOR_AT = /(?:keyof|typeof)\s+/uy;
+const LITERAL_TYPE_AT = /"[^"\n]*"|'[^'\n]*'|-?\d[\w.]*|true\b|false\b|null\b/uy;
+// `as const` and the two top types are excluded — they are assertions the rule
+// does not ask about.
+const TYPE_NAME_AT = /(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*/uy;
+const ARROW_AT = /\s*=>\s*/uy;
+const at = (pattern, text, index) => {
+  pattern.lastIndex = index;
+  const m = pattern.exec(text);
+  return m ? pattern.lastIndex : -1;
+};
+
+// The end of the type starting at `pos`, or -1 if there is not one there.
+function typeEnd(text, pos) {
+  let k = pos;
+  // `keyof`/`typeof` stack in practice — `as keyof typeof config` is the common
+  // one — and are a prefix rather than a type of their own.
+  for (let guard = 0; guard < 4; guard += 1) {
+    const next = at(TYPE_OPERATOR_AT, text, k);
+    if (next === -1) break;
+    k = next;
+  }
+  const ch = text[k];
+  if (ch === "{" || ch === "[") return balancedEnd(text, k);
+  if (ch === "(") {
+    const closed = balancedEnd(text, k);
+    if (closed === -1) return -1;
+    // A function type: `as (a: A) => B`. Without this the scan would stop at
+    // the parameter list and the terminator check would reject the whole thing.
+    const arrow = at(ARROW_AT, text, closed);
+    return arrow === -1 ? closed : typeEnd(text, arrow);
+  }
+  // Masking blanks a string's contents but keeps its quotes, so `as "ready"`
+  // still has the shape of a literal type here.
+  const literal = at(LITERAL_TYPE_AT, text, k);
+  if (literal !== -1) return literal;
+  const named = at(TYPE_NAME_AT, text, k);
+  if (named === -1) return -1;
+  k = named;
+  if (text[k] === "<") {
+    const closed = balancedEnd(text, k);
+    if (closed === -1) return -1;
+    k = closed;
+  }
+  return k;
+}
+
+// The operand prefix is anchored to an identifier start and needs real
+// whitespace before `as`: written as `([\w$]+)?\s*` it backtracked O(n^2) and
+// spent 9s on one long line, which this runs on after every edit.
+const AS_PREFIX = /(?:(?<![\w$.])([\w$]+)\s+)?\bas\s+(?:readonly\s+)?/gu;
+// A real terminator after the type. Without it, English prose in JSX text
+// ("served as static assets") and every multi-word sentence containing "as" was
+// reported as a type assertion.
+const TYPE_TERMINATOR = /[;,)\]}=&|?:]/u;
+const TRAILING_SPACE_AT = /\s*/uy;
+
+// Yields the same shape `matchAll` did — `[0]`, `[1]`, `.index` — so both the
+// per-line and the whole-file pass read unchanged.
+function* matchAssertions(text) {
+  AS_PREFIX.lastIndex = 0;
+  for (let m = AS_PREFIX.exec(text); m !== null; m = AS_PREFIX.exec(text)) {
+    let end = typeEnd(text, m.index + m[0].length);
+    if (end === -1) continue;
+    // An array (`User[]`) or an indexed access (`User["id"]`, `T[keyof T]`).
+    // Masking blanks the key but keeps the brackets, so the shape is intact.
+    for (let next = end; text[next] === "["; next = end) {
+      const closed = balancedEnd(text, next);
+      if (closed === -1) break;
+      end = closed;
+    }
+    const afterSpace = at(TRAILING_SPACE_AT, text, end);
+    const stop = afterSpace === -1 ? end : afterSpace;
+    if (stop < text.length && !TYPE_TERMINATOR.test(text[stop])) continue;
+    yield { 0: text.slice(m.index, stop), 1: m[1], index: m.index };
+    // Continue AFTER this assertion so a nested `as` inside the type it
+    // consumed is not reported a second time.
+    AS_PREFIX.lastIndex = Math.max(AS_PREFIX.lastIndex, stop);
+  }
+}
 
 
 // `<User>payload`, the pre-`as` assertion syntax. The `<` has to be in
@@ -1179,7 +1291,7 @@ function* iterateAssertionFindings(ctx) {
     // evidence is spent on the first assertion and the rest of the line needs
     // its own — which in practice means splitting the line.
     let evidence = commentLines.has(lineNumber) || commentLines.has(lineNumber - 1);
-    for (const candidate of line.matchAll(TYPE_ASSERTION_PATTERN)) {
+    for (const candidate of matchAssertions(line)) {
       // The operand's own offset in the file, not the line's: lineStarts is
       // built over the masked source, which shares every offset with the raw.
       if (candidate[1] && inCatchBlock(candidate[1], lineStarts[index] + candidate.index)) continue;
@@ -1218,7 +1330,7 @@ function* iterateAssertionFindings(ctx) {
   // what a formatter produces — cannot be seen by the per-line pass at all.
   // Only matches that actually cross a newline are taken here, so nothing the
   // loop above already reported can arrive twice.
-  for (const candidate of masked.matchAll(TYPE_ASSERTION_PATTERN)) {
+  for (const candidate of matchAssertions(masked)) {
     // The TYPE has to span lines, not just the whitespace after it: `\s*` before
     // the terminator swallows the trailing newline, so testing the raw match
     // reported single-line assertions here a second time.

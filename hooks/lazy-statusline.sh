@@ -56,7 +56,6 @@ else
     # and that is the safe direction: it cannot hide a badge nobody hid.
     if [ -f "$config" ]; then
         hidden=$(awk 'BEGIN {
-                RS = "\x01"
                 # awk has no chr() and does not read "0x53" as a number, so the
                 # table is keyed by the four hex digits of the escape. ASCII only:
                 # nothing above it can appear in the key being compared.
@@ -176,8 +175,18 @@ else
                     return 0
                 }
             }
-            {
-                s = $0
+            # The default record separator, and the file is reassembled from its
+            # lines here rather than parsed a record at a time. Splitting on any
+            # byte made that byte a document boundary: with RS = "\x01", a config
+            # of `{}` + U+0001 + `{"hideStatus":true}` validated the SECOND
+            # record on its own and hid the badge, while JSON.parse rejects the
+            # file as a whole. There is no byte that cannot appear in a file, so
+            # the parser gets the whole document and a stray control byte fails
+            # it -- inside a string by the check in str(), outside one by not
+            # being valid JSON structure.
+            { doc = (NR == 1 ? $0 : doc "\n" $0) }
+            END {
+                s = doc
                 # getHideStatus() strips a UTF-8 BOM before parsing, so a config
                 # saved with one is honoured there and has to be here too.
                 sub(/^\357\273\277/, "", s)

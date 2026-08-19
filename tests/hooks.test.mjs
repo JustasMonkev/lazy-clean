@@ -1170,6 +1170,24 @@ ok("/lazy default does not claim to move a chat holding its own level",
   ok("the OpenCode gain card attributes the figures upstream", /\bupstream\b/i.test(gain), gain.slice(0, 200));
   ok("the OpenCode gain card says they are not reproduced here",
     /\bnot been reproduced\b/i.test(gain), gain.slice(0, 200));
+
+  // The template and the plugin answer the same command, so they must not
+  // contradict each other about what `/lazy default` does to the CURRENT chat.
+  // The plugin stopped pinning the live level, so a chat holding no level of
+  // its own now follows the new default -- and the template still said to keep
+  // working at the old one.
+  const lazyTemplate = parseCommandFile(path.join(commandDir, "lazy.md")).template;
+  ok("the /lazy template does not promise the current chat is unchanged",
+    !/keep working at the level already active/i.test(lazyTemplate)
+      && !/do NOT switch anything/i.test(lazyTemplate),
+    lazyTemplate.slice(0, 300));
+  ok("the /lazy template names the follows-the-default case the plugin logs",
+    /follows the new default/i.test(lazyTemplate), lazyTemplate.slice(0, 300));
+  // Not prose-matching for its own sake: the phrase asserted here is the one
+  // the plugin actually logs, so the two drift together or not at all.
+  ok("the plugin logs the phrase the template promises",
+    fs.readFileSync(path.join(ROOT, ".opencode", "plugins", "lazy.mjs"), "utf8")
+      .includes("follows the new default"));
 }
 
 // A comment finding reports at the `/**`, so an edit deeper inside the comment
@@ -1411,6 +1429,13 @@ if (!canRunBash) {
     '{"a":"x\u0000y","hideStatus":true}',
     '{"a":"x\u001fy","hideStatus":true}',
     '{"hideStatus":true,"a":"x\ty"}',
+    // A raw control byte OUTSIDE a string is not a document boundary. Splitting
+    // records on one made the second half validate on its own and hide the
+    // badge, while JSON.parse rejects the file whole.
+    '{}\u0001{"hideStatus":true}',
+    '{"hideStatus":false}\u0001{"hideStatus":true}',
+    '{"hideStatus":true}\u0001garbage',
+    '{"hideStatus":true}\n{"hideStatus":true}',
   ]) {
     writeConfig(sl, body);
     const hidden = statusline("ultra").out === "";

@@ -224,6 +224,54 @@ expectRule(
   "const pattern = /x\\\nconst value: any = 1;/",
   "no-any",
 );
+// Nesting in a type is arbitrary, so the depth a pattern can balance was the
+// wrong thing to tune: every level added was another assertion slipping past.
+// The type is scanned now, so these are depth tests only in name.
+expectRule(
+  "flags an assertion four generic levels deep",
+  "const a = payload as Promise<Array<Map<string, Set<User>>>>;",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "flags an assertion six generic levels deep",
+  "const a = payload as A<B<C<D<E<F<G>>>>>>;",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "flags an assertion three object levels deep",
+  "const a = payload as { u: { p: { id: string } } };",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "flags an assertion three tuple levels deep",
+  "const a = payload as [string, [number, [boolean]]];",
+  "require-safety-comment-for-type-assertion",
+);
+// A `<` that is really a comparison must not be scanned as a type: the scan
+// stops at the statement end rather than hunting for a `>` down the file.
+expectNoRule(
+  "does not read a comparison after as-position text as a type",
+  "const ok = count as number;\nconst cmp = a < b;\nconst d = c > e;",
+  "no-any",
+);
+// An unfinished template literal is masked to the END of the file, not the end
+// of the line: unlike a string or a regex, a template legitimately spans lines,
+// so its later lines are template text too.
+expectNoRule(
+  "does not read an unfinished template literal as code",
+  "const message = `value as User",
+  "require-safety-comment-for-type-assertion",
+);
+expectNoRule(
+  "does not read an unfinished template literal as an any annotation",
+  "const message = `x: any",
+  "no-any",
+);
+expectNoRule(
+  "masks the later lines of an unfinished template literal too",
+  "const message = `line one\nvalue as User\nconst v: any = 1;",
+  "no-any",
+);
 expectRule("flags a string-literal type assertion", 'const a = payload as "ready";', "require-safety-comment-for-type-assertion");
 expectRule("flags a numeric-literal type assertion", "const a = payload as 42;", "require-safety-comment-for-type-assertion");
 expectRule('flags an indexed-access assertion', 'const a = payload as User["id"];', "require-safety-comment-for-type-assertion");
@@ -896,6 +944,12 @@ const REDOS_BUDGET_MS = 1000;
 for (const [label, source] of [
   ["a long identifier line", `const x = ${"a".repeat(56_000)};\n`],
   ["a long comment line", `// ${"word ".repeat(12_000)}\n`],
+  // The type after `as` is scanned forward now, so the shapes that could make a
+  // scan run long belong here too: an opener that never closes, many candidates
+  // on one line, and real depth.
+  ["an unclosed type opener", `const a = payload as ${"<".repeat(20_000)}\n`],
+  ["many assertion candidates", `const a = ${"payload as X ".repeat(4_000)};\n`],
+  ["deeply nested generics", `const a = payload as ${"A<".repeat(2_000)}B${">".repeat(2_000)};\n`],
 ]) {
   const started = Date.now();
   lintSource(source, "sample.ts");
