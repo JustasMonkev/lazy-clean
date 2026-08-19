@@ -681,6 +681,20 @@ const EMOJI_PATTERN = new RegExp(
   "u",
 );
 
+// A comment that actually says something, as opposed to one that merely exists.
+// A bare `// TODO` is a marker, not a reason, so the leading marker is stripped
+// before the two-word test. Shared by the rules that accept a comment as
+// evidence -- a swallowed catch and a hard-coded sleep -- because "any comment
+// counts here, a real one counts there" is a difference nobody intended.
+function isJustification(comment) {
+  const body = comment.text
+    .replace(/^\/\/+|^\/\*+|\*+\/$/gu, "")
+    .replace(/^\s*\*\s?/gmu, "")
+    .replace(/^\s*(?:todo|fixme|xxx|hack|note|wip)\b[\s:!-]*/iu, "")
+    .trim();
+  return body.split(/\s+/u).filter(Boolean).length >= 2;
+}
+
 // Each line rule runs against masked code, line by line.
 // `tsOnly` rules are skipped for plain JavaScript files.
 // An env var whose name says it holds a credential. Shared because the dot and
@@ -715,6 +729,15 @@ const LINE_RULES = [
     // `AbortSignal.any(signals)` declared as `any(signals: AbortSignal[])`,
     // and jest's `any(sample: unknown)`, both of which the corpus found. A
     // type `any` is never followed by either.
+    // ...and a file that BINDS `any` as a value gives the rule up entirely.
+    // `any` is not reserved, so `const any = 1; console.log(any)` is legal
+    // TypeScript, and the token-wide match reported both the declaration and
+    // the reference -- telling an agent to rewrite correct code, which is the
+    // worst thing this checker can do. Distinguishing the reference from a type
+    // needs scope analysis; noticing that the file binds the name at all does
+    // not. Such a file loses `no-any` coverage, which is the cheaper mistake:
+    // one where the rule stays quiet rather than one where it is wrong.
+    skipFile: (ctx) => ctx.declaredNames.has("any"),
     pattern: /(?<![\w$.#])any(?![\w$])(?!\s*[(:])/u,
     message: "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
   },
@@ -786,6 +809,15 @@ const LINE_RULES = [
     // assignment line escapes. Exempting the occurrence rather than the line
     // keeps a second, redundant comparison on the same line reportable.
     exempt: /=\s*[\w$.[\]]+\s*===?\s*true\s*;?\s*$/u,
+    // A bare identifier only, and the `.` in the leading class is what keeps a
+    // property out. `x === true` restates a boolean someone declared; a
+    // PROPERTY is usually `boolean | undefined` or comes off parsed JSON, where
+    // `=== true` distinguishes true from undefined and is the point rather than
+    // the defect. Measured before widening it: 286 property and call operands
+    // across 5,115 files, and the sample was `payload.isAxiosError === true`,
+    // `node.optional === true`, `process.browser === true`,
+    // `parser.testLine(line) === true` -- narrowing, every one. The same reason
+    // `!== true` is exempt just below.
     pattern: /(?:^|[^!<>=.\w$])[\w$]+\s*===?\s*true\b/u,
     message: "`x === true` restates the boolean. Use the value directly, or fix the type if it is not actually boolean.",
   },
@@ -888,12 +920,16 @@ const SLOP_DECLARATION_PATTERN = /\b(?:function|const|let|var|class|interface|ty
 function* iterateLineFindings(ctx) {
   const { maskedLines, rawLines, isTypeScript } = ctx;
   const isGeometryFile = maskedLines.some((line) => GEOMETRY_CONTEXT_PATTERN.test(line));
+  // Once per file, not once per line: a rule that cannot be trusted in this
+  // file is out for the whole file.
+  const skipped = new Set(LINE_RULES.filter((rule) => rule.skipFile?.(ctx)));
   for (let index = 0; index < maskedLines.length; index += 1) {
     const line = maskedLines[index];
     if (!line.trim()) continue;
     const lineNumber = index + 1;
     for (const rule of LINE_RULES) {
       if (rule.tsOnly && !isTypeScript) continue;
+      if (skipped.has(rule)) continue;
       if (rule.skipLine?.test(line)) continue;
       // `exempt` blanks just the part it matches, so the rest of the line is
       // still inspected; the blanks keep every column where it was.
@@ -942,14 +978,6 @@ function* iterateBlockFindings(ctx) {
   // still nothing while `TODO: the cache is advisory` is a reason that happens
   // to carry one. Two words is the bar — `best-effort cleanup` is terse but
   // real, and no bare marker survives the strip with two words left.
-  const isJustification = (comment) => {
-    const body = comment.text
-      .replace(/^\/\/+|^\/\*+|\*+\/$/gu, "")
-      .replace(/^\s*\*\s?/gmu, "")
-      .replace(/^\s*(?:todo|fixme|xxx|hack|note|wip)\b[\s:!-]*/iu, "")
-      .trim();
-    return body.split(/\s+/u).filter(Boolean).length >= 2;
-  };
   const hasCommentInRange = (start, end) =>
     comments.some((comment) => comment.start >= start && comment.start < end && isJustification(comment));
 
@@ -1205,8 +1233,13 @@ const IDENT_AFTER = String.raw`(?![\w$])`;
 // fired on human-written code was tightened or dropped.
 function* iterateCandidateFindings(ctx) {
   const { masked, lineStarts, comments } = ctx;
+  // Lines covered by a comment that actually justifies something. Presence was
+  // the old test, so a bare `// TODO` above a hard-coded sleep cleared it --
+  // the marker that most often sits above the code someone knows is wrong.
+  // Same isJustification() the swallowed-catch rule uses.
   const commentLines = new Set();
   for (const comment of comments) {
+    if (!isJustification(comment)) continue;
     const start = offsetToPosition(lineStarts, comment.start).line;
     const end = offsetToPosition(lineStarts, Math.max(comment.start, comment.end - 1)).line;
     for (let l = start; l <= end; l += 1) commentLines.add(l);

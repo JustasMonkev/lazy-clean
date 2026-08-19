@@ -50,6 +50,11 @@ if ($null -ne $env:LAZY_HIDE_STATUS) {
     }
 }
 
+# A valid level is one word, and -Raw reads and allocates the whole file before
+# anything can reject it -- so the size is checked first, as the Bash statusline
+# does. This runs on every prompt render. 4096 is the same cap that side uses.
+if ((Get-Item -LiteralPath $Flag).Length -gt 4096) { exit 0 }
+
 $Mode = ""
 try {
     # -Raw, not the first line: readMode() trims the whole file and rejects

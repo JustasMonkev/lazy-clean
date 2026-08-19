@@ -1283,6 +1283,17 @@ ok("a findings-heavy file still gets a capped report",
     ok("the Bash statusline caps the config size at the shared limit",
       fs.readFileSync(path.join(HOOKS, "lazy-statusline.sh"), "utf8").includes(limit), limit);
   }
+  // The FLAG cap, which is a different limit from the config one. There is no
+  // pwsh here to run the PowerShell statusline against, so this asserts the two
+  // scripts carry the same number -- the drift that would make one of them stall
+  // where the other rejects.
+  {
+    const sh = fs.readFileSync(path.join(HOOKS, "lazy-statusline.sh"), "utf8");
+    const flagCap = /read -r -n (\d+) -d/u.exec(sh);
+    ok("the Bash statusline caps the mode flag", flagCap !== null, sh.slice(0, 200));
+    ok("the PowerShell statusline caps the mode flag at the same size",
+      ps1.includes(`.Length -gt ${flagCap[1]}`), flagCap && flagCap[1]);
+  }
   // PowerShell member access is case-insensitive, so `.hideStatus` answered for
   // a `HideStatus` key that getHideStatus() ignores. Static guard: there is no
   // pwsh in CI, so this asserts the source shape rather than the behaviour.

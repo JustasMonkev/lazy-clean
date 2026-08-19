@@ -711,6 +711,41 @@ expectRule(
   "no-boolean-literal-compare",
 );
 expectNoRule("allows comparing a parsed property", "if (parsed.enabled === true) run();", "no-boolean-literal-compare");
+// Kept deliberately, and measured rather than assumed: widening the operand to
+// properties and calls added 286 findings across 5,115 files, and the sample
+// was narrowing every time -- `payload.isAxiosError === true` guarding an
+// unknown, `node.optional === true` on a `boolean | undefined` AST field,
+// `process.browser === true` on an ambient global. Same reason `!== true` is
+// exempt: off a property, `=== true` usually distinguishes true from undefined.
+expectNoRule("allows comparing a call result", "if (parser.testLine(line) === true) run();", "no-boolean-literal-compare");
+expectNoRule("allows comparing an optional-chained property", "if (flags?.on === true) run();", "no-boolean-literal-compare");
+
+// `any` is not a reserved word, so a file may bind it as a value. The
+// token-wide rule reported the declaration AND the reference -- valid,
+// type-safe code the checker was telling an agent to rewrite.
+expectNoRule("a file that binds any as a value is left alone", "const any = 1;\nconsole.log(any);", "no-any");
+expectNoRule("the reference to a bound any is left alone too", "let any = 1;\nconst x: string = String(any);", "no-any");
+// ...and a file that does NOT bind it keeps full coverage.
+expectRule("a file that does not bind any still reports the type", "const value: any = 1;", "no-any");
+
+// A comment is evidence only when it says something. A bare marker above a
+// hard-coded sleep is the most likely comment to find there, and it silenced
+// the rule outright.
+expectRule(
+  "a TODO does not justify a hard-coded sleep",
+  "// TODO\nawait new Promise(resolve => setTimeout(resolve, 1000));",
+  "no-arbitrary-sleep",
+);
+expectRule(
+  "an unrelated one-word comment does not justify a sleep",
+  "// wip\nawait new Promise(resolve => setTimeout(resolve, 1000));",
+  "no-arbitrary-sleep",
+);
+expectNoRule(
+  "a real justification still silences a sleep",
+  "// the device needs a second to settle after reset\nawait new Promise(resolve => setTimeout(resolve, 1000));",
+  "no-arbitrary-sleep",
+);
 expectRule("flags if (!!x)", "if (!!user) { greet(user); }", "no-double-negation-condition");
 expectNoRule("allows !! in assignment", "const hasUser = !!user;", "no-double-negation-condition");
 // A conditional TYPE is not a runtime ternary: `Boolean(...)` is not syntax in
