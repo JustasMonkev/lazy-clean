@@ -323,6 +323,8 @@ function maskSource(source, { jsx = false } = {}) {
       jsxTagBraceDepth = hole.tagBraceDepth;
       jsxTagClosing = hole.tagClosing;
       jsxTagNests = hole.tagNests;
+      jsxTagName = hole.tagName;
+      jsxTagStart = hole.tagStart;
       return index;
     }
     return jsxElementDepth > 0 ? consumeJsxText(index) : index;
@@ -430,10 +432,14 @@ function maskSource(source, { jsx = false } = {}) {
       // while it stayed set, a nested `<Tooltip>Delete as stale</Tooltip>` in a
       // render prop was never recognized and its prose reached the rules.
       if (jsx && jsxTagAngles >= 0 && braceDepth === jsxTagBraceDepth) {
+        // tagName/tagStart ride along too: a nested element inside the hole
+        // overwrites them, and the outer tag's closer was then claimed under
+        // the inner name — the next same-named element lost its prose masking.
         holes.push({
           depth: braceDepth, kind: "attribute", elementDepth: jsxElementDepth,
           tagAngles: jsxTagAngles, tagBraceDepth: jsxTagBraceDepth,
           tagClosing: jsxTagClosing, tagNests: jsxTagNests,
+          tagName: jsxTagName, tagStart: jsxTagStart,
         });
         jsxTagAngles = -1;
         jsxElementDepth = 0;
@@ -1969,11 +1975,20 @@ function addedLines(ref) {
   // A `+++ ` line is a header only where a header can appear: directly after the
   // `--- ` source line. An added source line reading `++ x;` arrives as
   // `+++ x;` and used to become a path that failed the whole scan.
+  // The prefixes are pinned above, so a real header always reads `a/`, `b/`
+  // (possibly inside git's quoting) or /dev/null. A removed line whose content
+  // begins `-- ` arrives as `--- …` and used to arm the header check; a
+  // following added `++ y` line then became a bogus path that failed the scan
+  // and swallowed the real file's findings.
+  const isHeader = (line, sigil, prefix) =>
+    line.startsWith(sigil + " " + prefix) ||
+    line.startsWith(sigil + ' "' + prefix) ||
+    line === sigil + " /dev/null";
   let afterSourceHeader = false;
   for (const line of diff.split("\n")) {
     const wasHeader = afterSourceHeader;
-    afterSourceHeader = line.startsWith("--- ");
-    if (wasHeader && line.startsWith("+++ ")) {
+    afterSourceHeader = isHeader(line, "---", "a/");
+    if (wasHeader && isHeader(line, "+++", "b/")) {
       const target = line.slice(4);
       lines = target === "/dev/null" ? null : new Set();
       if (lines) byFile.set(resolve(root, diffTargetPath(target)), lines);

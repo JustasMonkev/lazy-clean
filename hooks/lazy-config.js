@@ -91,9 +91,10 @@ function getDefaultMode() {
     const configPath = getConfigPath();
     // Strip UTF-8 BOM (common on Windows-saved files) so JSON.parse doesn't choke
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
-    if (config.defaultMode && RUNTIME_MODES.includes(config.defaultMode.toLowerCase())) {
-      return config.defaultMode.toLowerCase();
-    }
+    // trim() like the env path above: the file is hand-editable, and
+    // " ultra " silently fell back to full.
+    const fileMode = config.defaultMode && String(config.defaultMode).trim().toLowerCase();
+    if (fileMode && RUNTIME_MODES.includes(fileMode)) return fileMode;
   } catch (e) {
     // Config file doesn't exist or is invalid — fall through
   }

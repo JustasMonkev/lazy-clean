@@ -99,7 +99,12 @@ else
     # lands. The two must cap at the same size or they disagree about a file
     # between the caps.
     if [ -f "$config" ] && [ "$(wc -c < "$config")" -le 65536 ]; then
-        hidden=$(awk 'BEGIN {
+        # LC_ALL=C: the parser below is byte-oriented (the octal BOM strip,
+        # control-char classes, length/substr). BSD awk in a UTF-8 locale reads
+        # input as characters and the octal escapes stop matching the BOM
+        # bytes, so a BOM-prefixed config failed to parse and showed the badge
+        # while getHideStatus() hid it.
+        hidden=$(LC_ALL=C awk 'BEGIN {
                 # awk has no chr() and does not read "0x53" as a number, so the
                 # table is keyed by the four hex digits of the escape. ASCII only:
                 # nothing above it can appear in the key being compared.
@@ -264,7 +269,10 @@ fi
 # `flag_head` then holds the whole file, so it is reused below rather than read
 # again. `IFS=` keeps read from trimming, since readMode() trims the file itself.
 # Not `_` as the target: bash reassigns `_` on every command.
-if IFS= read -r -n 4096 -d "" flag_head < "$flag" 2>/dev/null; then
+# 4097, not 4096: read succeeding means the file holds at least that many
+# characters, and readMode() rejects only size > 4096 — an exactly-4096-byte
+# flag is valid there and must paint a badge here.
+if IFS= read -r -n 4097 -d "" flag_head < "$flag" 2>/dev/null; then
     exit 0
 fi
 # The whole file, not its first line: readMode() trims the whole file and

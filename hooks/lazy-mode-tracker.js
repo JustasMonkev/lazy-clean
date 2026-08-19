@@ -155,9 +155,15 @@ function finish() {
       } else if (isReportOnly) {
         notice = mode ? 'LAZY MODE ACTIVE — level: ' + mode : 'LAZY MODE OFF — start with /lazy lite|full|ultra.';
       } else if (mode && mode !== 'off') {
-        setMode(mode);
-        modeSwitched = true;
-        notice = 'LAZY MODE CHANGED — level: ' + mode;
+        // A failed write must say so, same as the off path below: setMode()
+        // throwing landed in the outer silent catch, so /lazy ultra printed
+        // nothing and the old level stayed live while the user believed it
+        // changed. Read the level back from disk instead of assuming.
+        try { setMode(mode); } catch (e) { /* verified by readMode below */ }
+        modeSwitched = readMode() === mode;
+        notice = modeSwitched
+          ? 'LAZY MODE CHANGED — level: ' + mode
+          : 'LAZY: could not switch to ' + mode + ' — the mode state could not be written, so the previous level is still active.';
       } else if (mode === 'off') {
         deactivated = turnOff();
         notice = deactivated

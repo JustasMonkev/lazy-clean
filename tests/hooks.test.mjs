@@ -205,6 +205,9 @@ eq("getDefaultMode rejects garbage env", defaultModeWith({ env: "; rm -rf /", fi
 eq("getDefaultMode ignores empty env", defaultModeWith({ env: "", file: null }), "full");
 
 eq("config file supplies default", defaultModeWith({ env: undefined, file: '{"defaultMode":"lite"}' }), "lite");
+// Same trim as the env path: the file is hand-editable, and " ultra "
+// silently fell back to full.
+eq("padded config value is trimmed", defaultModeWith({ env: undefined, file: '{"defaultMode":" ultra "}' }), "ultra");
 eq("config file BOM is stripped", defaultModeWith({ env: undefined, file: '\uFEFF{"defaultMode":"ultra"}' }), "ultra");
 eq("invalid JSON config falls back", defaultModeWith({ env: undefined, file: "{defaultMode: ultra" }), "full");
 eq("array config falls back", defaultModeWith({ env: undefined, file: '["ultra"]' }), "full");
@@ -843,6 +846,24 @@ ok("qoder folds the switch confirmation into one JSON write",
   ok("a failed deactivation admits lazy is still active", /still active/.test(context), context.slice(0, 160));
 }
 
+// The mirror image: a mode SWITCH that could not be written must not claim it
+// worked either. setMode() throwing used to land in the outer silent catch, so
+// /lazy ultra printed nothing while the old level stayed live.
+{
+  const box = freshHome("qoder-switch-unwritable");
+  const state = path.join(box.home, ".qoder", qoderStateFile("s-unwritable-switch"));
+  fs.mkdirSync(path.dirname(state), { recursive: true });
+  fs.mkdirSync(state, { recursive: true });
+  fs.mkdirSync(path.join(box.env.XDG_CONFIG_HOME, "lazy"), { recursive: true });
+  fs.writeFileSync(path.join(box.env.XDG_CONFIG_HOME, "lazy", "config.json"), JSON.stringify({ defaultMode: "full" }));
+  const res = runHook("lazy-mode-tracker.js", JSON.stringify({ prompt: "/lazy ultra" }),
+    { ...box.env, QODER_SESSION_ID: "s-unwritable-switch" });
+  const context = parses(res.stdout) ? JSON.parse(res.stdout).hookSpecificOutput.additionalContext : "";
+  ok("a failed switch reports the failure", /could not switch to ultra/.test(context), context.slice(0, 160));
+  ok("a failed switch does not claim LAZY MODE CHANGED", !/LAZY MODE CHANGED/.test(context), context.slice(0, 160));
+  ok("a failed switch admits the previous level is still active", /still active/.test(context), context.slice(0, 160));
+}
+
 r = track({ prompt: "stop lazy" }, { env: qoder });
 // `off` is written, not cleared. On Claude Code and Codex an absent flag IS
 // off, because lazy-activate.js rewrites it at SessionStart. Qoder has no
@@ -1360,8 +1381,12 @@ ok("a findings-heavy file still gets a capped report",
     const sh = fs.readFileSync(path.join(HOOKS, "lazy-statusline.sh"), "utf8");
     const flagCap = /read -r -n (\d+) -d/u.exec(sh);
     ok("the Bash statusline caps the mode flag", flagCap !== null, sh.slice(0, 200));
+    // Off by one on purpose: `read -n N` succeeding means the file holds at
+    // least N chars, i.e. length > N-1, which is the ps1's `-gt N-1`. Equal
+    // raw numbers would reject an exactly-at-cap flag in bash that readMode()
+    // and the ps1 both accept.
     ok("the PowerShell statusline caps the mode flag at the same size",
-      ps1.includes(`.Length -gt ${flagCap[1]}`), flagCap && flagCap[1]);
+      ps1.includes(`.Length -gt ${flagCap[1] - 1}`), flagCap && flagCap[1]);
   }
   // PowerShell member access is case-insensitive, so `.hideStatus` answered for
   // a `HideStatus` key that getHideStatus() ignores. Static guard: there is no
@@ -1734,6 +1759,13 @@ if (!canRunBash) {
   eq("a whitespace-only flag prints nothing, matching readMode", statusline("   \n\n"), { status: 0, out: "", err: "" });
   ok("surrounding whitespace is still trimmed, matching readMode",
     statusline("\n  ULTRA \t\n").out.includes("[LAZY:ULTRA]"));
+  // The flag cap is size > 4096, same as readMode(): an exactly-at-cap flag is
+  // valid there and must paint a badge; `read -n 4096` used to treat it as
+  // bloated (badge blank, readMode ultra). One byte over must stay blank.
+  ok("an exactly-4096-byte flag still paints the badge, matching readMode",
+    statusline("ultra" + " ".repeat(4091)).out.includes("[LAZY:ULTRA]"));
+  eq("a 4097-byte flag prints nothing, matching readMode",
+    statusline("ultra" + " ".repeat(4092)), { status: 0, out: "", err: "" });
 }
 
 // --- never-block contract (no EOF on stdin, the Windows #443 case) ------------

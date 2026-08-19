@@ -6,9 +6,13 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # macOS is in the matrix because the statusline shell script depends on
+    # awk/read behavior that differs between GNU (Linux) and BSD (macOS)
+    # tools; a BOM-handling bug shipped green here while failing on every Mac.
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest]
         node: ['18', '22']
     steps:
       - uses: actions/checkout@v4

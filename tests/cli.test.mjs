@@ -378,6 +378,33 @@ check("--since does not read added content as a diff header", () => {
   assert.match(result.stdout, /a\.ts:3:22 require-safety-comment/u);
 });
 
+check("--since does not read a removed/added line pair as a file header", () => {
+  const repo = join(root, "minus-header");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) =>
+    execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "a.ts"), "let x = 0;\n-- x;\n");
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since minus header (git unavailable)");
+    return;
+  }
+  // A removed line reading `-- x;` arrives as `--- x;` and used to arm the
+  // header check; the following added `++ y;` (`+++ y;`) then became a bogus
+  // path that failed the scan and swallowed the real file's findings.
+  writeFileSync(join(repo, "a.ts"), `let x = 0;\n++ y;\n${SLOP}`);
+  git("add", "-A");
+  const result = run(["--since=HEAD"], repo);
+  assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
+  assert.doesNotMatch(result.stderr, /cannot read/u);
+  assert.match(result.stdout, /a\.ts:3:22 require-safety-comment/u);
+});
+
 check("one file reached by two paths is linted once", () => {
   // Deduplication keys on filesystem identity, not on a case-folded path: two
   // distinct files on a case-sensitive volume must both be scanned, and two

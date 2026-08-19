@@ -302,6 +302,15 @@ expectRule(
   "no-any",
   "sample.tsx",
 );
+// A nested element inside an attribute hole overwrote the saved tag name, so
+// the outer tag's closer was claimed under the inner name and the NEXT
+// same-named element lost its prose masking — its text reached the rules.
+expectNoRule(
+  "prose masking survives a nested tag in an attribute hole",
+  'const a = <div title={<span/>}>hello</div>;\nconst b = <span>does any of this survive</span>;',
+  "no-any",
+  "sample.tsx",
+);
 // A union collapses to `any` whichever side it is written on.
 expectRule("flags any before a union delimiter", "type Cache = Map<string, any | null>;", "no-any");
 expectRule("flags any before an intersection delimiter", "type T = A<string, any & B>;", "no-any");
