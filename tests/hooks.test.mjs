@@ -659,6 +659,25 @@ eq("a bare /lazy with an off default reports off and writes nothing",
   [r.flag, JSON.parse(r.stdout).hookSpecificOutput.additionalContext],
   [null, "LAZY MODE OFF — start with /lazy lite|full|ultra."]);
 
+// `/lazy default` changes what LATER sessions start at. Qoder's initializer
+// above reads the default to pick the live level, so writing a new one used to
+// announce "new sessions start in ultra" and start ultra in this one.
+r = track({ prompt: "/lazy default ultra" }, { flag: null, config: JSON.stringify({ defaultMode: "off" }), env: qoder });
+eq("/lazy default on qoder records the new default", r.config, { defaultMode: "ultra" });
+eq("/lazy default on qoder does not activate it in this session", r.flag, null);
+eq("/lazy default on qoder says only that new sessions are affected",
+  JSON.parse(r.stdout).hookSpecificOutput.additionalContext,
+  "LAZY DEFAULT SET — new sessions start in ultra.");
+// The session was already running at the old default: it keeps that level, and
+// keeps receiving that ruleset, rather than jumping to the new one.
+r = track({ prompt: "/lazy default off" }, { flag: null, config: JSON.stringify({ defaultMode: "lite" }), env: qoder });
+eq("/lazy default off on qoder leaves this session at the level it had", r.flag, "lite");
+ok("/lazy default off on qoder still injects the live ruleset",
+  parses(r.stdout) &&
+  JSON.parse(r.stdout).hookSpecificOutput.additionalContext
+    .startsWith("LAZY DEFAULT SET — new sessions start in off."),
+  r.stdout.slice(0, 160));
+
 r = track({ prompt: "/lazy ultra" }, { env: qoder });
 ok("qoder folds the switch confirmation into one JSON write",
   parses(r.stdout) &&

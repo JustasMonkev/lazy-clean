@@ -81,18 +81,36 @@ function maskSource(source, { jsx = false } = {}) {
   let jsxTagNests = false;
   let closingTagNames = null;
 
-  // Safety valve for malformed JSX: an element with no closing tag anywhere in
-  // the file must not open a children region, because everything below it would
-  // then be masked as text. Collected in one pass on the first tag seen, so a
-  // file without JSX never pays for it.
-  const hasClosingTag = (name) => {
+  // Safety valve for malformed JSX: an element with no closing tag *after it*
+  // must not open a children region, because everything below it would then be
+  // masked as text. Positions, not just names: a file-wide name set let an
+  // earlier `<div></div>` vouch for a later unclosed `<div>`, and the tokenizer
+  // ran to EOF in text mode — hiding every finding below the incomplete edit,
+  // which is exactly the state a file is in mid-write. Collected in one pass on
+  // the first tag seen, so a file without JSX never pays for it.
+  const hasClosingTag = (name, after) => {
     if (closingTagNames === null) {
-      closingTagNames = new Set();
+      closingTagNames = new Map();
       for (const match of source.matchAll(/<\/([A-Za-z_$][\w$.:-]*)?/gu)) {
-        closingTagNames.add(match[1] ?? "");
+        const key = match[1] ?? "";
+        const positions = closingTagNames.get(key);
+        if (positions) positions.push(match.index);
+        else closingTagNames.set(key, [match.index]);
       }
     }
-    return closingTagNames.has(name);
+    const positions = closingTagNames.get(name);
+    if (!positions) return false;
+    // matchAll yields ascending offsets, so this is a binary search for the
+    // first closer past the opener. A linear scan is quadratic on a file of
+    // several thousand `<div>`s, which this runs on after every edit.
+    let low = 0;
+    let high = positions.length;
+    while (low < high) {
+      const mid = (low + high) >> 1;
+      if (positions[mid] > after) high = mid;
+      else low = mid + 1;
+    }
+    return low < positions.length;
   };
 
   const blank = (start, end) => {
@@ -316,7 +334,7 @@ function maskSource(source, { jsx = false } = {}) {
     }
     if (jsx && c === "<" && jsxTagAngles < 0) {
       if (source[i + 1] === ">") {
-        if (!hasClosingTag("")) { i += 2; continue; }
+        if (!hasClosingTag("", i)) { i += 2; continue; }
         jsxElementDepth += 1;
         i = consumeJsxText(i + 2);
         continue;
@@ -340,7 +358,7 @@ function maskSource(source, { jsx = false } = {}) {
           jsxTagAngles = 0;
           jsxTagBraceDepth = braceDepth;
           jsxTagClosing = closing;
-          jsxTagNests = closing || hasClosingTag(source.slice(i + 1, nameEnd));
+          jsxTagNests = closing || hasClosingTag(source.slice(i + 1, nameEnd), i);
           i = nameEnd;
           continue;
         }
@@ -747,6 +765,19 @@ const TYPE_ASSERTION_PATTERN = new RegExp(
 );
 
 
+// A name captured from source, made safe to interpolate into a pattern. `$` is
+// both a legal identifier character and a regex anchor, so it has to be escaped
+// — and `\b` is then still the wrong boundary, because `$` is not a regex word
+// character: `\berr$\b` can never match `err$`. The guards below use
+// `(?<![\w$])` / `(?![\w$])` instead, which is the identifier boundary they
+// meant all along.
+const escapeForRegExp = (text) => text.replace(/[$\\^*+?.()|[\]{}]/gu, "\\$&");
+// `.` and `#` are excluded too: in `name = nameOrOptions.name` the trailing
+// `name` is a property, not a read of the variable being declared, and counting
+// it as one silenced the rule on real code in eslint, playwright and corepack.
+const IDENT_BEFORE = String.raw`(?<![\w$.#])`;
+const IDENT_AFTER = String.raw`(?![\w$])`;
+
 // Multi-line shapes matched against the masked source. Each was measured
 // against 651 files of third-party JavaScript before landing; anything that
 // fired on human-written code was tightened or dropped.
@@ -779,7 +810,7 @@ function* iterateCandidateFindings(ctx) {
   for (const match of masked.matchAll(
     /\bcatch\s*\(\s*([\w$]+)\s*(?::[^)]*)?\)\s*\{\s*(?:console|logger|log)\s*\.\s*[\w$]+\s*\(([^;{}]*)\)\s*;?\s*throw\s+\1\s*;?\s*\}/gu,
   )) {
-    if (!new RegExp(String.raw`\b${match[1]}\b`, "u").test(match[2])) continue;
+    if (!new RegExp(`${IDENT_BEFORE}${escapeForRegExp(match[1])}${IDENT_AFTER}`, "u").test(match[2])) continue;
     yield {
       ...matchSpan(lineStarts, match),
       rule: "no-log-and-rethrow",
@@ -790,7 +821,7 @@ function* iterateCandidateFindings(ctx) {
   for (const match of masked.matchAll(
     /\bcatch\s*\(\s*([\w$]+)\s*(?::[^)]*)?\)\s*\{\s*throw\s+new\s+[\w$.]*Error\s*\(([^;]*?)\)\s*;?\s*\}/gu,
   )) {
-    if (!new RegExp(String.raw`\b${match[1]}\s*(?:\?\.|\.)\s*message\b`, "u").test(match[2])) continue;
+    if (!new RegExp(`${IDENT_BEFORE}${escapeForRegExp(match[1])}\\s*(?:\\?\\.|\\.)\\s*message\\b`, "u").test(match[2])) continue;
     if (/\bcause\b/u.test(match[2])) continue;
     yield {
       ...matchSpan(lineStarts, match),
@@ -818,6 +849,17 @@ function* iterateCandidateFindings(ctx) {
   for (const match of masked.matchAll(
     /\blet\s+([\w$]+)\s*(?::[^=;]+)?;\s*if\s*\((?:[^()]|\([^()]*\))*\)\s*(?:\{\s*\1\s*=\s*[^;{}]+;\s*\}|\1\s*=\s*[^;{}]+;)\s*else\b\s*(?:\{\s*\1\s*=\s*[^;{}]+;\s*\}|\1\s*=\s*[^;{}]+;)/gu,
   )) {
+    // "Declared only to be assigned" has to be true: `value = value || fallback`
+    // READS the variable it initializes, where the `const` rewrite this rule
+    // names would hit the temporal dead zone and throw. Blank the declaration
+    // and the assignment targets; a surviving mention is a read.
+    const name = escapeForRegExp(match[1]);
+    // `=(?!=)` so an assignment target is stripped but a comparison is not:
+    // `value = value == other` reads the variable and must stay visible here.
+    const reads = match[0]
+      .replace(new RegExp(String.raw`\blet\s+${name}${IDENT_AFTER}`, "gu"), "")
+      .replace(new RegExp(String.raw`${IDENT_BEFORE}${name}\s*=(?!=)`, "gu"), "");
+    if (new RegExp(`${IDENT_BEFORE}${name}${IDENT_AFTER}`, "u").test(reads)) continue;
     yield {
       ...matchSpan(lineStarts, match),
       rule: "no-let-if-else-assign",
@@ -1053,18 +1095,20 @@ function* iterateCommentFindings(ctx) {
 // The bar for entry, and the only thing that keeps this set from drifting back
 // into a severity ranking: the rule's message must name a replacement that
 // preserves behaviour in EVERY case the rule fires. "Do something better here"
-// is review, however certain the rule is that the code is wrong. Three rules
-// were demoted against this bar — `no-json-clone` (structuredClone keeps a Date
-// a Date and ignores toJSON, so it is not the same value), `no-await-promise-
-// resolve` (dropping the wrapper drops a microtask tick), and
+// is review, however certain the rule is that the code is wrong. Four rules were
+// demoted against this bar — `no-json-clone` (structuredClone keeps a Date a
+// Date and ignores toJSON, so it is not the same value), `no-await-promise-
+// resolve` (dropping the wrapper drops a microtask tick),
 // `no-chained-type-assertions` ("parse or validate instead" is a design, not a
-// rewrite) — so measure a new entry against them, not against how sure you are.
+// rewrite), and `no-promise-constructor-wrapper` (`Promise.resolve(p)` IS `p`
+// when `p` is already a promise, where the wrapper is a distinct one) — so
+// measure a new entry against them, not against how sure you are.
 const MECHANICAL_RULES = new Set([
   "no-boolean-literal-ternary", "no-double-negation-condition",
   "no-useless-rethrow", "no-emoji",
   "no-typed-jsdoc", "no-narration-comments", "no-change-note-comments",
   "no-boolean-return-branches", "no-let-if-else-assign",
-  "no-promise-constructor-wrapper", "no-obvious-doc-comments",
+  "no-obvious-doc-comments",
 ]);
 
 export function lintSource(rawSource, filePath) {

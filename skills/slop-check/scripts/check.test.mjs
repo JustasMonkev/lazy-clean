@@ -88,6 +88,22 @@ expectNoRule("allows union narrowing", 'if (typeof value === "string") { use(val
 expectNoRule("allows environment detection", 'const isBrowser = typeof window !== "undefined";', "no-runtime-typeof");
 expectNoRule("allows optional callback detection", 'if (typeof onDone === "function") onDone();', "no-runtime-typeof");
 
+// The malformed-JSX valve looked for a closing tag ANYWHERE in the file, so an
+// earlier complete `<div></div>` vouched for a later unclosed `<div>`: the
+// tokenizer entered text mode and ran to EOF, hiding every finding below the
+// incomplete element — the state a file is in halfway through an edit.
+expectRule(
+  "an earlier closing tag does not vouch for a later unclosed element",
+  "const a = <div></div>;\nconst b = <div>;\nfunction f(value: any) { return value; }",
+  "no-any",
+  "sample.tsx",
+);
+expectNoRule(
+  "still treats a properly closed element's children as text",
+  "const a = <div>Files are stored as blobs</div>;",
+  "require-safety-comment-for-type-assertion",
+  "sample.tsx",
+);
 expectRule("flags bare assertion", "const user = payload as User;", "require-safety-comment-for-type-assertion");
 // Prose is not code: JSX text nodes are not string literals, so every sentence
 // containing "as" used to read as a type assertion.
@@ -188,6 +204,34 @@ expectNoRule("allows import alias", 'import { readFile as read } from "node:fs";
 
 // --- pointless-code rules ----------------------------------------------------
 
+// The rule's premise is "declared only to be assigned". A branch that READS the
+// variable breaks it, and the `const` rewrite the message names would throw on
+// the temporal dead zone.
+expectNoRule(
+  "allows a let whose branch reads the variable it initializes",
+  "let value;\nif (enabled) value = value || fallback;\nelse value = other;",
+  "no-let-if-else-assign",
+);
+// A property that happens to share the variable's name is not a read of it.
+// Counting it as one silenced this rule on real eslint, playwright and corepack
+// code — `name = nameOrOptions.name` is exactly the shape the rule exists for.
+expectRule(
+  "a same-named property is not a self-reference",
+  "let name;\nif (isObject) name = options.name;\nelse name = options;",
+  "no-let-if-else-assign",
+);
+expectRule(
+  "still flags a let assigned from unrelated expressions",
+  "let value;\nif (enabled) value = first;\nelse value = second;",
+  "no-let-if-else-assign",
+);
+// `$` is an identifier character and a regex anchor: unescaped, the name-match
+// guards could never fire on a variable containing one.
+expectRule(
+  "matches a binding whose name contains a dollar sign",
+  "try { run(); } catch (err$) { console.error(err$); throw err$; }",
+  "no-log-and-rethrow",
+);
 expectRule("flags useless rethrow", "try { run(); } catch (error) { throw error; }", "no-useless-rethrow");
 expectNoRule("allows wrapping rethrow", "try { run(); } catch (error) { throw new AppError(error); }", "no-useless-rethrow");
 
@@ -624,6 +668,7 @@ for (const [source, rule, why] of [
   ["const copy = JSON.parse(JSON.stringify(state));", "no-json-clone", "structuredClone keeps a Date a Date"],
   ["const value = await Promise.resolve(input);", "no-await-promise-resolve", "dropping the wrapper drops a tick"],
   ["const user = value as unknown as User;", "no-chained-type-assertions", "parse-instead is a design, not a rewrite"],
+  ["const p = new Promise(resolve => resolve(value));", "no-promise-constructor-wrapper", "Promise.resolve(p) IS p when p is a promise"],
 ]) {
   const found = lintSource(source, "sample.ts").find((f) => f.rule === rule);
   assert.ok(found, `${rule} did not fire on its own sample`);

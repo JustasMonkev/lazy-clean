@@ -40,6 +40,11 @@ function finish() {
     // Outer scope because Qoder initializes the mode further down and has to
     // re-answer a bare `/lazy` from the level that initialization produced.
     let isReportOnly = false;
+    // The default as it stood BEFORE this prompt could change it. Qoder's
+    // first-prompt initializer below reads the default to pick the live level,
+    // so without this `/lazy default ultra` announced "new sessions start in
+    // ultra" and then started ultra in this one.
+    let defaultBeforeCommand = null;
     if (/^[/@$]lazy/.test(prompt)) {
       const parts = prompt.split(/\s+/);
       const cmd = parts[0].replace(/^[@$]/, '/');
@@ -61,6 +66,7 @@ function finish() {
             // A failed write must say so: silently doing nothing looks like it
             // worked until the next session starts in the old mode.
             try {
+              defaultBeforeCommand = getDefaultMode();
               writeDefaultMode(dmode);
               notice = 'LAZY DEFAULT SET — new sessions start in ' + dmode + '.';
             } catch (e) {
@@ -119,8 +125,11 @@ function finish() {
     if (isQoder && !deactivated) {
       let currentMode = readMode();
       if (!currentMode) {
-        // First prompt in session — initialize from config/env default
-        currentMode = getDefaultMode();
+        // First prompt in session — initialize from config/env default, or from
+        // the default this very prompt replaced: `/lazy default` is documented
+        // as changing what LATER sessions start at, so it must not decide this
+        // one's level.
+        currentMode = defaultBeforeCommand ?? getDefaultMode();
         if (currentMode !== 'off') {
           try { setMode(currentMode); } catch (e) { /* best-effort: the ruleset below still goes out */ }
         }
