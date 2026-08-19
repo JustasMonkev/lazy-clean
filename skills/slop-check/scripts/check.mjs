@@ -1120,6 +1120,7 @@ const LITERAL_TYPE_AT = /"[^"\n]*"|'[^'\n]*'|-?\d[\w.]*|true\b|false\b|null\b/uy
 // does not ask about.
 const TYPE_NAME_AT = /(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*/uy;
 const ARROW_AT = /\s*=>\s*/uy;
+const CONSTRUCTOR_TYPE_AT = /(?:abstract\s+)?new\s*(?=\()/uy;
 const at = (pattern, text, index) => {
   pattern.lastIndex = index;
   const m = pattern.exec(text);
@@ -1136,6 +1137,13 @@ function typeEnd(text, pos) {
     if (next === -1) break;
     k = next;
   }
+  // A constructor signature: `as new () => Service`, and its `abstract new`
+  // form. Without this `new` matched as an ordinary named type and the `(`
+  // after it failed the terminator check, so the assertion was not reported at
+  // all -- the one outcome a rule about missing justifications must not have.
+  // The `(` lookahead keeps `as newValue` a plain name.
+  const constructor = at(CONSTRUCTOR_TYPE_AT, text, k);
+  if (constructor !== -1) return typeEnd(text, constructor);
   const ch = text[k];
   if (ch === "{" || ch === "[") return balancedEnd(text, k);
   if (ch === "(") {
@@ -1248,12 +1256,53 @@ const escapeForRegExp = (text) => text.replace(/[$\\^*+?.()|[\]{}]/gu, "\\$&");
 // it as one silenced the rule on real code in eslint, playwright and corepack.
 const IDENT_BEFORE = String.raw`(?<![\w$.#])`;
 const IDENT_AFTER = String.raw`(?![\w$])`;
+// Every form that writes a binding. Longest first, so `||=` is not read as the
+// `|=` in it; `=(?![=>])` so a comparison and an arrow parameter are not writes.
+const ASSIGN_OPERATORS = String.raw`\*\*=|<<=|>>>=|>>=|\?\?=|\|\|=|&&=|[+\-*/%&|^]=|=(?![=>])`;
+
+// Whether the block enclosing `from` closes before `limit`. Bounded by `limit`
+// rather than by the end of the file, so asking about a write that is one line
+// away costs one line -- the unbounded version was quadratic on a file full of
+// these declarations.
+function blockClosesBefore(text, from, limit) {
+  let depth = 0;
+  for (let k = from; k < limit; k += 1) {
+    const ch = text[k];
+    if (ch === "{") depth += 1;
+    else if (ch === "}") {
+      if (depth === 0) return true;
+      depth -= 1;
+    }
+  }
+  return false;
+}
 
 // Multi-line shapes matched against the masked source. Each was measured
 // against 651 files of third-party JavaScript before landing; anything that
 // fired on human-written code was tightened or dropped.
 function* iterateCandidateFindings(ctx) {
   const { masked, lineStarts, comments } = ctx;
+  // Where each name is written, built once per file on first use. Rescanning
+  // the rest of the source per match was quadratic: 4,000 such declarations in
+  // one file took 4.3s against 0.7s before the scan existed, and this runs on
+  // every edit.
+  let writes = null;
+  const firstWriteFrom = (name, from) => {
+    if (writes === null) {
+      writes = new Map();
+      const pattern = new RegExp(
+        `${IDENT_BEFORE}([\\w$]+)\\s*(?:${ASSIGN_OPERATORS}|\\+\\+|--)|(?:\\+\\+|--)\\s*([\\w$]+)${IDENT_AFTER}`,
+        "gu",
+      );
+      for (const write of masked.matchAll(pattern)) {
+        const written = write[1] ?? write[2];
+        const seen = writes.get(written);
+        if (seen) seen.push(write.index);
+        else writes.set(written, [write.index]);
+      }
+    }
+    return (writes.get(name) ?? []).find((index) => index >= from);
+  };
   // Lines covered by a comment that actually justifies something. Presence was
   // the old test, so a bare `// TODO` above a hard-coded sleep cleared it --
   // the marker that most often sits above the code someone knows is wrong.
@@ -1377,6 +1426,15 @@ function* iterateCandidateFindings(ctx) {
       .replace(new RegExp(String.raw`\blet\s+${name}${IDENT_AFTER}`, "gu"), "")
       .replace(new RegExp(String.raw`${IDENT_BEFORE}${name}\s*=(?!=)`, "gu"), "");
     if (new RegExp(`${IDENT_BEFORE}${name}${IDENT_AFTER}`, "u").test(reads)) continue;
+    // A write after the branches means the variable is NOT declared only for
+    // them, and the prescribed `const` rewrite would not compile: `value =
+    // third;` after the `if`/`else` is a reassignment of a constant. This rule
+    // prints under "one correct answer", so a finding that cannot be applied is
+    // worse than a missed one. The span runs to the end of the enclosing block,
+    // so a same-named variable in a sibling scope does not silence it.
+    const end = match.index + match[0].length;
+    const write = firstWriteFrom(match[1], end);
+    if (write !== undefined && !blockClosesBefore(masked, end, write)) continue;
     yield {
       ...matchSpan(lineStarts, match),
       rule: "no-let-if-else-assign",

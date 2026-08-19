@@ -132,20 +132,26 @@ export default async ({ client } = {}) => {
         // price of the command never taking effect. So it goes, and the report
         // says so rather than letting the user discover it later.
         let cleared = null;
-        if (sessionLevel) {
-          try {
-            fs.rmSync(statePath, { force: true });
-            cleared = sessionLevel;
-          } catch (e) {
-            // Reported below: an override that could not be cleared still wins,
-            // and claiming the default applies would be the original bug.
-            cleared = false;
-          }
-        }
         // An unwritable config directory threw straight into OpenCode's hook
         // runner; the Claude tracker already catches this case and reports it.
         try {
+          // The save comes FIRST and the clear second. Clearing first meant a
+          // failed save destroyed the level the user already had: with `lite`
+          // stored and the config unwritable, `/lazy default ultra` reported
+          // that nothing was saved and left the next chat on the configured
+          // `full` -- neither the level they had nor the one they asked for.
+          // Saving first makes the throw land before anything is removed.
           const saved = writeDefaultMode(persisted) || persisted;
+          if (sessionLevel) {
+            try {
+              fs.rmSync(statePath, { force: true });
+              cleared = sessionLevel;
+            } catch (e) {
+              // Reported below: an override that could not be cleared still
+              // wins, and claiming the default applies would be the original bug.
+              cleared = false;
+            }
+          }
           // Same as the Claude hook: LAZY_DEFAULT_MODE outranks the config file
           // getDefaultMode() reads, so reporting plain success there is false.
           const override = normalizeMode(process.env.LAZY_DEFAULT_MODE);

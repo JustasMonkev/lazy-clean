@@ -35,7 +35,7 @@ The triage report that skill asks for is requested explanation, not unrequested 
 If checker findings arrive on their own after each Write/Edit, the `PostToolUse` hook is running it for you and a per-file manual run is redundant; if they do not, run it yourself on every file you changed. Run it by hand for repo-wide sweeps: a whole directory, a full diff, or a pre-review pass over files you did not just edit.
 
 ```bash
-node <skills-dir>/slop-check/scripts/check.mjs $(git diff --name-only HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.mts' '*.cts')
+node <skills-dir>/slop-check/scripts/check.mjs $(git diff --name-only --diff-filter=d HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.mts' '*.cts')
 ```
 
 ## Reject what the spec didn't define

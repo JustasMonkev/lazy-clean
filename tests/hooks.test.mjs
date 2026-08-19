@@ -1228,6 +1228,25 @@ ok("/lazy default names the level it cleared",
   Array.isArray(ocHeld.logs) && ocHeld.logs.some((l) => /cleared the stored lite level/.test(l.message)),
   JSON.stringify(ocHeld.logs));
 
+// Clearing before saving destroyed a level the command then failed to replace:
+// with `lite` stored and the config unwritable, `/lazy default ultra` reported
+// that nothing was saved and left the next chat on the configured `full` --
+// neither the level the user had nor the one they asked for. Saving now
+// precedes the clear, so a throw lands before anything is removed.
+const ocKeep = freshHome("opencode-failed-default-keeps-level");
+const ocKeepState = path.join(ocKeep.env.XDG_CONFIG_HOME, "opencode", ".lazy-active");
+fs.mkdirSync(path.dirname(ocKeepState), { recursive: true });
+fs.writeFileSync(ocKeepState, "lite");
+// A file where the config directory has to go: the default write cannot succeed.
+fs.writeFileSync(path.join(ocKeep.env.XDG_CONFIG_HOME, "lazy"), "");
+const ocKeptRes = opencodeCommand("default ultra", ocKeep.env.XDG_CONFIG_HOME);
+ok("a failed default write reports the failure",
+  Array.isArray(ocKeptRes.logs) && ocKeptRes.logs.some((l) => l.level === "error" && /could not write the default/.test(l.message)),
+  JSON.stringify(ocKeptRes.logs));
+ok("a failed default write keeps the level the user already had",
+  fs.existsSync(ocKeepState) && fs.readFileSync(ocKeepState, "utf8").trim() === "lite",
+  fs.existsSync(ocKeepState) ? fs.readFileSync(ocKeepState, "utf8") : "<GONE>");
+
 // A file whose name starts with `-` is an unknown option to the checker, which
 // exits 2 — so the hook reported nothing for a file the CLI can scan after `--`.
 {

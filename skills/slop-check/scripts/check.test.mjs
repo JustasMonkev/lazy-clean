@@ -932,6 +932,16 @@ expectRule("flags let assigned in both branches", "let label;\nif (flag) {\n  la
 expectRule("flags annotated let assigned in both branches", "let label: string;\nif (flag) label = 'on';\nelse label = 'off';", "no-let-if-else-assign");
 expectNoRule("allows a branch that does more than assign", "let n;\nif (isRange) {\n  n = split(body);\n} else {\n  n = parse(body);\n  n = n.map(embrace);\n}", "no-let-if-else-assign");
 expectNoRule("allows an accumulator loop", "let total = 0;\nfor (const value of values) total += value;", "no-let-if-else-assign");
+// A write after the branches means the variable is not declared only for them,
+// and this rule prints under "one correct answer": the `const` it prescribes
+// would not compile, because the later line reassigns it.
+expectNoRule("allows a let written again after the branches", "let value;\nif (flag) value = first;\nelse value = second;\nvalue = third;", "no-let-if-else-assign");
+expectNoRule("allows a let compound-assigned after the branches", "let value;\nif (flag) value = first;\nelse value = second;\nvalue += extra;", "no-let-if-else-assign");
+expectNoRule("allows a let incremented after the branches", "let value;\nif (flag) value = first;\nelse value = second;\nvalue++;", "no-let-if-else-assign");
+// The span stops at the end of the enclosing block, so a same-named variable in
+// a sibling scope does not silence the rule, and `===` is not a write.
+expectRule("still flags when a sibling scope writes the same name", "function a() {\n  let value;\n  if (flag) value = first;\n  else value = second;\n  return value;\n}\nfunction b() {\n  let value = 0;\n  value = 9;\n  return value;\n}", "no-let-if-else-assign");
+expectRule("still flags when the later line only compares", "let value;\nif (flag) value = first;\nelse value = second;\nreturn value === limit;", "no-let-if-else-assign");
 
 // --- promise slop ------------------------------------------------------------
 
@@ -1143,6 +1153,33 @@ expectNoRule(
   "require-safety-comment-for-type-assertion",
 );
 
+// A constructor signature is a type, not a name: `new` matched as a plain named
+// type and the `(` after it failed the terminator check, so the assertion was
+// not reported at all -- silence is the one outcome a rule about missing
+// justifications must not produce.
+expectRule(
+  "a constructor-signature assertion is still an assertion",
+  "const Ctor = value as new () => Service;",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "an abstract constructor signature too",
+  "const Ctor = value as abstract new (n: number) => Service;",
+  "require-safety-comment-for-type-assertion",
+);
+// The `(` lookahead is what keeps `new` a keyword here: without it any name
+// starting with those three letters would be swallowed as a constructor type.
+expectRule(
+  "an operand whose name starts with new is unaffected",
+  "const svc = newValue as Service;",
+  "require-safety-comment-for-type-assertion",
+);
+expectNoRule(
+  "a justified constructor-signature assertion stays clean",
+  "// SAFETY: the registry only stores constructors\nconst Ctor = value as new () => Service;",
+  "require-safety-comment-for-type-assertion",
+);
+
 // The pattern JSX masking exists for: a render prop holds a whole element, and
 // its children are prose.
 expectNoRule(
@@ -1180,7 +1217,7 @@ console.log("ok   a BOM before a shebang still skips the shebang");
 // after every edit. The bound is loose on purpose — it fails on quadratic
 // backtracking, not on a slow machine.
 const REDOS_BUDGET_MS = 1000;
-for (const [label, source] of [
+for (const [label, source, budget = REDOS_BUDGET_MS] of [
   ["a long identifier line", `const x = ${"a".repeat(56_000)};\n`],
   ["a long comment line", `// ${"word ".repeat(12_000)}\n`],
   // The type after `as` is scanned forward now, so the shapes that could make a
@@ -1189,12 +1226,21 @@ for (const [label, source] of [
   ["an unclosed type opener", `const a = payload as ${"<".repeat(20_000)}\n`],
   ["many assertion candidates", `const a = ${"payload as X ".repeat(4_000)};\n`],
   ["deeply nested generics", `const a = payload as ${"A<".repeat(2_000)}B${">".repeat(2_000)};\n`],
+  // The later-write check bounds its scan by the next write to that name, not
+  // by the end of the file. Scanning the rest of the source per match instead
+  // put this at 3.0s against 0.15s before the guard existed -- a rule guard is
+  // not allowed to cost more than the whole scan it guards. This one input is
+  // 400KB rather than one long line, so linting it legitimately costs a few
+  // hundred ms; the budget is its own to keep the shared one strict.
+  ["many branch-assigned declarations",
+    Array.from({ length: 4_000 }, (_, i) => `let v${i};\nif (c) v${i} = a;\nelse v${i} = b;\nuse(v${i});\n`).join(""),
+    2_000],
 ]) {
   const started = Date.now();
   lintSource(source, "sample.ts");
   const elapsed = Date.now() - started;
-  assert.ok(elapsed < REDOS_BUDGET_MS, `${label} took ${elapsed}ms, over the ${REDOS_BUDGET_MS}ms budget`);
-  console.log(`ok   ${label} does not backtrack (${elapsed}ms)`);
+  assert.ok(elapsed < budget, `${label} took ${elapsed}ms, over the ${budget}ms budget`);
+  console.log(`ok   ${label} does not backtrack (${elapsed}ms, budget ${budget}ms)`);
 }
 
 // It is only a no-op when the value cannot be null: `null ?? undefined` is

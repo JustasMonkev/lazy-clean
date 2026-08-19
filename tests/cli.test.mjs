@@ -491,10 +491,6 @@ check("--since follows a symlinked target to the changed files", () => {
 
 rmSync(root, { recursive: true, force: true });
 
-if (failures > 0) {
-  console.error(`\n${failures} test(s) failed`);
-  process.exit(1);
-}
 // `--since` skips most of what it collects, so the summary has to count the
 // files that actually reached the linter. One changed file beside one unchanged
 // one reported "clean (2 files checked)" -- overstating coverage is the same
@@ -523,5 +519,44 @@ check("--since counts only the files it linted, not the files it collected", () 
   assert.equal(none.status, 0);
   rmSync(repo, { recursive: true, force: true });
 });
+
+// The changed-file command in skills/slop-check/SKILL.md is read out of the doc
+// and run, so the doc is the thing under test. Without --diff-filter=d, git
+// prints the pathname of a DELETED file, the checker cannot read it, and an
+// ordinary deletion-only change exits 2 as "scan incomplete" with nothing wrong.
+check("the documented changed-file command survives a deleted file", () => {
+  const doc = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "skills", "slop-check", "SKILL.md"), "utf8");
+  const documented = /\$\((git diff [^)]*)\)/u.exec(doc);
+  assert.ok(documented, "SKILL.md no longer contains a `$(git diff ...)` command to test");
+
+  const repo = mkdtempSync(join(tmpdir(), "slop-deleted-"));
+  const git = (...args) => spawnSync("git", args, { cwd: repo, encoding: "utf8" });
+  git("init", "-q", ".");
+  git("config", "user.email", "t@t");
+  git("config", "user.name", "t");
+  writeFileSync(join(repo, "keep.ts"), "export const a = 1;\n");
+  writeFileSync(join(repo, "gone.ts"), "export const b = 2;\n");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  rmSync(join(repo, "gone.ts"));
+
+  const paths = spawnSync("sh", ["-c", `${documented[1]}`], { cwd: repo, encoding: "utf8" }).stdout.split("\n").filter(Boolean);
+  assert.deepEqual(paths, [], "a deletion-only change should hand the checker no paths");
+  const deletionOnly = run(paths, repo);
+  assert.equal(deletionOnly.status, 0, deletionOnly.stdout + deletionOnly.stderr);
+  assert.doesNotMatch(deletionOnly.stdout, /scan incomplete/u);
+
+  // Still collects what it should: the filter drops deletions, not edits.
+  writeFileSync(join(repo, "keep.ts"), "export const a = 1;\nconst user = payload as User;\n");
+  const edited = spawnSync("sh", ["-c", `${documented[1]}`], { cwd: repo, encoding: "utf8" }).stdout.split("\n").filter(Boolean);
+  assert.deepEqual(edited, ["keep.ts"]);
+  assert.equal(run(edited, repo).status, 1);
+  rmSync(repo, { recursive: true, force: true });
+});
+
+if (failures > 0) {
+  console.error(`\n${failures} test(s) failed`);
+  process.exit(1);
+}
 
 console.log("\nall slop-check CLI tests passed");
