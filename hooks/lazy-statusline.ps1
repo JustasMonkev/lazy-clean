@@ -26,9 +26,11 @@ if ($null -ne $env:LAZY_HIDE_STATUS) {
 
 $Mode = ""
 try {
-    # An empty flag file yields $null from Get-Content, and $null.Trim() throws
-    # — which used to swallow the badge entirely on Windows.
-    $Mode = ([string](Get-Content -LiteralPath $Flag -ErrorAction Stop | Select-Object -First 1)).Trim().ToLowerInvariant()
+    # -Raw, not the first line: readMode() trims the whole file and rejects
+    # whatever is left over, so `ultra\nanything` is off there and must not paint
+    # a badge here either. An empty flag file yields $null from Get-Content, and
+    # $null.Trim() throws — which used to swallow the badge entirely on Windows.
+    $Mode = ([string](Get-Content -LiteralPath $Flag -Raw -ErrorAction Stop)).Trim().ToLowerInvariant()
 } catch {
     exit 0
 }

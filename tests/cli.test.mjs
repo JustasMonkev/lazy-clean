@@ -133,18 +133,21 @@ check("a file outside cwd keeps its absolute path", () => {
 check("--since keeps only findings on lines the diff added", () => {
   const repo = join(root, "repo");
   mkdirSync(repo, { recursive: true });
-  const git = (...args) => execFileSync("git", args, { cwd: repo, encoding: "utf8" });
+  // -c commit.gpgsign=false: a developer who signs every commit by default has
+  // no key in this scratch repo, and the commit below would fail, not skip.
+  const git = (...args) =>
+    execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
   try {
     git("init", "-q");
     git("config", "user.email", "test@example.com");
     git("config", "user.name", "test");
+    writeFileSync(join(repo, "app.ts"), "const first = payload as User;\n");
+    git("add", "-A");
+    git("commit", "-qm", "base");
   } catch {
     console.log("skip --since (git unavailable)");
     return;
   }
-  writeFileSync(join(repo, "app.ts"), "const first = payload as User;\n");
-  git("add", "-A");
-  git("commit", "-qm", "base");
 
   const full = run(["app.ts"], repo);
   assert.equal(full.status, 1, "the committed assertion is still a finding on a full scan");
@@ -157,6 +160,34 @@ check("--since keeps only findings on lines the diff added", () => {
   assert.equal(since.status, 1);
   assert.match(since.stdout, /no-json-clone/u);
   assert.doesNotMatch(since.stdout, /require-safety-comment/u, "pre-existing findings stay out of scope");
+});
+
+check("--since survives a filename git has to quote or pad", () => {
+  const repo = join(root, "spaced");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) =>
+    execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "seed.ts"), "const ok = 1;\n");
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since quoting (git unavailable)");
+    return;
+  }
+  // A space makes git append a TAB after the path in the `+++` header, and
+  // mnemonicprefix renames the `b/` prefix the parser strips. Both used to drop
+  // the file's findings and exit 2.
+  writeFileSync(join(repo, "my file.ts"), "const user = payload as User;\n");
+  git("add", "-A");
+  git("config", "diff.mnemonicprefix", "true");
+  const result = run(["--since=HEAD"], repo);
+  assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
+  assert.match(result.stdout, /my file\.ts:1:22 require-safety-comment/u);
+  assert.doesNotMatch(result.stderr, /cannot read/u);
 });
 
 check("--since reports a bad ref instead of passing silently", () => {
@@ -190,7 +221,11 @@ check("a symlink loop terminates instead of hanging", () => {
   }
   const result = spawnSync(process.execPath, [CHECKER, loop], { cwd: root, encoding: "utf8", timeout: 20_000 });
   assert.notEqual(result.signal, "SIGTERM");
-  assert.ok(result.status === 1 || result.status === 2, `unexpected status ${result.status}`);
+  // 1, not 2: the tree is readable, so the loop must not be reported as a
+  // failed scan, and the one file in it must be counted once.
+  assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
+  assert.doesNotMatch(result.stderr, /cannot read/u);
+  assert.match(result.stdout, /1 file checked|1 finding in 1 file/u);
 });
 
 rmSync(root, { recursive: true, force: true });

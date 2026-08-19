@@ -8,10 +8,6 @@
 // edit-check, lazy-activate, lazy-statusline.sh) against a sandboxed
 // HOME / CLAUDE_CONFIG_DIR / XDG_CONFIG_HOME. All sandbox state lives in one
 // mkdtemp directory that is removed on exit.
-//
-// Everything here is green against the current tree. Cases marked `// BUG:` are
-// defects still open; their assertions are commented out so the suite stays
-// green, with the current behavior pinned underneath so a fix is noticed.
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -20,7 +16,7 @@ import path from "node:path";
 import vm from "node:vm";
 import { spawn, spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const require = createRequire(import.meta.url);
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -104,7 +100,7 @@ function writeConfig(box, text) {
 
 // Hook env starts from a scrubbed base so the developer's own shell can't leak in.
 const SCRUBBED = [
-  "LAZY_DEFAULT_MODE", "LAZY_HIDE_STATUS", "LAZY_QUIET_STARTUP", "LAZY_SUBAGENT_MATCHER",
+  "LAZY_DEFAULT_MODE", "LAZY_HIDE_STATUS", "LAZY_SUBAGENT_MATCHER",
   "COPILOT_PLUGIN_DATA", "PLUGIN_DATA", "QODER_SESSION_ID", "CLAUDE_PLUGIN_ROOT",
   "CLAUDE_CONFIG_DIR", "XDG_CONFIG_HOME", "APPDATA",
 ];
@@ -181,7 +177,7 @@ function withEnv(vars, fn) {
 }
 
 const cfgBox = freshHome("config");
-const CFG_ENV = { ...cfgBox.env, LAZY_DEFAULT_MODE: undefined, LAZY_HIDE_STATUS: undefined, LAZY_QUIET_STARTUP: undefined };
+const CFG_ENV = { ...cfgBox.env, LAZY_DEFAULT_MODE: undefined, LAZY_HIDE_STATUS: undefined };
 
 function defaultModeWith({ env, file }) {
   if (file === null) fs.rmSync(cfgBox.config, { force: true });
@@ -215,15 +211,11 @@ for (const [value, expected] of [["1", true], ["true", true], ["yes", true], ["b
   ["", false], ["   ", false], [" 0 ", false], [" 1 ", true]]) {
   eq(`getHideStatus env ${JSON.stringify(value)}`,
     withEnv({ ...CFG_ENV, LAZY_HIDE_STATUS: value }, () => config.getHideStatus()), expected);
-  eq(`getQuietStartup env ${JSON.stringify(value)}`,
-    withEnv({ ...CFG_ENV, LAZY_QUIET_STARTUP: value }, () => config.getQuietStartup()), expected);
 }
-writeConfig(cfgBox, '{"hideStatus":true,"quietStartup":true}');
+writeConfig(cfgBox, '{"hideStatus":true}');
 eq("getHideStatus reads config true", withEnv(CFG_ENV, () => config.getHideStatus()), true);
-eq("getQuietStartup reads config true", withEnv(CFG_ENV, () => config.getQuietStartup()), true);
-writeConfig(cfgBox, '{"hideStatus":1,"quietStartup":"yes"}');
+writeConfig(cfgBox, '{"hideStatus":1}');
 eq("getHideStatus requires strict true in config", withEnv(CFG_ENV, () => config.getHideStatus()), false);
-eq("getQuietStartup requires strict true in config", withEnv(CFG_ENV, () => config.getQuietStartup()), false);
 writeConfig(cfgBox, '{"hideStatus":true}');
 eq("env 0 overrides config true", withEnv({ ...CFG_ENV, LAZY_HIDE_STATUS: "0" }, () => config.getHideStatus()), false);
 eq("an env var set to empty overrides config true",
@@ -655,6 +647,18 @@ r = track({ prompt: "hello" }, { flag: null, config: null, env: qoder });
 eq("qoder activates the default on the first prompt", r.flag, "full");
 ok("qoder injects the ruleset as hookSpecificOutput",
   JSON.parse(r.stdout).hookSpecificOutput.additionalContext.startsWith("LAZY MODE ACTIVE — level: full"));
+// The report-only notice used to be computed before the initialization above,
+// so one message said OFF and ACTIVE at once — and still wrote the flag.
+r = track({ prompt: "/lazy" }, { flag: null, config: null, env: qoder });
+const bare = JSON.parse(r.stdout).hookSpecificOutput.additionalContext;
+ok("qoder reports the level a bare /lazy just initialized",
+  bare.startsWith("LAZY MODE ACTIVE — level: full") && !bare.includes("LAZY MODE OFF"), bare.slice(0, 120));
+eq("a bare /lazy on qoder still initializes the flag", r.flag, "full");
+r = track({ prompt: "/lazy" }, { flag: null, config: null, env: { ...qoder, LAZY_DEFAULT_MODE: "off" } });
+eq("a bare /lazy with an off default reports off and writes nothing",
+  [r.flag, JSON.parse(r.stdout).hookSpecificOutput.additionalContext],
+  [null, "LAZY MODE OFF — start with /lazy lite|full|ultra."]);
+
 r = track({ prompt: "/lazy ultra" }, { env: qoder });
 ok("qoder folds the switch confirmation into one JSON write",
   parses(r.stdout) &&
@@ -797,7 +801,25 @@ e = editCheck({ tool_name: "Edit", tool_input: { file_path: ranges, old_string: 
 const scoped = contextOf(e);
 ok("an Edit reports the findings it wrote", scoped.includes("ranges.ts:2"));
 ok("an Edit does not report findings far from the edit", !scoped.includes("ranges.ts:4"));
-ok("an Edit says how many findings predate it", /further findings? elsewhere in this file predate/.test(scoped));
+// The hook cannot prove pre-existence, so it must not tell the agent the rest
+// of the file predates the edit — that reads as "leave your own slop alone".
+ok("an Edit counts the rest of the file without claiming it predates the edit",
+  /further findings? elsewhere in this file, not attributed to this edit/.test(scoped) &&
+  !/predate|leave them alone/.test(scoped), scoped);
+
+// D: block rules report at the `catch`, several lines above the line the edit
+// wrote. With one line of headroom the whole report was suppressed.
+const blockTs = write("block.ts",
+  "export function run() {\n  try {\n    work();\n  } catch (e) {\n    console.log(e);\n    throw e;\n  }\n}\n");
+e = editCheck({ tool_name: "Edit", tool_input: { file_path: blockTs, old_string: "x", new_string: "    throw e;" } });
+ok("an Edit inside a catch block reports the block finding it created",
+  e.stdout.includes("block.ts:4") && e.stdout.includes("no-log-and-rethrow"), e.stdout);
+
+// F: "line\n".split("\n").length is 2, so a one-line edit used to claim the
+// line below it and report a pre-existing finding as the agent's own.
+const trailingTs = write("trailing.ts", "const ok = 1;\nconst mid = 2;\nconst bad: any = 3;\n");
+e = editCheck({ tool_name: "Edit", tool_input: { file_path: trailingTs, old_string: "x", new_string: "const ok = 1;\n" } });
+eq("a trailing newline does not stretch the edit onto the next lines", e.stdout, "");
 e = editCheck({ tool_name: "Edit", tool_input: { file_path: ranges, old_string: "x", new_string: "NOT IN THE FILE" } });
 ok("an unlocatable edit falls back to the whole file",
   contextOf(e).includes("ranges.ts:2") && contextOf(e).includes("ranges.ts:4"));
@@ -814,6 +836,36 @@ ok("a findings-heavy file has its finding list capped",
   contextOf(e).length < 20000, String(contextOf(e).length));
 ok("the cap says how many findings it dropped",
   /\(\d+ more on these lines, not listed\.\)/.test(contextOf(e)), contextOf(e).slice(-200));
+
+// --- .opencode plugin --------------------------------------------------------
+
+// The mode writes used to be unguarded, so an unwritable config directory threw
+// out of the plugin and into OpenCode's hook runner.
+const ocBox = freshHome("opencode");
+const blockedConfigDir = path.join(SANDBOX, "blocked-opencode");
+fs.writeFileSync(blockedConfigDir, "");
+function opencodeCommand(commandArguments) {
+  const source = `
+    import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, ".opencode", "plugins", "lazy.mjs")).href)};
+    const logs = [];
+    const hooks = await plugin({ client: { app: { log: async ({ body }) => { logs.push(body); } } } });
+    await hooks["command.execute.before"]({ command: "lazy", arguments: ${JSON.stringify(commandArguments)} });
+    process.stdout.write(JSON.stringify(logs));
+  `;
+  const res = spawnSync(process.execPath, ["--input-type=module", "-e", source], {
+    encoding: "utf8",
+    env: baseEnv({ ...ocBox.env, XDG_CONFIG_HOME: blockedConfigDir }),
+    timeout: 20000,
+  });
+  return { status: res.status, logs: res.stdout ? JSON.parse(res.stdout) : null, stderr: res.stderr || "" };
+}
+for (const [name, args] of [["a mode switch", "ultra"], ["/lazy default", "default ultra"]]) {
+  const res = opencodeCommand(args);
+  ok(`opencode survives an unwritable config on ${name}`, res.status === 0, res.stderr.slice(0, 200));
+  ok(`opencode logs the failed write on ${name}`,
+    Array.isArray(res.logs) && res.logs.some((l) => l.level === "error" && /could not/.test(l.message)),
+    JSON.stringify(res.logs));
+}
 
 // --- lazy-activate -----------------------------------------------------------
 
@@ -887,17 +939,22 @@ for (const script of ["lazy-activate.js", "lazy-subagent.js", "lazy-mode-tracker
 for (const source of ["startup", "resume", "clear", "compact"]) {
   ok(`SessionStart matcher covers ${source}`, new RegExp(byEvent.SessionStart.matcher).test(source));
 }
-for (const tool of ["Write", "Edit", "MultiEdit", "NotebookEdit"]) {
-  ok(`PostToolUse matcher covers ${tool}`, new RegExp(byEvent.PostToolUse.matcher).test(tool));
+// Claude Code matches tool names exactly, so the test has to anchor too: an
+// unanchored .test() said the matcher covered NotebookEdit, which it does not.
+const matchesTool = (tool) => new RegExp(`^(?:${byEvent.PostToolUse.matcher})$`, "u").test(tool);
+for (const tool of ["Write", "Edit", "MultiEdit"]) {
+  ok(`PostToolUse matcher covers ${tool}`, matchesTool(tool));
 }
-for (const tool of ["Read", "Bash", "Grep", "Glob", "WebFetch"]) {
-  ok(`PostToolUse matcher skips ${tool}`, !new RegExp(byEvent.PostToolUse.matcher).test(tool));
+// NotebookEdit is deliberately out: edit-check.js filters on file extension and
+// a notebook is not a TS/JS file.
+for (const tool of ["Read", "Bash", "Grep", "Glob", "WebFetch", "NotebookEdit"]) {
+  ok(`PostToolUse matcher skips ${tool}`, !matchesTool(tool));
 }
 ok("UserPromptSubmit hook fallback timer (1s) fits inside its wired timeout",
   byEvent.UserPromptSubmit.timeout * 1000 > 1000);
 // The wired command really runs end to end.
 const wireBox = freshHome("wire");
-const wired = spawnSync("node", ["-e", byEvent.UserPromptSubmit.command.replace(/^node -e "/, "").replace(/"$/, "").split('\\"').join('"')], {
+const wired = spawnSync(process.execPath, ["-e", byEvent.UserPromptSubmit.command.replace(/^node -e "/, "").replace(/"$/, "").split('\\"').join('"')], {
   input: '{"prompt":"/lazy ultra"}', encoding: "utf8", env: baseEnv({ ...wireBox.env, CLAUDE_PLUGIN_ROOT: ROOT }), timeout: 20000,
 });
 eq("the wired UserPromptSubmit command runs the hook for real",
@@ -926,7 +983,9 @@ if (!canRunBash) {
   ok("statusline prints [LAZY:LITE] for lite", statusline("lite").out.includes("[LAZY:LITE]"));
   ok("statusline prints [LAZY:REVIEW] for review", statusline("review").out.includes("[LAZY:REVIEW]"));
   ok("statusline normalizes case and padding", statusline("  ULTRA  ").out.includes("[LAZY:ULTRA]"));
-  ok("statusline reads only the first line", statusline("ultra\nsecond line").out.includes("[LAZY:ULTRA]"));
+  // readMode() rejects `ultra\nsecond line` (the whole file has to be a level),
+  // so the badge must not paint one either — it used to read only line 1.
+  eq("a multi-line flag prints nothing, matching readMode", statusline("ultra\nsecond line"), { status: 0, out: "" });
   eq("a flag of off prints nothing", statusline("off"), { status: 0, out: "" });
   eq("statusline always exits 0", [statusline("banana").status, statusline(null).status], [0, 0]);
   fs.writeFileSync(sl.flag, "lite");
@@ -959,7 +1018,7 @@ if (!canRunBash) {
 
   // The shell normalizes the value the same way getHideStatus does, so the
   // badge and the config API cannot disagree about what "hidden" means.
-  for (const value of ["False", "No", " 0 ", " ", "TRUE", "yes"]) {
+  for (const value of ["False", "No", " 0 ", " ", "TRUE", "yes", "f alse", "\tno\n"]) {
     const jsHides = withEnv({ ...sl.env, LAZY_HIDE_STATUS: value }, () => config.getHideStatus());
     const shHides = statusline("ultra", { LAZY_HIDE_STATUS: value }).out === "";
     ok(`statusline agrees with getHideStatus on ${JSON.stringify(value)}`, shHides === jsHides);
@@ -975,6 +1034,9 @@ if (!canRunBash) {
   // [LAZY] for a flag readMode() rejects is the mismatch /lazy just lost.
   eq("an unknown flag prints nothing, matching readMode", statusline("banana"), { status: 0, out: "" });
   eq("an empty flag file prints nothing, matching readMode", statusline(""), { status: 0, out: "" });
+  eq("a whitespace-only flag prints nothing, matching readMode", statusline("   \n\n"), { status: 0, out: "" });
+  ok("surrounding whitespace is still trimmed, matching readMode",
+    statusline("\n  ULTRA \t\n").out.includes("[LAZY:ULTRA]"));
 }
 
 // --- never-block contract (no EOF on stdin, the Windows #443 case) ------------

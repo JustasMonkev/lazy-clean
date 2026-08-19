@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { lintSource } from "./check.mjs";
+
+const here = dirname(fileURLToPath(import.meta.url));
 
 let failures = 0;
 
@@ -174,6 +179,25 @@ expectNoRule("allows shape as the domain", "interface Shape { radius: number }",
 expectNoRule(
   "reads geometry context from the whole file, not one line",
   "export type Shape =\n  | { kind: 'circle'; radius: number }\n  | { kind: 'rect'; width: number };",
+  "no-shape-in-symbol-names",
+);
+// The declaration can sit well below the union that gives it meaning.
+expectNoRule(
+  "allows a shape class declared far below its domain",
+  `export type Shape = { kind: 'circle'; radius: number };\n${"\n".repeat(12)}export class ShapeLayer {}`,
+  "no-shape-in-symbol-names",
+);
+// The word list is what keeps the rule alive. It once held `path`, `render` and
+// `draw`, which are identifiers in most server and React files, so a single
+// distant import disarmed the rule for the whole file.
+expectRule(
+  "an unrelated path import does not disarm the rule",
+  `import path from "node:path";\n${"\n".repeat(8)}const shapeData = load();`,
+  "no-shape-in-symbol-names",
+);
+expectRule(
+  "a render call does not disarm the rule",
+  "function render(el) { return el; }\nconst nodeShape = build();",
   "no-shape-in-symbol-names",
 );
 
@@ -415,6 +439,48 @@ expectRule(
   "const rate = index++ / (raw as Config) / scale;",
   "require-safety-comment-for-type-assertion",
 );
+// TS 4.4+ types the catch binding, and every sibling catch rule already allows
+// the annotation.
+expectRule(
+  "a typed catch binding is still a useless rethrow",
+  "try { f(); } catch (e: unknown) { throw e; }",
+  "no-useless-rethrow",
+);
+
+expectRule(
+  "a nested generic does not escape the assertion rule",
+  "const a = data as Map<string, Set<number>>;",
+  "require-safety-comment-for-type-assertion",
+);
+
+// The specifier-list skip must need specifier syntax: matching any export that
+// ends in `{` silenced the rule for the whole body below it.
+expectRule(
+  "an exported object literal is not a specifier list",
+  "export const cfg = {\n  port: raw.port as number,\n};",
+  "require-safety-comment-for-type-assertion",
+);
+expectNoRule(
+  "a multi-line import alias list is still skipped",
+  'import {\n  readFile as read,\n  writeFile as write,\n} from "node:fs";',
+  "require-safety-comment-for-type-assertion",
+);
+
+// The pattern JSX masking exists for: a render prop holds a whole element, and
+// its children are prose.
+expectNoRule(
+  "an element inside an attribute expression has its text masked",
+  "const a = <Foo overlay={<Tooltip>Delete the file marked as stale</Tooltip>}>ok</Foo>;",
+  "require-safety-comment-for-type-assertion",
+  "sample.tsx",
+);
+expectRule(
+  "a real assertion in an attribute expression is still found",
+  "const a = <Foo n={raw.n as number}>ok</Foo>;",
+  "require-safety-comment-for-type-assertion",
+  "sample.tsx",
+);
+
 expectRule(
   "a leading BOM does not hide the file",
   "\uFEFFconst value: any = 1;",
@@ -432,11 +498,46 @@ const shebang = lintSource("\uFEFF#!/usr/bin/env node\nconst value: any = 1;\n",
 assert.deepEqual(shebang.map((finding) => finding.line), [2]);
 console.log("ok   a BOM before a shebang still skips the shebang");
 
+// The assertion pattern ran in O(n^2) on one long line: 9s for a 56KB
+// identifier and 3.6s for a 60KB comment, on a checker a PostToolUse hook runs
+// after every edit. The bound is loose on purpose — it fails on quadratic
+// backtracking, not on a slow machine.
+const REDOS_BUDGET_MS = 1000;
+for (const [label, source] of [
+  ["a long identifier line", `const x = ${"a".repeat(56_000)};\n`],
+  ["a long comment line", `// ${"word ".repeat(12_000)}\n`],
+]) {
+  const started = Date.now();
+  lintSource(source, "sample.ts");
+  const elapsed = Date.now() - started;
+  assert.ok(elapsed < REDOS_BUDGET_MS, `${label} took ${elapsed}ms, over the ${REDOS_BUDGET_MS}ms budget`);
+  console.log(`ok   ${label} does not backtrack (${elapsed}ms)`);
+}
+
 const positioned = lintSource("const ok = 1;\nconst copy = JSON.parse(JSON.stringify(ok));\n", "sample.ts");
 assert.equal(positioned.length, 1);
 assert.equal(positioned[0].line, 2);
 assert.equal(positioned[0].rule, "no-json-clone");
 console.log("ok   reports correct line numbers");
+
+// SKILL.md's rule list is the only inventory an agent reads, and it had drifted
+// to naming two rules that no longer exist while omitting twelve that do.
+const ruleNames = (text) => new Set([...text.matchAll(/(?:\bname|\brule):\s*"([a-z0-9-]+)"/gu)].map((m) => m[1]));
+const implemented = ruleNames(readFileSync(join(here, "check.mjs"), "utf8"));
+const documented = new Set(
+  [...readFileSync(join(here, "..", "SKILL.md"), "utf8").matchAll(/`([a-z][a-z0-9-]+)`/gu)]
+    .map((m) => m[1])
+    .filter((name) => /^(?:no|require)-/u.test(name)),
+);
+assert.deepEqual(
+  [...implemented].filter((name) => !documented.has(name)).sort(), [],
+  "SKILL.md is missing rules the checker implements",
+);
+assert.deepEqual(
+  [...documented].filter((name) => !implemented.has(name)).sort(), [],
+  "SKILL.md names rules the checker does not implement",
+);
+console.log(`ok   SKILL.md lists exactly the ${implemented.size} implemented rules`);
 
 if (failures > 0) {
   console.error(`\n${failures} test(s) failed`);

@@ -16,7 +16,7 @@ write flag files, or persist anything.
 | Level | Trigger | What changes |
 |-------|---------|-------------|
 | **Lite** | `/lazy lite` | Build what's asked, name the lazier alternative in one line. |
-| **Full** | `/lazy` | The ladder enforced: YAGNI → stdlib → native → one line → minimum. Default. |
+| **Full** | `/lazy full` | The ladder enforced: YAGNI → stdlib → native → one line → minimum. Default. |
 | **Ultra** | `/lazy ultra` | YAGNI extremist. Deletion before addition. Challenges requirements before building. |
 
 Level sticks until changed or session end.
@@ -41,8 +41,8 @@ description.
 
 ## Deactivate
 
-Say "stop lazy" or "normal mode". Resume anytime with `/lazy`.
-`/lazy off` also works.
+Say "stop lazy" or "normal mode". Resume anytime with `/lazy full`.
+`/lazy off` also works. Bare `/lazy` only reports the live level.
 
 ## Configure Default Mode
 
@@ -59,7 +59,7 @@ export LAZY_DEFAULT_MODE=ultra
 ```
 
 Set `"off"` to disable auto-activation on session start, activate manually
-with `/lazy` when wanted.
+with `/lazy lite|full|ultra` when wanted.
 
 Resolution: env var > config file > `full`.
 

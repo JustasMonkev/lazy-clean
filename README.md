@@ -98,7 +98,7 @@ Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `
 
 The plugin ships a statusline script that shows the active level (`[LAZY]`, `[LAZY:ULTRA]`). It is not wired up automatically: on first session the hook offers to add a `statusLine` entry to your `settings.json` pointing at `hooks/lazy-statusline.sh` (or `.ps1` on Windows), and it makes that offer at most once.
 
-Hide the badge while keeping lazy active with `LAZY_HIDE_STATUS=1`, or `"hideStatus": true` in `~/.config/lazy/config.json` (`%APPDATA%\lazy\config.json` on Windows). `LAZY_QUIET_STARTUP=1` silences the startup toast the same way.
+Hide the badge while keeping lazy active with `LAZY_HIDE_STATUS=1`, or `"hideStatus": true` in `~/.config/lazy/config.json` (`%APPDATA%\lazy\config.json` on Windows).
 
 ## Disable
 

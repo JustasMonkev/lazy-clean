@@ -182,6 +182,13 @@ function maskSource(source, { jsx = false } = {}) {
   const resumeAfterHole = (hole, index) => {
     jsxElementDepth = hole.elementDepth;
     if (hole.kind === "template") return consumeTemplateBody(index);
+    if (hole.kind === "attribute") {
+      jsxTagAngles = hole.tagAngles;
+      jsxTagBraceDepth = hole.tagBraceDepth;
+      jsxTagClosing = hole.tagClosing;
+      jsxTagNests = hole.tagNests;
+      return index;
+    }
     return jsxElementDepth > 0 ? consumeJsxText(index) : index;
   };
 
@@ -266,6 +273,21 @@ function maskSource(source, { jsx = false } = {}) {
       continue;
     }
     if (c === "{") {
+      // An attribute hole is expression context, like a template or text hole.
+      // Standing the tag state aside is what lets a `<` inside it open a tag:
+      // while it stayed set, a nested `<Tooltip>Delete as stale</Tooltip>` in a
+      // render prop was never recognized and its prose reached the rules.
+      if (jsx && jsxTagAngles >= 0 && braceDepth === jsxTagBraceDepth) {
+        holes.push({
+          depth: braceDepth, kind: "attribute", elementDepth: jsxElementDepth,
+          tagAngles: jsxTagAngles, tagBraceDepth: jsxTagBraceDepth,
+          tagClosing: jsxTagClosing, tagNests: jsxTagNests,
+        });
+        jsxTagAngles = -1;
+        jsxElementDepth = 0;
+        i += 1;
+        continue;
+      }
       braceDepth += 1;
       i += 1;
       continue;
@@ -417,9 +439,14 @@ const SLOP_NAME_PATTERN =
 // was cloned from still sitting in the same file, so require that sibling.
 const VERSIONED_NAME_PATTERN = /^(.+?)(?:Final|Updated|Fixed|New|Old|Copy|Temp|V\d+|_v\d+)$/u;
 
-// "shape" is the domain in geometry, canvas, and tensor code.
+// "shape" is the domain in geometry, canvas, and tensor code. Read over the
+// whole file, because a `ShapeLayer` class sits well below the union that gives
+// it meaning — but only words that are unambiguously geometric. This list once
+// carried `path`, `render` and `draw`, which appear as identifiers in most
+// server and React files and disarmed the rule everywhere; narrowing the read
+// to a few lines instead traded that for missing the domain context above.
 const GEOMETRY_CONTEXT_PATTERN =
-  /\b(?:radius|width|height|circle|rect|rectangle|polygon|polyline|path|point|vertex|vertices|svg|canvas|geometry|bbox|tensor|dims?|draw|render)\b/iu;
+  /\b(?:radius|circle|rect|rectangle|polygon|polyline|vertex|vertices|svg|canvas|geometry|bbox|tensor)\b/iu;
 
 const FILLER_COMMENT_PATTERN = new RegExp(
   [
@@ -594,6 +621,7 @@ const SLOP_DECLARATION_PATTERN = /\b(?:function|const|let|var|class|interface|ty
 
 function* iterateLineFindings(ctx) {
   const { maskedLines, isTypeScript } = ctx;
+  const isGeometryFile = maskedLines.some((line) => GEOMETRY_CONTEXT_PATTERN.test(line));
   for (let index = 0; index < maskedLines.length; index += 1) {
     const line = maskedLines[index];
     if (!line.trim()) continue;
@@ -618,7 +646,7 @@ function* iterateLineFindings(ctx) {
           message: `"${name}" is named after the edit, not the domain. Rename it for its role and delete the version it replaced.`,
         };
       }
-      if (name.toLowerCase().includes("shape") && !ctx.isGeometry) {
+      if (name.toLowerCase().includes("shape") && !isGeometryFile) {
         yield {
           line: lineNumber,
           column: match.index + match[0].indexOf(name) + 1,
@@ -636,7 +664,7 @@ function* iterateBlockFindings(ctx) {
   const hasCommentInRange = (start, end) =>
     comments.some((comment) => comment.start >= start && comment.start < end);
 
-  for (const match of masked.matchAll(/\bcatch\s*\(\s*([\w$]+)\s*\)\s*\{\s*throw\s+\1\s*;?\s*\}/gu)) {
+  for (const match of masked.matchAll(/\bcatch\s*\(\s*([\w$]+)\s*(?::[^)]*)?\)\s*\{\s*throw\s+\1\s*;?\s*\}/gu)) {
     yield {
       ...offsetToPosition(lineStarts, match.index),
       rule: "no-useless-rethrow",
@@ -666,16 +694,19 @@ function* iterateBlockFindings(ctx) {
 }
 
 // `import {` / `export {` opening a specifier list that continues on later
-// lines. Anything with a paren is a declaration (`export function f() {`), not
-// a specifier list — treating those as one skipped the whole function body.
-const SPECIFIER_LIST_OPEN = /^\s*(?:import|export)\b[^(){}]*\{[^}]*$/u;
+// lines. Only real specifier-list syntax counts: matching any export ending in
+// `{` made `export const cfg = {` skip every line down to its closing brace.
+const SPECIFIER_LIST_OPEN = /^\s*(?:import|export)\s*(?:type\s+)?(?:[\w$*]+\s*,\s*)?\{[^}()]*$/u;
 const MODULE_STATEMENT = /^\s*import\b|^\s*export\s*(?:type\s+)?[{*]/u;
 
 // `as` followed by something type-shaped and then a real terminator. Without
 // the terminator, English prose in JSX text ("served as static assets") and
 // every multi-word sentence containing "as" was reported as a type assertion.
+// The operand prefix is anchored to an identifier start and needs real
+// whitespace before `as`: written as `([\w$]+)?\s*` it backtracked O(n^2) and
+// spent 9s on one long line, which this runs on after every edit.
 const TYPE_ASSERTION_PATTERN =
-  /([\w$]+)?\s*\bas\s+(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<[^<>]*>)?(?:\[\])*\s*(?=[;,)\]}=&|?:]|$)/u;
+  /(?:(?<![\w$.])([\w$]+)\s+)?\bas\s+(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<(?:[^<>]|<[^<>]*>)*>)?(?:\[\])*\s*(?=[;,)\]}=&|?:]|$)/u;
 
 
 // Multi-line shapes matched against the masked source. Each was measured
@@ -800,6 +831,7 @@ function* iterateAssertionFindings(ctx) {
   let inSpecifierList = false;
   for (let index = 0; index < maskedLines.length; index += 1) {
     const line = maskedLines[index];
+    if (!line.trim()) continue;
     if (inSpecifierList) {
       if (line.includes("}")) inSpecifierList = false;
       continue;
@@ -820,7 +852,10 @@ function* iterateAssertionFindings(ctx) {
     if (!hasSafetyComment) {
       yield {
         line: lineNumber,
-        column: match.index + (match[0].length - match[0].replace(/^\s*[\w$]*\s*/u, "").length) + 1,
+        // Point at the `as` itself: the operand is optional in the pattern, so
+        // measuring from the match start moved the column onto the type name
+        // for `foo.bar as Baz`, where the operand is not captured.
+        column: match.index + /\bas\s/u.exec(match[0]).index + 1,
         rule: "require-safety-comment-for-type-assertion",
         message: "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion, or remove it.",
       };
@@ -936,15 +971,11 @@ export function lintSource(rawSource, filePath) {
   // every column on that line by one.
   const source = rawSource.charCodeAt(0) === 0xfeff ? rawSource.slice(1) : rawSource;
   const { masked, comments } = maskSource(source, { jsx: JSX_EXTENSIONS.has(extension) });
-  // Whole-file, not per-line: `export type Shape =` carries no geometry words
-  // on its own line, but the union below it does.
-  const isGeometry = GEOMETRY_CONTEXT_PATTERN.test(masked);
   const declaredNames = new Set();
   for (const match of masked.matchAll(SLOP_DECLARATION_PATTERN)) declaredNames.add(match[1]);
   const ctx = {
     path: filePath,
     declaredNames,
-    isGeometry,
     isTypeScript: TYPESCRIPT_EXTENSIONS.has(extension),
     masked,
     maskedLines: masked.split("\n"),
@@ -970,6 +1001,11 @@ export function lintSource(rawSource, filePath) {
 // CLI
 // ---------------------------------------------------------------------------
 
+// Case-folded on the platforms where the filesystem is: otherwise
+// `check.mjs src/a.ts SRC/A.TS` lints one file twice on Windows and macOS.
+const pathKey = (target) =>
+  process.platform === "win32" || process.platform === "darwin" ? target.toLowerCase() : target;
+
 function collectFiles(entry, scan) {
   let stats;
   try {
@@ -980,6 +1016,16 @@ function collectFiles(entry, scan) {
     return;
   }
   if (stats.isDirectory()) {
+    // `ln -s . dir/self` recursed until ELOOP, then reported the whole tree as
+    // unreadable (exit 2) and counted the same files once per loop turn.
+    let real;
+    try {
+      real = realpathSync(entry);
+    } catch {
+      real = resolve(entry);
+    }
+    if (scan.seenDirs.has(pathKey(real))) return;
+    scan.seenDirs.add(pathKey(real));
     for (const name of readdirSync(entry)) {
       if (SKIPPED_DIRECTORIES.has(name)) continue;
       collectFiles(join(entry, name), scan);
@@ -994,10 +1040,7 @@ function collectFiles(entry, scan) {
   if (!SOURCE_EXTENSIONS.has(suffix) || entry.toLowerCase().endsWith(".d.ts")) return;
   // The same file can arrive twice (listed explicitly and again via its
   // directory); linting it twice would double every finding and the count.
-  // Case-folded on the platforms where the filesystem is: otherwise
-  // `check.mjs src/a.ts SRC/A.TS` lints one file twice on Windows and macOS.
-  const resolved = resolve(entry);
-  const key = process.platform === "win32" || process.platform === "darwin" ? resolved.toLowerCase() : resolved;
+  const key = pathKey(resolve(entry));
   if (scan.seen.has(key)) return;
   scan.seen.add(key);
   scan.files.push(entry);
@@ -1011,6 +1054,22 @@ function displayPath(file) {
   return isAbsolute(file) ? file : relative(process.cwd(), file) || file;
 }
 
+const QUOTED_PATH_ESCAPES = {
+  a: "\x07", b: "\b", f: "\f", n: "\n", r: "\r", t: "\t", v: "\v", "\\": "\\", '"': '"',
+};
+
+// The path out of a `+++ b/...` header. Git appends a TAB after a path holding
+// a space, and quotes any path with a control character, a quote, or a
+// backslash; with core.quotepath=false an octal escape is always one ASCII byte.
+function diffTargetPath(target) {
+  const raw = target.replace(/\t$/u, "");
+  const unquoted = raw.length > 1 && raw.startsWith('"') && raw.endsWith('"')
+    ? raw.slice(1, -1).replace(/\\([0-7]{3}|[\s\S])/gu, (_, escape) =>
+      escape.length === 3 ? String.fromCharCode(parseInt(escape, 8)) : QUOTED_PATH_ESCAPES[escape] ?? escape)
+    : raw;
+  return unquoted.replace(/^b\//u, "");
+}
+
 // Line numbers the diff against `ref` added, per absolute path. Git already
 // stores the baseline, so adopting the checker on an existing repo needs no
 // baseline file to generate, refresh, or drift.
@@ -1019,11 +1078,17 @@ function addedLines(ref) {
   const root = git(["rev-parse", "--show-toplevel"]).trim();
   const byFile = new Map();
   let lines = null;
-  for (const line of git(["diff", "-U0", "--no-color", ref, "--"]).split("\n")) {
+  // The prefixes are pinned because diff.mnemonicprefix renames `b/` to `w/`,
+  // and quotepath is off so a non-ASCII name arrives verbatim, not C-quoted.
+  const diff = git([
+    "-c", "core.quotepath=false", "diff", "-U0", "--no-color",
+    "--src-prefix=a/", "--dst-prefix=b/", ref, "--",
+  ]);
+  for (const line of diff.split("\n")) {
     if (line.startsWith("+++ ")) {
       const target = line.slice(4);
       lines = target === "/dev/null" ? null : new Set();
-      if (lines) byFile.set(resolve(root, target.replace(/^b\//u, "")), lines);
+      if (lines) byFile.set(resolve(root, diffTargetPath(target)), lines);
       continue;
     }
     const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/u.exec(line);
@@ -1065,7 +1130,7 @@ function main() {
     }
   }
 
-  const scan = { files: [], seen: new Set(), unreadable: 0 };
+  const scan = { files: [], seen: new Set(), seenDirs: new Set(), unreadable: 0 };
   for (const target of targets.length > 0 ? targets : added ? [...added.keys()] : ["."]) {
     collectFiles(target, scan);
   }

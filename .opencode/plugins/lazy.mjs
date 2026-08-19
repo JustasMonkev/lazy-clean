@@ -96,9 +96,17 @@ export default async ({ client } = {}) => {
       // hook. Without this the documented command silently did nothing here.
       if (args[0] === 'default') {
         const persisted = normalizeMode(args[1]);
-        log('info', persisted
-          ? 'lazy default ' + (writeDefaultMode(persisted) || persisted)
-          : 'lazy: "' + (args[1] || '') + '" is not a default level (off|lite|full|ultra)');
+        if (!persisted) {
+          log('info', 'lazy: "' + (args[1] || '') + '" is not a default level (off|lite|full|ultra)');
+          return;
+        }
+        // An unwritable config directory threw straight into OpenCode's hook
+        // runner; the Claude tracker already catches this case and reports it.
+        try {
+          log('info', 'lazy default ' + (writeDefaultMode(persisted) || persisted));
+        } catch (e) {
+          log('error', 'lazy: could not write the default (' + e.message + ')');
+        }
         return;
       }
 
@@ -118,8 +126,12 @@ export default async ({ client } = {}) => {
         log('info', 'lazy: unknown level "' + args[0] + '" — use lite|full|ultra|off');
         return;
       }
-      writeMode(mode);
-      log('info', 'lazy ' + mode);
+      try {
+        writeMode(mode);
+        log('info', 'lazy ' + mode);
+      } catch (e) {
+        log('error', 'lazy: could not switch to ' + mode + ' (' + e.message + ')');
+      }
     },
   };
 };

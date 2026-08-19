@@ -3,12 +3,24 @@
 flag="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.lazy-active"
 [ -f "$flag" ] || exit 0
 
+# String.prototype.trim() + toLowerCase(), so this and lazy-config.js normalize
+# a value identically. Interior whitespace survives, which is what makes "f alse"
+# and a multi-line flag file invalid in both.
+normalize() {
+    local value="$1"
+    value="${value#"${value%%[![:space:]]*}"}"
+    value="${value%"${value##*[![:space:]]}"}"
+    printf '%s' "$value" | tr '[:upper:]' '[:lower:]'
+}
+
 # Hide the badge while leaving lazy active. LAZY_HIDE_STATUS wins over the
-# stored preference; 0/false/no/empty mean "don't hide". `+set` distinguishes
-# empty from unset, and the value is trimmed and lowercased, so this agrees
-# with getHideStatus in lazy-config.js on every input.
+# stored preference; 0/false/no/empty mean "don't hide", and `+set` tells empty
+# from unset — that path matches getHideStatus exactly. The config fallback is a
+# grep, not a JSON parse, so it can disagree with getHideStatus on a nested,
+# multi-line, or invalid config, and it reads $APPDATA on every platform where
+# getConfigDir() resolves exactly one directory.
 if [ -n "${LAZY_HIDE_STATUS+set}" ]; then
-    hide=$(printf '%s' "$LAZY_HIDE_STATUS" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
+    hide=$(normalize "$LAZY_HIDE_STATUS")
     case "$hide" in
         ''|0|false|no) ;;
         *) exit 0 ;;
@@ -20,7 +32,10 @@ else
     done
 fi
 
-mode=$(head -n1 "$flag" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')
+# The whole file, not its first line: readMode() trims the whole file and
+# rejects whatever is left over, so `ultra\nanything` is off there and must not
+# paint a badge here either.
+mode=$(normalize "$(<"$flag")")
 # The flag file is hand-editable, and its contents used to reach the prompt
 # verbatim — escape sequences and all. Anything that is not a level is not one.
 case "$mode" in

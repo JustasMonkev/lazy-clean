@@ -102,25 +102,6 @@ function getDefaultMode() {
   return DEFAULT_MODE;
 }
 
-// Silence the pi "Lazy loaded" startup toast while keeping lazy active.
-// LAZY_QUIET_STARTUP=1 (or any truthy value; 0/false/empty mean "show it")
-// takes precedence, else config.quietStartup === true. Mirrors getHideStatus.
-function getQuietStartup() {
-  const env = process.env.LAZY_QUIET_STARTUP;
-  if (env !== undefined) {
-    const v = env.trim().toLowerCase();
-    return v !== '' && v !== '0' && v !== 'false' && v !== 'no';
-  }
-  try {
-    const config = JSON.parse(fs.readFileSync(getConfigPath(), 'utf8').replace(/^\uFEFF/, ''));
-    return config.quietStartup === true;
-  } catch (_) {
-    // No config, no preference: the toast shows. Absence is a real answer here,
-    // not a swallowed failure.
-    return false;
-  }
-}
-
 // Hide the status-bar indicator while keeping lazy active (#324).
 // LAZY_HIDE_STATUS=1 (or any truthy value; 0/false/empty mean "don't hide")
 // takes precedence, else config.hideStatus === true.
@@ -186,7 +167,6 @@ module.exports = {
   getConfigPath,
   getClaudeDir,
   getHideStatus,
-  getQuietStartup,
   isShellSafe,
   normalizeMode,
   normalizeConfigMode,

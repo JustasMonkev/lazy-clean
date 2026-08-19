@@ -37,13 +37,15 @@ function finish() {
     let notice = null;
     let modeSwitched = false;
     let deactivated = false;
+    // Outer scope because Qoder initializes the mode further down and has to
+    // re-answer a bare `/lazy` from the level that initialization produced.
+    let isReportOnly = false;
     if (/^[/@$]lazy/.test(prompt)) {
       const parts = prompt.split(/\s+/);
       const cmd = parts[0].replace(/^[@$]/, '/');
       const arg = parts[1] || '';
 
       let mode = null;
-      let isReportOnly = false;
       let handled = false;
 
       if (cmd === '/lazy-review' || cmd === '/lazy:lazy-review') {
@@ -122,6 +124,14 @@ function finish() {
         if (currentMode !== 'off') {
           try { setMode(currentMode); } catch (e) { /* best-effort: the ruleset below still goes out */ }
         }
+      }
+      // The report-only notice above was computed before this initialization
+      // ran, so a bare `/lazy` on the first Qoder prompt said OFF in the same
+      // message that turned lazy on. Answer from the level that is live now.
+      if (isReportOnly) {
+        notice = currentMode && currentMode !== 'off'
+          ? 'LAZY MODE ACTIVE — level: ' + currentMode
+          : 'LAZY MODE OFF — start with /lazy lite|full|ultra.';
       }
       if (currentMode && currentMode !== 'off') {
         writeHookOutput('UserPromptSubmit', currentMode,

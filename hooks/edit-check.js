@@ -8,8 +8,11 @@ const { spawnSync } = require('child_process');
 
 const CHECKER = path.join(__dirname, '..', 'skills', 'slop-check', 'scripts', 'check.mjs');
 const EXTS = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs']);
-// Block rules report at the `catch`/`try` above the body that was edited.
-const PAD = 1;
+// Block rules report at the `catch`/`try` line, which can sit several lines
+// above the body that was edited — with one line of headroom the finding the
+// edit had just created fell outside the range and the hook printed nothing.
+const PAD_UP = 3;
+const PAD_DOWN = 1;
 // A findings list past this is not review context, it is a wall. The file is
 // still there to scan in full if the agent wants the rest.
 const MAX_REPORTED = 40;
@@ -33,10 +36,12 @@ function writtenRanges(toolInput, content) {
     const at = content.indexOf(text);
     if (at === -1) return null;
     if (!edit.replace_all && at !== content.lastIndexOf(text)) return null;
-    const height = text.split('\n').length;
+    // A trailing newline is the end of the last written line, not a line of
+    // its own: without this a one-line edit claimed the line below it too.
+    const height = text.split('\n').length - (text.endsWith('\n') ? 1 : 0);
     for (let from = at; from !== -1; from = content.indexOf(text, from + text.length)) {
       const start = content.slice(0, from).split('\n').length;
-      ranges.push([start - PAD, start + height - 1 + PAD]);
+      ranges.push([start - PAD_UP, start + height - 1 + PAD_DOWN]);
       if (!edit.replace_all) break;
     }
   }
@@ -93,7 +98,7 @@ function finish() {
       render(shown) +
       (truncated > 0 ? `\n(${truncated} more on these lines, not listed.)` : '') +
       (elsewhere > 0
-        ? `\n(${elsewhere} further finding${elsewhere === 1 ? '' : 's'} elsewhere in this file predate${elsewhere === 1 ? 's' : ''} this edit — out of scope, leave them alone.)`
+        ? `\n(${elsewhere} further finding${elsewhere === 1 ? '' : 's'} elsewhere in this file, not attributed to this edit.)`
         : '');
 
     process.stdout.write(JSON.stringify({
