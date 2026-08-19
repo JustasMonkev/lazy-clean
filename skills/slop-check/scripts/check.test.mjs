@@ -107,6 +107,30 @@ expectRule(
   "export namespace API {\n  export const cfg = raw as Config;\n}",
   "require-safety-comment-for-type-assertion",
 );
+// Requiring a type NAME meant every anonymous form walked past: these are the
+// shapes an inline narrowing actually takes.
+expectRule("flags an object-literal type assertion", "const a = payload as { id: string };", "require-safety-comment-for-type-assertion");
+expectRule("flags a tuple type assertion", "const a = payload as [string, number];", "require-safety-comment-for-type-assertion");
+expectRule("flags a function type assertion", "const a = payload as () => void;", "require-safety-comment-for-type-assertion");
+expectRule("flags a typeof type assertion", "const a = payload as typeof User;", "require-safety-comment-for-type-assertion");
+// The catch exemption is scoped to the handler. An expression-bodied handler
+// has no block, and falling back to the whole file let one `.catch(e => f(e))`
+// exempt every later variable named `error`.
+expectRule(
+  "an expression-bodied catch handler does not exempt the rest of the file",
+  "promise.catch(error => handle(error));\nfunction parse(error) { return error as User; }",
+  "require-safety-comment-for-type-assertion",
+);
+expectNoRule(
+  "still allows narrowing inside an expression-bodied catch handler",
+  "promise.catch(error => report(error as Error));",
+  "require-safety-comment-for-type-assertion",
+);
+expectNoRule(
+  "still allows narrowing inside a block catch handler",
+  "try { run(); } catch (error) { report(error as Error); }",
+  "require-safety-comment-for-type-assertion",
+);
 expectNoRule(
   "allows aliases in a multi-line import list",
   'import {\n  readFile as read,\n  writeFile as write,\n} from "node:fs/promises";',
@@ -592,6 +616,20 @@ const nullish = lintSource("const value = input ?? undefined;", "sample.ts");
 assert.equal(nullish[0].severity, "review");
 assert.match(nullish[0].message, /can be `null`/u);
 console.log("ok   ?? undefined is a review finding, not a mechanical one");
+
+// The mechanical tier means "this exact replacement preserves behaviour". Three
+// rules were sure the code was wrong but could not name such a replacement, and
+// printing them as one-answer fixes is how correct code got rewritten.
+for (const [source, rule, why] of [
+  ["const copy = JSON.parse(JSON.stringify(state));", "no-json-clone", "structuredClone keeps a Date a Date"],
+  ["const value = await Promise.resolve(input);", "no-await-promise-resolve", "dropping the wrapper drops a tick"],
+  ["const user = value as unknown as User;", "no-chained-type-assertions", "parse-instead is a design, not a rewrite"],
+]) {
+  const found = lintSource(source, "sample.ts").find((f) => f.rule === rule);
+  assert.ok(found, `${rule} did not fire on its own sample`);
+  assert.equal(found.severity, "review", `${rule} is mechanical, but ${why}`);
+  console.log(`ok   ${rule} is a review finding (${why})`);
+}
 
 // A comment finding is reported at the opener, but the text that triggered it
 // can sit many lines below — both --since and the hook scope by written line.

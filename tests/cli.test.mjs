@@ -141,12 +141,15 @@ check("--json emits parseable findings and stays quiet otherwise", () => {
 });
 
 check("findings are grouped by whether the fix needs judgment", () => {
-  write("mixed.ts", "const copy = JSON.parse(JSON.stringify(state));\nconst user = payload as User;\n");
+  // Dropping `!!` in a condition is the whole fix and changes nothing else,
+  // which is what the mechanical tier claims; the assertion below needs a human.
+  write("mixed.ts", "if (!!ready) { go(); }\nconst copy = JSON.parse(JSON.stringify(state));\nconst user = payload as User;\n");
   const result = run(["mixed.ts"]);
   const fix = result.stdout.indexOf("Fix (mechanical");
   const review = result.stdout.indexOf("Review (heuristic");
   assert.ok(fix >= 0 && review > fix, result.stdout);
-  assert.ok(result.stdout.indexOf("no-json-clone") < review, "mechanical findings come first");
+  assert.ok(result.stdout.indexOf("no-double-negation-condition") < review, "mechanical findings come first");
+  assert.ok(result.stdout.indexOf("no-json-clone") > review, "a clone that is not equivalent is not mechanical");
 });
 
 check("--summary prints only the per-rule tally", () => {

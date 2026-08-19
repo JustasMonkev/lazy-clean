@@ -100,6 +100,17 @@ export default async ({ client } = {}) => {
           log('info', 'lazy: "' + (args[1] || '') + '" is not a default level (off|lite|full|ultra)');
           return;
         }
+        // Pin the level this session is actually running at before moving the
+        // default out from under it. With no state file, readMode() derives the
+        // live level from the config default, so `/lazy default off` used to
+        // switch off the session that ran it — a command about later sessions
+        // silently changed this one.
+        const live = readMode();
+        try {
+          if (!fs.existsSync(statePath)) writeMode(live);
+        } catch (e) {
+          log('error', 'lazy: could not pin the current level (' + e.message + ')');
+        }
         // An unwritable config directory threw straight into OpenCode's hook
         // runner; the Claude tracker already catches this case and reports it.
         try {

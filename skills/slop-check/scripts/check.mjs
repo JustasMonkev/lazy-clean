@@ -579,7 +579,7 @@ const LINE_RULES = [
   {
     name: "no-json-clone",
     pattern: /\bJSON\s*\.\s*parse\s*\(\s*JSON\s*\.\s*stringify\b/u,
-    message: "`JSON.parse(JSON.stringify(...))` is a lossy, slow clone. Use `structuredClone`, or copy the fields you need.",
+    message: "`JSON.parse(JSON.stringify(...))` is a lossy, slow clone: it drops undefined and functions, and turns a Date into a string. `structuredClone` keeps those — check that is what you want before swapping — or copy the fields you need.",
   },
   {
     name: "no-redundant-fallback",
@@ -689,7 +689,7 @@ function* iterateBlockFindings(ctx) {
     yield {
       ...matchSpan(lineStarts, match),
       rule: "no-useless-rethrow",
-      message: "A catch that only rethrows is dead weight. Delete the try/catch or actually handle the error.",
+      message: "A catch that only rethrows is dead weight. Delete the try/catch, keeping any `finally` block, or actually handle the error.",
     };
   }
 
@@ -720,6 +720,20 @@ function* iterateBlockFindings(ctx) {
 const SPECIFIER_LIST_OPEN = /^\s*(?:import|export)\s*(?:type\s+)?(?:[\w$*]+\s*,\s*)?\{[^}()]*$/u;
 const MODULE_STATEMENT = /^\s*import\b|^\s*export\s*(?:type\s+)?[{*]/u;
 
+// A type name: `User`, `A.B`, `Map<string, User>`. `as const` and the two
+// top types are excluded — they are assertions the rule does not ask about.
+const NAMED_TYPE = String.raw`(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<(?:[^<>]|<[^<>]*>)*>)?`;
+// The anonymous type forms. Requiring a name meant `payload as { id: string }`,
+// `as [string, number]`, `as () => void` and `as typeof User` were all missed,
+// which are exactly the shapes hand-written narrowing reaches for. `typeof`
+// leads so the named alternative cannot claim the keyword and stop there.
+const ASSERTED_TYPE = [
+  String.raw`typeof\s+${NAMED_TYPE}`,
+  String.raw`\((?:[^()]*)\)\s*=>\s*(?:${NAMED_TYPE}|\{[^{}]*\})`,
+  String.raw`\{[^{}]*\}`,
+  String.raw`\[[^[\]]*\]`,
+  NAMED_TYPE,
+].join("|");
 // `as` followed by something type-shaped and then a real terminator. Without
 // the terminator, English prose in JSX text ("served as static assets") and
 // every multi-word sentence containing "as" was reported as a type assertion.
@@ -727,8 +741,10 @@ const MODULE_STATEMENT = /^\s*import\b|^\s*export\s*(?:type\s+)?[{*]/u;
 // whitespace before `as`: written as `([\w$]+)?\s*` it backtracked O(n^2) and
 // spent 9s on one long line, which this runs on after every edit.
 // Global: every assertion on the line is examined, not just the first.
-const TYPE_ASSERTION_PATTERN =
-  /(?:(?<![\w$.])([\w$]+)\s+)?\bas\s+(?:readonly\s+)?(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<(?:[^<>]|<[^<>]*>)*>)?(?:\[\])*\s*(?=[;,)\]}=&|?:]|$)/gu;
+const TYPE_ASSERTION_PATTERN = new RegExp(
+  String.raw`(?:(?<![\w$.])([\w$]+)\s+)?\bas\s+(?:readonly\s+)?(?:${ASSERTED_TYPE})(?:\[\])*\s*(?=[;,)\]}=&|?:]|$)`,
+  "gu",
+);
 
 
 // Multi-line shapes matched against the masked source. Each was measured
@@ -815,7 +831,7 @@ function* iterateCandidateFindings(ctx) {
     yield {
       ...matchSpan(lineStarts, match),
       rule: "no-promise-constructor-wrapper",
-      message: "Wrapping a value in `new Promise` to resolve it immediately is `Promise.resolve` with extra steps. Return the value from an async function.",
+      message: "Wrapping a value in `new Promise` to resolve it immediately is `Promise.resolve` with extra steps. Call `Promise.resolve(value)`, or return the value from an async function.",
     };
   }
 
@@ -841,23 +857,34 @@ function* iterateAssertionFindings(ctx) {
   // variable that happened to be called `error` out of the handler entirely.
   const catchBindings = new Map();
   if (/\bcatch\s*\(\s*[\w$]/u.test(masked)) {
-    // One pass pairs every brace, so a handler's extent is a lookup. Rescanning
-    // per handler is quadratic on a file whose braces never close.
-    const closeOf = new Map();
+    // One pass pairs every brace and paren, so a handler's extent is a lookup.
+    // Rescanning per handler is quadratic on a file whose braces never close.
+    const closeBrace = new Map();
+    const closeParen = new Map();
     const openBraces = [];
+    const openParens = [];
     for (let k = 0; k < masked.length; k += 1) {
       if (masked[k] === "{") openBraces.push(k);
-      else if (masked[k] === "}" && openBraces.length) closeOf.set(openBraces.pop(), k);
+      else if (masked[k] === "}" && openBraces.length) closeBrace.set(openBraces.pop(), k);
+      else if (masked[k] === "(") openParens.push(k);
+      else if (masked[k] === ")" && openParens.length) closeParen.set(openParens.pop(), k);
     }
     for (const binding of masked.matchAll(/\bcatch\s*\(\s*([\w$]+)/gu)) {
-      // The body of `catch (e) {` and of `.catch(e => {` is the next brace, and
-      // nothing between may end a statement. Any other shape (`.catch(e => f(e))`)
-      // has no block to bound, so it keeps the old file-wide exemption.
       const from = binding.index + binding[0].length;
+      // `catch (`'s own parenthesis. For `catch (e) { ... }` it closes right
+      // after the binding; for `.catch(e => ...)` it closes at the end of the
+      // call, which bounds an expression-bodied handler that has no block.
+      const argsEnd = closeParen.get(binding.index + binding[0].indexOf("(")) ?? masked.length;
+      // A block body is either the arrow's, inside those parens, or the
+      // statement `catch`'s, immediately after them. Anything else — chiefly
+      // `.catch(e => f(e))` — ends with the call. Falling back to the file
+      // meant one expression-bodied handler exempted every later `error`.
       const brace = masked.indexOf("{", from);
-      const end = brace !== -1 && !/[;}]/u.test(masked.slice(from, brace))
-        ? closeOf.get(brace) ?? masked.length
-        : masked.length;
+      const isArrowBlock = brace !== -1 && brace < argsEnd && !/[;}]/u.test(masked.slice(from, brace));
+      const isCatchBlock = brace !== -1 && brace > argsEnd && !masked.slice(argsEnd + 1, brace).trim();
+      const end = isArrowBlock || isCatchBlock
+        ? closeBrace.get(brace) ?? masked.length
+        : argsEnd;
       const range = [
         offsetToPosition(lineStarts, binding.index).line,
         offsetToPosition(lineStarts, end).line,
@@ -1022,11 +1049,21 @@ function* iterateCommentFindings(ctx) {
 // finding is a heuristic prompt where "this is deliberate, leaving it" is a
 // legitimate answer — the distinction the flat list used to hide, which pushed
 // agents into rewriting correct code to clear the list.
+//
+// The bar for entry, and the only thing that keeps this set from drifting back
+// into a severity ranking: the rule's message must name a replacement that
+// preserves behaviour in EVERY case the rule fires. "Do something better here"
+// is review, however certain the rule is that the code is wrong. Three rules
+// were demoted against this bar — `no-json-clone` (structuredClone keeps a Date
+// a Date and ignores toJSON, so it is not the same value), `no-await-promise-
+// resolve` (dropping the wrapper drops a microtask tick), and
+// `no-chained-type-assertions` ("parse or validate instead" is a design, not a
+// rewrite) — so measure a new entry against them, not against how sure you are.
 const MECHANICAL_RULES = new Set([
   "no-boolean-literal-ternary", "no-double-negation-condition",
-  "no-await-promise-resolve", "no-useless-rethrow", "no-json-clone", "no-emoji",
+  "no-useless-rethrow", "no-emoji",
   "no-typed-jsdoc", "no-narration-comments", "no-change-note-comments",
-  "no-chained-type-assertions", "no-boolean-return-branches", "no-let-if-else-assign",
+  "no-boolean-return-branches", "no-let-if-else-assign",
   "no-promise-constructor-wrapper", "no-obvious-doc-comments",
 ]);
 

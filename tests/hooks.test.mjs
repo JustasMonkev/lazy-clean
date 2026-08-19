@@ -892,6 +892,28 @@ const bareLazy = opencodeCommand("", ocLive.env.XDG_CONFIG_HOME);
 eq("a bare /lazy reports the live level", bareLazy.logs, [{ service: "lazy", level: "info", message: "lazy lite" }]);
 eq("a bare /lazy leaves the live level alone", fs.readFileSync(ocState, "utf8"), "lite");
 
+// `/lazy default` is about later sessions. With no state file, readMode()
+// derives the live level from the config default, so `/lazy default off` used
+// to switch the running session off as a side effect.
+const ocDefault = freshHome("opencode-default");
+const ocDefaultState = path.join(ocDefault.env.XDG_CONFIG_HOME, "opencode", ".lazy-active");
+fs.mkdirSync(path.join(ocDefault.env.XDG_CONFIG_HOME, "lazy"), { recursive: true });
+fs.writeFileSync(path.join(ocDefault.env.XDG_CONFIG_HOME, "lazy", "config.json"), JSON.stringify({ defaultMode: "ultra" }));
+const ocDefaultOff = opencodeCommand("default off", ocDefault.env.XDG_CONFIG_HOME);
+ok("/lazy default off records the new default",
+  Array.isArray(ocDefaultOff.logs) && ocDefaultOff.logs.some((l) => l.message === "lazy default off"),
+  JSON.stringify(ocDefaultOff.logs));
+ok("/lazy default off pins the level the session was already running at",
+  fs.existsSync(ocDefaultState) && fs.readFileSync(ocDefaultState, "utf8").trim() === "ultra",
+  fs.existsSync(ocDefaultState) ? fs.readFileSync(ocDefaultState, "utf8") : "<no state file>");
+// An explicit level is the user's choice for this session; leave it be.
+const ocPinned = freshHome("opencode-pinned");
+const ocPinnedState = path.join(ocPinned.env.XDG_CONFIG_HOME, "opencode", ".lazy-active");
+fs.mkdirSync(path.dirname(ocPinnedState), { recursive: true });
+fs.writeFileSync(ocPinnedState, "lite");
+opencodeCommand("default ultra", ocPinned.env.XDG_CONFIG_HOME);
+eq("/lazy default does not overwrite an explicit session level", fs.readFileSync(ocPinnedState, "utf8"), "lite");
+
 // One drift guard over every command template, not just /lazy: the help card
 // carried the same stale claim that an omitted level means full, which sent the
 // agent to work at full while the transform injected the persisted level. Both
