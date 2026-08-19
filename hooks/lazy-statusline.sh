@@ -26,9 +26,13 @@ if [ -n "${LAZY_HIDE_STATUS+set}" ]; then
         *) exit 0 ;;
     esac
 else
+    # getConfigDir() reads exactly ONE directory, so stop at the first config
+    # that exists instead of letting a second one override it: bash cannot see
+    # process.platform, and $APPDATA is only that directory on Windows.
     for config in "${XDG_CONFIG_HOME:-$HOME/.config}/lazy/config.json" "${APPDATA:+$APPDATA/lazy/config.json}"; do
         [ -n "$config" ] && [ -f "$config" ] || continue
         grep -q '"hideStatus"[[:space:]]*:[[:space:]]*true' "$config" && exit 0
+        break
     done
 fi
 

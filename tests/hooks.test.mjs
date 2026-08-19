@@ -815,6 +815,22 @@ e = editCheck({ tool_name: "Edit", tool_input: { file_path: blockTs, old_string:
 ok("an Edit inside a catch block reports the block finding it created",
   e.stdout.includes("block.ts:4") && e.stdout.includes("no-log-and-rethrow"), e.stdout);
 
+// A block rule reports at the keyword that opens the block; the body can sit
+// arbitrarily far below it, which a fixed line offset cannot follow.
+const spacedTs = write("spaced.ts",
+  "export function run() {\n  try {\n    work();\n  } catch (e) {\n\n\n\n\n    return null;\n  }\n}\n");
+e = editCheck({ tool_name: "Edit", tool_input: { file_path: spacedTs, old_string: "x", new_string: "    return null;" } });
+ok("an Edit deep inside a catch block still reports the block finding it created",
+  e.stdout.includes("spaced.ts:4") && e.stdout.includes("no-catch-fake-success"), e.stdout);
+
+// The comment rules carry no span: a multi-line JSDoc still reports at its
+// `/**`, so the headroom above the written line is what surfaces it.
+const jsdocTs = write("jsdoc.ts",
+  "/**\n * Combine two numbers.\n * @param {number} a first\n */\nexport function add(a: number, b: number): number {\n  return a + b;\n}\n");
+e = editCheck({ tool_name: "Edit", tool_input: { file_path: jsdocTs, old_string: "x", new_string: " * @param {number} a first" } });
+ok("an Edit inside a multi-line comment still reports the comment finding",
+  e.stdout.includes("jsdoc.ts:1") && e.stdout.includes("no-typed-jsdoc"), e.stdout);
+
 // F: "line\n".split("\n").length is 2, so a one-line edit used to claim the
 // line below it and report a pre-existing finding as the agent's own.
 const trailingTs = write("trailing.ts", "const ok = 1;\nconst mid = 2;\nconst bad: any = 3;\n");
@@ -844,7 +860,7 @@ ok("the cap says how many findings it dropped",
 const ocBox = freshHome("opencode");
 const blockedConfigDir = path.join(SANDBOX, "blocked-opencode");
 fs.writeFileSync(blockedConfigDir, "");
-function opencodeCommand(commandArguments) {
+function opencodeCommand(commandArguments, configHome = blockedConfigDir) {
   const source = `
     import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, ".opencode", "plugins", "lazy.mjs")).href)};
     const logs = [];
@@ -854,7 +870,7 @@ function opencodeCommand(commandArguments) {
   `;
   const res = spawnSync(process.execPath, ["--input-type=module", "-e", source], {
     encoding: "utf8",
-    env: baseEnv({ ...ocBox.env, XDG_CONFIG_HOME: blockedConfigDir }),
+    env: baseEnv({ ...ocBox.env, XDG_CONFIG_HOME: configHome }),
     timeout: 20000,
   });
   return { status: res.status, logs: res.stdout ? JSON.parse(res.stdout) : null, stderr: res.stderr || "" };
@@ -865,6 +881,31 @@ for (const [name, args] of [["a mode switch", "ultra"], ["/lazy default", "defau
   ok(`opencode logs the failed write on ${name}`,
     Array.isArray(res.logs) && res.logs.some((l) => l.level === "error" && /could not/.test(l.message)),
     JSON.stringify(res.logs));
+}
+
+// A bare `/lazy` reports; it must not overwrite the live level with the default.
+const ocLive = freshHome("opencode-live");
+const ocState = path.join(ocLive.env.XDG_CONFIG_HOME, "opencode", ".lazy-active");
+fs.mkdirSync(path.dirname(ocState), { recursive: true });
+fs.writeFileSync(ocState, "lite");
+const bareLazy = opencodeCommand("", ocLive.env.XDG_CONFIG_HOME);
+eq("a bare /lazy reports the live level", bareLazy.logs, [{ service: "lazy", level: "info", message: "lazy lite" }]);
+eq("a bare /lazy leaves the live level alone", fs.readFileSync(ocState, "utf8"), "lite");
+
+// One drift guard over every command template, not just /lazy: the help card
+// carried the same stale claim that an omitted level means full, which sent the
+// agent to work at full while the transform injected the persisted level. Both
+// patterns are negative, so rewording the report sentence stays free.
+{
+  const { parseCommandFile } = require(path.join(ROOT, ".opencode", "plugins", "lazy-frontmatter.cjs"));
+  const commandDir = path.join(ROOT, ".opencode", "command");
+  for (const file of fs.readdirSync(commandDir).filter((name) => name.endsWith(".md"))) {
+    const { template } = parseCommandFile(path.join(commandDir, file));
+    const fallback = template.match(/\b(?:no|without|absent|bare)\b[^.;]*\b(?:use|defaults? to|means|assume)\s+(?:lite|full|ultra|off)\b/i);
+    ok(`${file} names no level for a bare /lazy`, !fallback, fallback && fallback[0]);
+    const equated = template.match(/\/lazy\s*\((?:lite|full|ultra|off)\b/i);
+    ok(`${file} does not equate a bare /lazy with a level`, !equated, equated && equated[0]);
+  }
 }
 
 // --- lazy-activate -----------------------------------------------------------
@@ -1015,6 +1056,19 @@ if (!canRunBash) {
   ok("config hideStatus:false keeps the badge", statusline("ultra").out.includes("[LAZY:ULTRA]"));
   writeConfig(sl, '{"defaultMode":"ultra"}');
   ok("a config without hideStatus keeps the badge", statusline("ultra").out.includes("[LAZY:ULTRA]"));
+
+  // getConfigDir() resolves exactly ONE directory, so a config in a directory it
+  // did not pick must not override the explicit hideStatus:false in the one it did.
+  const appdata = path.join(sl.home, "appdata");
+  fs.mkdirSync(path.join(appdata, "lazy"), { recursive: true });
+  fs.writeFileSync(path.join(appdata, "lazy", "config.json"), '{"hideStatus":true}');
+  writeConfig(sl, '{"hideStatus":false}');
+  ok("a second config dir cannot override the picked dir's hideStatus:false",
+    statusline("ultra", { APPDATA: appdata }).out.includes("[LAZY:ULTRA]"));
+  ok("statusline agrees with getHideStatus when two config dirs disagree",
+    (statusline("ultra", { APPDATA: appdata }).out === "") ===
+      withEnv({ ...sl.env, APPDATA: appdata }, () => config.getHideStatus()));
+  fs.rmSync(path.join(appdata, "lazy", "config.json"), { force: true });
 
   // The shell normalizes the value the same way getHideStatus does, so the
   // badge and the config API cannot disagree about what "hidden" means.

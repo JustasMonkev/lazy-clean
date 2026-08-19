@@ -8,9 +8,10 @@ const { spawnSync } = require('child_process');
 
 const CHECKER = path.join(__dirname, '..', 'skills', 'slop-check', 'scripts', 'check.mjs');
 const EXTS = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs']);
-// Block rules report at the `catch`/`try` line, which can sit several lines
-// above the body that was edited — with one line of headroom the finding the
-// edit had just created fell outside the range and the hook printed nothing.
+// Block rules carry an endLine, so their body is matched by the overlap test
+// below. Comment rules do not: a multi-line comment still reports at its `/**`,
+// and no-restating-comments reports at the comment above the code it restates,
+// so the headroom above the written line has to stay.
 const PAD_UP = 3;
 const PAD_DOWN = 1;
 // A findings list past this is not review context, it is a wall. The file is
@@ -87,7 +88,13 @@ function finish() {
     } catch (e) {
       // Unreadable after the write: fall back to reporting everything.
     }
-    const mine = ranges ? all.filter(f => ranges.some(([a, b]) => f.line >= a && f.line <= b)) : all;
+    // Overlap, not containment: a block rule reports at the `catch`/`if`/`let`
+    // that opens the block, which can sit well above the body the edit wrote.
+    // Comparing only the reported line dropped the finding the edit had just
+    // created, and the hook then printed nothing at all.
+    const mine = ranges
+      ? all.filter(f => ranges.some(([a, b]) => (f.endLine || f.line) >= a && f.line <= b))
+      : all;
     if (mine.length === 0) return;
 
     const shown = mine.slice(0, MAX_REPORTED);

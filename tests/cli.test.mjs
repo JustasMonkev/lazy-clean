@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -78,6 +78,50 @@ check("a directory scan skips node_modules, .d.ts, and non-source files", () => 
   const result = run(["."]);
   const paths = [...result.stdout.matchAll(/^\s+(\S+?):\d+:\d+ /gmu)].map((match) => match[1]);
   assert.deepEqual([...new Set(paths)].sort(), ["nested/deep/slop.ts", "slop.ts"]);
+});
+
+check("a file that stats but cannot be read is a failed scan, not a finding", () => {
+  // EIO on the first read, and unlike a chmod it does not depend on the uid, so
+  // this still covers the read guard in a root CI container.
+  if (process.platform !== "linux") {
+    console.log("skip unreadable file, EIO (linux-only fixture)");
+    return;
+  }
+  const dir = join(root, "unreadable-eio");
+  mkdirSync(dir, { recursive: true });
+  try {
+    symlinkSync("/proc/self/mem", join(dir, "eio.ts"), "file");
+    const result = run([join(dir, "eio.ts"), "clean.ts"]);
+    assert.equal(result.status, 2, `${result.stdout}${result.stderr}`);
+    assert.match(result.stderr, /cannot read/u);
+    assert.doesNotMatch(result.stderr, /EIO/u, "the scan reports the path, it does not crash");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+check("a directory that cannot be listed is a failed scan, not a crash", () => {
+  const dir = join(root, "unreadable-dir");
+  const sub = join(dir, "sub");
+  mkdirSync(sub, { recursive: true });
+  try {
+    writeFileSync(join(dir, "top.ts"), SLOP);
+    writeFileSync(join(sub, "hidden.ts"), SLOP);
+    chmodSync(sub, 0o000);
+    try {
+      readFileSync(join(sub, "hidden.ts"));
+      console.log("skip unlistable directory (mode bits do not apply to this user)");
+      return;
+    } catch { /* denied, which is the case under test */ }
+    const result = run([dir]);
+    assert.equal(result.status, 2, `${result.stdout}${result.stderr}`);
+    assert.match(result.stderr, /cannot read/u);
+    // The readable half of the tree is still reported, not thrown away.
+    assert.match(result.stdout, /top\.ts:1:22 require-safety-comment/u);
+  } finally {
+    chmodSync(sub, 0o755);
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 check("files over the size cap are skipped", () => {
@@ -188,6 +232,61 @@ check("--since survives a filename git has to quote or pad", () => {
   assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
   assert.match(result.stdout, /my file\.ts:1:22 require-safety-comment/u);
   assert.doesNotMatch(result.stderr, /cannot read/u);
+});
+
+check("--since sees a brand-new file git has never tracked", () => {
+  const repo = join(root, "untracked-new");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) =>
+    execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "seed.ts"), "const ok = 1;\n");
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since untracked (git unavailable)");
+    return;
+  }
+  // The documented pre-commit command is `--since=HEAD`, and a new file is the
+  // likeliest place for fresh slop; git diff never mentions it.
+  writeFileSync(join(repo, "brand-new.ts"), SLOP);
+  const result = run(["--since=HEAD"], repo);
+  assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
+  assert.match(result.stdout, /brand-new\.ts:1:22 require-safety-comment/u);
+});
+
+check("--since ignores untracked names it would never lint", () => {
+  const repo = join(root, "untracked-noise");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) =>
+    execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "seed.ts"), "const ok = 1;\n");
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since untracked noise (git unavailable)");
+    return;
+  }
+  // A symlink to an unbuilt asset is untracked but unlintable: stat()ing it
+  // would report "cannot read" and fail the whole run with exit 2.
+  symlinkSync(join(repo, "build", "logo.png"), join(repo, "logo.png"));
+  // git reports an untracked nested repo as the bare directory "vendored/".
+  mkdirSync(join(repo, "vendored"), { recursive: true });
+  execFileSync("git", ["init", "-q"], { cwd: join(repo, "vendored") });
+  writeFileSync(join(repo, "vendored", "lib.ts"), SLOP);
+  // A repo that never ignored node_modules must not hand --since its vendor tree.
+  mkdirSync(join(repo, "node_modules", "pkg"), { recursive: true });
+  writeFileSync(join(repo, "node_modules", "pkg", "index.ts"), SLOP);
+  const result = run(["--since=HEAD"], repo);
+  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
+  assert.match(result.stdout, /clean \(0 files checked\)/u);
 });
 
 check("--since reports a bad ref instead of passing silently", () => {

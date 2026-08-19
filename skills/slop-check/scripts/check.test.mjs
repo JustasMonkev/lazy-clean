@@ -97,6 +97,16 @@ expectNoRule(
   "require-safety-comment-for-type-assertion",
   "sample.tsx",
 );
+expectRule(
+  "an exported class body is not a specifier list",
+  "export class Service {\n  run(input: unknown) {\n    return input as Config;\n  }\n}",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "an exported namespace body is not a specifier list",
+  "export namespace API {\n  export const cfg = raw as Config;\n}",
+  "require-safety-comment-for-type-assertion",
+);
 expectNoRule(
   "allows aliases in a multi-line import list",
   'import {\n  readFile as read,\n  writeFile as write,\n} from "node:fs/promises";',
@@ -110,6 +120,21 @@ expectRule(
 expectRule(
   "sees an assertion on an export declaration",
   "export const user = payload as User;",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "the catch exemption ends at the handler's closing brace",
+  'try { f(); } catch (error) {\n  log(error);\n}\nconst user = error as User;',
+  "require-safety-comment-for-type-assertion",
+);
+expectNoRule(
+  "allows narrowing a catch binding to a domain type",
+  'try { f(); } catch (error) {\n  const problem = error as ProblemDetails;\n  return problem.status;\n}',
+  "require-safety-comment-for-type-assertion",
+);
+expectNoRule(
+  "allows narrowing in a promise catch callback",
+  'load().catch(error => {\n  const fault = error as NodeJS.ErrnoException;\n  report(fault);\n});',
   "require-safety-comment-for-type-assertion",
 );
 expectNoRule(
@@ -268,6 +293,15 @@ expectRule("flags boolean return branches", "function ok(x) { if (x > 0) { retur
 expectRule("flags braceless boolean return branches", "function ok(x) { if (x) return false; else return true; }", "no-boolean-return-branches");
 expectNoRule("allows a guard clause before a loop result", "function ok(xs) { for (const x of xs) { if (x.bad) return false; }\n  return true; }", "no-boolean-return-branches");
 expectNoRule("allows returning values from both branches", "function pick(x) { if (x) { return 'on'; } else { return 'off'; } }", "no-boolean-return-branches");
+// The condition is often not boolean — `return xs.length` turns a boolean API
+// into a number — and this rule prints under the mechanical heading, where the
+// message is meant to be the one correct answer.
+const looseBranches = lintSource("function ok(xs) { if (xs.length) return true; else return false; }", "sample.js");
+assert.equal(looseBranches[0].rule, "no-boolean-return-branches");
+assert.match(looseBranches[0].message, /Return the condition, wrapped in `Boolean/u);
+const invertedBranches = lintSource("function ok(xs) { if (xs.length) return false; else return true; }", "sample.js");
+assert.match(invertedBranches[0].message, /Return its negation, wrapped in `Boolean/u);
+console.log("ok   boolean return branches keep the coercion and the polarity");
 
 expectRule("flags let assigned in both branches", "let label;\nif (flag) {\n  label = 'on';\n} else {\n  label = 'off';\n}", "no-let-if-else-assign");
 expectRule("flags annotated let assigned in both branches", "let label: string;\nif (flag) label = 'on';\nelse label = 'off';", "no-let-if-else-assign");

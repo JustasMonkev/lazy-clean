@@ -409,6 +409,16 @@ function offsetToPosition(lineStarts, offset) {
   return { line: low + 1, column: offset - lineStarts[low] + 1 };
 }
 
+// Multi-line rules match a whole block but report at its opening keyword, which
+// can sit well above the body. Carrying the last line of the match lets a
+// consumer scoping by edited lines know an edit inside the body created the
+// finding. Single-line matches carry no endLine.
+function matchSpan(lineStarts, match) {
+  const start = offsetToPosition(lineStarts, match.index);
+  const end = offsetToPosition(lineStarts, match.index + match[0].length - 1);
+  return end.line > start.line ? { ...start, endLine: end.line } : start;
+}
+
 const IDENTIFIER_STOP_WORDS = new Set([
   "the", "a", "an", "and", "or", "to", "of", "for", "in", "on", "at", "is",
   "are", "be", "this", "that", "we", "it", "its", "with", "from", "then",
@@ -592,7 +602,7 @@ const LINE_RULES = [
   {
     name: "no-boolean-literal-ternary",
     pattern: /\?\s*true\s*:\s*false\b|\?\s*false\s*:\s*true\b/u,
-    message: "`cond ? true : false` restates the condition. Use the condition (or its negation) directly.",
+    message: "`cond ? true : false` restates the condition. Use the condition (or its negation) directly, wrapped in `Boolean(...)` when the condition is not already boolean.",
   },
   {
     name: "no-empty-type-declaration",
@@ -666,7 +676,7 @@ function* iterateBlockFindings(ctx) {
 
   for (const match of masked.matchAll(/\bcatch\s*\(\s*([\w$]+)\s*(?::[^)]*)?\)\s*\{\s*throw\s+\1\s*;?\s*\}/gu)) {
     yield {
-      ...offsetToPosition(lineStarts, match.index),
+      ...matchSpan(lineStarts, match),
       rule: "no-useless-rethrow",
       message: "A catch that only rethrows is dead weight. Delete the try/catch or actually handle the error.",
     };
@@ -675,7 +685,7 @@ function* iterateBlockFindings(ctx) {
   for (const match of masked.matchAll(/\bcatch\s*(?:\(\s*[\w$]*\s*(?::[^)]*)?\))?\s*\{(\s*)\}/gu)) {
     if (hasCommentInRange(match.index, match.index + match[0].length)) continue;
     yield {
-      ...offsetToPosition(lineStarts, match.index),
+      ...matchSpan(lineStarts, match),
       rule: "no-empty-catch",
       message: "An empty catch silently swallows failures. Handle the error, rethrow, or justify the swallow in a comment.",
     };
@@ -686,7 +696,7 @@ function* iterateBlockFindings(ctx) {
   )) {
     if (hasCommentInRange(match.index, match.index + match[0].length)) continue;
     yield {
-      ...offsetToPosition(lineStarts, match.index),
+      ...matchSpan(lineStarts, match),
       rule: "no-catch-fake-success",
       message: "Returning a default from catch disguises failure as success. Propagate the error or return an explicit failure value.",
     };
@@ -727,7 +737,7 @@ function* iterateCandidateFindings(ctx) {
   for (const match of masked.matchAll(
     /\bnew\s+Promise\s*(?:<[^>]*>)?\s*\(\s*\(?\s*([\w$]+)\s*\)?\s*=>\s*setTimeout\s*\(\s*\1\s*,\s*\d/gu,
   )) {
-    const position = offsetToPosition(lineStarts, match.index);
+    const position = matchSpan(lineStarts, match);
     if (justifiedNear(position.line)) continue;
     yield {
       ...position,
@@ -743,7 +753,7 @@ function* iterateCandidateFindings(ctx) {
   )) {
     if (!new RegExp(String.raw`\b${match[1]}\b`, "u").test(match[2])) continue;
     yield {
-      ...offsetToPosition(lineStarts, match.index),
+      ...matchSpan(lineStarts, match),
       rule: "no-log-and-rethrow",
       message: "Logging and rethrowing reports the same failure at every frame. Let it propagate, or attach context with `cause` and log once at the boundary.",
     };
@@ -755,7 +765,7 @@ function* iterateCandidateFindings(ctx) {
     if (!new RegExp(String.raw`\b${match[1]}\s*(?:\?\.|\.)\s*message\b`, "u").test(match[2])) continue;
     if (/\bcause\b/u.test(match[2])) continue;
     yield {
-      ...offsetToPosition(lineStarts, match.index),
+      ...matchSpan(lineStarts, match),
       rule: "no-message-only-rethrow",
       message: "Rebuilding an error from its message throws away the stack and the original type. Rethrow it, or wrap it with `{ cause }`.",
     };
@@ -766,9 +776,12 @@ function* iterateCandidateFindings(ctx) {
   )) {
     if (match[1] === match[2]) continue;
     yield {
-      ...offsetToPosition(lineStarts, match.index),
+      ...matchSpan(lineStarts, match),
       rule: "no-boolean-return-branches",
-      message: "Branching to return `true` or `false` restates the condition. Return the condition itself.",
+      // Per occurrence: match[1] is the `if` branch, so the rule already knows
+      // whether the answer is the condition or its negation. `xs.length` is a
+      // number, and this prints under the "one correct answer" heading.
+      message: `Branching to return \`true\` or \`false\` restates the condition. Return ${match[1] === "true" ? "the condition" : "its negation"}, wrapped in \`Boolean(...)\` when it is not already boolean.`,
     };
   }
 
@@ -778,7 +791,7 @@ function* iterateCandidateFindings(ctx) {
     /\blet\s+([\w$]+)\s*(?::[^=;]+)?;\s*if\s*\((?:[^()]|\([^()]*\))*\)\s*(?:\{\s*\1\s*=\s*[^;{}]+;\s*\}|\1\s*=\s*[^;{}]+;)\s*else\b\s*(?:\{\s*\1\s*=\s*[^;{}]+;\s*\}|\1\s*=\s*[^;{}]+;)/gu,
   )) {
     yield {
-      ...offsetToPosition(lineStarts, match.index),
+      ...matchSpan(lineStarts, match),
       rule: "no-let-if-else-assign",
       message: "A `let` declared only to be assigned in both branches hides a single expression. Use `const` with a conditional expression.",
     };
@@ -788,7 +801,7 @@ function* iterateCandidateFindings(ctx) {
     /\bnew\s+Promise\s*(?:<[^>]*>)?\s*\(\s*\(?\s*([\w$]+)\s*\)?\s*=>\s*\{?\s*\1\s*\([^;{}]*\)\s*;?\s*\}?\s*\)/gu,
   )) {
     yield {
-      ...offsetToPosition(lineStarts, match.index),
+      ...matchSpan(lineStarts, match),
       rule: "no-promise-constructor-wrapper",
       message: "Wrapping a value in `new Promise` to resolve it immediately is `Promise.resolve` with extra steps. Return the value from an async function.",
     };
@@ -798,7 +811,7 @@ function* iterateCandidateFindings(ctx) {
     /\.\s*forEach\s*\(\s*\(?\s*[\w$,\s]*\)?\s*=>\s*\{?\s*([\w$.]+)\s*\.\s*push\s*\([^;{}]*\)\s*;?\s*\}?\s*\)/gu,
   )) {
     yield {
-      ...offsetToPosition(lineStarts, match.index),
+      ...matchSpan(lineStarts, match),
       rule: "no-foreach-push",
       message: "A `forEach` whose whole body pushes into an array is a `map` written the long way. Use `map` (or `flatMap`) and bind the result.",
     };
@@ -807,16 +820,43 @@ function* iterateCandidateFindings(ctx) {
 
 function* iterateAssertionFindings(ctx) {
   if (!ctx.isTypeScript) return;
-  const { maskedLines, comments, lineStarts } = ctx;
+  const { masked, maskedLines, comments, lineStarts } = ctx;
 
   // Since TS 4.4 a catch binding is `unknown`, so narrowing it with `as Error`
   // is the only way to read `.code`/`.message`. Demanding a SAFETY: comment on
-  // every catch block is noise, not evidence.
+  // every catch block is noise, not evidence. The exemption ends at the
+  // handler's closing brace: keyed on the name alone it followed any later
+  // variable that happened to be called `error` out of the handler entirely.
   const catchBindings = new Map();
-  for (let index = 0; index < maskedLines.length; index += 1) {
-    const binding = /\bcatch\s*\(\s*([\w$]+)/u.exec(maskedLines[index]);
-    if (binding && !catchBindings.has(binding[1])) catchBindings.set(binding[1], index);
+  if (/\bcatch\s*\(\s*[\w$]/u.test(masked)) {
+    // One pass pairs every brace, so a handler's extent is a lookup. Rescanning
+    // per handler is quadratic on a file whose braces never close.
+    const closeOf = new Map();
+    const openBraces = [];
+    for (let k = 0; k < masked.length; k += 1) {
+      if (masked[k] === "{") openBraces.push(k);
+      else if (masked[k] === "}" && openBraces.length) closeOf.set(openBraces.pop(), k);
+    }
+    for (const binding of masked.matchAll(/\bcatch\s*\(\s*([\w$]+)/gu)) {
+      // The body of `catch (e) {` and of `.catch(e => {` is the next brace, and
+      // nothing between may end a statement. Any other shape (`.catch(e => f(e))`)
+      // has no block to bound, so it keeps the old file-wide exemption.
+      const from = binding.index + binding[0].length;
+      const brace = masked.indexOf("{", from);
+      const end = brace !== -1 && !/[;}]/u.test(masked.slice(from, brace))
+        ? closeOf.get(brace) ?? masked.length
+        : masked.length;
+      const range = [
+        offsetToPosition(lineStarts, binding.index).line,
+        offsetToPosition(lineStarts, end).line,
+      ];
+      const ranges = catchBindings.get(binding[1]);
+      if (ranges) ranges.push(range);
+      else catchBindings.set(binding[1], [range]);
+    }
   }
+  const inCatchBlock = (name, lineNumber) =>
+    (catchBindings.get(name) ?? []).some(([from, to]) => from <= lineNumber && lineNumber <= to);
 
   const commentLines = new Set();
   for (const comment of comments) {
@@ -844,8 +884,8 @@ function* iterateAssertionFindings(ctx) {
     const match = TYPE_ASSERTION_PATTERN.exec(line);
     if (!match) continue;
     const operand = match[1];
-    if (operand && catchBindings.has(operand) && catchBindings.get(operand) <= index) continue;
     const lineNumber = index + 1;
+    if (operand && inCatchBlock(operand, lineNumber)) continue;
     const hasSafetyComment =
       commentLines.has(lineNumber) || commentLines.has(lineNumber - 1) ||
       commentLines.has(lineNumber - 2) || commentLines.has(lineNumber - 3);
@@ -1026,7 +1066,15 @@ function collectFiles(entry, scan) {
     }
     if (scan.seenDirs.has(pathKey(real))) return;
     scan.seenDirs.add(pathKey(real));
-    for (const name of readdirSync(entry)) {
+    let names;
+    try {
+      names = readdirSync(entry);
+    } catch {
+      console.error(`slop-check: cannot read ${entry}`);
+      scan.unreadable += 1;
+      return;
+    }
+    for (const name of names) {
       if (SKIPPED_DIRECTORIES.has(name)) continue;
       collectFiles(join(entry, name), scan);
     }
@@ -1070,6 +1118,9 @@ function diffTargetPath(target) {
   return unquoted.replace(/^b\//u, "");
 }
 
+// Stands in for the line set of a wholly new file: every line is an added line.
+const ALL_LINES = { has: () => true };
+
 // Line numbers the diff against `ref` added, per absolute path. Git already
 // stores the baseline, so adopting the checker on an existing repo needs no
 // baseline file to generate, refresh, or drift.
@@ -1077,6 +1128,26 @@ function addedLines(ref) {
   const git = (args) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 64e6 });
   const root = git(["rev-parse", "--show-toplevel"]).trim();
   const byFile = new Map();
+
+  // A file git has never seen is absent from the diff entirely, so a brand-new
+  // source file — the likeliest place for fresh slop, and exactly what the
+  // documented `--since=HEAD` before a commit is aimed at — scanned as clean.
+  // Every line of it is added.
+  for (const name of git(["-C", root, "ls-files", "--others", "--exclude-standard", "-z"]).split("\0")) {
+    // Only names the scan would lint anyway are worth a map entry: a trailing
+    // slash is an untracked nested repo git refused to descend into, and
+    // stat()ing every untracked name made a dangling symlink to an unbuilt
+    // asset fail the whole run with exit 2.
+    if (!name || name.endsWith("/")) continue;
+    const base = name.slice(name.lastIndexOf("/") + 1).toLowerCase();
+    if (!SOURCE_EXTENSIONS.has(extname(base)) || base.endsWith(".d.ts")) continue;
+    // A directory the recursive scan skips is skipped here too: --exclude-standard
+    // drops what .gitignore lists, but a repo that never ignored node_modules or
+    // dist would otherwise hand --since its whole vendor tree.
+    if (name.split("/").slice(0, -1).some((part) => SKIPPED_DIRECTORIES.has(part))) continue;
+    byFile.set(resolve(root, name), ALL_LINES);
+  }
+
   let lines = null;
   // The prefixes are pinned because diff.mnemonicprefix renames `b/` to `w/`,
   // and quotepath is off so a non-ASCII name arrives verbatim, not C-quoted.
@@ -1140,8 +1211,28 @@ function main() {
   for (const file of files) {
     const changed = added?.get(resolve(file));
     if (added && !changed) continue;
-    const fileFindings = lintSource(readFileSync(file, "utf8"), displayPath(file));
-    findings.push(...(changed ? fileFindings.filter((finding) => changed.has(finding.line)) : fileFindings));
+    let source;
+    try {
+      source = readFileSync(file, "utf8");
+    } catch {
+      // Statted during collection, unreadable now: denied permissions, or the
+      // file was deleted mid-scan. Crashing here exits 1, the code the contract
+      // already spends on "findings exist".
+      console.error(`slop-check: cannot read ${file}`);
+      scan.unreadable += 1;
+      continue;
+    }
+    const fileFindings = lintSource(source, displayPath(file));
+    // Same overlap test the PostToolUse hook uses: a block rule reports at the
+    // keyword that opens the block, so testing the anchor line alone dropped
+    // findings whose body is exactly what `git diff` reports as changed.
+    const touched = (finding) => {
+      for (let line = finding.line; line <= (finding.endLine ?? finding.line); line += 1) {
+        if (changed.has(line)) return true;
+      }
+      return false;
+    };
+    findings.push(...(changed ? fileFindings.filter(touched) : fileFindings));
   }
 
   const scanned = added ? findings.length > 0 || files.length : files.length;
