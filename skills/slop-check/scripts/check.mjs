@@ -77,8 +77,12 @@ function maskSource(source, { jsx = false } = {}) {
   let jsxTagClosing = false;
   // True for exactly one iteration: the `<` we stopped JSX text at is a tag.
   let jsxTextPending = false;
-  // Whether the tag currently being scanned has children at all.
+  // Whether the tag currently being scanned has children at all, plus the name
+  // and offset it was decided from — the claim happens at the `>`, once a
+  // self-closing tag can be told apart from a real opener.
   let jsxTagNests = false;
+  let jsxTagName = "";
+  let jsxTagStart = 0;
   let closingTagNames = null;
 
   // Safety valve for malformed JSX: an element with no closing tag *after it*
@@ -88,7 +92,14 @@ function maskSource(source, { jsx = false } = {}) {
   // ran to EOF in text mode — hiding every finding below the incomplete edit,
   // which is exactly the state a file is in mid-write. Collected in one pass on
   // the first tag seen, so a file without JSX never pays for it.
-  const hasClosingTag = (name, after) => {
+  // One closer can only close one opener. Asking "is there a closer after this
+  // point" let a single `</div>` vouch for both openers of `<div><div></div>`,
+  // so the depth never returned to zero and everything below was masked as
+  // text. A per-name cursor makes the closer a consumable: an element claims one
+  // when it actually opens a children region, and the next opener has to find
+  // another.
+  const claimedThrough = new Map();
+  const findClosingTag = (name, after) => {
     if (closingTagNames === null) {
       closingTagNames = new Map();
       for (const match of source.matchAll(/<\/([A-Za-z_$][\w$.:-]*)?/gu)) {
@@ -99,18 +110,25 @@ function maskSource(source, { jsx = false } = {}) {
       }
     }
     const positions = closingTagNames.get(name);
-    if (!positions) return false;
+    if (!positions) return -1;
     // matchAll yields ascending offsets, so this is a binary search for the
-    // first closer past the opener. A linear scan is quadratic on a file of
-    // several thousand `<div>`s, which this runs on after every edit.
-    let low = 0;
+    // first unclaimed closer past the opener. A linear scan is quadratic on a
+    // file of several thousand `<div>`s, which this runs on after every edit.
+    let low = claimedThrough.get(name) ?? 0;
     let high = positions.length;
     while (low < high) {
       const mid = (low + high) >> 1;
       if (positions[mid] > after) high = mid;
       else low = mid + 1;
     }
-    return low < positions.length;
+    return low < positions.length ? low : -1;
+  };
+  const hasClosingTag = (name, after) => findClosingTag(name, after) !== -1;
+  // Called only once the element really opens a children region — not for a
+  // self-closing tag, which is known only at the `>` and closes nothing.
+  const claimClosingTag = (name, after) => {
+    const at = findClosingTag(name, after);
+    if (at !== -1) claimedThrough.set(name, at + 1);
   };
 
   const blank = (start, end) => {
@@ -215,7 +233,10 @@ function maskSource(source, { jsx = false } = {}) {
     const beforeAngle = lastCodeChar(index - 1);
     const selfClosing = beforeAngle !== null && beforeAngle.char === "/";
     if (jsxTagClosing) jsxElementDepth = Math.max(0, jsxElementDepth - 1);
-    else if (!selfClosing && jsxTagNests) jsxElementDepth += 1;
+    else if (!selfClosing && jsxTagNests) {
+      claimClosingTag(jsxTagName, jsxTagStart);
+      jsxElementDepth += 1;
+    }
     jsxTagAngles = -1;
     jsxTagClosing = false;
     return jsxElementDepth > 0 ? consumeJsxText(index + 1) : index + 1;
@@ -335,6 +356,8 @@ function maskSource(source, { jsx = false } = {}) {
     if (jsx && c === "<" && jsxTagAngles < 0) {
       if (source[i + 1] === ">") {
         if (!hasClosingTag("", i)) { i += 2; continue; }
+        // A fragment has no self-closing form, so it opens here and claims now.
+        claimClosingTag("", i);
         jsxElementDepth += 1;
         i = consumeJsxText(i + 2);
         continue;
@@ -358,7 +381,9 @@ function maskSource(source, { jsx = false } = {}) {
           jsxTagAngles = 0;
           jsxTagBraceDepth = braceDepth;
           jsxTagClosing = closing;
-          jsxTagNests = closing || hasClosingTag(source.slice(i + 1, nameEnd), i);
+          jsxTagName = closing ? "" : source.slice(i + 1, nameEnd);
+          jsxTagStart = i;
+          jsxTagNests = closing || hasClosingTag(jsxTagName, i);
           i = nameEnd;
           continue;
         }
@@ -633,6 +658,17 @@ const LINE_RULES = [
   },
   {
     name: "no-boolean-literal-ternary",
+    // A conditional TYPE is not this defect: `T extends string ? true : false`
+    // is the only way to write that predicate — there is no `Boolean(...)` in
+    // type space, so the rewrite this rule names is not even syntax there.
+    // `extends` is the keyword only a conditional type puts in front of such a
+    // ternary, and it has to skip the whole line rather than exempt a span:
+    // conditional types nest (`... ? (... ? false : true) : never ? false : true`)
+    // and a span-scoped exemption just uncovered the outer one. The cost is a
+    // one-line `class A extends B { … x ? true : false … }`, which this rule
+    // then misses; a mechanical "one correct answer" printed against valid type
+    // code is the worse of the two.
+    skipLine: /\bextends\b/u,
     pattern: /\?\s*true\s*:\s*false\b|\?\s*false\s*:\s*true\b/u,
     message: "`cond ? true : false` restates the condition. Use the condition (or its negation) directly, wrapped in `Boolean(...)` when the condition is not already boolean.",
   },
@@ -793,7 +829,10 @@ const ASSERTED_TYPE = [
 // spent 9s on one long line, which this runs on after every edit.
 // Global: every assertion on the line is examined, not just the first.
 const TYPE_ASSERTION_PATTERN = new RegExp(
-  String.raw`(?:(?<![\w$.])([\w$]+)\s+)?\bas\s+(?:readonly\s+)?(?:${ASSERTED_TYPE})(?:\[\])*\s*(?=[;,)\]}=&|?:]|$)`,
+  // `[...]` rather than `[]`: the suffix covers an array (`User[]`) and an
+  // indexed access (`User["id"]`, `T[keyof T]`) alike. Masking blanks the key
+  // but keeps the brackets, so the shape is intact here.
+  String.raw`(?:(?<![\w$.])([\w$]+)\s+)?\bas\s+(?:readonly\s+)?(?:${ASSERTED_TYPE})(?:\[[^[\]]*\])*\s*(?=[;,)\]}=&|?:]|$)`,
   "gu",
 );
 
@@ -1029,6 +1068,12 @@ function* iterateAssertionFindings(ctx) {
       // The operand's own offset in the file, not the line's: lineStarts is
       // built over the masked source, which shares every offset with the raw.
       if (candidate[1] && inCatchBlock(candidate[1], lineStarts[index] + candidate.index)) continue;
+      // `{ [K in Keys as Rename<K>]: V }` — the `as` of a mapped-type key remap
+      // is not an assertion, and the indexed-access suffix made the whole clause
+      // look like one. An unclosed `[` with an `in` inside it, immediately
+      // before this `as`, is that header and nothing else.
+      const asAt = candidate.index + /\bas\s/u.exec(candidate[0]).index;
+      if (/\[[^\]]*\bin\b[^\]]*$/u.test(line.slice(0, asAt))) continue;
       match = candidate;
       break;
     }
@@ -1386,8 +1431,17 @@ function main() {
     }
   }
 
+  // `--since` with no paths still means "under here", the same as a bare run:
+  // the changed-file map comes from the repository root, so from packages/a it
+  // was handing back findings in packages/b. Filtering the map keeps the fast
+  // path (visit only changed files) while honouring the directory asked about.
+  const cwd = resolve(process.cwd());
+  const underCwd = (file) => {
+    const rel = relative(cwd, file);
+    return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+  };
   const scan = { files: [], seen: new Set(), seenDirs: new Set(), unreadable: 0 };
-  for (const target of targets.length > 0 ? targets : added ? [...added.keys()] : ["."]) {
+  for (const target of targets.length > 0 ? targets : added ? [...added.keys()].filter(underCwd) : ["."]) {
     collectFiles(target, scan);
   }
   const { files } = scan;

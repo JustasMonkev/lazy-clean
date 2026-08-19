@@ -40,11 +40,6 @@ function finish() {
     // Outer scope because Qoder initializes the mode further down and has to
     // re-answer a bare `/lazy` from the level that initialization produced.
     let isReportOnly = false;
-    // The default as it stood BEFORE this prompt could change it. Qoder's
-    // first-prompt initializer below reads the default to pick the live level,
-    // so without this `/lazy default ultra` announced "new sessions start in
-    // ultra" and then started ultra in this one.
-    let defaultBeforeCommand = null;
     if (/^[/@$]lazy/.test(prompt)) {
       const parts = prompt.split(/\s+/);
       const cmd = parts[0].replace(/^[@$]/, '/');
@@ -63,14 +58,31 @@ function finish() {
         if (arg === 'default') {
           const dmode = parts[2];
           if (dmode === 'off' || dmode === 'lite' || dmode === 'full' || dmode === 'ultra') {
+            // On Qoder the live level is derived from the config default
+            // whenever no flag exists, so this session has to be pinned BEFORE
+            // the default moves. Pinning afterwards left a failed pin with the
+            // new default already written, and the next prompt adopted it — the
+            // command changing the one session it promises not to touch.
+            // `off` is pinned like any level: absent means "derive", not "off",
+            // once the value it would derive from has changed.
+            let pinned = true;
+            if (isQoder && !readMode()) {
+              try {
+                setMode(getDefaultMode());
+              } catch (e) {
+                notice = 'LAZY: could not pin the current level, so the default was left unchanged (' + e.message + ').';
+                pinned = false;
+              }
+            }
             // A failed write must say so: silently doing nothing looks like it
             // worked until the next session starts in the old mode.
-            try {
-              defaultBeforeCommand = getDefaultMode();
-              writeDefaultMode(dmode);
-              notice = 'LAZY DEFAULT SET — new sessions start in ' + dmode + '.';
-            } catch (e) {
-              notice = 'LAZY: could not write the default (' + e.message + ').';
+            if (pinned) {
+              try {
+                writeDefaultMode(dmode);
+                notice = 'LAZY DEFAULT SET — new sessions start in ' + dmode + '.';
+              } catch (e) {
+                notice = 'LAZY: could not write the default (' + e.message + ').';
+              }
             }
           } else {
             notice = 'LAZY: ' + (dmode ? '"' + dmode + '" is not' : 'a default level is required —') + ' one of off|lite|full|ultra.';
@@ -129,13 +141,12 @@ function finish() {
         // the default this very prompt replaced: `/lazy default` is documented
         // as changing what LATER sessions start at, so it must not decide this
         // one's level.
-        currentMode = defaultBeforeCommand ?? getDefaultMode();
-        // `off` is normally left unwritten — no flag IS off, and writing one
-        // would make every session start by creating state. But when this
-        // prompt moved the default, the absent flag stops meaning "off" and
-        // starts meaning "derive from the new default", so the NEXT prompt
-        // activated what this one only scheduled. Pin it in that case.
-        if (currentMode !== 'off' || defaultBeforeCommand !== null) {
+        currentMode = getDefaultMode();
+        // `off` is left unwritten here — no flag IS off, and writing one would
+        // make every session start by creating state. The one case that does
+        // need an explicit `off` is `/lazy default`, which pins above before it
+        // moves the value this line reads.
+        if (currentMode !== 'off') {
           try { setMode(currentMode); } catch (e) { /* best-effort: the ruleset below still goes out */ }
         }
       }

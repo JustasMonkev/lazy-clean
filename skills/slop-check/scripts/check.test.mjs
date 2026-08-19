@@ -92,6 +92,27 @@ expectNoRule("allows optional callback detection", 'if (typeof onDone === "funct
 // earlier complete `<div></div>` vouched for a later unclosed `<div>`: the
 // tokenizer entered text mode and ran to EOF, hiding every finding below the
 // incomplete element — the state a file is in halfway through an edit.
+// One closer closes one element. A single `</div>` used to vouch for both
+// openers of `<div><div></div>`, leaving the depth positive and masking the rest
+// of the file as text.
+expectRule(
+  "one closing tag does not vouch for two nested openers",
+  "const a = <div><div></div>;\nconst value: any = 1;",
+  "no-any",
+  "sample.tsx",
+);
+expectRule(
+  "a self-closing tag does not consume a later element's closer",
+  "const a = <div />;\nconst b = <div>text</div>;\nconst value: any = 1;",
+  "no-any",
+  "sample.tsx",
+);
+expectNoRule(
+  "well-formed nesting still masks its own text",
+  "const a = <div><span>Files are stored as blobs</span></div>;",
+  "require-safety-comment-for-type-assertion",
+  "sample.tsx",
+);
 expectRule(
   "an earlier closing tag does not vouch for a later unclosed element",
   "const a = <div></div>;\nconst b = <div>;\nfunction f(value: any) { return value; }",
@@ -125,6 +146,21 @@ expectRule(
 );
 // Requiring a type NAME meant every anonymous form walked past: these are the
 // shapes an inline narrowing actually takes.
+// `[K in Keys as Rename<K>]` is a mapped-type key remap, not an assertion. The
+// corpus caught this on real axios, eslint and type-fest source — and showed
+// the rule had been reporting eight of them since before this change.
+expectNoRule(
+  "does not read a mapped-type key remap as an assertion",
+  'type Listener = { [Node in RuleNode as Node["type"]]?: (node: Node) => void };',
+  "require-safety-comment-for-type-assertion",
+);
+expectNoRule(
+  "does not read a templated key remap as an assertion",
+  "type Getters<T> = { [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K] };",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule('flags an indexed-access assertion', 'const a = payload as User["id"];', "require-safety-comment-for-type-assertion");
+expectRule("flags a keyed indexed-access assertion", "const a = payload as T[keyof T];", "require-safety-comment-for-type-assertion");
 expectRule("flags a keyof type assertion", "const a = payload as keyof User;", "require-safety-comment-for-type-assertion");
 expectRule("flags a stacked keyof typeof assertion", "const a = payload as keyof typeof config;", "require-safety-comment-for-type-assertion");
 expectRule("flags a parenthesized type assertion", "const a = payload as (User & Admin);", "require-safety-comment-for-type-assertion");
@@ -324,6 +360,25 @@ expectRule(
 expectNoRule("allows comparing a parsed property", "if (parsed.enabled === true) run();", "no-boolean-literal-compare");
 expectRule("flags if (!!x)", "if (!!user) { greet(user); }", "no-double-negation-condition");
 expectNoRule("allows !! in assignment", "const hasUser = !!user;", "no-double-negation-condition");
+// A conditional TYPE is not a runtime ternary: `Boolean(...)` is not syntax in
+// type space, so the rewrite this rule names cannot be applied there at all.
+expectNoRule(
+  "allows a conditional type predicate",
+  "type IsString<T> = T extends string ? true : false;",
+  "no-boolean-literal-ternary",
+);
+// Conditional types nest, so a span-scoped exemption just uncovered the outer
+// one — the line has to be skipped, not a span of it.
+expectNoRule(
+  "allows a nested conditional type predicate",
+  "type A<T> = T extends string ? true : ((T extends [T] ? false : true) : never) ? false : true;",
+  "no-boolean-literal-ternary",
+);
+expectRule(
+  "still flags a runtime boolean ternary",
+  "const flag = ready ? true : false;",
+  "no-boolean-literal-ternary",
+);
 expectRule("flags boolean literal ternary", "const ready = count > 0 ? true : false;", "no-boolean-literal-ternary");
 expectRule("flags await Promise.resolve", "const value = await Promise.resolve(compute());", "no-await-promise-resolve");
 

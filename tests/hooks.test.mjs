@@ -681,6 +681,21 @@ ok("/lazy default off on qoder still injects the live ruleset",
     .startsWith("LAZY DEFAULT SET — new sessions start in off."),
   r.stdout.slice(0, 160));
 
+// The state directory and the config directory fail independently here too, and
+// the pin has to happen BEFORE the default moves: pinning afterwards left a
+// failed pin with the new default already written for the next prompt to adopt.
+const qoderBlocked = freshHome("qoder-blocked-pin");
+fs.writeFileSync(path.join(qoderBlocked.home, ".qoder"), "");   // a file where the dir must go
+r = track({ prompt: "/lazy default ultra" },
+  { flag: undefined, config: JSON.stringify({ defaultMode: "lite" }), env: { ...qoder, HOME: qoderBlocked.home } });
+ok("a failed qoder pin reports the failure",
+  /could not pin the current level/.test(JSON.parse(r.stdout).hookSpecificOutput.additionalContext),
+  r.stdout.slice(0, 200));
+ok("a failed qoder pin does not claim the default was set",
+  !/LAZY DEFAULT SET/.test(JSON.parse(r.stdout).hookSpecificOutput.additionalContext),
+  r.stdout.slice(0, 200));
+eq("a failed qoder pin leaves the stored default alone", r.config, { defaultMode: "lite" });
+
 // One invocation is not the test: the leak showed up on the NEXT prompt, which
 // re-derived the level from the default the command had already replaced.
 r = track({ prompt: "fix the parser" }, { flag: "off", config: JSON.stringify({ defaultMode: "ultra" }), env: qoder });

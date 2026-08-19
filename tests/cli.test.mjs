@@ -230,6 +230,43 @@ check("--since keeps only findings on lines the diff added", () => {
   assert.doesNotMatch(since.stdout, /require-safety-comment/u, "pre-existing findings stay out of scope");
 });
 
+check("--since with no paths stays under the current directory", () => {
+  // The changed-file map comes from the repository ROOT, so a run in packages/a
+  // was handing back findings from a changed packages/b — work outside the
+  // subtree the caller asked about.
+  const repo = join(root, "subdir-repo");
+  const git = (...args) =>
+    execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  try {
+    mkdirSync(join(repo, "packages", "a"), { recursive: true });
+    mkdirSync(join(repo, "packages", "b"), { recursive: true });
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "packages", "a", "a.ts"), "export const x = 1;\n");
+    writeFileSync(join(repo, "packages", "b", "b.ts"), "export const y = 1;\n");
+    git("add", "-A");
+    git("commit", "-qm", "base");
+    writeFileSync(join(repo, "packages", "a", "a.ts"), "export const x: any = 1;\n");
+    writeFileSync(join(repo, "packages", "b", "b.ts"), "export const y: any = 1;\n");
+    git("add", "-A");
+    git("commit", "-qm", "change");
+  } catch {
+    console.log("skip --since subdirectory scope (git unavailable)");
+    return;
+  }
+
+  const fromSubdir = run(["--since=HEAD~1", "--json"], join(repo, "packages", "a"));
+  const scoped = JSON.parse(fromSubdir.stdout);
+  assert.equal(scoped.length, 1, fromSubdir.stdout);
+  assert.match(scoped[0].path, /a\.ts$/u);
+
+  // From the root it still sees both, so the filter scoped the scan rather than
+  // narrowing what --since reports.
+  const fromRoot = JSON.parse(run(["--since=HEAD~1", "--json"], repo).stdout);
+  assert.equal(fromRoot.length, 2);
+});
+
 check("--since survives a filename git has to quote or pad", () => {
   const repo = join(root, "spaced");
   mkdirSync(repo, { recursive: true });

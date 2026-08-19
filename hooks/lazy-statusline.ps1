@@ -13,18 +13,18 @@ if (-not (Test-Path -LiteralPath $Flag)) {
 if ($null -ne $env:LAZY_HIDE_STATUS) {
     if ($env:LAZY_HIDE_STATUS.Trim() -notin @("", "0", "false", "no")) { exit 0 }
 } else {
-    # Same order as getConfigDir(): XDG, then APPDATA, then the platform
-    # fallback. On Windows that fallback is AppData\Roaming, not .config — a
-    # service account with neither variable set wrote its preference to one path
-    # and had the statusline read the other. $IsWindows is absent in Windows
-    # PowerShell 5.1, which only runs on Windows, so "not explicitly false" is
-    # the test.
+    # Same choice as getConfigDir(): XDG if set, else AppData\Roaming on Windows
+    # (via APPDATA when it is set), else .config. A service account with neither
+    # variable set wrote its preference to one path and had the statusline read
+    # the other. $IsWindows is absent in Windows PowerShell 5.1, which only runs
+    # on Windows, so "not explicitly false" is the test.
     $ConfigDir = if ($env:XDG_CONFIG_HOME) {
         $env:XDG_CONFIG_HOME
-    } elseif ($env:APPDATA) {
-        $env:APPDATA
     } elseif ($IsWindows -ne $false) {
-        Join-Path (Join-Path $HOME "AppData") "Roaming"
+        # APPDATA is inside the Windows branch, not ahead of it: getConfigDir()
+        # ignores it entirely on other platforms, so pwsh on Linux with a stray
+        # APPDATA read one file while the hooks wrote another.
+        if ($env:APPDATA) { $env:APPDATA } else { Join-Path (Join-Path $HOME "AppData") "Roaming" }
     } else {
         Join-Path $HOME ".config"
     }
