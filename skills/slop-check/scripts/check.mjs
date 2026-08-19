@@ -105,14 +105,17 @@ function maskSource(source, { jsx = false } = {}) {
   // the string contents answer for the element, which then opened a children
   // region that swallowed the code after it.
   //
-  // Deliberately only DOUBLE-quoted strings that close on their own line, and
-  // block comments. A pre-pass cannot know whether it is in code or in JSX
-  // text, and the wider version of this was wrong in both directions: an
-  // apostrophe in prose ("don't") read as a string, a URL in text read as a
-  // line comment, a lone backtick swallowing the file. Prose carries those
-  // three constantly and balanced double quotes almost never, so this covers
-  // the reported shape without inventing spans in text. A closer inside a
-  // single-quoted string or a template is still counted.
+  // Every quote form, and block comments -- but a quote only counts when it
+  // CLOSES ON ITS OWN LINE. That one condition is what makes this safe in JSX
+  // text, where a pre-pass cannot tell code from prose: an apostrophe in
+  // "don't" never finds a partner on its line, so it claims nothing, while
+  // `{'</div>'}` in an expression hole closes immediately and does. An earlier
+  // version claimed a span whether or not the quote closed, and read prose
+  // apostrophes, a URL's `//` and a lone backtick as literals -- so line
+  // comments stay out of this entirely and the pairing test carries the rest.
+  // A template that spans lines is given up with them; a closing tag inside one
+  // is rarer than the prose this protects.
+  const QUOTES = "\"'`";
   const literalSpans = () => {
     const spans = [];
     for (let k = 0; k < n; k += 1) {
@@ -124,13 +127,13 @@ function maskSource(source, { jsx = false } = {}) {
         k = close + 1;
         continue;
       }
-      if (ch !== '"') continue;
+      if (!QUOTES.includes(ch)) continue;
       let j = k + 1;
-      while (j < n && source[j] !== '"' && source[j] !== "\n") {
+      while (j < n && source[j] !== ch && source[j] !== "\n") {
         if (source[j] === "\\") j += 1;
         j += 1;
       }
-      // Unterminated on its line: not a string, so claim nothing.
+      // Unterminated on its line: not a literal, so claim nothing.
       if (j >= n || source[j] === "\n") continue;
       spans.push([k, j + 1]);
       k = j;
@@ -674,8 +677,10 @@ const LINE_RULES = [
     // colon, `as`, a generic delimiter, or precedes `[]`. `[<,]` and not `<`:
     // `Map<string, any>` is the SECOND type argument, and matching only the
     // first meant the common shape of this defect was reported clean while
-    // `Map<any, string>` was reported.
-    pattern: /:\s*any\b|\bas\s+any\b|[<,]\s*any\s*[,>]|\bany\s*\[\]|\btype\s+[\w$]+(?:<(?:[^<>]|<[^<>]*>)*>)?\s*=\s*any\b|[|&]\s*any\b/u,
+    // `Map<any, string>` was reported. A union is matched from BOTH sides for
+    // the same reason: `any | null` collapses to `any` exactly as `null | any`
+    // does, and operand order is not a property worth being sensitive to.
+    pattern: /:\s*any\b|\bas\s+any\b|[<,]\s*any\s*[,>]|\bany\s*\[\]|\btype\s+[\w$]+(?:<(?:[^<>]|<[^<>]*>)*>)?\s*=\s*any\b|[|&]\s*any\b|\bany\s*[|&]/u,
     message: "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
   },
   {
@@ -973,10 +978,12 @@ const ASSERTED_TYPE = [
 // none, and it drops the nested alternations that made the pattern expensive.
 const CLOSER = { "<": ">", "{": "}", "[": "]", "(": ")" };
 // A `;` ends the scan, because a `<` that was really a comparison would
-// otherwise run to the end of the file looking for its `>`. NOT inside braces:
-// an object type separates its members with `;`, so `as {\n id: string;\n}` is
-// the ordinary multi-line shape and bailing there missed it. Type arguments,
-// tuples and parameter lists are comma-separated and hold no `;`.
+// otherwise run to the end of the file looking for its `>`. NOT while inside
+// braces at ANY depth: an object type separates its members with `;`, so both
+// `as { id: string; }` and `as Promise<{ id: string; name: string }>` are
+// ordinary. Testing only the OUTERMOST opener got the first right and the
+// second wrong — the `;` sits inside braces nested in a `<>`, so a nesting
+// counter is the thing to track, not the opener the scan began at.
 // The cap bounds the work per candidate, since this runs from a PostToolUse
 // hook on every edit.
 const SCAN_LIMIT = 4000;
@@ -985,16 +992,18 @@ function balancedEnd(text, start) {
   const open = text[start];
   const close = CLOSER[open];
   if (!close) return -1;
-  const statementEnds = open !== "{";
   const limit = Math.min(text.length, start + SCAN_LIMIT);
   let depth = 0;
+  let braces = 0;
   for (let k = start; k < limit; k += 1) {
     const ch = text[k];
+    if (ch === "{") braces += 1;
+    else if (ch === "}") braces -= 1;
     if (ch === open) depth += 1;
     else if (ch === close) {
       depth -= 1;
       if (depth === 0) return k + 1;
-    } else if (ch === ";" && statementEnds) return -1;
+    } else if (ch === ";" && braces === 0) return -1;
   }
   return -1;
 }

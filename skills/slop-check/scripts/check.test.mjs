@@ -302,6 +302,43 @@ expectRule(
   "no-any",
   "sample.tsx",
 );
+// A union collapses to `any` whichever side it is written on.
+expectRule("flags any before a union delimiter", "type Cache = Map<string, any | null>;", "no-any");
+expectRule("flags any before an intersection delimiter", "type T = A<string, any & B>;", "no-any");
+expectRule("flags any after a union delimiter", "type C = Map<string, null | any>;", "no-any");
+// A `;` separates object-type members at ANY nesting depth, so it only ends the
+// scan outside braces. Testing the outermost opener got the first of these
+// right and the second wrong.
+expectRule(
+  "flags an assertion whose object type is nested in a generic",
+  "const a = payload as Promise<{ id: string; name: string }>;",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "flags an assertion with a semicolon-separated object type",
+  "const a = payload as { id: string; name: string };",
+  "require-safety-comment-for-type-assertion",
+);
+// A `;` outside braces still ends the scan, so a comparison cannot run away.
+expectNoRule(
+  "a comparison followed by a statement end is not a type",
+  "const ok = count as number;\nconst cmp = a < b;\nconst d = c > e;",
+  "no-any",
+);
+// Every quote form, not just double quotes: a closer inside any of them is not
+// the element's closer.
+for (const [label, quoted] of [
+  ["a single-quoted", "{'</div>'}"],
+  ["a double-quoted", '{"</div>"}'],
+  ["a template", "{`</div>`}"],
+]) {
+  expectRule(
+    `code after an unfinished element with ${label} closing tag is still checked`,
+    `const el = <div>${quoted}\nconst value: any = 1;`,
+    "no-any",
+    "sample.tsx",
+  );
+}
 expectRule("flags a string-literal type assertion", 'const a = payload as "ready";', "require-safety-comment-for-type-assertion");
 expectRule("flags a numeric-literal type assertion", "const a = payload as 42;", "require-safety-comment-for-type-assertion");
 expectRule('flags an indexed-access assertion', 'const a = payload as User["id"];', "require-safety-comment-for-type-assertion");

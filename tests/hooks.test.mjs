@@ -574,10 +574,14 @@ r = track({ prompt: "$lazy lite" });
 eq("$lazy switches mode", r.flag, "lite");
 r = track({ prompt: "/lazy:lazy ultra" });
 eq("/lazy:lazy (namespaced) switches mode", r.flag, "ultra");
+// One-shot: the review pointer goes out for this turn and the live level is
+// untouched. Persisting `review` pinned every later prompt and subagent to a
+// level skills/lazy-review/SKILL.md says is not a mode at all.
 r = track({ prompt: "/lazy-review" });
-eq("/lazy-review activates review", [r.flag, r.stdout], ["review", "LAZY MODE CHANGED — level: review"]);
+eq("/lazy-review emits the review pointer without switching",
+  [r.flag, r.stdout], ["ultra", "LAZY MODE ACTIVE — level: review. Behavior defined by /lazy-review skill."]);
 r = track({ prompt: "/lazy:lazy-review" });
-eq("/lazy:lazy-review activates review", r.flag, "review");
+eq("/lazy:lazy-review does not switch either", r.flag, "ultra");
 r = track({ prompt: "/lazy off" });
 eq("/lazy off clears the flag", [r.flag, r.stdout], [null, "LAZY MODE OFF"]);
 
@@ -789,6 +793,40 @@ ok("qoder folds the switch confirmation into one JSON write",
   parses(r.stdout) &&
   JSON.parse(r.stdout).hookSpecificOutput.additionalContext
     .startsWith("LAZY MODE CHANGED — level: ultra\n\nLAZY MODE ACTIVE — level: ultra"));
+// `/lazy-review` is one-shot: skills/lazy-review/SKILL.md says "it sets no
+// mode, so there is nothing to revert", and persisting `review` pinned every
+// later prompt and subagent to a level with no documented way back.
+{
+  const before = track({ prompt: "/lazy ultra" }, { flag: null });
+  eq("the live level before /lazy-review", before.flag, "ultra");
+  const review = track({ prompt: "/lazy-review" }, { flag: before.flag });
+  eq("/lazy-review leaves the live level alone", review.flag, "ultra");
+  eq("/lazy-review still emits the review pointer for this turn",
+    review.stdout, "LAZY MODE ACTIVE — level: review. Behavior defined by /lazy-review skill.");
+  const after = track({ prompt: "/lazy" }, { flag: review.flag });
+  eq("a bare /lazy after /lazy-review reports the real level, not review",
+    after.stdout, "LAZY MODE ACTIVE — level: ultra");
+}
+
+// A deactivation that could not be written must NOT claim it worked. Both
+// writes swallow their own failures, so the state is read back rather than
+// assumed. A directory where the state file goes fails every write, for root
+// too — permission bits alone do not reproduce this when the suite runs as root.
+{
+  const box = freshHome("qoder-off-unwritable");
+  const state = path.join(box.home, ".qoder", qoderStateFile("s-unwritable"));
+  fs.mkdirSync(path.dirname(state), { recursive: true });
+  fs.mkdirSync(state, { recursive: true });
+  fs.mkdirSync(path.join(box.env.XDG_CONFIG_HOME, "lazy"), { recursive: true });
+  fs.writeFileSync(path.join(box.env.XDG_CONFIG_HOME, "lazy", "config.json"), JSON.stringify({ defaultMode: "full" }));
+  const res = runHook("lazy-mode-tracker.js", JSON.stringify({ prompt: "/lazy off" }),
+    { ...box.env, QODER_SESSION_ID: "s-unwritable" });
+  const context = parses(res.stdout) ? JSON.parse(res.stdout).hookSpecificOutput.additionalContext : "";
+  ok("a failed deactivation reports the failure", /could not turn lazy off/.test(context), context.slice(0, 160));
+  ok("a failed deactivation does not claim LAZY MODE OFF", !/^LAZY MODE OFF/.test(context), context.slice(0, 160));
+  ok("a failed deactivation admits lazy is still active", /still active/.test(context), context.slice(0, 160));
+}
+
 r = track({ prompt: "stop lazy" }, { env: qoder });
 // `off` is written, not cleared. On Claude Code and Codex an absent flag IS
 // off, because lazy-activate.js rewrites it at SessionStart. Qoder has no
@@ -1365,9 +1403,10 @@ if (!canRunBash) {
     if (flagContent === null) fs.rmSync(sl.flag, { force: true });
     else fs.writeFileSync(sl.flag, flagContent);
     const res = spawnSync("bash", [STATUSLINE], { encoding: "utf8", env: baseEnv({ ...sl.env, ...env }), timeout: 20000 });
-    return { status: res.status, out: res.stdout };
+    // stderr too: a bash warning on the render path lands in the prompt.
+    return { status: res.status, out: res.stdout, err: res.stderr };
   };
-  eq("statusline prints nothing with no flag file", statusline(null), { status: 0, out: "" });
+  eq("statusline prints nothing with no flag file", statusline(null), { status: 0, out: "", err: "" });
   ok("statusline prints [LAZY] for full", statusline("full").out.includes("[LAZY]"));
   ok("statusline prints [LAZY:ULTRA] for ultra", statusline("ultra\n").out.includes("[LAZY:ULTRA]"));
   ok("statusline colors ultra amber", statusline("ultra").out.includes("38;5;173"));
@@ -1377,8 +1416,8 @@ if (!canRunBash) {
   ok("statusline normalizes case and padding", statusline("  ULTRA  ").out.includes("[LAZY:ULTRA]"));
   // readMode() rejects `ultra\nsecond line` (the whole file has to be a level),
   // so the badge must not paint one either — it used to read only line 1.
-  eq("a multi-line flag prints nothing, matching readMode", statusline("ultra\nsecond line"), { status: 0, out: "" });
-  eq("a flag of off prints nothing", statusline("off"), { status: 0, out: "" });
+  eq("a multi-line flag prints nothing, matching readMode", statusline("ultra\nsecond line"), { status: 0, out: "", err: "" });
+  eq("a flag of off prints nothing", statusline("off"), { status: 0, out: "", err: "" });
   eq("statusline always exits 0", [statusline("banana").status, statusline(null).status], [0, 0]);
   fs.writeFileSync(sl.flag, "lite");
   ok("statusline falls back to $HOME/.claude when CLAUDE_CONFIG_DIR is unset",
@@ -1480,6 +1519,34 @@ if (!canRunBash) {
   }
   fs.rmSync(sl.config, { force: true });
 
+  // A NUL byte in the flag file. `$(<file)` discards it and warns on stderr, so
+  // `ul\0tra` normalized to `ultra` and painted an active badge while
+  // readMode() kept the byte and rejected the same state as off -- and the
+  // warning itself leaked into the prompt.
+  {
+    for (const [label, body] of [
+      ["a NUL inside the level", "ul\u0000tra"],
+      ["a trailing NUL", "ultra\u0000"],
+      ["a leading NUL", "\u0000ultra"],
+    ]) {
+      // Through the helper, not written behind it: `statusline(x)` REWRITES the
+      // flag with x, so pre-writing the body tested "ultra" and passed against
+      // the bug.
+      const res = statusline(body);
+      // The real readMode(), not a re-implementation of it: the whole claim is
+      // that these two agree. Module state is resolved at import, so the cache
+      // has to be dropped for the box env to apply.
+      const live = withEnv(sl.env, () => {
+        delete require.cache[require.resolve(path.join(HOOKS, "lazy-runtime.js"))];
+        delete require.cache[require.resolve(path.join(HOOKS, "lazy-config.js"))];
+        return require(path.join(HOOKS, "lazy-runtime.js")).readMode();
+      });
+      ok(`the statusline agrees with readMode on ${label}`,
+        (res.out === "") === (live === null), JSON.stringify([res.out, live]));
+      ok(`${label} leaks no warning into the prompt`, !/warning|null byte/i.test(res.err || ""), res.err);
+    }
+  }
+
   // getConfigDir() resolves exactly ONE directory, so a config in a directory it
   // did not pick must not override the explicit hideStatus:false in the one it did.
   const appdata = path.join(sl.home, "appdata");
@@ -1509,9 +1576,9 @@ if (!canRunBash) {
 
   // The badge and readMode() must agree about whether lazy is on: painting
   // [LAZY] for a flag readMode() rejects is the mismatch /lazy just lost.
-  eq("an unknown flag prints nothing, matching readMode", statusline("banana"), { status: 0, out: "" });
-  eq("an empty flag file prints nothing, matching readMode", statusline(""), { status: 0, out: "" });
-  eq("a whitespace-only flag prints nothing, matching readMode", statusline("   \n\n"), { status: 0, out: "" });
+  eq("an unknown flag prints nothing, matching readMode", statusline("banana"), { status: 0, out: "", err: "" });
+  eq("an empty flag file prints nothing, matching readMode", statusline(""), { status: 0, out: "", err: "" });
+  eq("a whitespace-only flag prints nothing, matching readMode", statusline("   \n\n"), { status: 0, out: "", err: "" });
   ok("surrounding whitespace is still trimmed, matching readMode",
     statusline("\n  ULTRA \t\n").out.includes("[LAZY:ULTRA]"));
 }

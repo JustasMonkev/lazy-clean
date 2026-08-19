@@ -208,6 +208,15 @@ else
     fi
 fi
 
+# A NUL byte makes the flag invalid, and it has to be caught BEFORE command
+# substitution: `$(<file)` silently discards NUL and warns on stderr, so
+# `ul\0tra` normalized to `ultra` and painted an active badge while readMode()
+# kept the byte and rejected the same state as off -- with the warning itself
+# leaking into the prompt. `read -d ""` stops at the first NUL and succeeds only
+# when it finds one, so this is the test with no subprocess on the render path.
+if IFS= read -r -d "" _ < "$flag" 2>/dev/null; then
+    exit 0
+fi
 # The whole file, not its first line: readMode() trims the whole file and
 # rejects whatever is left over, so `ultra\nanything` is off there and must not
 # paint a badge here either.

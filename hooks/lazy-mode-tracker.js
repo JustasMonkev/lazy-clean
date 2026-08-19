@@ -42,15 +42,22 @@ function finish() {
     // next one re-derived `full` and turned lazy back on, and `/lazy default`
     // re-enabled it the same way. Qoder gets an explicit `off` on disk; the
     // other hosts keep the absent-is-off contract.
+    // Returns whether lazy is ACTUALLY off now, read back from disk rather than
+    // assumed. Both writes swallow their own failures -- clearMode() ignores a
+    // failed unlink by design -- so a state file that could not be written left
+    // the previous level in place while the hook still answered LAZY MODE OFF,
+    // and the next prompt injected the ruleset again.
     const turnOff = () => {
-      if (!isQoder) return clearMode();
-      try {
-        return setMode('off');
-      } catch (e) {
-        // Unwritable state: fall back to the absent-is-off contract rather than
-        // leave the previous level in place.
-        return clearMode();
+      if (isQoder) {
+        try {
+          setMode('off');
+        } catch (e) { /* checked below, not assumed */ }
+        // On Qoder an absent flag means "derive from the default", not off, so
+        // only an explicit `off` on disk counts as deactivated here.
+        return readMode() === 'off';
       }
+      clearMode();
+      return readMode() === null;
     };
 
     let notice = null;
@@ -68,8 +75,17 @@ function finish() {
       let handled = false;
 
       if (cmd === '/lazy-review' || cmd === '/lazy:lazy-review') {
-        mode = 'review';
-      } else if (cmd === '/lazy' || cmd === '/lazy:lazy') {
+        // One-shot, exactly as skills/lazy-review/SKILL.md promises: "it sets no
+        // mode, so there is nothing to revert". Persisting `review` pinned every
+        // later prompt and every subagent to a level the docs never mention, and
+        // made a bare `/lazy` answer "ACTIVE — level: review" with no documented
+        // way back. The review ruleset goes out for THIS turn and the live level
+        // is untouched -- which is what OpenCode already did, so this is the two
+        // hosts agreeing rather than a new rule.
+        writeHookOutput('UserPromptSubmit', readMode() || 'off', getLazyInstructions('review'));
+        return;
+      }
+      if (cmd === '/lazy' || cmd === '/lazy:lazy') {
         // `/lazy default <mode>` persists the default to config (survives
         // restarts). Plain switches stay session-scoped ("sticks until session
         // end"), so this is the only path that writes config. review is not a
@@ -143,17 +159,19 @@ function finish() {
         modeSwitched = true;
         notice = 'LAZY MODE CHANGED — level: ' + mode;
       } else if (mode === 'off') {
-        turnOff();
-        deactivated = true;
-        notice = 'LAZY MODE OFF';
+        deactivated = turnOff();
+        notice = deactivated
+          ? 'LAZY MODE OFF'
+          : 'LAZY: could not turn lazy off — the mode state could not be written, so lazy is still active.';
       }
     }
 
     // Detect deactivation
     if (!modeSwitched && !deactivated && isDeactivationCommand(prompt)) {
-      turnOff();
-      deactivated = true;
-      notice = 'LAZY MODE OFF';
+      deactivated = turnOff();
+      notice = deactivated
+        ? 'LAZY MODE OFF'
+        : 'LAZY: could not turn lazy off — the mode state could not be written, so lazy is still active.';
     }
 
     // Qoder has no SessionStart event, so UserPromptSubmit does double duty:
