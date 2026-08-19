@@ -174,6 +174,13 @@ expectNoRule("allows || undefined", "const company = input.company || undefined;
 expectRule("flags === true", "if (enabled === true) { run(); }", "no-boolean-literal-compare");
 expectNoRule("allows !== true tri-state", "if (flag !== true) { run(); }", "no-boolean-literal-compare");
 expectNoRule("allows normalizing an untyped value", "config.hideStatus = hide === true;", "no-boolean-literal-compare");
+// The exemption covers the normalization, not the line it sits on: a redundant
+// comparison sharing the line is still the thing this rule exists to catch.
+expectRule(
+  "a redundant comparison beside a normalization is still reported",
+  "if (enabled === true) normalized = input === true;",
+  "no-boolean-literal-compare",
+);
 expectNoRule("allows comparing a parsed property", "if (parsed.enabled === true) run();", "no-boolean-literal-compare");
 expectRule("flags if (!!x)", "if (!!user) { greet(user); }", "no-double-negation-condition");
 expectNoRule("allows !! in assignment", "const hasUser = !!user;", "no-double-negation-condition");
@@ -350,6 +357,17 @@ expectRule("flags bare ts-ignore", "// @ts-ignore\nconst parsed = legacyParse(in
 expectRule("flags ts-expect-error without a reason", "// @ts-expect-error broken\nconst parsed = legacyParse(input);", "no-unjustified-suppression");
 expectNoRule("allows an explained suppression", "// @ts-expect-error the vendored declaration is missing the strict option\nconst parsed = legacyParse(input, { strict: true });", "no-unjustified-suppression");
 expectNoRule("allows an ordinary comment", "// Parses the vendored payload.\nconst parsed = legacyParse(input);", "no-unjustified-suppression");
+// The `--` separator is the convention for the reason, not the reason itself.
+expectRule(
+  "flags a suppression whose separator is followed by nothing",
+  "// @ts-ignore --\nconst parsed = legacyParse(input);",
+  "no-unjustified-suppression",
+);
+expectNoRule(
+  "allows a reason after the separator",
+  "// @ts-expect-error -- the vendored types omit the strict option\nconst parsed = legacyParse(input, { strict: true });",
+  "no-unjustified-suppression",
+);
 
 expectRule("flags a Constructor doc comment", "/** Constructor */\nexport class AuthClient {}", "no-obvious-doc-comments");
 expectRule("flags a this-function doc comment", "/**\n * This function returns the current token.\n */\ngetToken() { return this.token; }", "no-obvious-doc-comments");

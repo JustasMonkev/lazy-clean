@@ -79,7 +79,7 @@ node skills/slop-check/scripts/check.mjs --since=HEAD          # before committi
 node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
 ```
 
-Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. `--summary` prints the per-rule tally alone, which is the number that tells you whether a codebase is worth a full pass.
+Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. `--summary` replaces the finding list with the per-rule tally, which is the number that tells you whether a codebase is worth a full pass. The run summary line still prints; `--json` is the machine-readable form.
 
 Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `slop-check`, `lazy-clean` (the main workflow).
 

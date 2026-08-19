@@ -289,6 +289,49 @@ check("--since ignores untracked names it would never lint", () => {
   assert.match(result.stdout, /clean \(0 files checked\)/u);
 });
 
+check("--since does not read added content as a diff header", () => {
+  const repo = join(root, "plus-content");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) =>
+    execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "a.ts"), "let x = 0;\n");
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since content header (git unavailable)");
+    return;
+  }
+  // An added line reading `++ x;` arrives from git as `+++ x;`, which used to
+  // parse as a destination header and fail the whole scan with exit 2.
+  writeFileSync(join(repo, "a.ts"), `let x = 0;\n++ x;\n${SLOP}`);
+  git("add", "-A");
+  const result = run(["--since=HEAD"], repo);
+  assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
+  assert.doesNotMatch(result.stderr, /cannot read/u);
+  assert.match(result.stdout, /a\.ts:3:22 require-safety-comment/u);
+});
+
+check("one file reached by two paths is linted once", () => {
+  // Deduplication keys on filesystem identity, not on a case-folded path: two
+  // distinct files on a case-sensitive volume must both be scanned, and two
+  // names for one file must not be.
+  const dir = join(root, "identity");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "real.ts"), SLOP);
+  try {
+    symlinkSync(join(dir, "real.ts"), join(dir, "alias.ts"), "file");
+  } catch {
+    console.log("skip identity dedupe (symlinks unavailable)");
+    return;
+  }
+  const result = run([join(dir, "real.ts"), join(dir, "alias.ts")]);
+  assert.match(result.stdout, /1 finding in 1 file/u, result.stdout);
+});
+
 check("--since reports a bad ref instead of passing silently", () => {
   const result = run(["--since=no-such-ref"], join(root, "repo"));
   assert.equal(result.status, 2);

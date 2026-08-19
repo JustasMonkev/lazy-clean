@@ -15,10 +15,13 @@ normalize() {
 
 # Hide the badge while leaving lazy active. LAZY_HIDE_STATUS wins over the
 # stored preference; 0/false/no/empty mean "don't hide", and `+set` tells empty
-# from unset — that path matches getHideStatus exactly. The config fallback is a
-# grep, not a JSON parse, so it can disagree with getHideStatus on a nested,
-# multi-line, or invalid config, and it reads $APPDATA on every platform where
-# getConfigDir() resolves exactly one directory.
+# from unset — that path matches getHideStatus exactly. The config fallback
+# strips whitespace before matching, so the key and value may sit on separate
+# lines as JSON allows; it is still a match and not a parse, so it can disagree
+# with getHideStatus on a nested `hideStatus` or one inside a string, and it
+# reads $APPDATA on every platform where getConfigDir() resolves one directory.
+# Parsing would mean a node start on every prompt render, which is the cost this
+# whole script exists to avoid.
 if [ -n "${LAZY_HIDE_STATUS+set}" ]; then
     hide=$(normalize "$LAZY_HIDE_STATUS")
     case "$hide" in
@@ -31,7 +34,7 @@ else
     # process.platform, and $APPDATA is only that directory on Windows.
     for config in "${XDG_CONFIG_HOME:-$HOME/.config}/lazy/config.json" "${APPDATA:+$APPDATA/lazy/config.json}"; do
         [ -n "$config" ] && [ -f "$config" ] || continue
-        grep -q '"hideStatus"[[:space:]]*:[[:space:]]*true' "$config" && exit 0
+        tr -d '[:space:]' < "$config" | grep -q '"hideStatus":true' && exit 0
         break
     done
 fi

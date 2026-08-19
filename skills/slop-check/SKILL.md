@@ -19,7 +19,7 @@ Everything runs from this skill directory with plain `node`. Do not install any 
 
    - With no paths it scans the current directory recursively (skipping `node_modules`, build output, and agent tooling directories).
    - To check only your own changes, pass the changed files: `node <skill-directory>/scripts/check.mjs $(git diff --name-only HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.mts' '*.cts')`.
-   - `--json` prints machine-readable findings; `--summary` prints only the per-rule tally. Exit code 1 means findings exist, 2 means a path could not be read, 0 means clean.
+   - `--json` prints machine-readable findings; `--summary` replaces the finding list with the per-rule tally (the run summary line still prints). Exit code 1 means findings exist, 2 means a path could not be read, 0 means clean.
    - `--since=<git-ref>` keeps only findings on lines the diff against that ref added — `--since=HEAD` before a commit, `--since=origin/main` in CI — which is how an existing codebase adopts the checker without a baseline file.
    - The checker reads TypeScript and JavaScript only. For any other language skip step 1 and treat the manual checklist below as the whole procedure — never report "clean" on the strength of a scan that read nothing.
 

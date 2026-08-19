@@ -589,8 +589,9 @@ const LINE_RULES = [
     name: "no-boolean-literal-compare",
     // `flag = value === true` normalizes an untyped value; the comparison has
     // to be the whole right-hand side, or a comparison anywhere on an
-    // assignment line escapes.
-    skipLine: /=\s*[\w$.[\]]+\s*===?\s*true\s*;?\s*$/u,
+    // assignment line escapes. Exempting the occurrence rather than the line
+    // keeps a second, redundant comparison on the same line reportable.
+    exempt: /=\s*[\w$.[\]]+\s*===?\s*true\s*;?\s*$/u,
     pattern: /(?:^|[^!<>=.\w$])[\w$]+\s*===?\s*true\b/u,
     message: "`x === true` restates the boolean. Use the value directly, or fix the type if it is not actually boolean.",
   },
@@ -639,7 +640,12 @@ function* iterateLineFindings(ctx) {
     for (const rule of LINE_RULES) {
       if (rule.tsOnly && !isTypeScript) continue;
       if (rule.skipLine?.test(line)) continue;
-      const match = rule.pattern.exec(line);
+      // `exempt` blanks just the part it matches, so the rest of the line is
+      // still inspected; the blanks keep every column where it was.
+      const probe = rule.exempt
+        ? line.replace(rule.exempt, (matched) => " ".repeat(matched.length))
+        : line;
+      const match = rule.pattern.exec(probe);
       if (match) {
         yield { line: lineNumber, column: match.index + 1, rule: rule.name, message: rule.message };
       }
@@ -921,7 +927,9 @@ function suppressionIsJustified(body) {
   const match = SUPPRESSION_DIRECTIVE_PATTERN.exec(body);
   if (!match) return true;
   const rest = body.slice(match.index + match[0].length);
-  if (rest.includes("--")) return true;
+  // The separator only justifies when something follows it.
+  const separated = rest.indexOf("--");
+  if (separated !== -1 && rest.slice(separated + 2).trim()) return true;
   const reason = rest.replace(/[\w@$][\w@$/.]*[-/][\w@$/.-]*/gu, " ");
   return (reason.match(/[A-Za-z]/gu) ?? []).length >= 10;
 }
@@ -1041,10 +1049,12 @@ export function lintSource(rawSource, filePath) {
 // CLI
 // ---------------------------------------------------------------------------
 
-// Case-folded on the platforms where the filesystem is: otherwise
-// `check.mjs src/a.ts SRC/A.TS` lints one file twice on Windows and macOS.
-const pathKey = (target) =>
-  process.platform === "win32" || process.platform === "darwin" ? target.toLowerCase() : target;
+// Filesystem identity, not a case-folded path: case-insensitivity is a property
+// of the volume, not the platform, so folding by process.platform merged
+// `src/A.ts` and `src/a.ts` on a case-sensitive macOS volume and silently
+// dropped whichever was collected second. dev+ino also makes two paths to one
+// file — including a symlink loop — the same entry for free.
+const identity = (stats, target) => (stats.ino ? `${stats.dev}:${stats.ino}` : resolve(target));
 
 function collectFiles(entry, scan) {
   let stats;
@@ -1058,14 +1068,9 @@ function collectFiles(entry, scan) {
   if (stats.isDirectory()) {
     // `ln -s . dir/self` recursed until ELOOP, then reported the whole tree as
     // unreadable (exit 2) and counted the same files once per loop turn.
-    let real;
-    try {
-      real = realpathSync(entry);
-    } catch {
-      real = resolve(entry);
-    }
-    if (scan.seenDirs.has(pathKey(real))) return;
-    scan.seenDirs.add(pathKey(real));
+    const dirKey = identity(stats, entry);
+    if (scan.seenDirs.has(dirKey)) return;
+    scan.seenDirs.add(dirKey);
     let names;
     try {
       names = readdirSync(entry);
@@ -1088,7 +1093,7 @@ function collectFiles(entry, scan) {
   if (!SOURCE_EXTENSIONS.has(suffix) || entry.toLowerCase().endsWith(".d.ts")) return;
   // The same file can arrive twice (listed explicitly and again via its
   // directory); linting it twice would double every finding and the count.
-  const key = pathKey(resolve(entry));
+  const key = identity(stats, entry);
   if (scan.seen.has(key)) return;
   scan.seen.add(key);
   scan.files.push(entry);
@@ -1155,8 +1160,14 @@ function addedLines(ref) {
     "-c", "core.quotepath=false", "diff", "-U0", "--no-color",
     "--src-prefix=a/", "--dst-prefix=b/", ref, "--",
   ]);
+  // A `+++ ` line is a header only where a header can appear: directly after the
+  // `--- ` source line. An added source line reading `++ x;` arrives as
+  // `+++ x;` and used to become a path that failed the whole scan.
+  let afterSourceHeader = false;
   for (const line of diff.split("\n")) {
-    if (line.startsWith("+++ ")) {
+    const wasHeader = afterSourceHeader;
+    afterSourceHeader = line.startsWith("--- ");
+    if (wasHeader && line.startsWith("+++ ")) {
       const target = line.slice(4);
       lines = target === "/dev/null" ? null : new Set();
       if (lines) byFile.set(resolve(root, diffTargetPath(target)), lines);

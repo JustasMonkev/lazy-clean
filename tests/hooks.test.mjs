@@ -1057,6 +1057,16 @@ if (!canRunBash) {
   writeConfig(sl, '{"defaultMode":"ultra"}');
   ok("a config without hideStatus keeps the badge", statusline("ultra").out.includes("[LAZY:ULTRA]"));
 
+  // JSON allows the key and value on separate lines; a line-based match could
+  // not see that, so the badge showed for a user who had hidden it.
+  for (const body of ['{\n  "hideStatus":\n  true\n}', '{"hideStatus":true}', '{ "hideStatus" : true }', '{"hideStatus":false}']) {
+    writeConfig(sl, body);
+    const hidden = statusline("ultra").out === "";
+    ok(`statusline agrees with getHideStatus on ${JSON.stringify(body)}`,
+      hidden === withEnv(sl.env, () => config.getHideStatus()));
+  }
+  fs.rmSync(sl.config, { force: true });
+
   // getConfigDir() resolves exactly ONE directory, so a config in a directory it
   // did not pick must not override the explicit hideStatus:false in the one it did.
   const appdata = path.join(sl.home, "appdata");
