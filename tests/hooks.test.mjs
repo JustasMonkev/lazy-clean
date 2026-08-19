@@ -908,6 +908,31 @@ eq("a bare /lazy leaves the live level alone", fs.readFileSync(ocState, "utf8"),
   }
 }
 
+// A findings-heavy file overran spawnSync's default 1MB buffer: the child ended
+// with a null status, which read as "the checker broke", and the hook dropped
+// the report for exactly the file that needed it most.
+const floodTs = write("flood.ts", "const user = payload as User;\n".repeat(10000));
+e = editCheck(toolPayload(floodTs));
+// Raw stdout, not contextOf: against a build with this bug there is no JSON to
+// parse, and the assertion has to fail rather than abort the suite.
+ok("a findings-heavy file still gets a capped report",
+  e.stdout.includes("more on these lines, not listed."), e.stdout.slice(0, 200));
+
+// Neither statusline may coerce the stored preference: getHideStatus() requires
+// the property to be strictly boolean true. The .sh path is exercised above;
+// PowerShell is not installed here, so this is a drift guard on the source.
+{
+  const ps1 = fs.readFileSync(path.join(ROOT, "hooks", "lazy-statusline.ps1"), "utf8");
+  ok("the PowerShell statusline requires a boolean hideStatus", /-is \[bool\]/.test(ps1));
+}
+
+// The OpenCode template is what /lazy-debt actually runs there, so it has to
+// carry the same marker set as the skill body.
+{
+  const template = fs.readFileSync(path.join(ROOT, ".opencode", "command", "lazy-debt.md"), "utf8");
+  ok("the OpenCode debt template matches the skill's marker set", template.includes("<!--") && template.includes("exclude-dir"), template.slice(0, 80));
+}
+
 // --- lazy-activate -----------------------------------------------------------
 
 const act = freshHome("activate");

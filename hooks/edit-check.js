@@ -74,7 +74,10 @@ function finish() {
     const file = toolInput.file_path || '';
     if (!file || !EXTS.has(path.extname(file).toLowerCase())) return;
 
-    const res = spawnSync(process.execPath, [CHECKER, file, '--json'], { encoding: 'utf8', timeout: 20000 });
+    // maxBuffer: the default 1MB is ~3,000 findings of JSON. Overrunning it
+    // ends the child with a null status, which read as "the checker broke" and
+    // dropped the report for exactly the files that needed it most.
+    const res = spawnSync(process.execPath, [CHECKER, file, '--json'], { encoding: 'utf8', timeout: 20000, maxBuffer: 64e6 });
     if (res.status !== 1 || !res.stdout) return; // 0 = clean, anything else = checker broke
     const all = JSON.parse(res.stdout);
     if (all.length === 0) return;

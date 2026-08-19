@@ -721,8 +721,9 @@ const MODULE_STATEMENT = /^\s*import\b|^\s*export\s*(?:type\s+)?[{*]/u;
 // The operand prefix is anchored to an identifier start and needs real
 // whitespace before `as`: written as `([\w$]+)?\s*` it backtracked O(n^2) and
 // spent 9s on one long line, which this runs on after every edit.
+// Global: every assertion on the line is examined, not just the first.
 const TYPE_ASSERTION_PATTERN =
-  /(?:(?<![\w$.])([\w$]+)\s+)?\bas\s+(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<(?:[^<>]|<[^<>]*>)*>)?(?:\[\])*\s*(?=[;,)\]}=&|?:]|$)/u;
+  /(?:(?<![\w$.])([\w$]+)\s+)?\bas\s+(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:<(?:[^<>]|<[^<>]*>)*>)?(?:\[\])*\s*(?=[;,)\]}=&|?:]|$)/gu;
 
 
 // Multi-line shapes matched against the masked source. Each was measured
@@ -887,11 +888,17 @@ function* iterateAssertionFindings(ctx) {
       continue;
     }
     if (MODULE_STATEMENT.test(line)) continue;
-    const match = TYPE_ASSERTION_PATTERN.exec(line);
-    if (!match) continue;
-    const operand = match[1];
     const lineNumber = index + 1;
-    if (operand && inCatchBlock(operand, lineNumber)) continue;
+    // Every assertion on the line, not just the first: exempting the catch
+    // narrowing in `const a = error as Error, b = payload as User;` used to
+    // exempt the whole line, and the second assertion escaped with it.
+    let match = null;
+    for (const candidate of line.matchAll(TYPE_ASSERTION_PATTERN)) {
+      if (candidate[1] && inCatchBlock(candidate[1], lineNumber)) continue;
+      match = candidate;
+      break;
+    }
+    if (!match) continue;
     const hasSafetyComment =
       commentLines.has(lineNumber) || commentLines.has(lineNumber - 1) ||
       commentLines.has(lineNumber - 2) || commentLines.has(lineNumber - 3);
@@ -1158,7 +1165,7 @@ function addedLines(ref) {
   // and quotepath is off so a non-ASCII name arrives verbatim, not C-quoted.
   const diff = git([
     "-c", "core.quotepath=false", "diff", "-U0", "--no-color",
-    "--src-prefix=a/", "--dst-prefix=b/", ref, "--",
+    "--src-prefix=a/", "--dst-prefix=b/", "--end-of-options", ref, "--",
   ]);
   // A `+++ ` line is a header only where a header can appear: directly after the
   // `--- ` source line. An added source line reading `++ x;` arrives as

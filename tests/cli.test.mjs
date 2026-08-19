@@ -332,6 +332,14 @@ check("one file reached by two paths is linted once", () => {
   assert.match(result.stdout, /1 finding in 1 file/u, result.stdout);
 });
 
+check("--since treats a dash-leading ref as a ref, not an option", () => {
+  // `--since=--no-patch` was handed to git ahead of the `--` separator, so git
+  // read it as another diff option and the scan reported clean with exit 0.
+  const result = run(["--since=--no-patch"], join(root, "repo"));
+  assert.equal(result.status, 2, `${result.stdout}${result.stderr}`);
+  assert.match(result.stderr, /cannot diff against --no-patch/u);
+});
+
 check("--since reports a bad ref instead of passing silently", () => {
   const result = run(["--since=no-such-ref"], join(root, "repo"));
   assert.equal(result.status, 2);

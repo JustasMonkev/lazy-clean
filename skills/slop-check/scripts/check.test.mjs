@@ -132,6 +132,13 @@ expectNoRule(
   'try { f(); } catch (error) {\n  const problem = error as ProblemDetails;\n  return problem.status;\n}',
   "require-safety-comment-for-type-assertion",
 );
+// The exemption covers the narrowing, not the line: a second, unrelated
+// assertion sharing it is still the thing the rule exists to ask about.
+expectRule(
+  "an unrelated assertion beside an exempt catch narrowing is still reported",
+  'try { f(); } catch (error) {\n  const a = error as Error, b = payload as User;\n}',
+  "require-safety-comment-for-type-assertion",
+);
 expectNoRule(
   "allows narrowing in a promise catch callback",
   'load().catch(error => {\n  const fault = error as NodeJS.ErrnoException;\n  report(fault);\n});',
