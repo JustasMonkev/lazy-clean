@@ -771,12 +771,19 @@ const NAMED_TYPE = String.raw`(?!const\b|any\b|unknown\b)[A-Za-z_$][\w$]*(?:\.[A
 // `as [string, number]`, `as () => void` and `as typeof User` were all missed,
 // which are exactly the shapes hand-written narrowing reaches for. `typeof`
 // leads so the named alternative cannot claim the keyword and stop there.
+// `keyof`/`typeof` stack in practice — `as keyof typeof config` is the common
+// one — so they are a bounded prefix rather than a separate alternative. Bounded
+// because an unbounded `*` over two whitespace-led alternatives is the shape
+// that backtracks, and this runs after every edit.
+const TYPE_OPERATOR = String.raw`(?:(?:keyof|typeof)\s+){0,3}`;
 const ASSERTED_TYPE = [
-  String.raw`typeof\s+${NAMED_TYPE}`,
+  // Function type first, so `as (a: A) => B` reports at the whole type rather
+  // than stopping at the parenthesized-type alternative below.
   String.raw`\((?:[^()]*)\)\s*=>\s*(?:${NAMED_TYPE}|\{[^{}]*\})`,
-  String.raw`\{[^{}]*\}`,
-  String.raw`\[[^[\]]*\]`,
-  NAMED_TYPE,
+  String.raw`${TYPE_OPERATOR}(?:${NAMED_TYPE}|\{[^{}]*\}|\[[^[\]]*\])`,
+  // A parenthesized type: `as (User & Admin)`. One nesting level, and the two
+  // branches are disjoint on their first character, so it cannot backtrack.
+  String.raw`\((?:[^()]|\([^()]*\))*\)`,
 ].join("|");
 // `as` followed by something type-shaped and then a real terminator. Without
 // the terminator, English prose in JSX text ("served as static assets") and
@@ -1343,14 +1350,29 @@ function renderTally(findings) {
 
 function main() {
   const args = process.argv.slice(2);
-  const json = args.includes("--json");
-  const summaryOnly = args.includes("--summary");
-  const since = args.find((arg) => arg.startsWith("--since="))?.slice("--since=".length);
-  const targets = args.filter((arg) => !arg.startsWith("-"));
-  for (const arg of args) {
-    if (arg.startsWith("-") && !["--json", "--summary"].includes(arg) && !arg.startsWith("--since=")) {
-      console.error(`slop-check: ignoring unknown option ${arg}`);
-    }
+  // `--` ends the options, POSIX-style: everything after it is a path. A source
+  // file whose name starts with `-` was otherwise unreachable — it read as an
+  // option, went unscanned, and the run still exited 0, which is a clean bill of
+  // health for a file nobody looked at.
+  const endOfOptions = args.indexOf("--");
+  const optionArgs = endOfOptions === -1 ? args : args.slice(0, endOfOptions);
+  const json = optionArgs.includes("--json");
+  const summaryOnly = optionArgs.includes("--summary");
+  const since = optionArgs.find((arg) => arg.startsWith("--since="))?.slice("--since=".length);
+  const targets = [
+    ...optionArgs.filter((arg) => !arg.startsWith("-")),
+    ...(endOfOptions === -1 ? [] : args.slice(endOfOptions + 1)),
+  ];
+  // Exit 2, not a warning: the run did not do what it was asked, and the whole
+  // point of the code is that a scan which skipped something never reports
+  // clean. 0 = clean, 1 = findings, 2 = scan failed.
+  const unknown = optionArgs.filter(
+    (arg) => arg.startsWith("-") && !["--json", "--summary"].includes(arg) && !arg.startsWith("--since="),
+  );
+  if (unknown.length > 0) {
+    console.error(`slop-check: unknown option ${unknown[0]} (use \`-- ${unknown[0]}\` to scan a file with that name)`);
+    process.exitCode = 2;
+    return;
   }
 
   let added = null;

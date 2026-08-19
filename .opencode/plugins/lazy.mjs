@@ -109,7 +109,12 @@ export default async ({ client } = {}) => {
         try {
           if (!fs.existsSync(statePath)) writeMode(live);
         } catch (e) {
-          log('error', 'lazy: could not pin the current level (' + e.message + ')');
+          // Writing the default anyway would move this session's level, which is
+          // the one thing the pin exists to prevent — and the state directory
+          // and the config directory can fail independently. Leave both as they
+          // are rather than half-applying the command.
+          log('error', 'lazy: could not pin the current level, so the default was left unchanged (' + e.message + ')');
+          return;
         }
         // An unwritable config directory threw straight into OpenCode's hook
         // runner; the Claude tracker already catches this case and reports it.

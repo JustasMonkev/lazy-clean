@@ -125,6 +125,9 @@ expectRule(
 );
 // Requiring a type NAME meant every anonymous form walked past: these are the
 // shapes an inline narrowing actually takes.
+expectRule("flags a keyof type assertion", "const a = payload as keyof User;", "require-safety-comment-for-type-assertion");
+expectRule("flags a stacked keyof typeof assertion", "const a = payload as keyof typeof config;", "require-safety-comment-for-type-assertion");
+expectRule("flags a parenthesized type assertion", "const a = payload as (User & Admin);", "require-safety-comment-for-type-assertion");
 expectRule("flags an object-literal type assertion", "const a = payload as { id: string };", "require-safety-comment-for-type-assertion");
 expectRule("flags a tuple type assertion", "const a = payload as [string, number];", "require-safety-comment-for-type-assertion");
 expectRule("flags a function type assertion", "const a = payload as () => void;", "require-safety-comment-for-type-assertion");

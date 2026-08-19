@@ -933,6 +933,25 @@ ok("/lazy default off records the new default",
 ok("/lazy default off pins the level the session was already running at",
   fs.existsSync(ocDefaultState) && fs.readFileSync(ocDefaultState, "utf8").trim() === "ultra",
   fs.existsSync(ocDefaultState) ? fs.readFileSync(ocDefaultState, "utf8") : "<no state file>");
+// The state directory and the config directory fail independently. Writing the
+// default when the pin failed would move THIS session's level — the one thing
+// the pin exists to prevent — so the command applies fully or not at all.
+const ocBlockedPin = freshHome("opencode-blocked-pin");
+fs.mkdirSync(path.join(ocBlockedPin.env.XDG_CONFIG_HOME, "lazy"), { recursive: true });
+const ocBlockedConfig = path.join(ocBlockedPin.env.XDG_CONFIG_HOME, "lazy", "config.json");
+fs.writeFileSync(ocBlockedConfig, JSON.stringify({ defaultMode: "lite" }));
+// A file where the state directory has to go: mkdir fails, the config does not.
+fs.writeFileSync(path.join(ocBlockedPin.env.XDG_CONFIG_HOME, "opencode"), "");
+const ocPinFail = opencodeCommand("default ultra", ocBlockedPin.env.XDG_CONFIG_HOME);
+ok("a failed pin is reported",
+  Array.isArray(ocPinFail.logs) && ocPinFail.logs.some((l) => l.level === "error" && /could not pin/.test(l.message)),
+  JSON.stringify(ocPinFail.logs));
+ok("a failed pin does not report the default as set",
+  Array.isArray(ocPinFail.logs) && !ocPinFail.logs.some((l) => /^lazy default /.test(l.message)),
+  JSON.stringify(ocPinFail.logs));
+eq("a failed pin leaves the stored default alone",
+  JSON.parse(fs.readFileSync(ocBlockedConfig, "utf8")).defaultMode, "lite");
+
 // An explicit level is the user's choice for this session; leave it be.
 const ocPinned = freshHome("opencode-pinned");
 const ocPinnedState = path.join(ocPinned.env.XDG_CONFIG_HOME, "opencode", ".lazy-active");

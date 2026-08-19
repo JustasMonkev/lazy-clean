@@ -165,11 +165,32 @@ check("--json on a clean file is an empty array", () => {
   assert.equal(result.status, 0);
 });
 
-check("an unknown option is reported, not treated as a path", () => {
+check("an unknown option fails the scan rather than being ignored", () => {
+  // Exit 2, not 1: warning and carrying on meant a run that skipped what it was
+  // asked to look at could still report on everything else and exit 0.
   const result = run(["slop.ts", "-v"]);
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /ignoring unknown option -v/u);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /unknown option -v/u);
   assert.doesNotMatch(result.stderr, /cannot read/u);
+});
+
+check("-- lets a dash-leading filename be scanned", () => {
+  // Without an end-of-options marker this name was unreachable: it read as an
+  // option, went unscanned, and the run exited 0 — clean for a file nobody read.
+  write("-dash.ts", "const value: any = 1;\n");
+  const result = run(["--", "-dash.ts"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /-dash\.ts:1:12 no-any/u);
+  // That one file and no other: with `--` stripped as an option the target list
+  // fell back to ".", which scanned the whole tree and found it by accident.
+  assert.match(result.stdout, /1 finding in 1 file/u);
+});
+
+check("-- keeps options before it and paths after it apart", () => {
+  const result = run(["--json", "--", "-dash.ts"]);
+  const findings = JSON.parse(result.stdout);
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].rule, "no-any");
 });
 
 check("a file outside cwd keeps its absolute path", () => {
