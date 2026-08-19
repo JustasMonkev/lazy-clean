@@ -6,10 +6,23 @@ flag="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.lazy-active"
 # String.prototype.trim() + toLowerCase(), so this and lazy-config.js normalize
 # a value identically. Interior whitespace survives, which is what makes "f alse"
 # and a multi-line flag file invalid in both.
+#
+# `[:space:]` is NOT that set. JavaScript trim() removes 25 code points, 19 of
+# them non-ASCII, and under the C locale a bracket class matches ASCII only --
+# so an NBSP-padded ` false ` stayed truthy here and hid the badge while
+# getHideStatus() trimmed it to `false` and showed it. The class is spelled out
+# to match trim() exactly: the ASCII six, then U+00A0, U+1680, U+2000-200A,
+# U+2028, U+2029, U+202F, U+205F, U+3000 and U+FEFF.
+#
+# Under a UTF-8 locale bash compares characters and this is exact. Under the C
+# locale it compares bytes, so a trailing byte that merely appears inside one of
+# those UTF-8 sequences is also trimmed -- reachable only with invalid UTF-8,
+# which is not a level either way.
+TRIM_SET=$'\t\n\v\f\r \302\240\341\232\200\342\201\202\203\204\205\206\207\210\211\212\250\251\257\237\343\357\273\277'
 normalize() {
     local value="$1"
-    value="${value#"${value%%[![:space:]]*}"}"
-    value="${value%"${value##*[![:space:]]}"}"
+    value="${value#"${value%%[!$TRIM_SET]*}"}"
+    value="${value%"${value##*[!$TRIM_SET]}"}"
     printf '%s' "$value" | tr '[:upper:]' '[:lower:]'
 }
 

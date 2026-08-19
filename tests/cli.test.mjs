@@ -180,7 +180,9 @@ check("-- lets a dash-leading filename be scanned", () => {
   write("-dash.ts", "const value: any = 1;\n");
   const result = run(["--", "-dash.ts"]);
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /-dash\.ts:1:12 no-any/u);
+  // Column 14 is the `any` itself. The rule used to report at the delimiter
+  // in front of it, which is where the position list was matching.
+  assert.match(result.stdout, /-dash\.ts:1:14 no-any/u);
   // That one file and no other: with `--` stripped as an option the target list
   // fell back to ".", which scanned the whole tree and found it by accident.
   assert.match(result.stdout, /1 finding in 1 file/u);
@@ -437,6 +439,54 @@ check("a symlink loop terminates instead of hanging", () => {
   assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
   assert.doesNotMatch(result.stderr, /cannot read/u);
   assert.match(result.stdout, /1 file checked|1 finding in 1 file/u);
+});
+
+// A declaration file is skipped whatever its module format. `.d.ts` was and
+// `.d.mts`/`.d.cts` were not, so whether a hand-written `any` in a declaration
+// was reported came down to the module format of the file it lived in.
+check("declaration files are skipped in every module format", () => {
+  const dir = mkdtempSync(join(tmpdir(), "slop-decl-"));
+  for (const name of ["types.d.ts", "types.d.mts", "types.d.cts"]) {
+    writeFileSync(join(dir, name), "export type External = any;\n");
+  }
+  writeFileSync(join(dir, "real.ts"), "export const a = 1;\n");
+  const result = run([dir]);
+  assert.match(result.stdout, /clean \(1 file checked\)/u);
+  assert.equal(result.status, 0);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+// A failed scan must not print a clean bill of health on stdout. Exit 2 and a
+// stderr line already said so; the summary a human reads said "clean".
+check("a failed scan does not print a clean summary", () => {
+  const result = run(["definitely-not-here.ts"]);
+  assert.equal(result.status, 2);
+  assert.doesNotMatch(result.stdout, /clean/u);
+  assert.match(result.stdout, /scan incomplete \(1 path unreadable/u);
+});
+
+// `--since` keys changes by their path under the repository root, so an
+// explicit target that is a symlink to a tracked directory looked up the alias
+// spelling, found nothing, and reported clean.
+check("--since follows a symlinked target to the changed files", () => {
+  const repo = mkdtempSync(join(tmpdir(), "slop-since-symlink-"));
+  const git = (...args) => spawnSync("git", args, { cwd: repo, encoding: "utf8" });
+  mkdirSync(join(repo, "real"), { recursive: true });
+  git("init", "-q", ".");
+  git("config", "user.email", "t@t");
+  git("config", "user.name", "t");
+  writeFileSync(join(repo, "real", "a.ts"), "export const a = 1;\n");
+  symlinkSync("real", join(repo, "alias"));
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  writeFileSync(join(repo, "real", "a.ts"), "export const a = 1;\nconst bad: any = 2;\n");
+
+  const viaReal = run(["--since=HEAD", "real"], repo);
+  const viaAlias = run(["--since=HEAD", "alias"], repo);
+  assert.match(viaReal.stdout, /no-any/u);
+  assert.match(viaAlias.stdout, /no-any/u);
+  assert.equal(viaAlias.status, viaReal.status);
+  rmSync(repo, { recursive: true, force: true });
 });
 
 rmSync(root, { recursive: true, force: true });

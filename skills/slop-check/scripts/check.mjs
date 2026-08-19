@@ -33,6 +33,11 @@ const SKIPPED_DIRECTORIES = new Set([
 // comparison and a `.ts` `<T>value` is a cast, so neither opts in.
 const JSX_EXTENSIONS = new Set([".jsx", ".tsx"]);
 
+// A declaration file in any module format. `.d.ts` was skipped and `.d.mts`
+// and `.d.cts` were not, so whether a hand-written `any` in a declaration was
+// reported came down to the module format of the file it lived in.
+const DECLARATION_FILE = /\.d\.[cm]?ts$/iu;
+
 const MAX_FILE_BYTES = 1_000_000;
 
 // ---------------------------------------------------------------------------
@@ -128,12 +133,17 @@ function maskSource(source, { jsx = false } = {}) {
         k = close + 1;
         continue;
       }
-      // A line comment, EXCEPT when the `//` follows a `:` -- that is a URL
-      // scheme, and reading `https://example.com` in JSX text as a comment was
-      // one of the failures that kept line comments out of here at first. The
-      // colon is the whole difference: prose carries URLs, and a `//` with no
-      // colon before it is a comment in code and prose alike.
-      if (ch === "/" && source[k + 1] === "/" && source[k - 1] !== ":") {
+      // A line comment, EXCEPT after `:` or `>`. `:` is a URL scheme
+      // (`https://example.com`), and `>` is a JSX tag that prose follows
+      // (`<div>//cdn.example.com</div>`) -- a protocol-relative URL, which the
+      // colon test alone read as a comment and which then hid the element's
+      // real closer. Neither appears immediately before a real comment, which
+      // is preceded by line start, whitespace, or a statement end.
+      // Still imperfect by construction: a protocol-relative URL further into
+      // JSX prose (`<div>see //cdn.example.com</div>`) is preceded by a space
+      // and is indistinguishable here from a comment. A pre-pass cannot know
+      // it is in prose; only the masker's own state could tell.
+      if (ch === "/" && source[k + 1] === "/" && source[k - 1] !== ":" && source[k - 1] !== ">") {
         const close = source.indexOf("\n", k + 2);
         const end = close === -1 ? n : close;
         spans.push([k, end]);
@@ -685,15 +695,27 @@ const LINE_RULES = [
   {
     name: "no-any",
     tsOnly: true,
-    // `type Payload = any` and `A | any` disable checking as completely as an
-    // annotation does; the rule only knew the positions where `any` follows a
-    // colon, `as`, a generic delimiter, or precedes `[]`. `[<,]` and not `<`:
-    // `Map<string, any>` is the SECOND type argument, and matching only the
-    // first meant the common shape of this defect was reported clean while
-    // `Map<any, string>` was reported. A union is matched from BOTH sides for
-    // the same reason: `any | null` collapses to `any` exactly as `null | any`
-    // does, and operand order is not a property worth being sensitive to.
-    pattern: /:\s*any\b|\bas\s+any\b|[<,[]\s*any\s*[,>\]]|\bany\s*\[\]|\btype\s+[\w$]+(?:<(?:[^<>]|<[^<>]*>)*>)?\s*=\s*any\b|[|&]\s*any\b|\bany\s*[|&]/u,
+    // Every bare `any` in MASKED code, which is the whole rule now. It used to
+    // be a list of positions -- after a colon, after `as`, inside a generic,
+    // before `[]` -- and four review passes running turned up a position that
+    // list did not have: a later type argument, a union from the other side, a
+    // tuple element, a return type. The list was never going to be complete,
+    // because it was a list.
+    //
+    // Matching the token instead is safe for one reason: the masker has already
+    // blanked comments, strings, template text and JSX prose, so the English
+    // word "any" -- which outnumbers the type in raw source -- cannot reach
+    // here. Measured across 5,115 real files: 3,188 bare `any` tokens survive
+    // masking, and the 249 the position list missed are all types (`<T = any>`
+    // and `=> any`, neither of which anyone had reported yet).
+    //
+    // The guards keep VALUES named `any` out, which is the only way the token
+    // appears in masked code without being the type: `.any`/`#any` for a
+    // property access, and a following `(` or `:` for a method or a key --
+    // `AbortSignal.any(signals)` declared as `any(signals: AbortSignal[])`,
+    // and jest's `any(sample: unknown)`, both of which the corpus found. A
+    // type `any` is never followed by either.
+    pattern: /(?<![\w$.#])any(?![\w$])(?!\s*[(:])/u,
     message: "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
   },
   {
@@ -815,8 +837,20 @@ const LINE_RULES = [
     // the real binding name off the raw line, since masking blanks the literal
     // but keeps its quotes.
     name: "no-env-secret-fallback",
-    pattern: /\{[^{}]*?(?<![\w$])([A-Za-z_$][\w$]*)\s*(?::\s*[\w$]+\s*)?=\s*["'`][^\n]*?\}\s*=\s*process\s*\.\s*env\b/du,
-    verify: (match, rawLine) => CREDENTIAL_NAME.test(rawLine.slice(...match.indices[1])),
+    pattern: /\{([^{}]*)\}\s*=\s*process\s*\.\s*env\b/du,
+    // EVERY defaulted binding in the pattern, not the first one the regex could
+    // capture: `{ PORT = "3000", API_TOKEN = "dev-token" }` bound `PORT`, failed
+    // this test, and the line runner never looked at the rest -- so an ordinary
+    // default in front of a credential hid it. The names come off the RAW line
+    // because masking blanks a literal's contents while keeping its quotes,
+    // which is exactly the shape being matched here.
+    verify: (match, rawLine) => {
+      const bindings = rawLine.slice(...match.indices[1]);
+      for (const binding of bindings.matchAll(/(?<![\w$])([A-Za-z_$][\w$]*)\s*(?::\s*[A-Za-z_$][\w$]*\s*)?=\s*["'`]/gu)) {
+        if (CREDENTIAL_NAME.test(binding[1])) return true;
+      }
+      return false;
+    },
     message: ENV_SECRET_FALLBACK_MESSAGE,
   },
   {
@@ -1680,13 +1714,24 @@ function collectFiles(entry, scan) {
   // accepts PROBE.TS and spawns the checker, which then silently scanned
   // nothing and reported clean.
   const suffix = extname(entry).toLowerCase();
-  if (!SOURCE_EXTENSIONS.has(suffix) || entry.toLowerCase().endsWith(".d.ts")) return;
+  if (!SOURCE_EXTENSIONS.has(suffix) || DECLARATION_FILE.test(entry)) return;
   // The same file can arrive twice (listed explicitly and again via its
   // directory); linting it twice would double every finding and the count.
   const key = identity(stats, entry);
   if (scan.seen.has(key)) return;
   scan.seen.add(key);
   scan.files.push(entry);
+}
+
+// The path a change map is keyed by. Falls back to resolve() when the file is
+// gone between collection and lookup, so a missing file is still a read error
+// below rather than a crash here.
+function realPath(file) {
+  try {
+    return realpathSync(resolve(file));
+  } catch {
+    return resolve(file);
+  }
 }
 
 // The printed path mirrors what the caller passed in: absolute stays absolute.
@@ -1735,7 +1780,7 @@ function addedLines(ref) {
     // asset fail the whole run with exit 2.
     if (!name || name.endsWith("/")) continue;
     const base = name.slice(name.lastIndexOf("/") + 1).toLowerCase();
-    if (!SOURCE_EXTENSIONS.has(extname(base)) || base.endsWith(".d.ts")) continue;
+    if (!SOURCE_EXTENSIONS.has(extname(base)) || DECLARATION_FILE.test(base)) continue;
     // A directory the recursive scan skips is skipped here too: --exclude-standard
     // drops what .gitignore lists, but a repo that never ignored node_modules or
     // dist would otherwise hand --since its whole vendor tree.
@@ -1839,7 +1884,12 @@ function main() {
   // one unchanged one said "clean (2 files checked)".
   let linted = 0;
   for (const file of files) {
-    const changed = added?.get(resolve(file));
+    // realpath, not resolve: addedLines() keys every change by its path under
+    // the repository root, so an explicit target that is a SYMLINK to a tracked
+    // directory looked up `alias/a.ts` and found nothing -- `--since=HEAD alias`
+    // reported "clean (0 files checked)" while the same scan of `real` reported
+    // the finding. A supported input spelling must not silently skip changes.
+    const changed = added?.get(realPath(file));
     if (added && !changed) continue;
     let source;
     try {
@@ -1867,7 +1917,13 @@ function main() {
   }
 
   const scanned = linted;
-  const summary = findings.length === 0
+  // A failed scan never prints a clean bill of health on stdout. Exit 2 and a
+  // stderr line said so already, but the summary line a human actually reads
+  // said "clean", which is the one sentence the failure status exists to
+  // prevent.
+  const summary = scan.unreadable > 0
+    ? `slop-check: scan incomplete (${scan.unreadable} path${scan.unreadable === 1 ? "" : "s"} unreadable, ${scanned} file${scanned === 1 ? "" : "s"} checked, ${findings.length} finding${findings.length === 1 ? "" : "s"})`
+    : findings.length === 0
     ? `slop-check: clean (${scanned} file${scanned === 1 ? "" : "s"} checked)`
     : `slop-check: ${findings.length} finding${findings.length === 1 ? "" : "s"} in ${new Set(findings.map((finding) => finding.path)).size} file${new Set(findings.map((finding) => finding.path)).size === 1 ? "" : "s"}`;
 

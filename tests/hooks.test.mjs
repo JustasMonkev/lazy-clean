@@ -1547,6 +1547,39 @@ if (!canRunBash) {
     }
   }
 
+  // The shell has to trim exactly what String.prototype.trim() trims. `[:space:]`
+  // is ASCII-only under the C locale, so an NBSP-padded ` false ` stayed truthy
+  // in the shell and hid the badge while getHideStatus() read it as `false`.
+  // Every code point JS trims, on both sides, against both resolvers.
+  {
+    const trimmed = [];
+    for (let cp = 0; cp <= 0xffff; cp += 1) {
+      const ch = String.fromCharCode(cp);
+      if (ch.trim() === "" && ch !== "") trimmed.push(ch);
+    }
+    eq("the JS trim set is the 25 code points this asserts over", trimmed.length, 25);
+    let envMismatch = 0;
+    let flagMismatch = 0;
+    for (const pad of trimmed) {
+      for (const body of ["false", "true", "0", "no"]) {
+        const value = `${pad}${body}${pad}`;
+        const hidden = statusline("ultra", { LAZY_HIDE_STATUS: value }).out === "";
+        if (hidden !== withEnv({ ...sl.env, LAZY_HIDE_STATUS: value }, () => config.getHideStatus())) envMismatch += 1;
+      }
+      for (const body of ["ultra", "off"]) {
+        const shown = statusline(`${pad}${body}${pad}`).out !== "";
+        const live = withEnv(sl.env, () => {
+          delete require.cache[require.resolve(path.join(HOOKS, "lazy-runtime.js"))];
+          delete require.cache[require.resolve(path.join(HOOKS, "lazy-config.js"))];
+          return require(path.join(HOOKS, "lazy-runtime.js")).readMode();
+        });
+        if (shown !== (live !== null && live !== "off")) flagMismatch += 1;
+      }
+    }
+    eq("the statusline trims LAZY_HIDE_STATUS exactly as getHideStatus does", envMismatch, 0);
+    eq("the statusline trims the mode flag exactly as readMode does", flagMismatch, 0);
+  }
+
   // An oversized flag is corrupt, not a preference, and both reads of it took
   // the whole file -- a 20MB flag cost ~6.6s per prompt render. The badge is a
   // few bytes either way, so this asserts the outcome and the fact that the

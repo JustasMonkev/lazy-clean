@@ -386,6 +386,61 @@ expectNoRule(
   'const { PORT = "3000" } = process.env;',
   "no-env-secret-fallback",
 );
+// no-any matches the TOKEN now, not a list of positions. These are the four
+// positions that arrived one review pass at a time, plus the two the corpus
+// turned up once the rule stopped enumerating.
+for (const [label, source] of [
+  ["a return type", "type Handler = () => any;"],
+  ["a default type parameter", "interface Box<T = any> { value: T }"],
+  ["an annotation", "function f(value: any) { return value; }"],
+  ["an assertion", "const a = payload as any;"],
+  ["a later type argument", "type Cache = Map<string, any>;"],
+  ["a union member", "type U = string | any;"],
+  ["a tuple element", "type Pair = [any, string];"],
+  ["an array", "const xs: any[] = [];"],
+  ["a mapped-type value", "type M = { [K in keyof T]: any };"],
+  ["an alias", "type P = any;"],
+]) expectRule(`flags any in ${label}`, source, "no-any");
+// A VALUE named `any` is not the type: a method declaration and a property key
+// are the two shapes the corpus found, and both would be false positives.
+expectNoRule("a method named any is not the type", "interface S { any(signals: AbortSignal[]): AbortSignal }", "no-any");
+expectNoRule("a property key named any is not the type", "const m = { any: 1 };", "no-any");
+expectNoRule("a property access named any is not the type", "const v = matchers.any;", "no-any");
+// The word `any` in prose never reaches the rules: the masker blanks comments,
+// strings and JSX text first, which is what makes matching the token safe.
+expectNoRule("the word any in a comment is not the type", "// call dispose on any handles\nconst x = 1;", "no-any");
+expectNoRule("the word any in a string is not the type", 'const msg = "any of these will do";', "no-any");
+expectNoRule("the word any in JSX text is not the type", "const el = <p>pick any option</p>;", "no-any", "sample.tsx");
+
+// A protocol-relative URL right after a JSX tag is not a line comment. The `:`
+// test alone read it as one, hid the element's real closer, and masked the code
+// after it -- a regression from the pass that added line comments here.
+expectRule(
+  "a protocol-relative URL in JSX text does not hide the closing tag",
+  'const el = <div>//cdn.example.com</div>; const value = payload as User;',
+  "require-safety-comment-for-type-assertion",
+  "sample.tsx",
+);
+// ...and the commented-out closer that motivated line comments still works.
+expectRule(
+  "code above a commented-out closing tag is still checked",
+  "const el = <div>\nconst value: any = 1;\n// </div>",
+  "no-any",
+  "sample.tsx",
+);
+
+// Every defaulted binding, not the first: an ordinary default in front of a
+// credential hid it, because the line runner never retried the later one.
+expectRule(
+  "flags a credential default after an ordinary one",
+  'const { PORT = "3000", API_TOKEN = "dev-token" } = process.env;',
+  "no-env-secret-fallback",
+);
+expectNoRule(
+  "ordinary defaults alone are not credentials",
+  'const { PORT = "3000", DEBUG = "1" } = process.env;',
+  "no-env-secret-fallback",
+);
 expectRule("flags a string-literal type assertion", 'const a = payload as "ready";', "require-safety-comment-for-type-assertion");
 expectRule("flags a numeric-literal type assertion", "const a = payload as 42;", "require-safety-comment-for-type-assertion");
 expectRule('flags an indexed-access assertion', 'const a = payload as User["id"];', "require-safety-comment-for-type-assertion");
