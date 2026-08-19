@@ -107,28 +107,20 @@ export default async ({ client } = {}) => {
           log('info', 'lazy: "' + (args[1] || '') + '" is not a default level (off|lite|full|ultra)');
           return;
         }
-        // Pin the level this session is actually running at before moving the
-        // default out from under it. With no state file, readMode() derives the
-        // live level from the config default, so `/lazy default off` used to
-        // switch off the session that ran it — a command about later sessions
-        // silently changed this one.
-        const live = readMode();
+        // This does NOT pin the level the chat is running at, and the asymmetry
+        // with the Claude hook is deliberate. There, lazy-activate.js rewrites
+        // the flag file at SessionStart, so a pin lasts exactly one session and
+        // the new default takes over at the next one. OpenCode gives this
+        // plugin no session-start event and statePath is ONE global file, so a
+        // pin written here never expires: `/lazy default ultra` wrote the old
+        // live level to it, and every later chat then read that instead of the
+        // new default — the command defeating the only thing it promises.
+        // Saying that this chat moves too is the smaller surprise.
         // Not existsSync: readMode() falls back to the default for an empty or
-        // invalid file just as it does for a missing one, so those need the pin
-        // too. The question is whether a valid level is persisted, not whether
-        // a file is there.
-        let persistedLevel = null;
-        try { persistedLevel = normalizeMode(fs.readFileSync(statePath, 'utf8').trim()); } catch (e) { /* no state yet */ }
-        try {
-          if (!persistedLevel) writeMode(live);
-        } catch (e) {
-          // Writing the default anyway would move this session's level, which is
-          // the one thing the pin exists to prevent — and the state directory
-          // and the config directory can fail independently. Leave both as they
-          // are rather than half-applying the command.
-          log('error', 'lazy: could not pin the current level, so the default was left unchanged (' + e.message + ')');
-          return;
-        }
+        // invalid file just as it does for a missing one, so the question is
+        // whether a valid level is persisted, not whether a file is there.
+        let sessionLevel = null;
+        try { sessionLevel = normalizeMode(fs.readFileSync(statePath, 'utf8').trim()); } catch (e) { /* no state yet */ }
         // An unwritable config directory threw straight into OpenCode's hook
         // runner; the Claude tracker already catches this case and reports it.
         try {
@@ -136,9 +128,13 @@ export default async ({ client } = {}) => {
           // Same as the Claude hook: LAZY_DEFAULT_MODE outranks the config file
           // getDefaultMode() reads, so reporting plain success there is false.
           const override = normalizeMode(process.env.LAZY_DEFAULT_MODE);
-          log('info', override && override !== saved
-            ? 'lazy: default saved as ' + saved + ', but LAZY_DEFAULT_MODE=' + override + ' overrides it'
-            : 'lazy default ' + saved);
+          if (override && override !== saved) {
+            log('info', 'lazy: default saved as ' + saved + ', but LAZY_DEFAULT_MODE=' + override + ' overrides it');
+          } else {
+            log('info', 'lazy default ' + saved + (sessionLevel
+              ? ''
+              : ' (this chat has no level of its own, so it follows the new default too; /lazy <level> holds one)'));
+          }
         } catch (e) {
           log('error', 'lazy: could not write the default (' + e.message + ')');
         }

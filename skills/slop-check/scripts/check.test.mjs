@@ -199,6 +199,31 @@ expectRule(
   'const message = "value as User\nconst real = payload as User;',
   "require-safety-comment-for-type-assertion",
 );
+// Same mid-edit case for a regex being typed. This checker runs from a
+// PostToolUse hook, so a half-written pattern is ordinary input: leaving the
+// body bare scanned pattern text as TypeScript and invented findings from it.
+expectNoRule(
+  "does not read an unterminated regex as code",
+  "const pattern = /x: any",
+  "no-any",
+);
+expectNoRule(
+  "does not read an unterminated regex as an assertion",
+  "const pattern = /value as User",
+  "require-safety-comment-for-type-assertion",
+);
+expectRule(
+  "still checks the code below an unterminated regex",
+  "const pattern = /x: any\nconst value: any = 1;",
+  "no-any",
+);
+// A regex cannot span lines, so an escape at the end of one does not continue
+// onto the next: pairing this slash with the one below masked real code away.
+expectRule(
+  "does not pair an unterminated regex with a slash on the next line",
+  "const pattern = /x\\\nconst value: any = 1;/",
+  "no-any",
+);
 expectRule("flags a string-literal type assertion", 'const a = payload as "ready";', "require-safety-comment-for-type-assertion");
 expectRule("flags a numeric-literal type assertion", "const a = payload as 42;", "require-safety-comment-for-type-assertion");
 expectRule('flags an indexed-access assertion', 'const a = payload as User["id"];', "require-safety-comment-for-type-assertion");
@@ -947,6 +972,23 @@ assert.deepEqual(
   "SKILL.md names rules the checker does not implement",
 );
 console.log(`ok   SKILL.md lists exactly the ${implemented.size} implemented rules`);
+
+// The severity bar in one line: a "review" rule may name a replacement that is
+// not always equivalent, but the message has to say where it diverges.
+// `new Promise(r => r(JSON.parse(t)))` REJECTS when the parse throws, while
+// `Promise.resolve(JSON.parse(t))` throws synchronously — a caller catching one
+// does not catch the other.
+{
+  const [finding] = lintSource("const p = new Promise(resolve => resolve(JSON.parse(text)));", "sample.ts")
+    .filter((f) => f.rule === "no-promise-constructor-wrapper");
+  const names = finding && /async/u.test(finding.message) && /synchronous/u.test(finding.message);
+  if (!names) {
+    failures += 1;
+    console.error(`FAIL promise-wrapper message names the throwing case: ${finding ? finding.message : "<no finding>"}`);
+  } else {
+    console.log("ok   promise-wrapper message names the throwing case");
+  }
+}
 
 if (failures > 0) {
   console.error(`\n${failures} test(s) failed`);

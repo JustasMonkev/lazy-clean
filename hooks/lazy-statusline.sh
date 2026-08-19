@@ -64,6 +64,11 @@ else
                     CHAR[sprintf("%04x", c)] = sprintf("%c", c)
                     CHAR[sprintf("%04X", c)] = sprintf("%c", c)
                 }
+                # A raw NUL is a control character like any other and JSON.parse
+                # rejects it, but a \000 inside a regex bracket is the one piece
+                # of this that awks disagree about, so build the character and
+                # compare against it instead.
+                NUL = sprintf("%c", 0)
             }
             function ws() { while (i <= n && substr(s, i, 1) ~ /[ \t\r\n]/) i++ }
             # Escapes are DECODED, not carried through: `{"hide\\u0053tatus":true}`
@@ -95,7 +100,13 @@ else
                         j += 2; continue
                     }
                     if (d == "\"") { i = j + 1; tok = out; return 1 }
-                    if (d == "\n") return 0
+                    # JSON.parse rejects EVERY raw U+0000-U+001F inside a string,
+                    # not just a newline: a literal tab in an unrelated key made
+                    # this accept a document getHideStatus() throws on, and the
+                    # two then disagreed about whether to hide the badge. A raw
+                    # U+0001 is handled by RS above, which ends the record early
+                    # and leaves the string unterminated -- also a rejection.
+                    if (d == NUL || d ~ /[\001-\037]/) return 0
                     out = out d; j++
                 }
                 return 0

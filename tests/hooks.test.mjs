@@ -1036,7 +1036,8 @@ eq("a bare /lazy leaves the live level alone", fs.readFileSync(ocState, "utf8"),
 }
 
 // readMode() falls back to the default for an EMPTY or invalid state file just
-// as it does for a missing one, so file presence was the wrong pin condition.
+// as it does for a missing one, so neither holds a level of its own: the chat
+// follows the new default and the file is left exactly as it was found.
 for (const [name, body] of [["an empty", ""], ["an invalid", "nonsense"]]) {
   const box = freshHome(`opencode-${name.replace(/\W/gu, "")}-state`);
   fs.mkdirSync(path.join(box.env.XDG_CONFIG_HOME, "lazy"), { recursive: true });
@@ -1044,8 +1045,11 @@ for (const [name, body] of [["an empty", ""], ["an invalid", "nonsense"]]) {
   const state = path.join(box.env.XDG_CONFIG_HOME, "opencode", ".lazy-active");
   fs.mkdirSync(path.dirname(state), { recursive: true });
   fs.writeFileSync(state, body);
-  opencodeCommand("default ultra", box.env.XDG_CONFIG_HOME);
-  eq(`/lazy default pins the live level over ${name} state file`, fs.readFileSync(state, "utf8"), "lite");
+  const res = opencodeCommand("default ultra", box.env.XDG_CONFIG_HOME);
+  eq(`/lazy default leaves ${name} state file untouched`, fs.readFileSync(state, "utf8"), body);
+  ok(`/lazy default reports that ${name} state file follows the new default`,
+    Array.isArray(res.logs) && res.logs.some((l) => /follows the new default/.test(l.message)),
+    JSON.stringify(res.logs));
 }
 // A valid level is the user's choice for this session and is left alone.
 {
@@ -1066,37 +1070,69 @@ fs.mkdirSync(path.join(ocDefault.env.XDG_CONFIG_HOME, "lazy"), { recursive: true
 fs.writeFileSync(path.join(ocDefault.env.XDG_CONFIG_HOME, "lazy", "config.json"), JSON.stringify({ defaultMode: "ultra" }));
 const ocDefaultOff = opencodeCommand("default off", ocDefault.env.XDG_CONFIG_HOME);
 ok("/lazy default off records the new default",
-  Array.isArray(ocDefaultOff.logs) && ocDefaultOff.logs.some((l) => l.message === "lazy default off"),
+  Array.isArray(ocDefaultOff.logs) && ocDefaultOff.logs.some((l) => l.message.startsWith("lazy default off")),
   JSON.stringify(ocDefaultOff.logs));
-ok("/lazy default off pins the level the session was already running at",
-  fs.existsSync(ocDefaultState) && fs.readFileSync(ocDefaultState, "utf8").trim() === "ultra",
+// statePath is ONE global file and OpenCode gives the plugin no session-start
+// event to clear it, so pinning the live level here would outlive the session
+// and shadow the default from then on. The Claude hook can pin because
+// lazy-activate.js rewrites the flag at SessionStart; this one cannot.
+ok("/lazy default writes no global state file to pin the session",
+  !fs.existsSync(ocDefaultState),
   fs.existsSync(ocDefaultState) ? fs.readFileSync(ocDefaultState, "utf8") : "<no state file>");
-// The state directory and the config directory fail independently. Writing the
-// default when the pin failed would move THIS session's level — the one thing
-// the pin exists to prevent — so the command applies fully or not at all.
-const ocBlockedPin = freshHome("opencode-blocked-pin");
-fs.mkdirSync(path.join(ocBlockedPin.env.XDG_CONFIG_HOME, "lazy"), { recursive: true });
-const ocBlockedConfig = path.join(ocBlockedPin.env.XDG_CONFIG_HOME, "lazy", "config.json");
-fs.writeFileSync(ocBlockedConfig, JSON.stringify({ defaultMode: "lite" }));
-// A file where the state directory has to go: mkdir fails, the config does not.
-fs.writeFileSync(path.join(ocBlockedPin.env.XDG_CONFIG_HOME, "opencode"), "");
+ok("/lazy default says the chat follows the new default",
+  ocDefaultOff.logs.some((l) => /follows the new default/.test(l.message)),
+  JSON.stringify(ocDefaultOff.logs));
+
+// The finding this replaced the pin over: with a pin, a LATER session read the
+// pinned old level instead of the default just set, so the command never took
+// effect anywhere.
+{
+  const box = freshHome("opencode-later-session");
+  fs.mkdirSync(path.join(box.env.XDG_CONFIG_HOME, "lazy"), { recursive: true });
+  fs.writeFileSync(path.join(box.env.XDG_CONFIG_HOME, "lazy", "config.json"), JSON.stringify({ defaultMode: "full" }));
+  opencodeCommand("default ultra", box.env.XDG_CONFIG_HOME);
+  const later = spawnSync(process.execPath, ["--input-type=module", "-e", `
+    import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, ".opencode", "plugins", "lazy.mjs")).href)};
+    const hooks = await plugin({ client: { app: { log: async () => {} } } });
+    const out = { system: [] };
+    await hooks["experimental.chat.system.transform"]({}, out);
+    console.log(JSON.stringify(out.system.join("\\n")));
+  `], { encoding: "utf8", env: baseEnv(box.env), timeout: 20000 });
+  const injected = later.status === 0 ? JSON.parse(later.stdout.trim()) : "";
+  ok("a later OpenCode session starts at the newly saved default",
+    /level: ultra/.test(injected) && !/level: full/.test(injected),
+    later.stderr.slice(0, 200) || injected.slice(0, 200));
+}
+
+// The config directory and the state directory fail independently. A failed
+// config write must leave NO state file behind: readMode() prefers that file,
+// so one written here would outrank config and environment from then on, while
+// the command reported that nothing was saved.
+const ocBlockedPin = freshHome("opencode-blocked-config");
+const ocBlockedState = path.join(ocBlockedPin.env.XDG_CONFIG_HOME, "opencode", ".lazy-active");
+// A file where the config directory has to go: mkdir fails, the state dir does not.
+fs.writeFileSync(path.join(ocBlockedPin.env.XDG_CONFIG_HOME, "lazy"), "");
 const ocPinFail = opencodeCommand("default ultra", ocBlockedPin.env.XDG_CONFIG_HOME);
-ok("a failed pin is reported",
-  Array.isArray(ocPinFail.logs) && ocPinFail.logs.some((l) => l.level === "error" && /could not pin/.test(l.message)),
+ok("a failed default write is reported",
+  Array.isArray(ocPinFail.logs) && ocPinFail.logs.some((l) => l.level === "error" && /could not write the default/.test(l.message)),
   JSON.stringify(ocPinFail.logs));
-ok("a failed pin does not report the default as set",
+ok("a failed default write does not report the default as set",
   Array.isArray(ocPinFail.logs) && !ocPinFail.logs.some((l) => /^lazy default /.test(l.message)),
   JSON.stringify(ocPinFail.logs));
-eq("a failed pin leaves the stored default alone",
-  JSON.parse(fs.readFileSync(ocBlockedConfig, "utf8")).defaultMode, "lite");
+ok("a failed default write leaves no state file behind",
+  !fs.existsSync(ocBlockedState),
+  fs.existsSync(ocBlockedState) ? fs.readFileSync(ocBlockedState, "utf8") : "<no state file>");
 
 // An explicit level is the user's choice for this session; leave it be.
 const ocPinned = freshHome("opencode-pinned");
 const ocPinnedState = path.join(ocPinned.env.XDG_CONFIG_HOME, "opencode", ".lazy-active");
 fs.mkdirSync(path.dirname(ocPinnedState), { recursive: true });
 fs.writeFileSync(ocPinnedState, "lite");
-opencodeCommand("default ultra", ocPinned.env.XDG_CONFIG_HOME);
+const ocHeld = opencodeCommand("default ultra", ocPinned.env.XDG_CONFIG_HOME);
 eq("/lazy default does not overwrite an explicit session level", fs.readFileSync(ocPinnedState, "utf8"), "lite");
+ok("/lazy default does not claim to move a chat holding its own level",
+  Array.isArray(ocHeld.logs) && ocHeld.logs.some((l) => l.message === "lazy default ultra"),
+  JSON.stringify(ocHeld.logs));
 
 // A file whose name starts with `-` is an unknown option to the checker, which
 // exits 2 — so the hook reported nothing for a file the CLI can scan after `--`.
@@ -1367,6 +1403,14 @@ if (!canRunBash) {
     // ...and an escape outside the JSON set is not one.
     '{"a":"\\q","hideStatus":true}',
     '{"a":"\\u00zz","hideStatus":true}',
+    // A RAW control character inside any string is not valid JSON, escaped or
+    // not, so a stray tab in an unrelated key has to fail the whole document
+    // here exactly as it fails JSON.parse.
+    '{"a":"x\ty","hideStatus":true}',
+    '{"a":"x\ry","hideStatus":true}',
+    '{"a":"x\u0000y","hideStatus":true}',
+    '{"a":"x\u001fy","hideStatus":true}',
+    '{"hideStatus":true,"a":"x\ty"}',
   ]) {
     writeConfig(sl, body);
     const hidden = statusline("ultra").out === "";

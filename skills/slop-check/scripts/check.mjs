@@ -441,7 +441,14 @@ function maskSource(source, { jsx = false } = {}) {
         let inClass = false;
         while (j < n) {
           const ch = source[j];
-          if (ch === "\\") { j += 2; continue; }
+          // A regex literal cannot span lines, so an escape at the end of one
+          // does not continue onto the next: without this the scan walked into
+          // the following line and could pair the slash with one down there.
+          if (ch === "\\") {
+            if (source[j + 1] === "\n" || j + 1 >= n) break;
+            j += 2;
+            continue;
+          }
           if (ch === "\n") break;
           if (ch === "[") inClass = true;
           else if (ch === "]") inClass = false;
@@ -454,6 +461,16 @@ function maskSource(source, { jsx = false } = {}) {
           while (i < n && /[a-z]/i.test(source[i])) i += 1;
           continue;
         }
+        // Unterminated: the closing slash is missing, which for a file caught
+        // mid-edit is the ordinary state of a pattern being typed. Leaving the
+        // body unmasked scanned pattern text as code — `/x: any` reported
+        // no-any against a regex — and this checker runs from a PostToolUse
+        // hook, so half-typed files are its normal input, not an edge case.
+        // Mask to the end of the line and resume on the next one, which is
+        // where the code continues: a regex literal cannot span lines.
+        blank(i + 1, j);
+        i = j;
+        continue;
       }
     }
     i += 1;
@@ -1059,7 +1076,7 @@ function* iterateCandidateFindings(ctx) {
     yield {
       ...matchSpan(lineStarts, match),
       rule: "no-promise-constructor-wrapper",
-      message: "Wrapping a value in `new Promise` to resolve it immediately is `Promise.resolve` with extra steps. Call `Promise.resolve(value)`, or return the value from an async function.",
+      message: "Wrapping a value in `new Promise` to resolve it immediately is `Promise.resolve` with extra steps. Call `Promise.resolve(value)` \u2014 or, when the expression can throw, return it from an `async` function: the constructor turns a throw into a rejected promise, and `Promise.resolve(expr)` evaluates `expr` first, so it throws synchronously instead.",
     };
   }
 
