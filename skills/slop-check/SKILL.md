@@ -33,19 +33,23 @@ Everything runs from this skill directory with plain `node`. Do not install any 
 
 4. Report what was found, what was fixed, and any findings intentionally left in place with the reason.
 
+## Languages and versions
+
+Detect which of TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go the project actually uses, and read each pinned or installed version from its toolchain file, manifest, lockfile, or runtime. Before version-sensitive advice, check that language's latest stable release at its official source, say whether the project is current, and suggest only what the version in use supports. If the latest release cannot be checked, say so and do not guess.
+
 ## Manual review checklist
 
 For each item, the question is the same: does this code earn its place, or does it only exist because generating it was easy?
 
 - **Dead code shipped "just in case"** — unused exports, unused parameters, branches no caller can reach, commented-out code. Delete it; version control remembers.
-- **Speculative generality** — config options, flags, or abstraction layers nobody asked for; a helper called once that wraps a one-liner; an interface with a single implementation. Inline it.
+- **Speculative generality** — config options, flags, or abstraction layers nobody asked for. One caller alone is not evidence: keep a helper separate when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. Inline only when separation has none of that value.
 - **Defensive checks against impossible states** — `if (!items) return` when the type says `items: Item[]`; re-validating data already validated upstream; optional chaining on values that cannot be null. Trust the types, or fix the types.
 - **Reimplementing the platform** — hand-rolled `deepClone`, `debounce`, `isEmpty`, UUID generators, date formatting. Use the standard library or an existing project utility.
 - **Error handling that hides errors** — catch-log-continue, retries around non-transient failures, fallback values that turn failure into silently wrong behavior.
 - **Debug leftovers** — `console.log` tracing, timing code, temporary variables named `test`/`tmp`/`debug`.
 - **Edit-artifacts** — old and new versions of a function both kept, re-export aliases "for compatibility" when every call site could just be updated, comments describing the diff instead of the code.
 - **Comment and doc bloat** — JSDoc that restates the signature, section banner comments, README additions narrating the change. A comment should state a constraint the code cannot show.
-- **Test slop** — tests that assert a mock was called with the value it was just given, module-level mocks instead of real dependency seams, duplicated setup that hides what varies.
+- **Test slop** — tests that assert a mock was called with the value it was just given, module-level mocks instead of real dependency seams, duplicated setup that hides what varies. Keep a mutation test when it fails after the covered logic is changed.
 
 ## Checker rules
 

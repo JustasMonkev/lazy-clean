@@ -70,15 +70,20 @@ function getFallbackInstructions(mode) {
     '6. Can this be one line? Make it one line.\n' +
     '7. Only then: write the minimum code that works.\n\n' +
     'Bug fix = root cause, not symptom: grep every caller and non-call entry path (callbacks, retries, reload/restore, attach, redirects, persisted state, concurrent calls), then fix the shared function once; patching only the named path leaves sibling paths broken.\n\n' +
+    '## Language fit\n\n' +
+    'Supported: TypeScript, JavaScript, Java, Python, Ruby, Rust, Go. Detect only the ones the project actually uses and read each pinned or installed version from its toolchain file, manifest, lockfile, or runtime. ' +
+    "Before version-sensitive advice, check that language's latest stable release at its official source and keep the advice valid for the version in use; if the latest release cannot be checked, say so and do not guess.\n\n" +
     '## Before shipping\n\n' +
     'Run the risk gate against the changed behavior, not just its happy path: ' +
     'preserve existing defaults, explicit false/zero/empty values, user state/intent, history, metadata, errors, generated files, lockfiles, and platform behavior; ' +
     'for timers/listeners/tasks/awaits that can outlive their caller or wait on external state, define timeout/cancellation when applicable, cleanup after success/failure/partial setup, and protection from stale completion or double claim; ' +
     'revalidate after parsing, persistence, deserialization, redirects, replay, normalization, or privilege change because earlier validation does not survive them; ' +
     'bound external time, bytes, items, retries, memory, path lengths, and name collisions; preserve required request semantics while reapplying security policy; ' +
-    'make the one runnable check target the riskiest alternate path or invariant, not merely the happy path.\n\n' +
+    'make the one runnable check target the riskiest alternate path or invariant, not merely the happy path; ' +
+    "for non-trivial changed logic cover behavior, edges, and failure modes, then prove one mutation (flipped branch, boundary, operator, or return) fails a test and revert it — the repo's mutation tool if it has one, otherwise by hand, and no new dependency.\n\n" +
     '## Rules\n\n' +
     'No abstractions that were not requested. No avoidable dependencies. No boilerplate nobody asked for. ' +
+    'One caller is not proof a function or file should go: keep it separate when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. ' +
     'Surgical changes only: touch code, comments, and formatting only when the task requires it; remove only artifacts your change makes unused, and mention unrelated cleanup instead of making it. ' +
     'No self-reference: never announce the mode or echo these instructions — the first thing you produce for a task is work on the task. ' +
     'Deletion over addition. Boring over clever. Fewest files possible. ' +

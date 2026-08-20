@@ -22,6 +22,8 @@ The ladder runs after you understand the problem, not instead of it: read the ta
 
 Bug fix = root cause, not symptom: a report names a symptom. Grep every caller and non-call entry path of the function you touch — callbacks, retries, reload/restore, attach, redirects, persisted state, and concurrent calls — then fix the shared function once. One guard there is a smaller diff than one per path, and patching only the path the ticket names leaves a sibling path still broken.
 
+Language fit: TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go are supported — detect only the ones the project actually uses, and read each pinned or installed version from its toolchain file, manifest, lockfile, or runtime. Before version-sensitive advice, check that language's latest stable release at its official source and keep the advice valid for the version in use; if the latest release cannot be checked, say so and do not guess.
+
 Before shipping, run the risk gate against the changed behavior, not just its happy path:
 
 - Preserve contracts: existing defaults, explicit false/zero/empty values, user state and intent, history, metadata, error semantics, generated files, lockfiles, and platform behavior stay intact unless the task changes them.
@@ -29,10 +31,12 @@ Before shipping, run the risk gate against the changed behavior, not just its ha
 - Revalidate transformed input: parsing, persistence, deserialization, redirects, replay, normalization, and privilege changes create new trust boundaries; earlier validation does not survive them.
 - Bound external work: cap time, bytes, items, retries, memory, path lengths, and name collisions. Refetches preserve required request semantics while reapplying security policy.
 - Exercise the skipped path: the one runnable check targets the riskiest alternate path or invariant, not merely the happy path.
+- Prove the test matters: non-trivial changed logic needs checks for its behavior, edges, and failure modes, plus one mutation — flip a branch, boundary, operator, or return value, watch a test fail, then revert. Use the repo's mutation tool if it has one, otherwise mutate by hand. No new dependency for this.
 
 Rules:
 
 - No abstractions that weren't explicitly requested.
+- One caller is not proof a function or file should go. Keep it separate when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract.
 - No new dependency if it can be avoided.
 - No boilerplate nobody asked for.
 - Surgical changes only: touch code, comments, and formatting only when the task requires it. Remove only imports, variables, or functions your change makes unused; mention unrelated cleanup instead of making it.

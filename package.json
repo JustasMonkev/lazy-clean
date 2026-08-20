@@ -7,7 +7,7 @@
   "repository": "https://github.com/JustasMonkev/lazy-clean",
   "engines": { "node": ">=18" },
   "scripts": {
-    "test": "node skills/slop-check/scripts/check.test.mjs && node tests/cli.test.mjs && node tests/hooks.test.mjs",
-    "slop-check": "node skills/slop-check/scripts/check.mjs hooks .opencode skills tests/cli.test.mjs tests/hooks.test.mjs"
+    "test": "node skills/slop-check/scripts/check.test.mjs && node tests/cli.test.mjs && node tests/hooks.test.mjs && node tests/language-guidance.test.mjs",
+    "slop-check": "node skills/slop-check/scripts/check.mjs hooks .opencode skills tests/cli.test.mjs tests/hooks.test.mjs tests/language-guidance.test.mjs"
   }
 }

@@ -30,6 +30,14 @@ Triage every finding per `<skills-dir>/slop-check/SKILL.md`:
 
 The triage report that skill asks for is requested explanation, not unrequested prose: give it in full, then apply its manual review checklist — dead code, speculative generality, reimplemented platform, edit-artifacts — which no mechanical scan catches.
 
+The checker reads TypeScript and JavaScript only. Java, Python, Ruby, Rust, and Go get the same manual pass by hand — never report them clean on the strength of a scan that did not read them. For every language the change actually touches, read its pinned or installed version from the toolchain file, manifest, lockfile, or runtime, check that language's latest stable release at its official source, and keep version-sensitive advice valid for the version in use. If the latest release cannot be checked, say so and do not guess.
+
+One caller alone is not a reason to inline or delete a function or file. Keep it separate when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. Inline or delete only when none of those hold.
+
+## Tests that earn their place
+
+List the changed behavior, its edge cases, and its failure modes, and cover each one. Keep the tests that can fail for a real regression; drop tautologies and mock-call checks that only repeat their own setup. For non-trivial changed logic, run one mutation check: flip a branch, boundary, operator, or return value, confirm a test fails, then revert the mutation before shipping. Use the repo's mutation tool if it has one, otherwise mutate by hand. No new dependency for this.
+
 ## When the manual run is needed
 
 If checker findings arrive on their own after each Write/Edit, the `PostToolUse` hook is running it for you and a per-file manual run is redundant; if they do not, run it yourself on every file you changed. Run it by hand for repo-wide sweeps: a whole directory, a full diff, or a pre-review pass over files you did not just edit.

@@ -13,6 +13,19 @@ description: >
 Review diffs for unnecessary complexity. One line per finding: location, what
 to cut, what replaces it. The diff's best outcome is getting shorter.
 
+Detect which of TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go the
+diff actually touches, and read each pinned or installed version from its
+toolchain file, manifest, lockfile, or runtime. Before version-sensitive
+advice, check that language's latest stable release at its official source and
+keep the replacement valid for the version in use. If the latest release cannot
+be checked, say so and do not guess.
+
+One caller is never a finding on its own. Before `yagni:`, `shrink:`, or
+`delete:`, check whether the function or file names a domain idea, hides tricky
+logic, isolates a side effect or boundary, earns its keep in tests or
+readability, or is required by a framework contract. Keep it separate when any
+of those hold.
+
 ## Format
 
 `L<line>: <tag> <what>. <replacement>.`, or `<file>:L<line>: ...` for
@@ -23,7 +36,7 @@ Tags:
 - `delete:` dead code, unused flexibility, speculative feature. Replacement: nothing.
 - `stdlib:` hand-rolled thing the standard library ships. Name the function.
 - `native:` dependency or code doing what the platform already does. Name the feature.
-- `yagni:` abstraction with one implementation, config nobody sets, layer with one caller.
+- `yagni:` abstraction with one implementation, config nobody sets, layer that only forwards.
 - `shrink:` same logic, fewer lines. Show the shorter form.
 
 ## Examples
@@ -52,7 +65,8 @@ If there is nothing to cut, say `Lean already. Ship.` and stop.
 Scope: over-engineering and complexity only. Correctness bugs, security holes,
 and performance are explicitly out of scope. Route them to a normal review
 pass, not this one. A single smoke test or `assert`-based
-self-check is the lazy minimum, not bloat, never flag it for deletion.
+self-check is the lazy minimum, not bloat, never flag it for deletion — and a
+mutation test that fails after the covered logic is changed has earned its lines.
 Does not apply the fixes, only lists them — say "apply the findings" and they
 are applied under the lazy ladder and the surgical-changes rule. One-shot: it
 sets no mode, so there is nothing to revert.
