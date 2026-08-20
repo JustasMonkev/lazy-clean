@@ -23,6 +23,14 @@ Only the Claude Code and Codex tiers run the checker automatically. Everywhere e
 
 Qoder and VS Code Copilot are detected by the hooks and get the right output shape, but neither is wired up here as its own tier. Upstream also ships adapters this fork skips (MCP server, pi extension, Hermes, Devin, openclaw). Add them from upstream if you need them.
 
+## Languages and review scope
+
+The rulesets cover TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go. The agent detects the ones your project actually uses, reads their pinned or installed versions, and checks the latest stable release at the language's official source before any version-sensitive advice — and says the check failed instead of guessing.
+
+The bundled checker script stays TS/JS-only; the other five languages get the manual review, because a zero-dependency scanner is not a parser.
+
+Two rules the reviews follow throughout: a one-caller helper stays when it carries real value (a domain name, tricky logic, an isolated side effect, test or readability value, a framework contract), and non-trivial changed logic needs one mutation check — the repo's own tool, or one flip by hand, never a new dependency.
+
 ## Install — zero-install, skills only
 
 No packages, no npm, no plugin needed. Copy the skills into your global skills folder:

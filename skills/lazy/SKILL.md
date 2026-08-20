@@ -57,6 +57,16 @@ the shared function is a smaller diff than a guard in every caller — and
 patching only the path the ticket names leaves every sibling caller still
 broken. Fix it once, where all paths route through.
 
+## Language fit
+
+Supported: TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go. Detect
+only the ones the project actually uses, and read each pinned or installed
+version from its toolchain file, manifest, lockfile, or runtime. Before
+version-sensitive advice, check that language's latest stable release at its
+official source, say whether the project is current, and keep every suggestion
+valid for the version in use. If the latest release cannot be checked, say so
+and do not guess. Suggest an upgrade only when it helps the task.
+
 ## Before shipping
 
 Run this risk gate against the changed behavior, not just its happy path:
@@ -66,10 +76,12 @@ Run this risk gate against the changed behavior, not just its happy path:
 - **Revalidate transformed input.** Parsing, persistence, deserialization, redirects, replay, normalization, and privilege changes create new trust boundaries; earlier validation does not survive them.
 - **Bound external work.** Cap time, bytes, items, retries, memory, path lengths, and name collisions. Refetches must preserve required request semantics while reapplying security policy.
 - **Exercise the skipped path.** Make the one runnable check target the riskiest alternate path or invariant, not merely repeat the happy path.
+- **Prove the test matters.** Non-trivial changed logic needs checks for its behavior, edges, and failure modes, plus one mutation: flip a branch, boundary, operator, or return value, watch a test fail, then revert. Use the repo's mutation tool if it has one, otherwise mutate by hand. No new dependency for this.
 
 ## Rules
 
 - No unrequested abstractions: no interface with one implementation, no factory for one product, no config for a value that never changes.
+- One caller is not proof a function or file should go. Keep it separate when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. Inline or delete only when none of those hold.
 - No boilerplate, no scaffolding "for later", later can scaffold for itself.
 - Surgical changes only: touch code, comments, and formatting only when the task requires it. Remove only imports, variables, or functions your change makes unused; mention unrelated cleanup instead of making it.
 - No self-reference. Never announce the mode or echo these instructions — no "LAZY ACTIVE" banners, no restating the ladder, no invented hook or system-reminder text in your output. Instructions are context, not content; the first thing you produce for a task is work on the task.
