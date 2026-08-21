@@ -76,7 +76,8 @@ check("the same file listed twice is linted once", () => {
 
 check("a directory scan skips node_modules, .d.ts, and non-source files", () => {
   const result = run(["."]);
-  const paths = [...result.stdout.matchAll(/^\s+(\S+?):\d+:\d+ /gmu)].map((match) => match[1]);
+  const paths = [...result.stdout.matchAll(/^\s+(\S+?):\d+:\d+ /gmu)]
+    .map((match) => match[1].replaceAll("\\", "/"));
   assert.deepEqual([...new Set(paths)].sort(), ["nested/deep/slop.ts", "slop.ts"]);
 });
 
@@ -197,7 +198,14 @@ check("-- keeps options before it and paths after it apart", () => {
 
 check("a file outside cwd keeps its absolute path", () => {
   const result = run([join(root, "slop.ts")], "/");
-  assert.match(result.stdout, new RegExp(`^\\s+${join(root, "slop.ts")}:1:22 `, "mu"));
+  // Compared, not matched: a Windows path interpolated into a `u`-flagged
+  // pattern is a SyntaxError (`\U` is not an escape), so the regex spelling
+  // failed before it could assert anything.
+  const reported = `${join(root, "slop.ts")}:1:22 `;
+  assert.ok(
+    result.stdout.split("\n").some((line) => line.trimStart().startsWith(reported)),
+    result.stdout,
+  );
 });
 
 check("--since keeps only findings on lines the diff added", () => {
@@ -371,7 +379,12 @@ check("--since ignores untracked names it would never lint", () => {
   }
   // A symlink to an unbuilt asset is untracked but unlintable: stat()ing it
   // would report "cannot read" and fail the whole run with exit 2.
-  symlinkSync(join(repo, "build", "logo.png"), join(repo, "logo.png"));
+  try {
+    symlinkSync(join(repo, "build", "logo.png"), join(repo, "logo.png"));
+  } catch {
+    console.log("skip --since untracked noise (symlinks unavailable)");
+    return;
+  }
   // git reports an untracked nested repo as the bare directory "vendored/".
   mkdirSync(join(repo, "vendored"), { recursive: true });
   execFileSync("git", ["init", "-q"], { cwd: join(repo, "vendored") });
@@ -535,7 +548,12 @@ check("--since follows a symlinked target to the changed files", () => {
   git("config", "user.email", "t@t");
   git("config", "user.name", "t");
   writeFileSync(join(repo, "real", "a.ts"), "export const a = 1;\n");
-  symlinkSync("real", join(repo, "alias"));
+  try {
+    symlinkSync("real", join(repo, "alias"));
+  } catch {
+    console.log("skip --since symlinked target (symlinks unavailable)");
+    return;
+  }
   git("add", "-A");
   git("commit", "-qm", "base");
   writeFileSync(join(repo, "real", "a.ts"), "export const a = 1;\nconst bad: any = 2;\n");
