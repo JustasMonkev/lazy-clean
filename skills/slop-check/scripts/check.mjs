@@ -687,12 +687,29 @@ const EMOJI_PATTERN = new RegExp(
   "u",
 );
 
+// `// slop-check-ignore <rule-id>[, <rule-id>] -- <reason>` silences those rules
+// on this line and the next; the `-file` variant silences them for the file, and
+// is only read near the top so a reader meets it before the code it covers.
+// Anchored to the comment's own opener: a directive has to BE the comment, not
+// appear inside one. Unanchored, every line that quotes the syntax to explain it
+// -- this file's own documentation first -- read as a malformed directive. No
+// `m` flag, and no newline in the run after the opener, for the same reason one
+// level in: with either, `/*` followed by a line reading `// slop-check-ignore`
+// matched, so a block comment DOCUMENTING the syntax silenced the rule it named.
+const IGNORE_DIRECTIVE = /^(?:\/\/|\/\*)[^\S\r\n]*slop-check-ignore(-file)?\b(.*)/u;
+
 // A comment that actually says something, as opposed to one that merely exists.
 // A bare `// TODO` is a marker, not a reason, so the leading marker is stripped
 // before the two-word test. Shared by the rules that accept a comment as
 // evidence -- a swallowed catch and a hard-coded sleep -- because "any comment
 // counts here, a real one counts there" is a difference nobody intended.
 function isJustification(comment) {
+  // A directive names the rules it silences. Letting it also satisfy the rules
+  // that merely want SOME reason nearby made it silence rules it never named:
+  // `slop-check-ignore no-any -- ...` above a hard-coded sleep cleared
+  // `no-arbitrary-sleep`, and a MALFORMED directive -- one that suppresses
+  // nothing and is reported for it -- cleared them just the same.
+  if (IGNORE_DIRECTIVE.test(comment.text)) return false;
   const body = comment.text
     .replace(/^\/\/+|^\/\*+|\*+\/$/gu, "")
     .replace(/^\s*\*\s?/gmu, "")
@@ -1805,7 +1822,94 @@ const MECHANICAL_RULES = new Set([
   "no-obvious-doc-comments",
 ]);
 
-export function lintSource(rawSource, filePath) {
+// ---------------------------------------------------------------------------
+// Suppression
+// ---------------------------------------------------------------------------
+
+// The rules whose ids are literals at the yield site rather than a LINE_RULES
+// entry. Listing them is what makes a typo in an ignore directive reportable:
+// an unknown id suppresses nothing while reading exactly like a working ignore,
+// which is the one failure mode a suppression feature must not have. A test
+// asserts this list against every `rule:` literal in this file, so a new rule
+// cannot ship unsuppressable.
+const STANDALONE_RULE_IDS = [
+  "no-arbitrary-sleep", "no-backcompat-comments", "no-boolean-return-branches",
+  "no-catch-fake-success", "no-change-note-comments", "no-emoji",
+  "no-empty-catch", "no-empty-type-declaration", "no-filler-comments",
+  "no-foreach-push", "no-let-if-else-assign", "no-log-and-rethrow",
+  "no-message-only-rethrow", "no-narration-comments", "no-obvious-doc-comments",
+  "no-promise-constructor-wrapper", "no-restating-comments",
+  "no-shape-in-symbol-names", "no-slop-symbol-names", "no-typed-jsdoc",
+  "no-unjustified-ignore", "no-unjustified-suppression", "no-unknown-alias",
+  "no-useless-rethrow", "require-safety-comment-for-type-assertion",
+];
+
+export const RULE_IDS = new Set([...LINE_RULES.map((rule) => rule.name), ...STANDALONE_RULE_IDS]);
+
+const FILE_DIRECTIVE_LINES = 10;
+
+const wordCount = (text) => text.split(/\s+/u).filter(Boolean).length;
+
+function parseIgnoreDirective(text) {
+  const separator = text.indexOf("--");
+  const trailing = /\*\/\s*$/u;
+  const names = (separator === -1 ? text : text.slice(0, separator)).replace(trailing, "");
+  return {
+    ids: names.split(/[\s,]+/u).filter(Boolean),
+    reason: separator === -1 ? "" : text.slice(separator + 2).replace(trailing, "").trim(),
+  };
+}
+
+// A directive that does not suppress is worse than no directive: the author
+// stopped looking. Every way one can fail to apply is reported at its own line,
+// under the same standard the checker already holds `@ts-expect-error` to -- a
+// stated reason, not a word.
+function collectSuppressions(comments, lineStarts) {
+  const forLine = new Map();
+  const forFile = new Set();
+  const findings = [];
+  const silence = (lineNumber, ids) => {
+    const set = forLine.get(lineNumber) ?? new Set();
+    for (const id of ids) set.add(id);
+    forLine.set(lineNumber, set);
+  };
+  // Comments, not raw lines: the directive is only a directive where a reader
+  // would take it as one. Scanning the text found it inside string literals too,
+  // and the first file that cost was this checker's own test fixtures.
+  for (const comment of comments) {
+    const match = IGNORE_DIRECTIVE.exec(comment.text);
+    if (!match) continue;
+    const position = offsetToPosition(lineStarts, comment.start);
+    const { ids, reason } = parseIgnoreDirective(match[2]);
+    const unknown = ids.filter((id) => !RULE_IDS.has(id));
+    const fault = ids.length === 0
+      ? "names no rule"
+      : unknown.length > 0
+      ? `names \`${unknown[0]}\`, which is not a rule id`
+      : wordCount(reason) < 2
+      ? "states no reason"
+      : match[1] && position.line > FILE_DIRECTIVE_LINES
+      ? `sits below line ${FILE_DIRECTIVE_LINES}, where file-level directives stop being read`
+      : null;
+    if (fault !== null) {
+      findings.push({
+        ...position,
+        rule: "no-unjustified-ignore",
+        message: `This ignore ${fault}, so it suppresses nothing. Write \`slop-check-ignore <rule-id> -- <why the rule is wrong here>\`, or delete it.`,
+      });
+      continue;
+    }
+    if (match[1]) {
+      for (const id of ids) forFile.add(id);
+      continue;
+    }
+    silence(position.line, ids);
+    silence(position.line + 1, ids);
+  }
+  return { forLine, forFile, findings };
+}
+
+export function lintSource(rawSource, filePath, { disabled } = {}) {
   const extension = extname(filePath).toLowerCase();
   // A leading BOM is not part of line 1: it defeats the shebang skip and shifts
   // every column on that line by one.
@@ -1831,19 +1935,48 @@ export function lintSource(rawSource, filePath) {
     comments,
     lineStarts: buildLineStarts(masked),
   };
+  const suppressions = collectSuppressions(ctx.comments, ctx.lineStarts);
   const findings = [
     ...iterateLineFindings(ctx),
     ...iterateBlockFindings(ctx),
     ...iterateCandidateFindings(ctx),
     ...iterateAssertionFindings(ctx),
     ...iterateCommentFindings(ctx),
+    ...suppressions.findings,
   ];
   findings.sort((a, b) => a.line - b.line || a.column - b.column || a.rule.localeCompare(b.rule));
-  return findings.map((finding) => ({
-    path: filePath,
-    ...finding,
-    severity: MECHANICAL_RULES.has(finding.rule) ? "fix" : "review",
-  }));
+  // One filter for every rule, because a rule that reaches the report without
+  // passing here is a rule nobody can turn off -- the complaint that sinks a
+  // heuristic checker faster than any false positive does.
+  const kept = [];
+  const seen = new Set();
+  const suppressed = [];
+  for (const finding of findings) {
+    // Two rules matching one position is one thing to fix, not two. Reporting
+    // it twice also counted it twice in the tally.
+    const key = `${finding.line}:${finding.column}:${finding.rule}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const silenced = disabled?.has(finding.rule)
+      || suppressions.forFile.has(finding.rule)
+      || suppressions.forLine.get(finding.line)?.has(finding.rule) === true;
+    if (silenced) {
+      suppressed.push(finding);
+      continue;
+    }
+    kept.push({
+      path: filePath,
+      ...finding,
+      severity: MECHANICAL_RULES.has(finding.rule) ? "fix" : "review",
+    });
+  }
+  // On the array rather than in it: `--json` is a bare array of findings that
+  // consumers already parse, and what was silenced is a property of the scan,
+  // not a finding. JSON.stringify drops it for free. The findings themselves
+  // rather than a tally, because `--since` has to scope them to the changed
+  // lines exactly as it scopes the ones it reports.
+  kept.suppressed = suppressed;
+  return kept;
 }
 
 // ---------------------------------------------------------------------------
@@ -2021,6 +2154,12 @@ function main() {
   const json = optionArgs.includes("--json");
   const summaryOnly = optionArgs.includes("--summary");
   const since = optionArgs.find((arg) => arg.startsWith("--since="))?.slice("--since=".length);
+  const disabled = new Set(
+    optionArgs.filter((arg) => arg.startsWith("--disable="))
+      .flatMap((arg) => arg.slice("--disable=".length).split(","))
+      .map((id) => id.trim())
+      .filter(Boolean),
+  );
   const targets = [
     ...optionArgs.filter((arg) => !arg.startsWith("-")),
     ...(endOfOptions === -1 ? [] : args.slice(endOfOptions + 1)),
@@ -2029,12 +2168,19 @@ function main() {
   // point of the code is that a scan which skipped something never reports
   // clean. 0 = clean, 1 = findings, 2 = scan failed.
   const unknown = optionArgs.filter(
-    (arg) => arg.startsWith("-") && !["--json", "--summary"].includes(arg) && !arg.startsWith("--since="),
+    (arg) => arg.startsWith("-") && !["--json", "--summary"].includes(arg)
+      && !arg.startsWith("--since=") && !arg.startsWith("--disable="),
   );
   if (unknown.length > 0) {
     console.error(`slop-check: unknown option ${unknown[0]} (use \`-- ${unknown[0]}\` to scan a file with that name)`);
     process.exitCode = 2;
     return;
+  }
+  // A warning rather than exit 2: a misspelled id disables nothing, so the run
+  // that follows is stricter than asked for, never weaker. Silence is what would
+  // be dangerous -- it reads as "that rule is off now".
+  for (const id of disabled) {
+    if (!RULE_IDS.has(id)) console.error(`slop-check: --disable names ${id}, which is not a rule id`);
   }
 
   let added = null;
@@ -2069,6 +2215,9 @@ function main() {
   // `files.length` claimed coverage the scan never had: one changed file beside
   // one unchanged one said "clean (2 files checked)".
   let linted = 0;
+  // Reported because the density is the signal: a tree whose findings all went
+  // away under ignores has not been cleaned, and the summary is where that shows.
+  let suppressed = 0;
   for (const file of files) {
     // realpath, not resolve: addedLines() keys every change by its path under
     // the repository root, so an explicit target that is a SYMLINK to a tracked
@@ -2089,7 +2238,7 @@ function main() {
       continue;
     }
     linted += 1;
-    const fileFindings = lintSource(source, displayPath(file));
+    const fileFindings = lintSource(source, displayPath(file), { disabled });
     // Same overlap test the PostToolUse hook uses: a block rule reports at the
     // keyword that opens the block, so testing the anchor line alone dropped
     // findings whose body is exactly what `git diff` reports as changed.
@@ -2099,6 +2248,11 @@ function main() {
       }
       return false;
     };
+    // Held to the same scope as the findings: counting every ignore in a file
+    // one of whose lines changed reported `clean (1 file checked, 1 suppressed)`
+    // for an untouched ignore somebody else wrote years ago, which reads as this
+    // change having silenced something.
+    suppressed += (changed ? fileFindings.suppressed.filter(touched) : fileFindings.suppressed).length;
     findings.push(...(changed ? fileFindings.filter(touched) : fileFindings));
   }
 
@@ -2107,11 +2261,15 @@ function main() {
   // stderr line said so already, but the summary line a human actually reads
   // said "clean", which is the one sentence the failure status exists to
   // prevent.
+  // Appended rather than folded into each branch: "clean" earned under 40
+  // ignores is a different sentence from "clean", and every branch needs to say
+  // so, including the one that reports a failed scan.
+  const silenced = suppressed > 0 ? `, ${suppressed} suppressed` : "";
   const summary = scan.unreadable > 0
-    ? `slop-check: scan incomplete (${scan.unreadable} path${scan.unreadable === 1 ? "" : "s"} unreadable, ${scanned} file${scanned === 1 ? "" : "s"} checked, ${findings.length} finding${findings.length === 1 ? "" : "s"})`
+    ? `slop-check: scan incomplete (${scan.unreadable} path${scan.unreadable === 1 ? "" : "s"} unreadable, ${scanned} file${scanned === 1 ? "" : "s"} checked, ${findings.length} finding${findings.length === 1 ? "" : "s"}${silenced})`
     : findings.length === 0
-    ? `slop-check: clean (${scanned} file${scanned === 1 ? "" : "s"} checked)`
-    : `slop-check: ${findings.length} finding${findings.length === 1 ? "" : "s"} in ${new Set(findings.map((finding) => finding.path)).size} file${new Set(findings.map((finding) => finding.path)).size === 1 ? "" : "s"}`;
+    ? `slop-check: clean (${scanned} file${scanned === 1 ? "" : "s"} checked${silenced})`
+    : `slop-check: ${findings.length} finding${findings.length === 1 ? "" : "s"} in ${new Set(findings.map((finding) => finding.path)).size} file${new Set(findings.map((finding) => finding.path)).size === 1 ? "" : "s"}${silenced}`;
 
   if (json) {
     console.log(JSON.stringify(findings, null, 2));

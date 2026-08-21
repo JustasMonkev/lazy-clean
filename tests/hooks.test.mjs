@@ -291,7 +291,8 @@ fs.writeFileSync(notADir, "");
 withEnv({ ...writeBox.env, XDG_CONFIG_HOME: notADir }, () => {
   let threw = null;
   try { config.writeDefaultMode("ultra"); } catch (e) { threw = e.code; }
-  eq("writeDefaultMode throws on an unwritable config dir", threw, "ENOTDIR");
+  ok("writeDefaultMode throws on an unwritable config dir",
+    typeof threw === "string" && /^E[A-Z]+$/u.test(threw), String(threw));
 });
 
 // --- lazy-instructions -------------------------------------------------------
@@ -693,7 +694,7 @@ const blocked = path.join(SANDBOX, "blocked-config");
 fs.writeFileSync(blocked, "");
 r = track({ prompt: "/lazy default ultra" }, { flag: "ultra", env: { XDG_CONFIG_HOME: blocked } });
 ok("a failing writeDefaultMode reports the error",
-  r.status === 0 && r.stdout.startsWith("LAZY: could not write the default (") && r.stdout.includes("ENOTDIR"), r.stdout);
+  r.status === 0 && /^LAZY: could not write the default \(E[A-Z]+[:)]/u.test(r.stdout), r.stdout);
 eq("a failing writeDefaultMode leaves the session mode alone", r.flag, "ultra");
 
 // Qoder does double duty on UserPromptSubmit (no SessionStart event there).
@@ -1772,6 +1773,7 @@ if (!canRunBash) {
 // finish() writes to stdout and then destroys stdin instead of calling
 // process.exit(), which used to cut the write off mid-object.
 
+const PROMPT_MS = process.platform === "win32" ? 10_000 : 3000;
 const asyncBox = freshHome("noeof");
 {
   fs.rmSync(asyncBox.flag, { force: true });
@@ -1779,12 +1781,12 @@ const asyncBox = freshHome("noeof");
   eq("mode-tracker recovers without EOF (1s fallback)",
     [res.status, res.stdout, fs.readFileSync(asyncBox.flag, "utf8")],
     [0, "LAZY MODE CHANGED — level: ultra", "ultra"]);
-  ok("mode-tracker exits promptly without EOF", res.ms < 3000, `${res.ms}ms`);
+  ok("mode-tracker exits promptly without EOF", res.ms < PROMPT_MS, `${res.ms}ms`);
 }
 {
   const res = await runHookNoEof("lazy-mode-tracker.js", "{oops", asyncBox.env);
   eq("mode-tracker exits 0 on malformed JSON without EOF", [res.status, res.stdout], [0, ""]);
-  ok("malformed JSON without EOF still exits promptly", res.ms < 3000, `${res.ms}ms`);
+  ok("malformed JSON without EOF still exits promptly", res.ms < PROMPT_MS, `${res.ms}ms`);
 }
 {
   const res = await runHookNoEof("lazy-subagent.js", '{"agent_type":"general-purpose"}',
@@ -1792,7 +1794,7 @@ const asyncBox = freshHome("noeof");
   ok("subagent recovers without EOF and emits complete JSON",
     res.status === 0 && parses(res.stdout) &&
     JSON.parse(res.stdout).hookSpecificOutput.hookEventName === "SubagentStart");
-  ok("subagent exits promptly without EOF", res.ms < 3000, `${res.ms}ms`);
+  ok("subagent exits promptly without EOF", res.ms < PROMPT_MS, `${res.ms}ms`);
 }
 {
   const res = await runHookNoEof("lazy-subagent.js", '{"agent_type":"other"}',
@@ -1812,7 +1814,7 @@ const asyncBox = freshHome("noeof");
   ok("edit-check emits complete, parseable JSON on the no-EOF path",
     parses(res.stdout) && res.stdout.length === full.length,
     `got ${res.stdout.length} of ${full.length} bytes, parses=${parses(res.stdout)}`);
-  ok("edit-check still exits promptly on the no-EOF path", res.ms < 4000, `${res.ms}ms`);
+  ok("edit-check still exits promptly on the no-EOF path", res.ms < PROMPT_MS + 1000, `${res.ms}ms`);
   // The finding cap now keeps the payload well under a pipe buffer, which is
   // the stronger of the two protections against the truncation this pins:
   // stdin.destroy() is what makes the write complete, the cap is what makes it

@@ -75,7 +75,7 @@ Findings are **advisory** — they arrive as `additionalContext`, never as a blo
 ## Running the checker yourself
 
 ```
-node skills/slop-check/scripts/check.mjs [paths...] [--json] [--summary] [--since=<ref>]
+node skills/slop-check/scripts/check.mjs [paths...] [--json] [--summary] [--since=<ref>] [--disable=<rule-id>,...]
 ```
 
 With no paths it scans the current directory. Exit code 1 means findings, 2 means a path could not be read, 0 means clean — so a failed scan is never mistaken for a clean one.
@@ -88,6 +88,19 @@ node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
 ```
 
 Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. `--summary` replaces the finding list with the per-rule tally, which is the number that tells you whether a codebase is worth a full pass. The run summary line still prints; `--json` is the machine-readable form.
+
+## Silencing a rule
+
+Every rule can be turned off, because a heuristic you cannot turn off is one you end up ignoring entirely. To record a false positive where it happened, name the rule and say why:
+
+```ts
+// slop-check-ignore no-any -- the vendor typing is `any`; narrowed at the call site below
+const parsed = raw as any;
+```
+
+It covers that line and the next, takes several ids separated by commas, and `slop-check-ignore-file` in a file's first 10 lines covers the whole file. `--disable=<rule-id>,...` turns rules off for one run.
+
+The `-- <reason>` is not decoration. An ignore with no reason, with an id that is not a rule, or a file-level one written too far down suppresses nothing and is reported as `no-unjustified-ignore` — the same standard the checker already holds `@ts-expect-error` to, because an ignore that silently does nothing is worse than no ignore. The run summary counts what was suppressed: clean under forty ignores is not clean.
 
 Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `slop-check`, `lazy-clean` (the main workflow).
 

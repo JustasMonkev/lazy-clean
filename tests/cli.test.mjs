@@ -76,7 +76,8 @@ check("the same file listed twice is linted once", () => {
 
 check("a directory scan skips node_modules, .d.ts, and non-source files", () => {
   const result = run(["."]);
-  const paths = [...result.stdout.matchAll(/^\s+(\S+?):\d+:\d+ /gmu)].map((match) => match[1]);
+  const paths = [...result.stdout.matchAll(/^\s+(\S+?):\d+:\d+ /gmu)]
+    .map((match) => match[1].replaceAll("\\", "/"));
   assert.deepEqual([...new Set(paths)].sort(), ["nested/deep/slop.ts", "slop.ts"]);
 });
 
@@ -197,7 +198,14 @@ check("-- keeps options before it and paths after it apart", () => {
 
 check("a file outside cwd keeps its absolute path", () => {
   const result = run([join(root, "slop.ts")], "/");
-  assert.match(result.stdout, new RegExp(`^\\s+${join(root, "slop.ts")}:1:22 `, "mu"));
+  // Compared, not matched: a Windows path interpolated into a `u`-flagged
+  // pattern is a SyntaxError (`\U` is not an escape), so the regex spelling
+  // failed before it could assert anything.
+  const reported = `${join(root, "slop.ts")}:1:22 `;
+  assert.ok(
+    result.stdout.split("\n").some((line) => line.trimStart().startsWith(reported)),
+    result.stdout,
+  );
 });
 
 check("--since keeps only findings on lines the diff added", () => {
@@ -230,6 +238,38 @@ check("--since keeps only findings on lines the diff added", () => {
   assert.equal(since.status, 1);
   assert.match(since.stdout, /no-json-clone/u);
   assert.doesNotMatch(since.stdout, /require-safety-comment/u, "pre-existing findings stay out of scope");
+});
+
+// The tally is part of the same report `--since` scopes to the diff. Counting
+// every ignore in a file one of whose lines changed reported "1 suppressed" for
+// an untouched ignore somebody else wrote, which reads as this change having
+// silenced something.
+check("--since counts only suppressions on lines the diff added", () => {
+  const repo = join(root, "since-suppressed");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) =>
+    execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const ignored =
+    "// slop-check-ignore require-safety-comment-for-type-assertion -- parsed by the schema above\n"
+    + "const first = payload as User;\n";
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "app.ts"), ignored);
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since suppression scope (git unavailable)");
+    return;
+  }
+
+  assert.match(run(["app.ts"], repo).stdout, /1 suppressed/u, "a full scan still counts it");
+
+  writeFileSync(join(repo, "app.ts"), `${ignored}export const added = 1;\n`);
+  const since = run(["--since=HEAD"], repo);
+  assert.equal(since.status, 0, since.stdout);
+  assert.doesNotMatch(since.stdout, /suppressed/u, "the untouched ignore is out of scope");
 });
 
 check("--since with no paths stays under the current directory", () => {
@@ -339,7 +379,12 @@ check("--since ignores untracked names it would never lint", () => {
   }
   // A symlink to an unbuilt asset is untracked but unlintable: stat()ing it
   // would report "cannot read" and fail the whole run with exit 2.
-  symlinkSync(join(repo, "build", "logo.png"), join(repo, "logo.png"));
+  try {
+    symlinkSync(join(repo, "build", "logo.png"), join(repo, "logo.png"));
+  } catch {
+    console.log("skip --since untracked noise (symlinks unavailable)");
+    return;
+  }
   // git reports an untracked nested repo as the bare directory "vendored/".
   mkdirSync(join(repo, "vendored"), { recursive: true });
   execFileSync("git", ["init", "-q"], { cwd: join(repo, "vendored") });
@@ -503,7 +548,12 @@ check("--since follows a symlinked target to the changed files", () => {
   git("config", "user.email", "t@t");
   git("config", "user.name", "t");
   writeFileSync(join(repo, "real", "a.ts"), "export const a = 1;\n");
-  symlinkSync("real", join(repo, "alias"));
+  try {
+    symlinkSync("real", join(repo, "alias"));
+  } catch {
+    console.log("skip --since symlinked target (symlinks unavailable)");
+    return;
+  }
   git("add", "-A");
   git("commit", "-qm", "base");
   writeFileSync(join(repo, "real", "a.ts"), "export const a = 1;\nconst bad: any = 2;\n");
@@ -579,6 +629,51 @@ check("the documented changed-file command survives a deleted file", () => {
   assert.deepEqual(edited, ["keep.ts"]);
   assert.equal(run(edited, repo).status, 1);
   rmSync(repo, { recursive: true, force: true });
+});
+
+write("disable-me.ts", SLOP);
+
+check("--disable turns a rule off for the run", () => {
+  const result = run(["--disable=require-safety-comment-for-type-assertion", "disable-me.ts"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /clean \(1 file checked, 1 suppressed\)/u);
+});
+
+check("--disable takes a comma-separated list", () => {
+  write("two-rules.ts", "const copy = JSON.parse(JSON.stringify(payload as User));\n");
+  const result = run(["--disable=no-json-clone,require-safety-comment-for-type-assertion", "two-rules.ts"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /2 suppressed/u);
+});
+
+// A warning and a run, not exit 2: a misspelled id leaves the rule ON, so the
+// scan is stricter than asked for. Saying nothing is what would read as "off".
+check("--disable warns about an id that is not a rule", () => {
+  const result = run(["--disable=no-such-rule", "disable-me.ts"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /not a rule id/u);
+  assert.match(result.stdout, /1 finding in 1 file/u);
+});
+
+check("an ignore comment silences the rule it names", () => {
+  write("ignored.ts", `// slop-check-ignore require-safety-comment-for-type-assertion -- parsed at the boundary above\n${SLOP}`);
+  const result = run(["ignored.ts"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /clean \(1 file checked, 1 suppressed\)/u);
+});
+
+check("an ignore with no reason is reported instead of applied", () => {
+  write("unjustified.ts", `// slop-check-ignore require-safety-comment-for-type-assertion\n${SLOP}`);
+  const result = run(["unjustified.ts"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /unjustified\.ts:1:1 no-unjustified-ignore/u);
+  assert.match(result.stdout, /2 findings in 1 file/u);
+});
+
+// The count is a scan property, not a finding: consumers parse a bare array.
+check("--json stays a bare array when findings are suppressed", () => {
+  const result = run(["--json", "ignored.ts"]);
+  assert.deepEqual(JSON.parse(result.stdout), []);
 });
 
 if (failures > 0) {
