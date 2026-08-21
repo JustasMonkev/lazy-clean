@@ -1452,11 +1452,11 @@ const ignoring = (reason) => `// slop-check-ignore ${ASSERTION} -- ${reason}`;
 function expectSuppression(description, source, { rules, suppressed }) {
   const findings = lintSource(source, "sample.ts");
   const actual = findings.map((finding) => finding.rule);
-  if (JSON.stringify(actual) !== JSON.stringify(rules) || findings.suppressed !== suppressed) {
+  if (JSON.stringify(actual) !== JSON.stringify(rules) || findings.suppressed.length !== suppressed) {
     failures += 1;
     console.error(
       `FAIL ${description}: expected [${rules.join(", ")}] and ${suppressed} suppressed, `
-      + `got [${actual.join(", ")}] and ${findings.suppressed}`,
+      + `got [${actual.join(", ")}] and ${findings.suppressed.length}`,
     );
   } else {
     console.log(`ok   ${description}`);
@@ -1528,6 +1528,27 @@ expectSuppression(
   { rules: ["no-unjustified-ignore", ASSERTION], suppressed: 0 },
 );
 
+expectSuppression(
+  "a directive quoted inside a block comment is not a directive",
+  `/*\n${ignoring("example syntax")}\n*/\nconst user = payload as User;\n`,
+  { rules: [ASSERTION], suppressed: 0 },
+);
+
+// An ignore names what it silences. Reaching the rules that only want SOME
+// reason nearby let it silence rules it never named -- and let a malformed one,
+// which suppresses nothing and says so, silence them just the same.
+expectSuppression(
+  "an ignore does not justify a rule it does not name",
+  `// slop-check-ignore ${ASSERTION} -- parsed by the schema above\nawait new Promise((resolve) => setTimeout(resolve, 1000));\n`,
+  { rules: ["no-arbitrary-sleep"], suppressed: 0 },
+);
+
+expectSuppression(
+  "a malformed ignore does not justify a swallowed catch",
+  "try {\n  work();\n} catch (error) {\n  // slop-check-ignore -- names no rule at all\n}\n",
+  { rules: ["no-empty-catch", "no-unjustified-ignore"], suppressed: 0 },
+);
+
 {
   const findings = lintSource(
     "const user = payload as User;\nconst copy = JSON.parse(JSON.stringify(user));\n",
@@ -1535,7 +1556,7 @@ expectSuppression(
     { disabled: new Set([ASSERTION]) },
   );
   assert.deepEqual(findings.map((finding) => finding.rule), ["no-json-clone"]);
-  assert.equal(findings.suppressed, 1);
+  assert.equal(findings.suppressed.length, 1);
   console.log("ok   a disabled rule is filtered like an ignored one");
 }
 

@@ -687,12 +687,29 @@ const EMOJI_PATTERN = new RegExp(
   "u",
 );
 
+// `// slop-check-ignore <rule-id>[, <rule-id>] -- <reason>` silences those rules
+// on this line and the next; the `-file` variant silences them for the file, and
+// is only read near the top so a reader meets it before the code it covers.
+// Anchored to the comment's own opener: a directive has to BE the comment, not
+// appear inside one. Unanchored, every line that quotes the syntax to explain it
+// -- this file's own documentation first -- read as a malformed directive. No
+// `m` flag, and no newline in the run after the opener, for the same reason one
+// level in: with either, `/*` followed by a line reading `// slop-check-ignore`
+// matched, so a block comment DOCUMENTING the syntax silenced the rule it named.
+const IGNORE_DIRECTIVE = /^(?:\/\/|\/\*)[^\S\r\n]*slop-check-ignore(-file)?\b(.*)/u;
+
 // A comment that actually says something, as opposed to one that merely exists.
 // A bare `// TODO` is a marker, not a reason, so the leading marker is stripped
 // before the two-word test. Shared by the rules that accept a comment as
 // evidence -- a swallowed catch and a hard-coded sleep -- because "any comment
 // counts here, a real one counts there" is a difference nobody intended.
 function isJustification(comment) {
+  // A directive names the rules it silences. Letting it also satisfy the rules
+  // that merely want SOME reason nearby made it silence rules it never named:
+  // `slop-check-ignore no-any -- ...` above a hard-coded sleep cleared
+  // `no-arbitrary-sleep`, and a MALFORMED directive -- one that suppresses
+  // nothing and is reported for it -- cleared them just the same.
+  if (IGNORE_DIRECTIVE.test(comment.text)) return false;
   const body = comment.text
     .replace(/^\/\/+|^\/\*+|\*+\/$/gu, "")
     .replace(/^\s*\*\s?/gmu, "")
@@ -1829,13 +1846,6 @@ const STANDALONE_RULE_IDS = [
 
 export const RULE_IDS = new Set([...LINE_RULES.map((rule) => rule.name), ...STANDALONE_RULE_IDS]);
 
-// `// slop-check-ignore <rule-id>[, <rule-id>] -- <reason>` silences those rules
-// on this line and the next; the `-file` variant silences them for the file, and
-// is only read near the top so a reader meets it before the code it covers.
-// Anchored to the comment's own opener: a directive has to BE the comment, not
-// appear inside one. Unanchored, every line that quotes the syntax to explain it
-// -- this file's own documentation first -- read as a malformed directive.
-const IGNORE_DIRECTIVE = /^(?:\/\/|\/\*)\s*slop-check-ignore(-file)?\b(.*)$/mu;
 const FILE_DIRECTIVE_LINES = 10;
 
 const wordCount = (text) => text.split(/\s+/u).filter(Boolean).length;
@@ -1869,7 +1879,7 @@ function collectSuppressions(comments, lineStarts) {
   for (const comment of comments) {
     const match = IGNORE_DIRECTIVE.exec(comment.text);
     if (!match) continue;
-    const position = offsetToPosition(lineStarts, comment.start + match.index);
+    const position = offsetToPosition(lineStarts, comment.start);
     const { ids, reason } = parseIgnoreDirective(match[2]);
     const unknown = ids.filter((id) => !RULE_IDS.has(id));
     const fault = ids.length === 0
@@ -1940,7 +1950,7 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
   // heuristic checker faster than any false positive does.
   const kept = [];
   const seen = new Set();
-  let suppressed = 0;
+  const suppressed = [];
   for (const finding of findings) {
     // Two rules matching one position is one thing to fix, not two. Reporting
     // it twice also counted it twice in the tally.
@@ -1951,7 +1961,7 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
       || suppressions.forFile.has(finding.rule)
       || suppressions.forLine.get(finding.line)?.has(finding.rule) === true;
     if (silenced) {
-      suppressed += 1;
+      suppressed.push(finding);
       continue;
     }
     kept.push({
@@ -1960,9 +1970,11 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
       severity: MECHANICAL_RULES.has(finding.rule) ? "fix" : "review",
     });
   }
-  // A count, not a list, and on the array rather than in it: `--json` is a bare
-  // array of findings that consumers already parse, and how many were silenced
-  // is a property of the scan, not a finding. JSON.stringify drops it for free.
+  // On the array rather than in it: `--json` is a bare array of findings that
+  // consumers already parse, and what was silenced is a property of the scan,
+  // not a finding. JSON.stringify drops it for free. The findings themselves
+  // rather than a tally, because `--since` has to scope them to the changed
+  // lines exactly as it scopes the ones it reports.
   kept.suppressed = suppressed;
   return kept;
 }
@@ -2227,7 +2239,6 @@ function main() {
     }
     linted += 1;
     const fileFindings = lintSource(source, displayPath(file), { disabled });
-    suppressed += fileFindings.suppressed;
     // Same overlap test the PostToolUse hook uses: a block rule reports at the
     // keyword that opens the block, so testing the anchor line alone dropped
     // findings whose body is exactly what `git diff` reports as changed.
@@ -2237,6 +2248,11 @@ function main() {
       }
       return false;
     };
+    // Held to the same scope as the findings: counting every ignore in a file
+    // one of whose lines changed reported `clean (1 file checked, 1 suppressed)`
+    // for an untouched ignore somebody else wrote years ago, which reads as this
+    // change having silenced something.
+    suppressed += (changed ? fileFindings.suppressed.filter(touched) : fileFindings.suppressed).length;
     findings.push(...(changed ? fileFindings.filter(touched) : fileFindings));
   }
 

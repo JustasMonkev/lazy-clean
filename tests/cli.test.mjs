@@ -232,6 +232,38 @@ check("--since keeps only findings on lines the diff added", () => {
   assert.doesNotMatch(since.stdout, /require-safety-comment/u, "pre-existing findings stay out of scope");
 });
 
+// The tally is part of the same report `--since` scopes to the diff. Counting
+// every ignore in a file one of whose lines changed reported "1 suppressed" for
+// an untouched ignore somebody else wrote, which reads as this change having
+// silenced something.
+check("--since counts only suppressions on lines the diff added", () => {
+  const repo = join(root, "since-suppressed");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) =>
+    execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const ignored =
+    "// slop-check-ignore require-safety-comment-for-type-assertion -- parsed by the schema above\n"
+    + "const first = payload as User;\n";
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "app.ts"), ignored);
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since suppression scope (git unavailable)");
+    return;
+  }
+
+  assert.match(run(["app.ts"], repo).stdout, /1 suppressed/u, "a full scan still counts it");
+
+  writeFileSync(join(repo, "app.ts"), `${ignored}export const added = 1;\n`);
+  const since = run(["--since=HEAD"], repo);
+  assert.equal(since.status, 0, since.stdout);
+  assert.doesNotMatch(since.stdout, /suppressed/u, "the untouched ignore is out of scope");
+});
+
 check("--since with no paths stays under the current directory", () => {
   // The changed-file map comes from the repository ROOT, so a run in packages/a
   // was handing back findings from a changed packages/b — work outside the
