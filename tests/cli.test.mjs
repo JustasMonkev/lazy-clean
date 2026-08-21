@@ -581,6 +581,51 @@ check("the documented changed-file command survives a deleted file", () => {
   rmSync(repo, { recursive: true, force: true });
 });
 
+write("disable-me.ts", SLOP);
+
+check("--disable turns a rule off for the run", () => {
+  const result = run(["--disable=require-safety-comment-for-type-assertion", "disable-me.ts"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /clean \(1 file checked, 1 suppressed\)/u);
+});
+
+check("--disable takes a comma-separated list", () => {
+  write("two-rules.ts", "const copy = JSON.parse(JSON.stringify(payload as User));\n");
+  const result = run(["--disable=no-json-clone,require-safety-comment-for-type-assertion", "two-rules.ts"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /2 suppressed/u);
+});
+
+// A warning and a run, not exit 2: a misspelled id leaves the rule ON, so the
+// scan is stricter than asked for. Saying nothing is what would read as "off".
+check("--disable warns about an id that is not a rule", () => {
+  const result = run(["--disable=no-such-rule", "disable-me.ts"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /not a rule id/u);
+  assert.match(result.stdout, /1 finding in 1 file/u);
+});
+
+check("an ignore comment silences the rule it names", () => {
+  write("ignored.ts", `// slop-check-ignore require-safety-comment-for-type-assertion -- parsed at the boundary above\n${SLOP}`);
+  const result = run(["ignored.ts"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /clean \(1 file checked, 1 suppressed\)/u);
+});
+
+check("an ignore with no reason is reported instead of applied", () => {
+  write("unjustified.ts", `// slop-check-ignore require-safety-comment-for-type-assertion\n${SLOP}`);
+  const result = run(["unjustified.ts"]);
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /unjustified\.ts:1:1 no-unjustified-ignore/u);
+  assert.match(result.stdout, /2 findings in 1 file/u);
+});
+
+// The count is a scan property, not a finding: consumers parse a bare array.
+check("--json stays a bare array when findings are suppressed", () => {
+  const result = run(["--json", "ignored.ts"]);
+  assert.deepEqual(JSON.parse(result.stdout), []);
+});
+
 if (failures > 0) {
   console.error(`\n${failures} test(s) failed`);
   process.exit(1);

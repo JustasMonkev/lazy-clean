@@ -21,6 +21,7 @@ Everything runs from this skill directory with plain `node`. Do not install any 
    - To check only your own changes, pass the changed files: `node <skill-directory>/scripts/check.mjs $(git diff --name-only --diff-filter=d HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.mts' '*.cts')`. `--diff-filter=d` drops deleted paths: without it a deletion-only change hands the checker a pathname that no longer exists, and the run exits 2 as `scan incomplete` with nothing wrong.
    - `--json` prints machine-readable findings; `--summary` replaces the finding list with the per-rule tally (the run summary line still prints). Exit code 1 means findings exist, 2 means a path could not be read, 0 means clean.
    - `--since=<git-ref>` keeps only findings on lines the diff against that ref added — `--since=HEAD` before a commit, `--since=origin/main` in CI — which is how an existing codebase adopts the checker without a baseline file.
+   - `--disable=<rule-id>[,<rule-id>]` turns rules off for the run. An id that is not a rule warns on stderr and the run continues with that rule still on, because the alternative is a scan that reads as narrower than it is.
    - The checker reads TypeScript and JavaScript only. For any other language skip step 1 and treat the manual checklist below as the whole procedure — never report "clean" on the strength of a scan that read nothing.
 
 2. Triage every finding. The checker is heuristic, so findings are review prompts, not verdicts:
@@ -28,6 +29,14 @@ Everything runs from this skill directory with plain `node`. Do not install any 
    - A justified type assertion needs a `// SAFETY:` comment stating the checked invariant immediately before it.
    - A justified swallowed error needs a comment inside the catch block explaining why.
    - If a finding is a genuine false positive, leave the code alone and say so briefly. Never rewrite correct code into something worse just to silence the checker, and never weaken or disable a check.
+
+   To record a false positive in the code, write a reason and silence that one rule:
+
+   ```ts
+   // slop-check-ignore no-any -- the vendor typing is `any`; narrowed at the call site below
+   ```
+
+   It applies to that line and the next, takes several ids separated by commas, and the `slop-check-ignore-file` variant covers the whole file when written in its first 10 lines. The `-- <reason>` is required and must say something: an ignore with no reason, with an id that is not a rule, or a file-level one written too far down suppresses nothing and is itself reported as `no-unjustified-ignore`. The run summary counts what was suppressed, because a tree that is clean under forty ignores is not clean.
 
 3. Apply the manual review checklist below to the same code. These are the highest-value slop patterns that a mechanical scan cannot catch.
 
@@ -59,4 +68,4 @@ Pointless code: `no-useless-rethrow`, `no-empty-catch`, `no-catch-fake-success`,
 
 Faked behavior and test slop: `no-arbitrary-sleep`, `no-env-secret-fallback`, `no-module-mocking`, `no-tautological-assertion`.
 
-Comment slop: `no-filler-comments`, `no-narration-comments`, `no-change-note-comments`, `no-backcompat-comments`, `no-restating-comments`, `no-obvious-doc-comments`, `no-typed-jsdoc`, `no-unjustified-suppression`, `no-emoji`.
+Comment slop: `no-filler-comments`, `no-narration-comments`, `no-change-note-comments`, `no-backcompat-comments`, `no-restating-comments`, `no-obvious-doc-comments`, `no-typed-jsdoc`, `no-unjustified-suppression`, `no-unjustified-ignore`, `no-emoji`.

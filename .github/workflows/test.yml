@@ -9,10 +9,13 @@ jobs:
     # macOS is in the matrix because the statusline shell script depends on
     # awk/read behavior that differs between GNU (Linux) and BSD (macOS)
     # tools; a BOM-handling bug shipped green here while failing on every Mac.
+    # Windows is in the matrix because the plugin ships Windows-specific code
+    # (lazy-statusline.ps1, %APPDATA% config resolution, BOM handling) that
+    # only ever ran on contributors' machines before.
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         node: ['18', '22']
     steps:
       - uses: actions/checkout@v4

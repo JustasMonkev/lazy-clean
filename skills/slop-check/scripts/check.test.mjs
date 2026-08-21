@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { lintSource } from "./check.mjs";
+import { lintSource, RULE_IDS } from "./check.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -1421,6 +1421,139 @@ console.log(`ok   SKILL.md lists exactly the ${implemented.size} implemented rul
   } else {
     console.log("ok   promise-wrapper message names the throwing case");
   }
+}
+
+// ---------------------------------------------------------------------------
+// Suppression
+// ---------------------------------------------------------------------------
+
+// The registry is what makes a typo reportable, so a rule missing from it is a
+// rule whose ignore directive silently does nothing. Same drift guard as the
+// SKILL.md check above, against the ids the source actually yields.
+{
+  const emitted = new Set(
+    [...readFileSync(join(here, "check.mjs"), "utf8").matchAll(/(?:\bname|\brule):\s*"([a-z0-9-]+)"/gu)]
+      .map((match) => match[1]),
+  );
+  assert.deepEqual(
+    [...emitted].filter((id) => !RULE_IDS.has(id)).sort(), [],
+    "RULE_IDS is missing rules the checker emits",
+  );
+  assert.deepEqual(
+    [...RULE_IDS].filter((id) => !emitted.has(id)).sort(), [],
+    "RULE_IDS names rules the checker does not emit",
+  );
+  console.log(`ok   RULE_IDS lists exactly the ${RULE_IDS.size} emitted rules`);
+}
+
+const ASSERTION = "require-safety-comment-for-type-assertion";
+const ignoring = (reason) => `// slop-check-ignore ${ASSERTION} -- ${reason}`;
+
+function expectSuppression(description, source, { rules, suppressed }) {
+  const findings = lintSource(source, "sample.ts");
+  const actual = findings.map((finding) => finding.rule);
+  if (JSON.stringify(actual) !== JSON.stringify(rules) || findings.suppressed !== suppressed) {
+    failures += 1;
+    console.error(
+      `FAIL ${description}: expected [${rules.join(", ")}] and ${suppressed} suppressed, `
+      + `got [${actual.join(", ")}] and ${findings.suppressed}`,
+    );
+  } else {
+    console.log(`ok   ${description}`);
+  }
+}
+
+expectSuppression(
+  "an ignore silences the line below it",
+  `${ignoring("parsed by the schema above")}\nconst user = payload as User;\n`,
+  { rules: [], suppressed: 1 },
+);
+
+expectSuppression(
+  "an ignore silences its own line",
+  `const user = payload as User; ${ignoring("parsed by the schema above")}\n`,
+  { rules: [], suppressed: 1 },
+);
+
+// Two lines and no further: an ignore that outlived the line it was written for
+// is how a rule turns off without anyone deciding to turn it off.
+expectSuppression(
+  "an ignore stops after the next line",
+  `${ignoring("parsed by the schema above")}\nconst a = x as A;\nconst b = y as B;\n`,
+  { rules: [ASSERTION], suppressed: 1 },
+);
+
+expectSuppression(
+  "one ignore takes several rule ids",
+  `// slop-check-ignore no-json-clone, ${ASSERTION} -- both deliberate at this boundary\n`
+  + "const copy = JSON.parse(JSON.stringify(payload as User));\n",
+  { rules: [], suppressed: 2 },
+);
+
+expectSuppression(
+  "a file-level ignore covers the whole file",
+  `// slop-check-ignore-file ${ASSERTION} -- every assertion here is a parser boundary\nconst a = x as A;\nconst b = y as B;\n`,
+  { rules: [], suppressed: 2 },
+);
+
+// Each of these looks like a working ignore and is not one, which is the only
+// way a suppression feature can make a codebase worse than having none.
+expectSuppression(
+  "an ignore with no reason suppresses nothing",
+  `// slop-check-ignore ${ASSERTION}\nconst user = payload as User;\n`,
+  { rules: ["no-unjustified-ignore", ASSERTION], suppressed: 0 },
+);
+
+expectSuppression(
+  "a one-word reason does not count as a reason",
+  `// slop-check-ignore ${ASSERTION} -- later\nconst user = payload as User;\n`,
+  { rules: ["no-unjustified-ignore", ASSERTION], suppressed: 0 },
+);
+
+expectSuppression(
+  "an ignore naming no rule suppresses nothing",
+  "// slop-check-ignore -- checked this one already\nconst user = payload as User;\n",
+  { rules: ["no-unjustified-ignore", ASSERTION], suppressed: 0 },
+);
+
+expectSuppression(
+  "a misspelled rule id suppresses nothing",
+  "// slop-check-ignore no-safety-comment -- close, but not the id\nconst user = payload as User;\n",
+  { rules: ["no-unjustified-ignore", ASSERTION], suppressed: 0 },
+);
+
+expectSuppression(
+  "a file-level ignore below line 10 suppresses nothing",
+  `${"const filler = 1;\n".repeat(10)}// slop-check-ignore-file ${ASSERTION} -- too far down to be read\nconst user = payload as User;\n`,
+  { rules: ["no-unjustified-ignore", ASSERTION], suppressed: 0 },
+);
+
+{
+  const findings = lintSource(
+    "const user = payload as User;\nconst copy = JSON.parse(JSON.stringify(user));\n",
+    "sample.ts",
+    { disabled: new Set([ASSERTION]) },
+  );
+  assert.deepEqual(findings.map((finding) => finding.rule), ["no-json-clone"]);
+  assert.equal(findings.suppressed, 1);
+  console.log("ok   a disabled rule is filtered like an ignored one");
+}
+
+// The count is a property of the scan rather than a finding, so `--json` stays
+// the bare array its consumers already parse.
+{
+  const findings = lintSource(`${ignoring("parsed by the schema above")}\nconst user = payload as User;\n`, "sample.ts");
+  assert.equal(JSON.stringify(findings), "[]");
+  console.log("ok   the suppressed count stays out of the JSON payload");
+}
+
+// Overlapping patterns reporting one position twice also counted it twice in
+// the tally, which reads as two things to fix.
+{
+  const source = readFileSync(join(here, "check.mjs"), "utf8");
+  const positions = lintSource(source, "check.mjs").map((f) => `${f.line}:${f.column}:${f.rule}`);
+  assert.equal(new Set(positions).size, positions.length, "one position reported twice for one rule");
+  console.log("ok   no position is reported twice for one rule");
 }
 
 if (failures > 0) {
