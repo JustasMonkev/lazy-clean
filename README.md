@@ -15,7 +15,7 @@ Same ruleset, five levels of wiring — pick whatever your agent supports.
 | --- | --- | --- | --- |
 | Full hooks | Claude Code, Codex | Ruleset injected at session and subagent start, `/lazy` level switching, slop-check auto-run after every Write/Edit | `hooks/lazy-clean.json` via `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` |
 | Plugin | OpenCode | Ruleset injected every turn plus six slash commands | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
-| Rules file | Cursor, Copilot | Always-on ruleset in the editor; run the checker by hand after TS/JS changes | `.cursor/rules/lazy-clean.mdc`, `.github/copilot-instructions.md` |
+| Rules file | Cursor, Copilot | Always-on ruleset for all seven supported languages; run the TS/JS-only checker by hand after TS/JS changes | `.cursor/rules/lazy-clean.mdc`, `.github/copilot-instructions.md` |
 | `AGENTS.md` | Everything else that reads it — Codex, Zed, Amp, Jules | The compact ruleset plus the post-edit checker step | `AGENTS.md` |
 | Skills only | Anything that reads `~/.claude/skills` | Every skill on demand, no automation | `skills/` |
 
