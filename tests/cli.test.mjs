@@ -175,6 +175,35 @@ check("an unknown option fails the scan rather than being ignored", () => {
   assert.doesNotMatch(result.stderr, /cannot read/u);
 });
 
+check("--help prints usage", () => {
+  const result = run(["--help"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /Usage: slop-check \[options\] \[paths\.\.\.\]/u);
+  assert.match(result.stdout, /-h, --help/u);
+  assert.doesNotMatch(result.stdout, /unknown option/u);
+});
+
+check("-h prints usage", () => {
+  const result = run(["-h"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /Scan only lines added since/u);
+});
+
+check("--help can be requested with a target and still prints usage", () => {
+  const result = run(["--help", "slop.ts"]);
+  assert.equal(result.status, 0);
+  assert.doesNotMatch(result.stderr, /unknown option/u);
+  assert.match(result.stdout, /Usage: slop-check/u);
+  assert.doesNotMatch(result.stdout, /slop\.ts/u);
+});
+
+check("-- keeps --help as a literal path", () => {
+  const result = run(["--", "--help"]);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /cannot read --help/u);
+  assert.doesNotMatch(result.stdout, /Usage: slop-check/u);
+});
+
 check("-- lets a dash-leading filename be scanned", () => {
   // Without an end-of-options marker this name was unreachable: it read as an
   // option, went unscanned, and the run exited 0 — clean for a file nobody read.
