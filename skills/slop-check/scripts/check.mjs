@@ -2143,6 +2143,19 @@ function renderTally(findings) {
     .map(([rule, count]) => `  ${count} ${rule}`).join("\n");
 }
 
+function printUsage() {
+  console.log(`Usage: slop-check [options] [paths...]
+
+Options:
+  --json             Print findings as JSON.
+  --summary          Print only the per-rule tally.
+  --since=<ref>      Scan only lines added since <ref>.
+  --disable=<ids>    Disable comma-separated rule IDs.
+  -h, --help         Show this help text.
+
+Paths may be absolute or relative. Use '--' if a path starts with '-'.`);
+}
+
 function main() {
   const args = process.argv.slice(2);
   // `--` ends the options, POSIX-style: everything after it is a path. A source
@@ -2151,6 +2164,10 @@ function main() {
   // health for a file nobody looked at.
   const endOfOptions = args.indexOf("--");
   const optionArgs = endOfOptions === -1 ? args : args.slice(0, endOfOptions);
+  if (optionArgs.includes("--help") || optionArgs.includes("-h")) {
+    printUsage();
+    return;
+  }
   const json = optionArgs.includes("--json");
   const summaryOnly = optionArgs.includes("--summary");
   const since = optionArgs.find((arg) => arg.startsWith("--since="))?.slice("--since=".length);
