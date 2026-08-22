@@ -2144,11 +2144,11 @@ function renderTally(findings) {
 }
 
 function printUsage() {
-  console.log(`Usage: slop-check [options] [paths...]
+  console.log(`Usage: node <skill-directory>/scripts/check.mjs [options] [paths...]
 
 Options:
   --json             Print findings as JSON.
-  --summary          Print only the per-rule tally.
+  --summary          Replace findings with a rule tally; keep the run summary.
   --since=<ref>      Scan only lines added since <ref>.
   --disable=<ids>    Disable comma-separated rule IDs.
   -h, --help         Show this help text.
@@ -2164,10 +2164,6 @@ function main() {
   // health for a file nobody looked at.
   const endOfOptions = args.indexOf("--");
   const optionArgs = endOfOptions === -1 ? args : args.slice(0, endOfOptions);
-  if (optionArgs.includes("--help") || optionArgs.includes("-h")) {
-    printUsage();
-    return;
-  }
   const json = optionArgs.includes("--json");
   const summaryOnly = optionArgs.includes("--summary");
   const since = optionArgs.find((arg) => arg.startsWith("--since="))?.slice("--since=".length);
@@ -2185,12 +2181,16 @@ function main() {
   // point of the code is that a scan which skipped something never reports
   // clean. 0 = clean, 1 = findings, 2 = scan failed.
   const unknown = optionArgs.filter(
-    (arg) => arg.startsWith("-") && !["--json", "--summary"].includes(arg)
+    (arg) => arg.startsWith("-") && !["--json", "--summary", "-h", "--help"].includes(arg)
       && !arg.startsWith("--since=") && !arg.startsWith("--disable="),
   );
   if (unknown.length > 0) {
     console.error(`slop-check: unknown option ${unknown[0]} (use \`-- ${unknown[0]}\` to scan a file with that name)`);
     process.exitCode = 2;
+    return;
+  }
+  if (optionArgs.includes("--help") || optionArgs.includes("-h")) {
+    printUsage();
     return;
   }
   // A warning rather than exit 2: a misspelled id disables nothing, so the run
