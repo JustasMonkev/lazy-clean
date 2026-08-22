@@ -153,7 +153,7 @@ check("findings are grouped by whether the fix needs judgment", () => {
   assert.ok(result.stdout.indexOf("no-json-clone") > review, "a clone that is not equivalent is not mechanical");
 });
 
-check("--summary prints only the per-rule tally", () => {
+check("--summary replaces findings with the per-rule tally", () => {
   const result = run(["mixed.ts", "--summary"]);
   assert.match(result.stdout, /1 no-json-clone/u);
   assert.doesNotMatch(result.stdout, /disables the type system|lossy, slow clone/u);
@@ -178,8 +178,9 @@ check("an unknown option fails the scan rather than being ignored", () => {
 check("--help prints usage", () => {
   const result = run(["--help"]);
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /Usage: slop-check \[options\] \[paths\.\.\.\]/u);
+  assert.match(result.stdout, /Usage: node <skill-directory>\/scripts\/check\.mjs \[options\] \[paths\.\.\.\]/u);
   assert.match(result.stdout, /-h, --help/u);
+  assert.match(result.stdout, /Replace findings with a rule tally; keep the run summary/u);
   assert.doesNotMatch(result.stdout, /unknown option/u);
 });
 
@@ -193,15 +194,22 @@ check("--help can be requested with a target and still prints usage", () => {
   const result = run(["--help", "slop.ts"]);
   assert.equal(result.status, 0);
   assert.doesNotMatch(result.stderr, /unknown option/u);
-  assert.match(result.stdout, /Usage: slop-check/u);
+  assert.match(result.stdout, /Usage: node/u);
   assert.doesNotMatch(result.stdout, /slop\.ts/u);
+});
+
+check("--help does not hide an unknown option", () => {
+  const result = run(["--jsoon", "--help"]);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /unknown option --jsoon/u);
+  assert.doesNotMatch(result.stdout, /Usage:/u);
 });
 
 check("-- keeps --help as a literal path", () => {
   const result = run(["--", "--help"]);
   assert.equal(result.status, 2);
   assert.match(result.stderr, /cannot read --help/u);
-  assert.doesNotMatch(result.stdout, /Usage: slop-check/u);
+  assert.doesNotMatch(result.stdout, /Usage:/u);
 });
 
 check("-- lets a dash-leading filename be scanned", () => {
