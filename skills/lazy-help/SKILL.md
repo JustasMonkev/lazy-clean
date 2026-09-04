@@ -16,8 +16,8 @@ write flag files, or persist anything.
 | Level | Trigger | What changes |
 |-------|---------|-------------|
 | **Lite** | `/lazy lite` | Build what's asked, name the lazier alternative in one line. |
-| **Full** | `/lazy full` | The ladder enforced: YAGNI → stdlib → native → one line → minimum. Default. |
-| **Ultra** | `/lazy ultra` | YAGNI extremist. Deletion before addition. Challenges requirements before building. |
+| **Full** | `/lazy full` | The ladder enforced: YAGNI → reuse → stdlib → native → clear minimum. Default. |
+| **Ultra** | `/lazy ultra` | Cut unasked extras, never requested behavior or checks. |
 
 Level sticks until changed or session end.
 

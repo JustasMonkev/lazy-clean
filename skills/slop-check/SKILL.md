@@ -18,7 +18,7 @@ Everything runs from this skill directory with plain `node`. Do not install any 
    ```
 
    - With no paths it scans the current directory recursively (skipping `node_modules`, build output, and agent tooling directories).
-   - To check only your own changes, pass the changed files: `node <skill-directory>/scripts/check.mjs $(git diff --name-only --diff-filter=d HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.mts' '*.cts')`. `--diff-filter=d` drops deleted paths: without it a deletion-only change hands the checker a pathname that no longer exists, and the run exits 2 as `scan incomplete` with nothing wrong.
+   - Before finishing, run from the repo root with `--since=HEAD`, even if edit hooks ran. It covers tracked changes, new untracked files, and shell edits. Use the task base ref for committed changes. Triage only your scope, not pre-existing user edits. Without Git, pass changed paths as separate quoted arguments; do not build arguments with shell word splitting.
    - `--json` prints machine-readable findings; `--summary` replaces the finding list with the per-rule tally (the run summary line still prints). Exit code 1 means findings exist, 2 means a path could not be read, 0 means clean.
    - `--since=<git-ref>` keeps only findings on lines the diff against that ref added — `--since=HEAD` before a commit, `--since=origin/main` in CI — which is how an existing codebase adopts the checker without a baseline file.
    - `--disable=<rule-id>[,<rule-id>]` turns rules off for the run. An id that is not a rule warns on stderr and the run continues with that rule still on, because the alternative is a scan that reads as narrower than it is.
@@ -52,7 +52,7 @@ For each item, the question is the same: does this code earn its place, or does 
 
 - **Dead code shipped "just in case"** — unused exports, unused parameters, branches no caller can reach, commented-out code. Delete it; version control remembers.
 - **Speculative generality** — config options, flags, or abstraction layers nobody asked for. One caller alone is not evidence: keep a helper separate when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. Inline only when separation has none of that value.
-- **Defensive checks against impossible states** — `if (!items) return` when the type says `items: Item[]`; re-validating data already validated upstream; optional chaining on values that cannot be null. Trust the types, or fix the types.
+- **Defensive checks against impossible states** — `if (!items) return` when the type says `items: Item[]`; re-validating unchanged data within the same trust boundary; optional chaining on values that cannot be null. Keep runtime checks after parsing, persistence, redirects, or other trust boundaries; types do not validate external data.
 - **Reimplementing the platform** — hand-rolled `deepClone`, `debounce`, `isEmpty`, UUID generators, date formatting. Use the standard library or an existing project utility.
 - **Error handling that hides errors** — catch-log-continue, retries around non-transient failures, fallback values that turn failure into silently wrong behavior.
 - **Debug leftovers** — `console.log` tracing, timing code, temporary variables named `test`/`tmp`/`debug`.

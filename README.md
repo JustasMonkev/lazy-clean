@@ -13,7 +13,7 @@ Same ruleset, five levels of wiring — pick whatever your agent supports.
 
 | Tier | Platforms | What you get | Files |
 | --- | --- | --- | --- |
-| Full hooks | Claude Code, Codex | Ruleset injected at session and subagent start, `/lazy` level switching, slop-check auto-run after every Write/Edit | `hooks/lazy-clean.json` via `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` |
+| Full hooks | Claude Code, Codex | Compact ruleset injected at session and subagent start, `/lazy` level switching, slop-check auto-run after every Write/Edit | `hooks/lazy-clean.json` via `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` |
 | Plugin | OpenCode | Ruleset injected every turn plus six slash commands | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
 | Rules file | Cursor, Copilot | Always-on ruleset for all seven supported languages; run the TS/JS-only checker by hand after TS/JS changes | `.cursor/rules/lazy-clean.mdc`, `.github/copilot-instructions.md` |
 | `AGENTS.md` | Everything else that reads it — Codex, Zed, Amp, Jules | The compact ruleset plus the post-edit checker step | `AGENTS.md` |
@@ -70,7 +70,7 @@ Requires `node` 18+ on `PATH`. No dependencies to install.
 
 The checker only looks at `.ts .tsx .mts .cts .js .jsx .mjs .cjs`; anything else is skipped silently. Files written through `Bash` — heredocs, `sed -i`, codemods — are not seen by the hook at all; run the checker on those yourself.
 
-Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. It reports only findings on the lines that edit wrote, and says how many others in the file predate it, so a small edit never hands back a to-do list for the whole file. Triage them per `skills/slop-check/SKILL.md`: fix real slop, justify false positives, keep deliberate assertions with a `// SAFETY:` comment.
+Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. A failed checker run reports `check failed`; it does not claim the edit was clean. It reports only findings on the lines that edit wrote, and says how many others in the file predate it, so a small edit never hands back a to-do list for the whole file. Triage them per `skills/slop-check/SKILL.md`: fix real slop, justify false positives, keep deliberate assertions with a `// SAFETY:` comment.
 
 ## Running the checker yourself
 
@@ -88,6 +88,25 @@ node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
 ```
 
 Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. `--summary` replaces the finding list with the per-rule tally, which is the number that tells you whether a codebase is worth a full pass. The run summary line still prints; `--json` is the machine-readable form.
+
+Before finishing any TS/JS task, run `node skills/slop-check/scripts/check.mjs --since=HEAD`
+from the repo root even if edit hooks ran. It includes new untracked files and
+shell edits without fragile shell path splitting. Use the task base ref for
+already-committed changes. Triage only the task's scope, not unrelated user edits.
+Without Git, pass each changed path as a separate quoted argument.
+
+## Improving AI behavior
+
+The main and subagent prompts use the same compact rules. Detailed
+[risk checks](skills/lazy/references/risk-checks.md) are loaded for non-trivial
+code changes, not every task. All levels preserve requested scope, existing
+input formats, and the repo's test tools; none treats one-line code as a goal.
+
+[Run the AI behavior checks](benchmarks/README.md) to compare ten tasks with the
+rules off/on, three trials each. Compare correctness first, then time, cost,
+and size for paired passing runs. This fork makes no measured improvement
+claim without real comparable runs. `npm test` checks the benchmark machinery
+without calling an AI service.
 
 ## Silencing a rule
 

@@ -372,9 +372,10 @@ for (const mode of ["lite", "full", "ultra"]) {
   const sub = instructions.getSubagentInstructions(mode);
   ok(`getLazyInstructions(${mode}) headers the level`, full.startsWith(`LAZY MODE ACTIVE — level: ${mode}\n`));
   ok(`getLazyInstructions(${mode}) uses SKILL.md`, full.includes("## Intensity"));
-  ok(`getSubagentInstructions(${mode}) is the condensed form`, !sub.includes("## Intensity") && sub.includes("## The ladder"));
-  ok(`getSubagentInstructions(${mode}) is materially smaller`, sub.length < full.length * 0.8, `${sub.length} vs ${full.length}`);
-  ok(`getSubagentInstructions(${mode}) states what the level means`, sub.includes(`Current level: **${mode}**`));
+  eq(`subagents receive the same compact rules in ${mode}`, sub, full);
+  ok(`core prompt stays below 700 words in ${mode}`, full.split(/\s+/u).length < 700);
+  ok(`risk-check reference resolves in ${mode}`, full.includes(path.join(ROOT, "skills/lazy/references/risk-checks.md")));
+  ok(`checker path resolves in ${mode}`, full.includes(path.join(ROOT, "skills/slop-check/scripts/check.mjs")));
 }
 ok("getLazyInstructions(garbage) degrades to full", instructions.getLazyInstructions("banana").startsWith("LAZY MODE ACTIVE — level: full"));
 
@@ -924,15 +925,15 @@ s = subagent('{"agent_type":"general-purpose"}', { flag: "banana" });
 eq("an invalid flag reads as off, so nothing is injected", [s.status, s.stdout], [0, ""]);
 s = subagent('{"agent_type":"general-purpose"}', { flag: "ultra" });
 ok("no matcher: inject into every subagent", injected(s));
-ok("subagent payload is the condensed ruleset",
-  JSON.parse(s.stdout).hookSpecificOutput.additionalContext.includes("Current level: **ultra**"));
+ok("subagent payload is the compact shared ruleset",
+  JSON.parse(s.stdout).hookSpecificOutput.additionalContext.includes("## Intensity"));
 s = subagent('{"agent_type":"general-purpose"}', { flag: "review" });
 eq("flag=review injects the pointer",
   JSON.parse(s.stdout).hookSpecificOutput.additionalContext,
   "LAZY MODE ACTIVE — level: review. Behavior defined by /lazy-review skill.");
 s = subagent('{"agent_type":"general-purpose"}', { flag: "  ULTRA  " });
 ok("a padded/uppercased flag is normalized before use",
-  JSON.parse(s.stdout).hookSpecificOutput.additionalContext.includes("Current level: **ultra**"));
+  JSON.parse(s.stdout).hookSpecificOutput.additionalContext.includes("## Intensity"));
 
 s = subagent('{"agent_type":"general-purpose"}', { flag: "ultra", matcher: "general" });
 ok("matcher: unanchored substring matches", injected(s));
@@ -988,7 +989,6 @@ for (const [name, payload] of [
   ["clean file", toolPayload(cleanTs)],
   ["unknown extension", toolPayload(write("notes.md", "# hi\n"))],
   ["no extension", toolPayload(path.join(files, "Makefile"))],
-  ["nonexistent file", toolPayload(path.join(files, "nope.ts"))],
   ["a .d.ts declaration file", toolPayload(write("types.d.ts", TS_SLOP))],
   ["missing file_path", { tool_input: {} }],
   ["missing tool_input", { tool_name: "Edit" }],
@@ -999,6 +999,10 @@ for (const [name, payload] of [
   const res = editCheck(payload);
   eq(`edit-check stays silent + exit 0 on ${name}`, [res.status, res.stdout], [0, ""]);
 }
+const missingEdit = editCheck(toolPayload(path.join(files, "missing.ts")));
+eq("an unreadable file still exits 0", missingEdit.status, 0);
+ok("an unreadable file reports failed verification", contextOf(missingEdit).includes("check failed"));
+
 for (const ext of ["ts", "tsx", "mts", "cts"]) {
   const res = editCheck(toolPayload(write(`dirty.${ext}`, TS_SLOP)));
   ok(`edit-check applies TypeScript rules to .${ext}`, res.status === 0 && res.stdout.includes("no-any"));
