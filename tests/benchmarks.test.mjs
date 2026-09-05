@@ -24,18 +24,20 @@ try {
   const linked = join(root, 'linked benchmark');
   const entries = [fileURLToPath(new URL('../benchmarks/run.mjs', import.meta.url))];
   try {
-    symlinkSync(fileURLToPath(new URL('../benchmarks/', import.meta.url)), linked, 'junction');
-    entries.push(join(linked, 'run.mjs'));
+    symlinkSync(fileURLToPath(new URL('../', import.meta.url)), linked, 'junction');
+    entries.push(join(linked, 'benchmarks/run.mjs'));
   } catch (error) {
     if (!['EPERM', 'EACCES', 'ENOSYS', 'ENOTSUP', 'EOPNOTSUPP'].includes(error.code)) throw error;
     console.log(`skip linked CLI (${error.code}: links unavailable)`);
   }
   for (const entry of entries) {
-    const help = spawnSync(process.execPath, [entry, '--help'], { encoding: 'utf8', timeout: 5000 });
-    assert.equal(help.status, 0, help.stderr);
-    assert.match(help.stdout, /Usage: node benchmarks\/run.mjs/u);
-    const invalid = spawnSync(process.execPath, [entry], { encoding: 'utf8', timeout: 5000 });
-    assert.equal(invalid.status, 2, 'CLI must not silently succeed without arguments');
+    for (const flags of [[], ['--preserve-symlinks-main']]) {
+      const help = spawnSync(process.execPath, [...flags, entry, '--help'], { encoding: 'utf8', timeout: 5000 });
+      assert.equal(help.status, 0, help.stderr);
+      assert.match(help.stdout, /Usage: node benchmarks\/run.mjs/u);
+      const invalid = spawnSync(process.execPath, [...flags, entry], { encoding: 'utf8', timeout: 5000 });
+      assert.equal(invalid.status, 2, 'CLI must not silently succeed without arguments');
+    }
   }
   const imported = spawnSync(process.execPath, ['--input-type=module', '-e',
     `process.argv[1] = 'missing-entry.mjs'; await import(${JSON.stringify(new URL('../benchmarks/run.mjs', import.meta.url).href)});`],

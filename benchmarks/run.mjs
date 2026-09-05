@@ -175,6 +175,7 @@ export async function main(args) {
 
 function isMainModule() {
   if (!process.argv[1]) return false;
+  if (import.meta.url === pathToFileURL(resolve(process.argv[1])).href) return true;
   try {
     return import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
   } catch {
