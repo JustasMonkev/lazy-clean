@@ -49,15 +49,21 @@ try {
   writeFileSync(join(hooks, 'pre-commit'), '#!/bin/sh\nexit 1\n', { mode: 0o755 });
   writeFileSync(join(hooks, 'post-commit'), '#!/bin/sh\necho touched > user-hook-ran\n', { mode: 0o755 });
   const globalConfig = join(root, 'global.gitconfig');
-  writeFileSync(globalConfig, `[core]\n hooksPath = ${JSON.stringify(hooks)}\n`);
+  const globalIgnore = join(root, 'global.ignore');
+  writeFileSync(globalIgnore, '*.cjs\n');
+  writeFileSync(globalConfig, `[core]\n hooksPath = ${JSON.stringify(hooks)}\n excludesFile = ${JSON.stringify(globalIgnore)}\n`);
   const fixture = join(root, 'global-hooks-fixture');
   const prepared = spawnSync(process.execPath, ['--input-type=module', '-e',
     `import {prepare} from ${JSON.stringify(new URL('../benchmarks/run.mjs', import.meta.url).href)};
-     prepare({files:{}}, ${JSON.stringify(fixture)});`], {
+     prepare({files:{"app.cjs":"original"},dirty:{"app.cjs":"user edit"}}, ${JSON.stringify(fixture)});`], {
     env: { ...process.env, GIT_CONFIG_GLOBAL: globalConfig }, encoding: 'utf8', timeout: 10000,
   });
   assert.equal(prepared.status, 0, prepared.stderr);
   assert.equal(existsSync(join(fixture, 'user-hook-ran')), false, 'fixture setup must not run any user hooks');
+  const committed = spawnSync('git', ['show', 'HEAD:app.cjs'], { cwd: fixture, encoding: 'utf8', timeout: 5000 });
+  assert.equal(committed.status, 0, committed.stderr);
+  assert.equal(committed.stdout, 'original');
+  assert.equal(readFileSync(join(fixture, 'app.cjs'), 'utf8'), 'user edit');
   assert.equal(tasks.length, 10);
   assert.equal(new Set(tasks.map(task => task.id)).size, 10);
   for (const task of tasks) {
@@ -75,6 +81,12 @@ try {
       assert.equal((await grade(task, cwd)).pass, false);
       writeFileSync(join(cwd, file), source);
       assert.equal((await grade(task, cwd)).pass, true);
+      writeFileSync(join(cwd, file), 'process.exit(0);');
+      try {
+        assert.equal((await grade(task, cwd)).pass, false, 'early exit must not bypass the held-out checks');
+      } finally {
+        writeFileSync(join(cwd, file), source);
+      }
       for (const modules of ['node_modules', 'nested/node_modules']) {
         const dependency = join(cwd, modules, 'new-dependency');
         mkdirSync(dependency, { recursive: true });

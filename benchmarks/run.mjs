@@ -1,5 +1,6 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { randomUUID } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, lstatSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -23,12 +24,13 @@ export function prepare(task, cwd) {
   writeFileSync(join(cwd, 'test.cjs'), 'console.log("No local tests yet; add task checks here.");\n');
   for (const [name, body] of Object.entries(task.files)) writeFileSync(join(cwd, name), body);
   git(cwd, ['init', '-q']);
-  git(cwd, ['add', '.']);
+  git(cwd, ['add', '-f', '--', 'package.json', 'test.cjs', ...Object.keys(task.files)]);
   git(cwd, ['-c', 'user.name=Eval', '-c', 'user.email=eval@example.invalid', '-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', 'commit', '-qm', 'fixture']);
   for (const [name, body] of Object.entries(task.dirty || {})) writeFileSync(join(cwd, name), body);
 }
 
 export async function grade(task, cwd) {
+  const complete = `\n${randomUUID()}\n`;
   const result = await runAgent([process.execPath, '-e', `const assert=require('node:assert/strict'); const fs=require('node:fs');
 ${task.check}
 const manifest=JSON.parse(fs.readFileSync('package.json','utf8'));
@@ -42,8 +44,11 @@ while(dirs.length) {
     assert.notEqual(entry.name,'node_modules','unexpected installed dependency');
     if(entry.isDirectory() && entry.name!=='.git') dirs.push(dir+'/'+entry.name);
   }
-}`], cwd, '', 10000);
-  return { pass: result.status === 0 && !result.error, output: result.stdout + result.stderr, error: result.error };
+}
+process.stdout.write(${JSON.stringify(complete)});`], cwd, '', 10000);
+  const completed = result.stdout.includes(complete);
+  return { pass: result.status === 0 && !result.error && completed, output: result.stdout.replace(complete, '') + result.stderr,
+    error: result.error || (result.status === 0 && !completed ? 'incomplete grader' : null) };
 }
 
 // No shell interpolation. Kill the process tree on timeout or output overflow.
