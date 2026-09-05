@@ -18,6 +18,7 @@ try {
     'process.exitCode = 2;',
     'console.log("not json"); process.exitCode = 1;',
     'console.log("{}"); process.exitCode = 1;',
+    'console.log("[]"); process.exitCode = 1;',
     'console.log("[null]"); process.exitCode = 1;',
     'console.log("[{}]"); process.exitCode = 1;',
     'process.kill(process.pid, "SIGKILL");',

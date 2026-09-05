@@ -95,11 +95,10 @@ function finish() {
     if (res.status === 0) return;
     if (res.error || res.status !== 1 || !res.stdout) throw new Error('scan incomplete');
     const all = JSON.parse(res.stdout);
-    if (!Array.isArray(all) || all.some(f => !f || typeof f.path !== 'string'
+    if (!Array.isArray(all) || all.length === 0 || all.some(f => !f || typeof f.path !== 'string'
       || !Number.isInteger(f.line) || f.line < 1 || !Number.isInteger(f.column) || f.column < 1
       || typeof f.rule !== 'string' || typeof f.message !== 'string'
       || !['fix', 'review'].includes(f.severity))) throw new Error('invalid checker output');
-    if (all.length === 0) return;
 
     // Only report what this edit wrote. Handing back the whole file's findings
     // invited edits outside the task — the opposite of the surgical-changes
