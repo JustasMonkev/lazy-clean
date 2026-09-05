@@ -75,6 +75,18 @@ try {
       assert.equal((await grade(task, cwd)).pass, false);
       writeFileSync(join(cwd, file), source);
       assert.equal((await grade(task, cwd)).pass, true);
+      for (const modules of ['node_modules', 'nested/node_modules']) {
+        const dependency = join(cwd, modules, 'new-dependency');
+        mkdirSync(dependency, { recursive: true });
+        writeFileSync(join(dependency, 'index.js'), source);
+        writeFileSync(join(cwd, file), `module.exports=require('./${modules}/new-dependency');`);
+        try {
+          assert.equal((await grade(task, cwd)).pass, false, `${modules}: undeclared installed dependency passed`);
+        } finally {
+          rmSync(join(cwd, modules.split('/')[0]), { recursive: true, force: true });
+          writeFileSync(join(cwd, file), source);
+        }
+      }
       const manifestPath = join(cwd, 'package.json');
       const originalManifest = readFileSync(manifestPath, 'utf8');
       const fields = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies', 'bundledDependencies', 'bundleDependencies'];
@@ -156,6 +168,20 @@ try {
     assert.equal(saved.results[0].sourceBytesAfter, null);
     assert.equal(saved.results[0].pass, false);
     assert.throws(() => process.kill(Number(readFileSync(ready, 'utf8')), 0), { code: 'ESRCH' });
+  }
+  const balancedConfig = JSON.parse(passingConfig);
+  delete balancedConfig.trials; // Exercise the default three trials.
+  writeFileSync(config, JSON.stringify(balancedConfig));
+  const balancedOut = join(root, 'balanced-results');
+  assert.equal(await main([config, balancedOut]), 0);
+  const balancedRows = JSON.parse(readFileSync(join(balancedOut, 'results.json'), 'utf8')).results;
+  assert.equal(balancedRows.length, 60);
+  const firstArms = balancedRows.filter((row, index) => index % 2 === 0).map(row => row.arm);
+  assert.equal(firstArms.filter(arm => arm === 'off').length, 15, 'default run must balance first-arm cache effects');
+  for (let index = 0; index < balancedRows.length; index += 2) {
+    assert.notEqual(balancedRows[index].arm, balancedRows[index + 1].arm);
+    assert.equal(balancedRows[index].task, balancedRows[index + 1].task);
+    assert.equal(balancedRows[index].trial, balancedRows[index + 1].trial);
   }
   writeFileSync(config, passingConfig);
   const failedOut = join(root, 'failed-results');

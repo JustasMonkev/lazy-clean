@@ -33,7 +33,16 @@ export async function grade(task, cwd) {
 ${task.check}
 const manifest=JSON.parse(fs.readFileSync('package.json','utf8'));
 for(const field of ['dependencies','devDependencies','optionalDependencies','peerDependencies','bundledDependencies','bundleDependencies'])
-assert.equal(Object.keys(manifest[field] || {}).length,0);`], cwd, '', 10000);
+assert.equal(Object.keys(manifest[field] || {}).length,0);
+const dirs=['.']; let entries=0;
+while(dirs.length) {
+  const dir=dirs.pop();
+  for(const entry of fs.readdirSync(dir,{withFileTypes:true})) {
+    assert(++entries<=1000,'workspace file limit');
+    assert.notEqual(entry.name,'node_modules','unexpected installed dependency');
+    if(entry.isDirectory() && entry.name!=='.git') dirs.push(dir+'/'+entry.name);
+  }
+}`], cwd, '', 10000);
   return { pass: result.status === 0 && !result.error, output: result.stdout + result.stderr, error: result.error };
 }
 
@@ -142,10 +151,10 @@ export async function main(args) {
     dirty: git(root, ['status', '--porcelain']).length > 0, config: { command, model, trials, timeoutMs, mode }, results: [] };
   const save = () => writeFileSync(join(output, 'results.json'), JSON.stringify(report, null, 2) + '\n');
   save();
-  for (const task of selected) {
+  for (const [taskIndex, task] of selected.entries()) {
     for (let trial = 1; trial <= trials; trial++) {
-      // Alternate arm order to reduce first-run/cache bias.
-      for (const arm of trial % 2 ? ['off', 'on'] : ['on', 'off']) {
+      // Counterbalance across tasks as well as trials, including odd trial counts.
+      for (const arm of (trial + taskIndex) % 2 ? ['off', 'on'] : ['on', 'off']) {
         const dir = join(output, `${task.id}-${trial}-${arm}`);
         const cwd = join(dir, 'work');
         prepare(task, cwd);
