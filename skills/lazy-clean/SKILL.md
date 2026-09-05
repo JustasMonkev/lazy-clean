@@ -9,7 +9,7 @@ Two passes over one change: build the least code that works, then delete the slo
 
 ## 1. While writing — the lazy ladder
 
-Follow `<skills-dir>/lazy/SKILL.md` as written: climb the ladder (YAGNI → reuse → stdlib → platform → installed dep → one line → minimum code) and run its risk gate before shipping. Do not restate the rules here; read that file.
+Follow `<skills-dir>/lazy/SKILL.md` as written: climb the ladder (YAGNI → reuse → stdlib → platform → installed dep → clear minimum code) and run its risk gate before shipping. Do not restate the rules here; read that file.
 
 If your context already carries a `LAZY MODE ACTIVE` header, the ruleset is injected and you are following it; otherwise read that file now. Intensity is `/lazy lite|full|ultra`.
 
@@ -30,30 +30,35 @@ Triage every finding per `<skills-dir>/slop-check/SKILL.md`:
 
 The triage report that skill asks for is requested explanation, not unrequested prose: give it in full, then apply its manual review checklist — dead code, speculative generality, reimplemented platform, edit-artifacts — which no mechanical scan catches.
 
-The checker reads TypeScript and JavaScript only. Java, Python, Ruby, Rust, and Go get the same manual pass by hand — never report them clean on the strength of a scan that did not read them. For every language the change actually touches, read its pinned or installed version from the toolchain file, manifest, lockfile, or runtime, check that language's latest stable release at its official source, and keep version-sensitive advice valid for the version in use. If the latest release cannot be checked, say so and do not guess.
+The checker reads TypeScript and JavaScript only. Java, Python, Ruby, Rust, and Go get the same manual pass by hand — never report them clean on the strength of a scan that did not read them. For every language the change actually touches, read its pinned or installed version from the toolchain file, manifest, lockfile, or runtime. Before version-sensitive advice, check that language's latest stable release at its official source and keep advice valid for the version in use. If the latest release cannot be checked, say so and do not guess.
 
 One caller alone is not a reason to inline or delete a function or file. Keep it separate when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. Inline or delete only when none of those hold.
 
 ## Tests that earn their place
 
-List the changed behavior, its edge cases, and its failure modes, and cover each one. Keep the tests that can fail for a real regression; drop tautologies and mock-call checks that only repeat their own setup. For non-trivial changed logic, run one mutation check: flip a branch, boundary, operator, or return value, confirm a test fails, then revert the mutation before shipping. Use the repo's mutation tool if it has one, otherwise mutate by hand. No new dependency for this.
+List the changed behavior, its edge cases, and its failure modes, and cover each one. Use the repo's existing test tools. Keep the tests that can fail for a real regression; drop tautologies and mock-call checks that only repeat their own setup. For non-trivial changed logic, run one mutation check: flip a branch, boundary, operator, or return value, confirm a test fails, then revert the mutation before shipping. Use the repo's mutation tool if it has one, otherwise mutate by hand. No new dependency for this.
 
 ## When the manual run is needed
 
-If checker findings arrive on their own after each Write/Edit, the `PostToolUse` hook is running it for you and a per-file manual run is redundant; if they do not, run it yourself on every file you changed. Run it by hand for repo-wide sweeps: a whole directory, a full diff, or a pre-review pass over files you did not just edit.
+Edit hooks give quick feedback, not final coverage. Before finishing, run from
+the repo root, even if those hooks ran:
 
 ```bash
-node <skills-dir>/slop-check/scripts/check.mjs $(git diff --name-only --diff-filter=d HEAD -- '*.ts' '*.tsx' '*.js' '*.jsx' '*.mjs' '*.cjs' '*.mts' '*.cts')
+node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD
 ```
 
-## Reject what the spec didn't define
+This includes tracked changes, new untracked files, and edits made through shell
+commands. Use the task base ref if its changes are already committed. Findings
+can include pre-existing user edits: triage only your task's scope. Without Git,
+pass changed paths as separate quoted arguments. Exit 2 means the scan failed;
+report that, never claim it was clean.
 
-Clean code can still be too generous. When parsing or validating input, accept
-exactly the formats the task names and throw on everything else — do not
-silently take uppercase variants, decimals, padded whitespace, or other
-unrequested formats "to be nice". Every silently accepted format is an
-undocumented contract you now maintain. Leniency is a feature: if wanted, it
-gets asked for, specified, and tested.
+## Preserve input contracts
+
+For new input formats, implement the specified contract without inventing extra
+formats. For existing parsers, preserve accepted formats unless the task changes
+them. An omitted detail in a new task is not permission to reject inputs that
+already worked. Revalidate after a trust boundary without changing that contract.
 
 ## Order matters
 

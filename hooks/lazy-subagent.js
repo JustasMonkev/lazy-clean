@@ -22,8 +22,6 @@ if (!mode || mode === 'off') {
 
 function inject() {
   try {
-    // Condensed ruleset, not the full SKILL.md — the full body repeats ~1,300
-    // tokens into every spawn and heavy sessions spawn dozens (#597).
     writeHookOutput('SubagentStart', mode, getSubagentInstructions(mode));
   } catch (e) {
     // Silent fail — a stdout error at hook exit must not surface as a hook failure.

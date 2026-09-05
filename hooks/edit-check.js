@@ -64,16 +64,27 @@ function render(findings) {
   return lines.join('\n');
 }
 
+function report(context) {
+  try {
+    process.stdout.write(JSON.stringify({
+      hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: context },
+    }));
+  } catch { /* A closed output pipe must not turn advice into a hook failure. */ }
+}
+
 function finish() {
   if (done) return;
   done = true;
+  let data;
   try {
-    // Strip UTF-8 BOM some shells prepend when piping (breaks JSON.parse)
-    const data = JSON.parse(input.replace(/^\uFEFF/, ''));
-    const toolInput = data.tool_input || {};
-    const file = toolInput.file_path || '';
-    if (!file || !EXTS.has(path.extname(file).toLowerCase())) return;
-
+    data = JSON.parse(input.replace(/^\uFEFF/, ''));
+  } catch {
+    return; // A malformed tool payload cannot identify a file to check.
+  }
+  const toolInput = data?.tool_input || {};
+  const file = toolInput.file_path;
+  if (typeof file !== 'string' || !EXTS.has(path.extname(file).toLowerCase())) return;
+  try {
     // maxBuffer: the default 1MB is ~3,000 findings of JSON. Overrunning it
     // ends the child with a null status, which read as "the checker broke" and
     // dropped the report for exactly the files that needed it most.
@@ -81,9 +92,13 @@ function finish() {
     // option to the checker, which exits 2, and this hook then reports nothing
     // for a file the manual CLI can scan perfectly well after the same marker.
     const res = spawnSync(process.execPath, [CHECKER, '--json', '--', file], { encoding: 'utf8', timeout: 20000, maxBuffer: 64e6 });
-    if (res.status !== 1 || !res.stdout) return; // 0 = clean, anything else = checker broke
+    if (res.error || ![0, 1].includes(res.status) || !res.stdout) throw new Error('scan incomplete');
     const all = JSON.parse(res.stdout);
-    if (all.length === 0) return;
+    if (!Array.isArray(all) || (res.status === 0) !== (all.length === 0) || all.some(f => !f || typeof f.path !== 'string'
+      || !Number.isInteger(f.line) || f.line < 1 || !Number.isInteger(f.column) || f.column < 1
+      || typeof f.rule !== 'string' || typeof f.message !== 'string'
+      || !['fix', 'review'].includes(f.severity))) throw new Error('invalid checker output');
+    if (res.status === 0) return;
 
     // Only report what this edit wrote. Handing back the whole file's findings
     // invited edits outside the task — the opposite of the surgical-changes
@@ -114,16 +129,13 @@ function finish() {
         ? `\n(${elsewhere} further finding${elsewhere === 1 ? '' : 's'} elsewhere in this file, not attributed to this edit.)`
         : '');
 
-    process.stdout.write(JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: 'PostToolUse',
-        additionalContext: context,
-      },
-    }));
+    report(context);
   } catch (e) {
-    // Silent fail — a broken checker must never interrupt an edit.
+    report('slop-check: check failed; this edit was not verified. Run the bundled checker with --since=HEAD from the repo root before finishing (use the task base ref for committed changes, or explicit changed paths without Git). This is advisory, not a clean result.');
   }
 }
+
+process.stdout.on('error', () => { /* The host may close the advisory pipe early. */ });
 
 process.stdin.on('data', chunk => {
   input += chunk;
