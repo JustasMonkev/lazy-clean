@@ -24,7 +24,7 @@ export function prepare(task, cwd) {
   for (const [name, body] of Object.entries(task.files)) writeFileSync(join(cwd, name), body);
   git(cwd, ['init', '-q']);
   git(cwd, ['add', '.']);
-  git(cwd, ['-c', 'user.name=Eval', '-c', 'user.email=eval@example.invalid', '-c', 'commit.gpgsign=false', 'commit', '-qm', 'fixture']);
+  git(cwd, ['-c', 'user.name=Eval', '-c', 'user.email=eval@example.invalid', '-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', 'commit', '-qm', 'fixture']);
   for (const [name, body] of Object.entries(task.dirty || {})) writeFileSync(join(cwd, name), body);
 }
 
@@ -155,17 +155,18 @@ export async function main(args) {
         writeFileSync(join(dir, 'prompt.txt'), prompt);
         const before = sourceBytes(cwd);
         const run = await runAgent(command, cwd, prompt, timeoutMs);
+        const interrupted = run.error === 'interrupted';
         writeFileSync(join(dir, 'stdout.txt'), run.stdout);
         writeFileSync(join(dir, 'stderr.txt'), run.stderr);
         const measured = metrics(run.stdout);
-        const verdict = grade(task, cwd);
+        const verdict = interrupted ? { pass: false, output: 'Skipped: interrupted.\n', error: 'interrupted' } : grade(task, cwd);
         writeFileSync(join(dir, 'grade.txt'), verdict.output);
         const result = { task: task.id, trial, arm, pass: run.status === 0 && !run.error && !measured.agentError && verdict.pass,
-          status: run.status, error: run.error, gradeError: verdict.error, ms: run.ms, sourceBytesBefore: before, sourceBytesAfter: sourceBytes(cwd), ...measured };
+          status: run.status, error: run.error, gradeError: verdict.error, ms: run.ms, sourceBytesBefore: before, sourceBytesAfter: interrupted ? null : sourceBytes(cwd), ...measured };
         report.results.push(result);
         save();
         console.log(`${task.id} ${trial} ${arm}: ${result.pass ? 'PASS' : 'FAIL'} (${run.ms}ms)`);
-        if (run.error === 'interrupted') return 130;
+        if (interrupted) return 130;
       }
     }
   }

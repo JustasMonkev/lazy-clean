@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -44,6 +44,20 @@ try {
     { cwd: root, encoding: 'utf8', timeout: 5000 });
   assert.equal(imported.status, 0, imported.stderr);
   assert.equal(imported.stdout, '', 'importing the runner must not invoke its CLI');
+  const hooks = join(root, 'user-hooks');
+  mkdirSync(hooks);
+  writeFileSync(join(hooks, 'pre-commit'), '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+  writeFileSync(join(hooks, 'post-commit'), '#!/bin/sh\necho touched > user-hook-ran\n', { mode: 0o755 });
+  const globalConfig = join(root, 'global.gitconfig');
+  writeFileSync(globalConfig, `[core]\n hooksPath = ${JSON.stringify(hooks)}\n`);
+  const fixture = join(root, 'global-hooks-fixture');
+  const prepared = spawnSync(process.execPath, ['--input-type=module', '-e',
+    `import {prepare} from ${JSON.stringify(new URL('../benchmarks/run.mjs', import.meta.url).href)};
+     prepare({files:{}}, ${JSON.stringify(fixture)});`], {
+    env: { ...process.env, GIT_CONFIG_GLOBAL: globalConfig }, encoding: 'utf8', timeout: 10000,
+  });
+  assert.equal(prepared.status, 0, prepared.stderr);
+  assert.equal(existsSync(join(fixture, 'user-hook-ran')), false, 'fixture setup must not run any user hooks');
   assert.equal(tasks.length, 10);
   assert.equal(new Set(tasks.map(task => task.id)).size, 10);
   for (const task of tasks) {
@@ -100,6 +114,29 @@ try {
   assert.deepEqual(report.results.map(x => [x.arm, x.pass, x.tokens]), [['off', true, null], ['on', true, null]]);
   assert.match(readFileSync(join(out, 'explicit-values-1-on/prompt.txt'), 'utf8'), /LAZY MODE ACTIVE/u);
   assert.doesNotMatch(readFileSync(join(out, 'explicit-values-1-off/prompt.txt'), 'utf8'), /LAZY MODE ACTIVE/u);
+  const passingConfig = readFileSync(config, 'utf8');
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    const ready = join(root, `ready-${signal}`);
+    const cancelledOut = join(root, `cancelled-${signal}`);
+    const partial = "require('node:fs').writeFileSync('grader-ran','yes');" + fixes['explicit-values'][1];
+    writeFileSync(config, JSON.stringify({ command: [process.execPath, '-e',
+      `const fs=require('node:fs');fs.writeFileSync('defaults.cjs',${JSON.stringify(partial)});
+       fs.writeFileSync('partial.cjs','x'.repeat(9*1024*1024));fs.writeFileSync(${JSON.stringify(ready)},'ready');
+       setInterval(()=>{},1000);`], model: 'fake-interrupted', trials: 1, timeoutMs: 5000 }));
+    const notify = setInterval(() => { if (existsSync(ready)) { clearInterval(notify); process.emit(signal); } }, 10);
+    try {
+      assert.equal(await main([config, cancelledOut, 'explicit-values']), 130);
+    } finally {
+      clearInterval(notify);
+    }
+    const saved = JSON.parse(readFileSync(join(cancelledOut, 'results.json'), 'utf8'));
+    assert.equal(saved.results.length, 1, 'cancellation must not start the next arm');
+    assert.equal(saved.results[0].error, 'interrupted');
+    assert.equal(saved.results[0].pass, false);
+    assert.equal(saved.results[0].sourceBytesAfter, null);
+    assert.equal(existsSync(join(cancelledOut, 'explicit-values-1-off/work/grader-ran')), false);
+  }
+  writeFileSync(config, passingConfig);
   const failedOut = join(root, 'failed-results');
   const failedConfig = JSON.parse(readFileSync(config, 'utf8'));
   failedConfig.command[2] += 'process.exitCode=1;';
