@@ -16,6 +16,10 @@ try {
   writeFileSync(file, 'export const n = 1;\n');
   for (const source of [
     'process.exitCode = 2;',
+    'process.exitCode = 0;',
+    'console.log("not json");',
+    'console.log("[{}]");',
+    'console.log(JSON.stringify([{path:"app.ts",line:1,column:1,rule:"test",message:"finding",severity:"review"}]));',
     'console.log("not json"); process.exitCode = 1;',
     'console.log("{}"); process.exitCode = 1;',
     'console.log("[]"); process.exitCode = 1;',
@@ -34,6 +38,12 @@ try {
     assert.match(output.hookSpecificOutput.additionalContext, /check failed/u);
     assert.match(output.hookSpecificOutput.additionalContext, /--since=HEAD/u);
   }
+  writeFileSync(checker, 'console.log("[]");');
+  const clean = spawnSync(process.execPath, [hook], {
+    input: JSON.stringify({ tool_input: { file_path: file } }), encoding: 'utf8', timeout: 5000,
+  });
+  assert.equal(clean.status, 0, clean.stderr);
+  assert.equal(clean.stdout, '', 'a valid clean scan must stay quiet');
   rmSync(checker);
   const missing = spawnSync(process.execPath, [hook], {
     input: JSON.stringify({ tool_input: { file_path: file } }), encoding: 'utf8', timeout: 5000,
