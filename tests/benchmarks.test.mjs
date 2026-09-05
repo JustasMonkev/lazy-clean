@@ -63,18 +63,18 @@ try {
   for (const task of tasks) {
     const cwd = join(root, task.id);
     prepare(task, cwd);
-    assert.equal(grade(task, cwd).pass, false, `${task.id}: broken fixture passed`);
+    assert.equal((await grade(task, cwd)).pass, false, `${task.id}: broken fixture passed`);
     const [file, source] = fixes[task.id];
     writeFileSync(join(cwd, file), source);
     if (task.id === 'existing-tests') writeFileSync(join(cwd, 'test.cjs'), task.files['test.cjs'] + 'assert.equal(sum([]),0);\n');
-    const result = grade(task, cwd);
+    const result = await grade(task, cwd);
     assert.equal(result.pass, true, `${task.id}: ${result.output}`);
     // A concrete false-value mutation must be caught, then the fixed source restored.
     if (task.id === 'explicit-values') {
       writeFileSync(join(cwd, file), source.replace('x.enabled??true', 'x.enabled||true'));
-      assert.equal(grade(task, cwd).pass, false);
+      assert.equal((await grade(task, cwd)).pass, false);
       writeFileSync(join(cwd, file), source);
-      assert.equal(grade(task, cwd).pass, true);
+      assert.equal((await grade(task, cwd)).pass, true);
       const manifestPath = join(cwd, 'package.json');
       const originalManifest = readFileSync(manifestPath, 'utf8');
       const fields = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies', 'bundledDependencies', 'bundleDependencies'];
@@ -82,12 +82,12 @@ try {
         for (const field of fields) {
           const packages = field.startsWith('bundle') ? ['extra-package'] : { 'extra-package': '*' };
           writeFileSync(manifestPath, JSON.stringify({ ...JSON.parse(originalManifest), [field]: packages }));
-          assert.equal(grade(task, cwd).pass, false, `${field} must fail the no-dependency task`);
+          assert.equal((await grade(task, cwd)).pass, false, `${field} must fail the no-dependency task`);
         }
       } finally {
         writeFileSync(manifestPath, originalManifest);
       }
-      assert.equal(grade(task, cwd).pass, true);
+      assert.equal((await grade(task, cwd)).pass, true);
     }
   }
   assert.deepEqual(metrics('{}'), { costUsd: null, tokens: null, models: [], agentError: false, permissionDenials: null });
@@ -135,6 +135,27 @@ try {
     assert.equal(saved.results[0].pass, false);
     assert.equal(saved.results[0].sourceBytesAfter, null);
     assert.equal(existsSync(join(cancelledOut, 'explicit-values-1-off/work/grader-ran')), false);
+  }
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    const ready = join(root, `grade-ready-${signal}`);
+    const gradingOut = join(root, `grading-${signal}`);
+    const partial = `require('node:fs').writeFileSync(${JSON.stringify(ready)},String(process.pid));
+      setInterval(()=>{},1000);` + fixes['explicit-values'][1];
+    writeFileSync(config, JSON.stringify({ command: [process.execPath, '-e',
+      `require('node:fs').writeFileSync('defaults.cjs',${JSON.stringify(partial)});`],
+      model: 'fake-grading', trials: 1, timeoutMs: 5000 }));
+    const notify = setInterval(() => { if (existsSync(ready)) { clearInterval(notify); process.emit(signal); } }, 10);
+    try {
+      assert.equal(await main([config, gradingOut, 'explicit-values']), 130);
+    } finally {
+      clearInterval(notify);
+    }
+    const saved = JSON.parse(readFileSync(join(gradingOut, 'results.json'), 'utf8'));
+    assert.equal(saved.results.length, 1, 'grading cancellation must not start the next arm');
+    assert.equal(saved.results[0].gradeError, 'interrupted');
+    assert.equal(saved.results[0].sourceBytesAfter, null);
+    assert.equal(saved.results[0].pass, false);
+    assert.throws(() => process.kill(Number(readFileSync(ready, 'utf8')), 0), { code: 'ESRCH' });
   }
   writeFileSync(config, passingConfig);
   const failedOut = join(root, 'failed-results');

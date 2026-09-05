@@ -28,15 +28,13 @@ export function prepare(task, cwd) {
   for (const [name, body] of Object.entries(task.dirty || {})) writeFileSync(join(cwd, name), body);
 }
 
-export function grade(task, cwd) {
-  const result = spawnSync(process.execPath, ['-e', `const assert=require('node:assert/strict'); const fs=require('node:fs');
+export async function grade(task, cwd) {
+  const result = await runAgent([process.execPath, '-e', `const assert=require('node:assert/strict'); const fs=require('node:fs');
 ${task.check}
 const manifest=JSON.parse(fs.readFileSync('package.json','utf8'));
 for(const field of ['dependencies','devDependencies','optionalDependencies','peerDependencies','bundledDependencies','bundleDependencies'])
-assert.equal(Object.keys(manifest[field] || {}).length,0);`], {
-    cwd, encoding: 'utf8', timeout: 10000, killSignal: 'SIGKILL', maxBuffer: limit,
-  });
-  return { pass: result.status === 0, output: (result.stdout || '') + (result.stderr || ''), error: result.error?.code || null };
+assert.equal(Object.keys(manifest[field] || {}).length,0);`], cwd, '', 10000);
+  return { pass: result.status === 0 && !result.error, output: result.stdout + result.stderr, error: result.error };
 }
 
 // No shell interpolation. Kill the process tree on timeout or output overflow.
@@ -155,14 +153,15 @@ export async function main(args) {
         writeFileSync(join(dir, 'prompt.txt'), prompt);
         const before = sourceBytes(cwd);
         const run = await runAgent(command, cwd, prompt, timeoutMs);
-        const interrupted = run.error === 'interrupted';
+        let interrupted = run.error === 'interrupted';
         writeFileSync(join(dir, 'stdout.txt'), run.stdout);
         writeFileSync(join(dir, 'stderr.txt'), run.stderr);
         const measured = metrics(run.stdout);
-        const verdict = interrupted ? { pass: false, output: 'Skipped: interrupted.\n', error: 'interrupted' } : grade(task, cwd);
+        const verdict = interrupted ? { pass: false, output: 'Skipped: interrupted.\n', error: 'interrupted' } : await grade(task, cwd);
+        interrupted ||= verdict.error === 'interrupted';
         writeFileSync(join(dir, 'grade.txt'), verdict.output);
         const result = { task: task.id, trial, arm, pass: run.status === 0 && !run.error && !measured.agentError && verdict.pass,
-          status: run.status, error: run.error, gradeError: verdict.error, ms: run.ms, sourceBytesBefore: before, sourceBytesAfter: interrupted ? null : sourceBytes(cwd), ...measured };
+          status: run.status, error: interrupted ? 'interrupted' : run.error, gradeError: verdict.error, ms: run.ms, sourceBytesBefore: before, sourceBytesAfter: interrupted ? null : sourceBytes(cwd), ...measured };
         report.results.push(result);
         save();
         console.log(`${task.id} ${trial} ${arm}: ${result.pass ? 'PASS' : 'FAIL'} (${run.ms}ms)`);
