@@ -1,6 +1,6 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, lstatSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, lstatSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -32,8 +32,8 @@ export function grade(task, cwd) {
   const result = spawnSync(process.execPath, ['-e', `const assert=require('node:assert/strict'); const fs=require('node:fs');
 ${task.check}
 const manifest=JSON.parse(fs.readFileSync('package.json','utf8'));
-assert.equal(Object.keys(manifest.dependencies || {}).length,0);
-assert.equal(Object.keys(manifest.devDependencies || {}).length,0);`], {
+for(const field of ['dependencies','devDependencies','optionalDependencies','peerDependencies','bundledDependencies','bundleDependencies'])
+assert.equal(Object.keys(manifest[field] || {}).length,0);`], {
     cwd, encoding: 'utf8', timeout: 10000, killSignal: 'SIGKILL', maxBuffer: limit,
   });
   return { pass: result.status === 0, output: (result.stdout || '') + (result.stderr || ''), error: result.error?.code || null };
@@ -173,7 +173,16 @@ export async function main(args) {
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+function isMainModule() {
+  if (!process.argv[1]) return false;
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
+  } catch {
+    return false; // Programmatic entry points need not name a file.
+  }
+}
+
+if (isMainModule()) {
   main(process.argv.slice(2)).then(code => { process.exitCode = code; }).catch(error => {
     console.error(error.message); process.exitCode = 2;
   });

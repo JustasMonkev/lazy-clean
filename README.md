@@ -70,7 +70,7 @@ Requires `node` 18+ on `PATH`. No dependencies to install.
 
 The checker only looks at `.ts .tsx .mts .cts .js .jsx .mjs .cjs`; anything else is skipped silently. Files written through `Bash` — heredocs, `sed -i`, codemods — are not seen by the hook at all; run the checker on those yourself.
 
-Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. A failed checker run reports `check failed`; it does not claim the edit was clean. It reports only findings on the lines that edit wrote, and says how many others in the file predate it, so a small edit never hands back a to-do list for the whole file. Triage them per `skills/slop-check/SKILL.md`: fix real slop, justify false positives, keep deliberate assertions with a `// SAFETY:` comment.
+Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. A failed checker run reports `check failed`; it does not claim the edit was clean. It reports findings on the lines attributed to that edit and counts findings elsewhere in the file whose origin is unknown. Those other findings may come from earlier edits in the same task; the final scan still covers them. Triage them per `skills/slop-check/SKILL.md`: fix real slop, justify false positives, keep deliberate assertions with a `// SAFETY:` comment.
 
 ## Running the checker yourself
 

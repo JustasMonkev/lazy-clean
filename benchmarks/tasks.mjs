@@ -17,7 +17,7 @@ assert.deepEqual(options({enabled:null,retries:null,label:null}), {enabled:true,
 for (const id of [null, undefined, '', ' abc ']) {
 assert.equal(app.button(id), id == null ? '' : id.trim());
 assert.equal(app.restore({id}), id == null ? '' : id.trim());
-}`, 
+}`,
   },
   {
     id: 'user-edits',

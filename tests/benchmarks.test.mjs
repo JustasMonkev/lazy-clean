@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { grade, main, metrics, prepare, runAgent } from '../benchmarks/run.mjs';
 import { tasks } from '../benchmarks/tasks.mjs';
 
@@ -19,6 +21,27 @@ const fixes = {
 };
 const root = mkdtempSync(join(tmpdir(), 'lazy-eval-test-'));
 try {
+  const linked = join(root, 'linked benchmark');
+  const entries = [fileURLToPath(new URL('../benchmarks/run.mjs', import.meta.url))];
+  try {
+    symlinkSync(fileURLToPath(new URL('../benchmarks/', import.meta.url)), linked, 'junction');
+    entries.push(join(linked, 'run.mjs'));
+  } catch (error) {
+    if (!['EPERM', 'EACCES', 'ENOSYS', 'ENOTSUP', 'EOPNOTSUPP'].includes(error.code)) throw error;
+    console.log(`skip linked CLI (${error.code}: links unavailable)`);
+  }
+  for (const entry of entries) {
+    const help = spawnSync(process.execPath, [entry, '--help'], { encoding: 'utf8', timeout: 5000 });
+    assert.equal(help.status, 0, help.stderr);
+    assert.match(help.stdout, /Usage: node benchmarks\/run.mjs/u);
+    const invalid = spawnSync(process.execPath, [entry], { encoding: 'utf8', timeout: 5000 });
+    assert.equal(invalid.status, 2, 'CLI must not silently succeed without arguments');
+  }
+  const imported = spawnSync(process.execPath, ['--input-type=module', '-e',
+    `process.argv[1] = 'missing-entry.mjs'; await import(${JSON.stringify(new URL('../benchmarks/run.mjs', import.meta.url).href)});`],
+    { cwd: root, encoding: 'utf8', timeout: 5000 });
+  assert.equal(imported.status, 0, imported.stderr);
+  assert.equal(imported.stdout, '', 'importing the runner must not invoke its CLI');
   assert.equal(tasks.length, 10);
   assert.equal(new Set(tasks.map(task => task.id)).size, 10);
   for (const task of tasks) {
@@ -35,6 +58,19 @@ try {
       writeFileSync(join(cwd, file), source.replace('x.enabled??true', 'x.enabled||true'));
       assert.equal(grade(task, cwd).pass, false);
       writeFileSync(join(cwd, file), source);
+      assert.equal(grade(task, cwd).pass, true);
+      const manifestPath = join(cwd, 'package.json');
+      const originalManifest = readFileSync(manifestPath, 'utf8');
+      const fields = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies', 'bundledDependencies', 'bundleDependencies'];
+      try {
+        for (const field of fields) {
+          const packages = field.startsWith('bundle') ? ['extra-package'] : { 'extra-package': '*' };
+          writeFileSync(manifestPath, JSON.stringify({ ...JSON.parse(originalManifest), [field]: packages }));
+          assert.equal(grade(task, cwd).pass, false, `${field} must fail the no-dependency task`);
+        }
+      } finally {
+        writeFileSync(manifestPath, originalManifest);
+      }
       assert.equal(grade(task, cwd).pass, true);
     }
   }
