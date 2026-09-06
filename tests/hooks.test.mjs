@@ -375,6 +375,9 @@ for (const mode of ["lite", "full", "ultra"]) {
   eq(`subagents receive the same compact rules in ${mode}`, sub, full);
   ok(`core prompt stays below 700 words in ${mode}`, full.split(/\s+/u).length < 700);
   ok(`risk-check reference resolves in ${mode}`, full.includes(path.join(ROOT, "skills/lazy/references/risk-checks.md")));
+  const simplificationReference = path.join(ROOT, "skills/lazy/references/simplification-checks.md");
+  ok(`simplification reference is readable in ${mode}`,
+    full.includes(`(<${simplificationReference}>)`) && fs.existsSync(simplificationReference));
   ok(`checker path resolves in ${mode}`, full.includes(path.join(ROOT, "skills/slop-check/scripts/check.mjs")));
 }
 ok("getLazyInstructions(garbage) degrades to full", instructions.getLazyInstructions("banana").startsWith("LAZY MODE ACTIVE — level: full"));
@@ -387,6 +390,12 @@ const orphanInstructions = require(path.join(orphan, "hooks", "lazy-instructions
 const fallback = orphanInstructions.getLazyInstructions("ultra");
 ok("missing SKILL.md falls back cleanly", fallback.startsWith("LAZY MODE ACTIVE — level: ultra") && fallback.includes("## The ladder"));
 ok("fallback carries no SKILL.md-only text", !fallback.includes("## Intensity"));
+ok("missing SKILL.md preserves concrete simplification checks",
+  /infer obvious local types/.test(fallback) &&
+  /normalize overloaded arguments once/.test(fallback) &&
+  /throwing only to catch them locally/.test(fallback) &&
+  /Match error and\s+cancellation semantics/.test(fallback) &&
+  /Preserve encoding\s+and buffer ownership/.test(fallback));
 eq("missing SKILL.md still yields nothing for off", orphanInstructions.getLazyInstructions("off"), "");
 
 // --- lazy-runtime (env is read at module load, so probe in child processes) ---
