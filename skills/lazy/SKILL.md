@@ -41,6 +41,15 @@ user state, errors, metadata, and platform behavior unless the task changes them
 Keep security, accessibility, and real-hardware calibration. Revalidate at new
 trust boundaries. Bound external work and clean up timers, listeners, and tasks.
 
+Before finishing a TS/JS change, read [TS/JS simplification checks](references/simplification-checks.md): infer obvious private/local types without
+`any` or bypass casts; normalize overload, encoding, and callback arguments once;
+handle returned errors directly; use one-liners where clearer, e.g. for value
+selection; and
+challenge deletions with lifetime, caller, and regression/mutation evidence.
+Keep explicit multi-step control flow, useful domain helpers, and guards whose
+error, cancellation, ownership, or cleanup semantics are required. The examples
+are TS/JS guidance, not mandatory syntax for other supported languages.
+
 For non-trivial code changes, read [risk checks](references/risk-checks.md).
 Use the repo's existing test tools. Cover changed behavior, edge cases, and
 failure modes; run one mutation that makes a test fail, then revert it.

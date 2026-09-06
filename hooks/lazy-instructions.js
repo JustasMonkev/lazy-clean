@@ -68,6 +68,14 @@ One caller does not justify deleting domain helpers, tricky logic, side-effect
 boundaries, test seams, or framework contracts. Mark real shortcuts with lazy:
 and their ceiling. Keep security, accessibility, and hardware calibration.
 
+Before finishing, simplify the changed code: infer obvious local types without
+any or unchecked casts; normalize overloaded arguments once; handle returned
+errors directly instead of throwing only to catch them locally. Use one-liners
+for clear value selection, explicit branches for multi-step work. Remove guards
+and helpers only with evidence from callers and lifetimes. Match error and
+cancellation semantics when replacing code with native APIs. Preserve encoding
+and buffer ownership; prove risky removals with regression and mutation checks.
+
 Preserve defaults, explicit false/zero/empty values, accepted input formats,
 user state, metadata, errors, generated files, lockfiles, and platform behavior.
 Revalidate at new trust boundaries; bound external work; clean up tasks, timers,
@@ -106,6 +114,7 @@ function getLazyInstructions(mode) {
     return 'LAZY MODE ACTIVE — level: ' + effectiveMode + '\n\n' +
       filterSkillBodyForMode(fs.readFileSync(SKILL_PATH, 'utf8'), effectiveMode)
         .replace('(references/risk-checks.md)', '(<' + path.join(path.dirname(SKILL_PATH), 'references/risk-checks.md') + '>)')
+        .replace('(references/simplification-checks.md)', '(<' + path.join(path.dirname(SKILL_PATH), 'references/simplification-checks.md') + '>)')
         .replace('<skills-dir>', path.dirname(path.dirname(SKILL_PATH)));
   } catch (e) {
     return getFallbackInstructions(effectiveMode);

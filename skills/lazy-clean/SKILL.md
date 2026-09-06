@@ -34,6 +34,10 @@ The checker reads TypeScript and JavaScript only. Java, Python, Ruby, Rust, and 
 
 One caller alone is not a reason to inline or delete a function or file. Keep it separate when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. Inline or delete only when none of those hold.
 
+## Manual simplification pass
+
+Before finishing a TypeScript or JavaScript change, read and apply [TS/JS simplification checks](../lazy/references/simplification-checks.md). It is a concise pre-finish review with small before/after examples: infer obvious local types without `any` or bypass casts, normalize arguments once, handle returned errors directly, and compare lifetimes, callers, and error/cancellation/cleanup semantics before replacing or deleting code. Keep useful domain helpers and explicit multi-step control flow. Its TS/JS examples are illustrative; other languages keep their own syntax and idioms.
+
 ## Tests that earn their place
 
 List the changed behavior, its edge cases, and its failure modes, and cover each one. Use the repo's existing test tools. Keep the tests that can fail for a real regression; drop tautologies and mock-call checks that only repeat their own setup. For non-trivial changed logic, run one mutation check: flip a branch, boundary, operator, or return value, confirm a test fails, then revert the mutation before shipping. Use the repo's mutation tool if it has one, otherwise mutate by hand. No new dependency for this.
