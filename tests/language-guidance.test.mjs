@@ -91,10 +91,23 @@ const REVIEW_SURFACES = [
   ".opencode/command/lazy-review.md",
   ".opencode/command/lazy-audit.md",
 ];
+// "Mutation evidence is optional when red-green checks already prove the risk"
+// alone lets a reviewer cut evidence that covers risk nothing else proves: the
+// surface must also protect that evidence, either by telling a reviewer to keep
+// it or by requiring a mutation check when existing coverage is absent.
 const protectsUsefulMutationTest = (text) =>
-  /\bmutation\b/iu.test(text) && /optional/iu.test(text) && /red-green/iu.test(text);
+  /\bmutation\b/iu.test(text) &&
+  /optional/iu.test(text) &&
+  /red-green/iu.test(text) &&
+  /keep (?:meaningful mutation|tests that catch real)|otherwise[^.;]*meaningful mutation/iu.test(text);
 
 ok("a mutation mention alone is not proof", !protectsUsefulMutationTest("Mutation is discussed."));
+ok("optional-when-proven alone is not protection",
+  !protectsUsefulMutationTest("Mutation evidence is optional when existing red-green checks already prove the risky behavior."));
+ok("a keep clause plus the optional case is protection",
+  protectsUsefulMutationTest("Keep meaningful mutation evidence when existing red-green checks do not already prove the risky behavior; it is optional when they do."));
+ok("a required otherwise-check plus the optional case is protection",
+  protectsUsefulMutationTest("Mutation work is optional when existing red-green checks already prove the risk; otherwise a small meaningful mutation check is useful."));
 for (const file of BUILD_SURFACES) {
   ok(`${file} has a risk-scoped mutation policy`, protectsUsefulMutationTest(read(file)));
 }
