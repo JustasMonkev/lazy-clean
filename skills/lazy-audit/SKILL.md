@@ -9,8 +9,8 @@ description: >
   "lazy-audit", or "/lazy-audit". One-shot report, does not apply fixes.
 ---
 
-lazy-review, repo-wide. Scan the whole tree instead of a diff. Rank
-findings biggest cut first.
+lazy-review, repo-wide. Scan the whole tree instead of a diff. Rank findings by
+useful simplification, and do not cut required behavior merely to reduce lines.
 
 ## Tags
 
@@ -25,11 +25,10 @@ Same as lazy-review:
 ## Hunt
 
 Detect which of TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go the
-repo actually uses, and read each pinned or installed version from its
-toolchain file, manifest, lockfile, or runtime. Before version-sensitive
-advice, check that language's latest stable release at its official source and
-keep the replacement valid for the version in use. If the latest release cannot
-be checked, say so and do not guess.
+repo actually uses. Read each pinned or installed version from its toolchain
+file, manifest, lockfile, or runtime and keep replacements compatible. If a
+needed version fact cannot be checked, say so and do not guess; check the latest
+release only when the user asks for current-version advice.
 
 One caller or one export is not proof of waste. Keep a separate function or
 file when it names a domain idea, hides tricky logic, isolates a side effect or
@@ -47,7 +46,11 @@ End with `net: -<N> lines, -<M> deps possible.` Nothing to cut: `Lean already. S
 
 ## Boundaries
 
-Behavior, edge, failure, and mutation tests that catch real regressions are not bloat; never flag them only to make the test tree smaller.
+Behavior, edge, and failure tests that catch real regressions are not bloat.
+Keep meaningful mutation evidence when existing red-green checks do not already prove the
+risky behavior; mutation evidence is optional when they do. Never flag useful
+evidence only to make the test tree smaller. Every proposed simplification must
+preserve behavior; a separate correctness/security audit is not this pass.
 
 Scope: over-engineering and complexity only. Correctness bugs, security holes,
 and performance are explicitly out of scope. Route them to a normal review

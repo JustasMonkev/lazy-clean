@@ -10,6 +10,14 @@ license: MIT
 Complete the user's request with the clearest small solution. Correctness and
 requested scope come before code size, speed, or fewer files.
 
+## Think, then act
+
+Before coding, state material assumptions, interpretations, and tradeoffs. Ask
+only when a missing answer blocks the requested result; use judgment for trivial
+choices. For a multi-step task, write a brief step → check plan. Define a
+verifiable finish: bug fixes go red → green, refactors have before/after checks,
+and keep looping until the result is verified.
+
 ## Persistence
 
 Use the active level until `/lazy off`, "stop lazy", or "normal mode".
@@ -27,12 +35,22 @@ Fix the shared cause, not just the reported path.
 3. Prefer the standard library, native platform, or an installed dependency.
 4. Otherwise write the clearest small solution. One line is not a goal.
 
-Meet every requested need; skip only unasked extras. Preserve unrelated edits.
+Preserve unrelated edits.
 One caller is not proof a helper should go: keep domain names, tricky logic,
 side effects, test seams, readability, and framework contracts.
 No avoidable dependency, speculative abstraction, or unrelated cleanup.
 Mark a deliberate shortcut with `lazy:` only when it has a known ceiling;
 name that ceiling and when to replace it.
+
+Match existing style. Do not add speculative features/config, needless
+single-use abstractions, or impossible-state guards. Push back on unneeded scope
+and offer a simpler alternative. Review the task-owned diff once more: remove
+only orphans created by this task, mention unrelated dead code instead of
+deleting it, and cut additions that do not support the request. If 200 lines can
+be 50 with the same behavior and clearer structure, rewrite; do not compress
+formatting. Do not force a net-negative diff or remove required behavior. Every
+proposed simplification must preserve behavior. Every changed line should be
+traceable to the request or verification.
 
 ## Checks
 
@@ -41,19 +59,15 @@ user state, errors, metadata, and platform behavior unless the task changes them
 Keep security, accessibility, and real-hardware calibration. Revalidate at new
 trust boundaries. Bound external work and clean up timers, listeners, and tasks.
 
-Before finishing a TS/JS change, read [TS/JS simplification checks](references/simplification-checks.md): infer obvious private/local types without
-`any` or bypass casts; normalize overload, encoding, and callback arguments once;
-handle returned errors directly; use one-liners where clearer, e.g. for value
-selection; and
-challenge deletions with lifetime, caller, and regression/mutation evidence.
-Keep explicit multi-step control flow, useful domain helpers, and guards whose
-error, cancellation, ownership, or cleanup semantics are required. The examples
-are TS/JS guidance, not mandatory syntax for other supported languages.
+Before finishing TS/JS changes, read [TS/JS simplification checks](references/simplification-checks.md)
+for concrete type, argument, control-flow, ownership, and deletion examples.
+Other languages keep their own idioms.
 
 For non-trivial code changes, read [risk checks](references/risk-checks.md).
 Use the repo's existing test tools. Cover changed behavior, edge cases, and
-failure modes; run one mutation that makes a test fail, then revert it.
-Use the repo's mutation tool or mutate by hand; no new dependency for this.
+failure modes. If existing red-green checks already prove the risky regression,
+mutation work is optional; otherwise, a small meaningful mutation check is
+useful. Never add a dependency just for mutation evidence.
 When writing tests is the task, cover the full case list, not just one example.
 
 Before finishing TS/JS edits, run the bundled checker from the repo root:
@@ -67,10 +81,10 @@ Triage findings; never weaken a check just to silence it.
 ## Language fit
 
 Supported: TypeScript, JavaScript, Java, Python, Ruby, Rust, Go. Detect only those
-in use; read each pinned or installed version from its toolchain file, manifest,
-lockfile, or runtime. Before version-sensitive advice, check the latest stable
-release at its official source. If it cannot be checked, say so and do not guess.
-Keep advice valid for the installed version; suggest upgrades only when useful.
+in use; read each pinned or runtime version from its toolchain file, manifest,
+lockfile, or runtime. Keep advice valid for the installed version. If a needed
+version fact cannot be checked, say so and do not guess; latest-version research
+is only needed when the user asks for current-version advice.
 
 ## Intensity
 

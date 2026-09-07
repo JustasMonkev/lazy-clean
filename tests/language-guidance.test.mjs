@@ -45,39 +45,29 @@ const ADVICE_SKILLS = [
 // `Java` is a prefix of `JavaScript`, so a file listing only JavaScript must not
 // pass as listing Java: match each name with no letter after it.
 const lists = (text, language) => new RegExp(`\\b${language}(?![A-Za-z])`, "u").test(text);
-const hasUnavailableVersionRule = (text) =>
-  text
-    .split(/\n\s*\n/u)
-    .map(flat)
-    .some(
-      (block) =>
-        /latest stable/iu.test(block) &&
-        /official source/iu.test(block) &&
-        /cannot be checked|cannot check|unable to check|check failed/iu.test(block) &&
-        /say so|report|state/iu.test(block) &&
-        /do not guess/iu.test(block),
-    );
-
 for (const file of [...ADVICE_SKILLS, ...RULES_FILES, ...OPENCODE_COMMANDS, "README.md"]) {
   const text = flat(read(file));
   for (const language of LANGUAGES) ok(`${file} lists ${language}`, lists(text, language));
-  ok(`${file} requires the latest-stable check`, /latest stable/iu.test(text));
-  ok(`${file} names the official source`, /official source/iu.test(text));
+  ok(`${file} does not mandate latest-release research`, !/latest stable/iu.test(text));
+  ok(`${file} keeps advice compatible with installed versions`, /installed version/iu.test(text));
+  ok(`${file} says what to do when a version fact is unavailable`, /do not guess|instead of guessing/iu.test(text));
 }
 
 // README describes the behavior; the instruction surfaces have to command it.
 for (const file of [...ADVICE_SKILLS, ...RULES_FILES, ...OPENCODE_COMMANDS]) {
   const text = flat(read(file));
-  ok(`${file} forbids guessing an unavailable version`, /do not guess/iu.test(text));
-  ok(`${file} reports a failed latest-version lookup`, hasUnavailableVersionRule(read(file)));
   ok(`${file} says where the pinned version lives`, /toolchain file, manifest, lockfile/iu.test(text));
 }
 ok("README.md promises no guessed versions", /instead of guessing|do not guess/iu.test(flat(read("README.md"))));
 
 ok(
-  "slop-check does not order unconditional inlining before the helper guard",
-  !/single implementation\. Inline it\./iu.test(flat(read("skills/slop-check/SKILL.md"))),
+  "review examples avoid unconditional inlining",
+  !/single implementation\. Inline it\./iu.test(flat(read("skills/lazy-review/SKILL.md"))),
 );
+ok("review examples avoid the email-at-sign shortcut", !/EmailValidator|"@" in email/iu.test(flat(read("skills/lazy-review/SKILL.md"))));
+ok("review examples state concrete invariants", /finite numbers and min <= max/iu.test(flat(read("skills/lazy-review/SKILL.md"))));
+ok("review examples preserve locale and timezone", /en-US\/UTC.*Intl\.DateTimeFormat/iu.test(flat(read("skills/lazy-review/SKILL.md"))));
+ok("review examples include a keep case", /KEEP.*rollback.*one caller/iu.test(flat(read("skills/lazy-review/SKILL.md"))));
 
 for (const file of [...ADVICE_SKILLS, ...RULES_FILES, ...OPENCODE_COMMANDS, "README.md", "hooks/lazy-instructions.js"]) {
   const text = flat(read(file));
@@ -101,47 +91,63 @@ const REVIEW_SURFACES = [
   ".opencode/command/lazy-review.md",
   ".opencode/command/lazy-audit.md",
 ];
-const hasMutationWitness = (text) =>
-  text
-    .split(/\n\s*\n/u)
-    .map(flat)
-    .some((block) => /\bmutation\b/iu.test(block) && /\bfail(?:s|ed|ure)?\b/iu.test(block) && /\brevert/iu.test(block));
+// "Mutation evidence is optional when red-green checks already prove the risk"
+// alone lets a reviewer cut evidence that covers risk nothing else proves: the
+// surface must also protect that evidence, either by telling a reviewer to keep
+// it or by requiring a mutation check when existing coverage is absent.
 const protectsUsefulMutationTest = (text) =>
-  text.split(/\r?\n/u).some(
-    (line) =>
-      /\bmutation\b/iu.test(line) &&
-      (/\bfail(?:s|ed|ure)?\b/iu.test(line) || /catch(?:es)? a?\s*real regression/iu.test(line)) &&
-      /keep|earned|not bloat|never flag|do not flag/iu.test(line),
-  );
+  /\bmutation\b/iu.test(text) &&
+  /optional/iu.test(text) &&
+  /red-green/iu.test(text) &&
+  /keep (?:meaningful mutation|tests that catch real)|otherwise[^.;]*meaningful mutation/iu.test(text);
 
-ok("a mutation mention alone is not proof", !hasMutationWitness("Mutation is discussed."));
+ok("a mutation mention alone is not proof", !protectsUsefulMutationTest("Mutation is discussed."));
+ok("optional-when-proven alone is not protection",
+  !protectsUsefulMutationTest("Mutation evidence is optional when existing red-green checks already prove the risky behavior."));
+ok("a keep clause plus the optional case is protection",
+  protectsUsefulMutationTest("Keep meaningful mutation evidence when existing red-green checks do not already prove the risky behavior; it is optional when they do."));
+ok("a required otherwise-check plus the optional case is protection",
+  protectsUsefulMutationTest("Mutation work is optional when existing red-green checks already prove the risk; otherwise a small meaningful mutation check is useful."));
 for (const file of BUILD_SURFACES) {
-  ok(`${file} requires a failing, reverted mutation`, hasMutationWitness(read(file)));
+  ok(`${file} has a risk-scoped mutation policy`, protectsUsefulMutationTest(read(file)));
 }
 for (const file of REVIEW_SURFACES) {
-  ok(`${file} protects useful mutation tests`, protectsUsefulMutationTest(read(file)));
+  ok(`${file} protects useful mutation evidence`, protectsUsefulMutationTest(read(file)));
 }
 
 for (const file of BUILD_SURFACES) {
   const text = flat(read(file));
   ok(`${file} requires behavior, edge, and failure coverage`, /edge/iu.test(text) && /failure mode/iu.test(text));
-  ok(`${file} forbids a new dependency for the mutation check`, /no new dependency|without a new dependency/iu.test(text));
+  ok(`${file} forbids a new dependency for mutation evidence`, /no new dependency|without a new dependency|never add a dependency/iu.test(text));
+  ok(`${file} names task-owned surgical scope`, /task-owned/iu.test(text));
+  ok(`${file} preserves explicit values`, /explicit false\/zero\/empty/iu.test(text));
 }
 
 // The hooks are the only surface that rewrites the ruleset before an agent sees
 // it: SKILL.md is filtered per level, and subagents get the condensed fallback.
 // Both paths must still carry the guidance.
 const instructions = require(path.join(ROOT, "hooks", "lazy-instructions.js"));
+const DELIVERY_CONTRACT = [
+  ["states material assumptions", /material assumptions/iu],
+  ["defines a plan and verifiable finish", /step.*check plan/iu],
+  ["uses task-owned surgical scope", /task-owned/iu],
+  ["preserves explicit values", /explicit false\/zero\/empty/iu],
+];
 for (const mode of ["lite", "full", "ultra"]) {
   for (const [surface, text] of [
     [`getLazyInstructions(${mode})`, flat(instructions.getLazyInstructions(mode))],
     [`getSubagentInstructions(${mode})`, flat(instructions.getSubagentInstructions(mode))],
+    [`getFallbackInstructions(${mode})`, flat(instructions.getFallbackInstructions(mode))],
   ]) {
     for (const language of LANGUAGES) ok(`${surface} lists ${language}`, lists(text, language));
-    ok(`${surface} requires the latest-stable check`, /latest stable/iu.test(text));
+    ok(`${surface} keeps installed-version compatibility`, /installed version/iu.test(text));
     ok(`${surface} forbids guessing an unavailable version`, /do not guess/iu.test(text));
     ok(`${surface} guards one-caller helpers`, /one caller/iu.test(text));
-    ok(`${surface} requires a mutation check`, /mutation/iu.test(text));
+    ok(`${surface} scopes mutation evidence to meaningful risk`, /mutation/iu.test(text) && /optional|meaningful/iu.test(text));
+    ok(`${surface} does not demand both forms of evidence`,
+      !/prove risky removals with regression and mutation checks/iu.test(text));
+    for (const [description, pattern] of DELIVERY_CONTRACT)
+      ok(`${surface} ${description}`, pattern.test(text));
   }
 }
 
@@ -153,7 +159,7 @@ ok("off injects nothing", instructions.getLazyInstructions("off") === "" && inst
 // would vanish from every other level. Nothing added here may be mode-keyed.
 const skillBody = read("skills/lazy/SKILL.md");
 const levels = ["lite", "full", "ultra"].map((mode) => instructions.filterSkillBodyForMode(skillBody, mode));
-const guidanceLines = (text) => text.split("\n").filter((line) => /one caller|mutation|latest stable/iu.test(line));
+const guidanceLines = (text) => text.split("\n").filter((line) => /one caller|mutation|installed version|task-owned|red → green/iu.test(line));
 assert.ok(guidanceLines(skillBody).length > 0, "SKILL.md must carry the guidance for this check to mean anything");
 for (const [index, level] of levels.entries())
   ok(`level ${index} keeps every guidance line`,

@@ -10,15 +10,16 @@ description: >
   hunts complexity.
 ---
 
-Review diffs for unnecessary complexity. One line per finding: location, what
-to cut, what replaces it. The diff's best outcome is getting shorter.
+Review only the task-owned diff for unnecessary complexity. One line per
+finding: location, what to cut, and what preserves the requested behavior. Cut
+real slop, but do not manufacture a net-negative diff or delete required
+features.
 
 Detect which of TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go the
-diff actually touches, and read each pinned or installed version from its
-toolchain file, manifest, lockfile, or runtime. Before version-sensitive
-advice, check that language's latest stable release at its official source and
-keep the replacement valid for the version in use. If the latest release cannot
-be checked, say so and do not guess.
+diff actually touches. Read each pinned or installed version from its toolchain
+file, manifest, lockfile, or runtime and keep replacements compatible. If a
+needed version fact cannot be checked, say so and do not guess; check the latest
+release only when the user asks for current-version advice.
 
 One caller is never a finding on its own. Before `yagni:`, `shrink:`, or
 `delete:`, check whether the function or file names a domain idea, hides tricky
@@ -41,22 +42,20 @@ Tags:
 
 ## Examples
 
-❌ "This EmailValidator class might be more complex than necessary, have you
-considered whether all these validation rules are needed at this stage?"
+✅ `L12-18: stdlib: 7-line clamp helper where finite numbers and min <= max are already enforced. Math.min(Math.max(value, min), max), preserving the bounds.`
 
-✅ `L12-38: stdlib: 27-line validator class. "@" in email, 1 line, real validation is the confirmation mail.`
+✅ `L4: native: moment.js for one en-US/UTC medium-date format. Intl.DateTimeFormat('en-US', { timeZone: 'UTC', dateStyle: 'medium' }), preserving the format contract.`
 
-✅ `L4: native: moment.js imported for one format call. Intl.DateTimeFormat, 0 deps.`
+✅ `repo.py:L88: yagni: wrapper that only forwards to the single SQLite repository. Call it directly, preserving the transaction boundary.`
 
-✅ `repo.py:L88: yagni: AbstractRepository with one implementation. Inline it until a second one exists.`
+✅ `L30-34: shrink: wrapper passes arguments unchanged to parseInt with radix 10. Call parseInt directly, preserving the radix.`
 
-✅ `L52-71: delete: retry wrapper around an idempotent local call. Nothing replaces it.`
-
-✅ `L30-44: shrink: manual loop builds dict. dict(zip(keys, values)), 1 line.`
+KEEP `repo.py:L88: transaction helper owns rollback and is covered by a rollback test. Keep it even with one caller.`
 
 ## Scoring
 
-End with the only metric that matters: `net: -<N> lines possible.`
+End with `net: -<N> lines possible` only when findings remove code; otherwise
+say `net: unchanged` when a required feature remains intact.
 
 If there is nothing to cut, say `Lean already. Ship.` and stop.
 
@@ -64,9 +63,12 @@ If there is nothing to cut, say `Lean already. Ship.` and stop.
 
 Scope: over-engineering and complexity only. Correctness bugs, security holes,
 and performance are explicitly out of scope. Route them to a normal review
-pass, not this one. A single smoke test or `assert`-based
-self-check is the lazy minimum, not bloat, never flag it for deletion — and a
-mutation test that fails after the covered logic is changed has earned its lines.
+pass, not this one. Behavior, edge, and failure tests that catch a real
+regression are not bloat. Keep meaningful mutation evidence when existing
+red-green checks do not already prove the risky behavior; mutation evidence is
+optional when they do. Do not flag useful evidence only to make the test tree
+smaller. Every proposed simplification must preserve behavior; a separate
+correctness/security audit is not this pass.
 Does not apply the fixes, only lists them — say "apply the findings" and they
 are applied under the lazy ladder and the surgical-changes rule. One-shot: it
 sets no mode, so there is nothing to revert.
