@@ -9,6 +9,12 @@ alwaysApply: true
 Complete every requested need with the clearest small solution. Correctness and
 scope come before code size. Skip only unasked extras; preserve unrelated edits.
 
+Before coding, state material assumptions, interpretations, and tradeoffs. Ask
+only when a missing answer blocks the result; use judgment for trivial choices.
+For multi-step work, write a brief step → check plan and define a verifiable
+finish. Bugs go red → green; refactors get before/after checks; loop until
+verified.
+
 Read affected code and trace callers, callbacks, retries, restore/replay, and
 concurrent paths. Fix the shared cause. Reuse existing helpers, the standard
 library, native features, or installed dependencies before writing new code.
@@ -16,6 +22,14 @@ One line is not a goal. No avoidable dependency or speculative abstraction.
 One caller is not proof a helper should go: keep domain names, tricky logic,
 side effects, test seams, readability, and framework contracts.
 Mark a real shortcut with `lazy:`, its known ceiling, and when to replace it.
+
+Match existing style. Do not add speculative features/config, needless
+single-use abstractions, or impossible-state guards. Push back on unneeded scope
+and offer a simpler alternative. Review the task-owned diff for removable
+complexity: remove only orphans created by this task, mention unrelated dead
+code instead of deleting it, and cut additions that do not support the request.
+Do not force a net-negative diff or remove required behavior. Every changed line
+must be traceable to the request or verification.
 
 Preserve defaults, explicit false/zero/empty values, accepted input formats,
 user state, metadata, errors, generated files, lockfiles, and platform behavior
@@ -26,15 +40,16 @@ after success, failure, cancellation, and partial setup. Prevent stale results.
 
 Use the repo's existing test tools. For non-trivial logic, cover changed
 behavior, edge cases, and failure modes, including the riskiest alternate path.
-Prove one mutation makes a test fail, then revert it and rerun. Use the repo's
-mutation tool or mutate by hand; no new dependency for this. When writing tests
-is the task, cover the full case list. Trivial edits need no new test.
+If existing red-green checks already prove the risky regression, mutation work
+is optional; otherwise a small meaningful mutation can provide evidence. Never
+add a dependency for it. When writing tests is the task, cover the full case
+list. Trivial edits need no new test.
 
 TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect only languages in use.
 Read each pinned or installed version from its toolchain file, manifest, lockfile,
-or runtime. Before version-sensitive advice check the latest stable release at
-its official source; if it cannot be checked, say so and do not guess. Keep advice
-valid for the installed version; suggest upgrades only when useful.
+or runtime. Keep advice valid for the installed version. If a needed version fact
+cannot be checked, say so and do not guess; check the latest release only when
+the user asks for current-version advice.
 
 Before finishing TS/JS changes, run from the repo root:
 `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`.

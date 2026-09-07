@@ -25,11 +25,19 @@ Qoder and VS Code Copilot are detected by the hooks and get the right output sha
 
 ## Languages and review scope
 
-The rulesets cover TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go. The agent detects the ones your project actually uses, reads their pinned or installed versions, and checks the latest stable release at the language's official source before any version-sensitive advice — and says the check failed instead of guessing.
+The rulesets cover TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go. The agent detects the ones your project actually uses, reads their pinned or installed versions, and keeps advice compatible with them. If a needed version fact cannot be checked, it says so instead of guessing; latest-release research is only used when current-version advice is requested.
 
 The bundled checker script stays TS/JS-only; the other five languages get the manual review, because a zero-dependency scanner is not a parser.
+HTML is not scanned either: extract inline `<script>` code to a temporary `.js`
+or report a manual review. Zero files checked is no coverage, not a clean result.
 
-Two rules the reviews follow throughout: a one-caller helper stays when it carries real value (a domain name, tricky logic, an isolated side effect, test or readability value, a framework contract), and non-trivial changed logic needs one mutation check — the repo's own tool, or one flip by hand, never a new dependency.
+The rulesets think before coding, state material assumptions when they matter,
+match existing style, cut only task-owned orphans, and define a verifiable goal.
+One-caller helpers stay when they carry real value (a domain name, tricky logic,
+an isolated side effect, test or readability value, or a framework contract).
+Non-trivial changed logic needs behavior, edge, and failure coverage; mutation
+evidence is optional when existing red-green checks already prove the risky
+regression, and never justifies a new dependency.
 
 ## Install — zero-install, skills only
 
@@ -97,7 +105,9 @@ Without Git, pass each changed path as a separate quoted argument.
 
 ## Improving AI behavior
 
-The main and subagent prompts use the same compact rules. Detailed
+The main and subagent prompts use the same compact rules. They include a brief
+think → plan → check loop for multi-step work and a strong cut pass over the
+task-owned diff without forcing net-negative feature changes. Detailed
 [risk checks](skills/lazy/references/risk-checks.md) are loaded for non-trivial
 code changes, not every task. All levels preserve requested scope, existing
 input formats, and the repo's test tools; none treats one-line code as a goal.

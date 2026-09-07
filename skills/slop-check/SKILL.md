@@ -23,6 +23,7 @@ Everything runs from this skill directory with plain `node`. Do not install any 
    - `--since=<git-ref>` keeps only findings on lines the diff against that ref added — `--since=HEAD` before a commit, `--since=origin/main` in CI — which is how an existing codebase adopts the checker without a baseline file.
    - `--disable=<rule-id>[,<rule-id>]` turns rules off for the run. An id that is not a rule warns on stderr and the run continues with that rule still on, because the alternative is a scan that reads as narrower than it is.
    - The checker reads TypeScript and JavaScript only. For any other language skip step 1 and treat the manual checklist below as the whole procedure — never report "clean" on the strength of a scan that read nothing.
+   - HTML is not scanned. If the changed behavior is in an inline `<script>`, extract that script to a temporary `.js` for the checker or perform and report a manual review; zero files checked is no coverage, never a clean verdict.
 
 2. Triage every finding. The checker is heuristic, so findings are review prompts, not verdicts:
    - Fix real slop by removing the pointless code or restoring real type evidence — prefer inference, `as const`, `satisfies`, named owner contracts, and parsing at the boundary.
@@ -44,7 +45,11 @@ Everything runs from this skill directory with plain `node`. Do not install any 
 
 ## Languages and versions
 
-Detect which of TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go the project actually uses, and read each pinned or installed version from its toolchain file, manifest, lockfile, or runtime. Before version-sensitive advice, check that language's latest stable release at its official source, say whether the project is current, and suggest only what the version in use supports. If the latest release cannot be checked, say so and do not guess.
+Detect which of TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go the
+project actually uses. Read each pinned or installed version from its toolchain
+file, manifest, lockfile, or runtime, and keep advice compatible with it. If a
+needed version fact cannot be checked, say so and do not guess. Research the
+latest release only when the user asks for current-version advice.
 
 ## Manual review checklist
 
@@ -58,7 +63,7 @@ For each item, the question is the same: does this code earn its place, or does 
 - **Debug leftovers** — `console.log` tracing, timing code, temporary variables named `test`/`tmp`/`debug`.
 - **Edit-artifacts** — old and new versions of a function both kept, re-export aliases "for compatibility" when every call site could just be updated, comments describing the diff instead of the code.
 - **Comment and doc bloat** — JSDoc that restates the signature, section banner comments, README additions narrating the change. A comment should state a constraint the code cannot show.
-- **Test slop** — tests that assert a mock was called with the value it was just given, module-level mocks instead of real dependency seams, duplicated setup that hides what varies. Keep a mutation test when it fails after the covered logic is changed.
+- **Test slop** — tests that assert a mock was called with the value it was just given, module-level mocks instead of real dependency seams, duplicated setup that hides what varies. Keep tests that catch real regressions; mutation evidence is optional when existing red-green checks already prove the risky behavior.
 
 ## Checker rules
 

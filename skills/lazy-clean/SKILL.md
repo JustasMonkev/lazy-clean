@@ -5,11 +5,14 @@ description: Write clean minimal code — the lazy ladder while writing, the slo
 
 # lazy-clean
 
-Two passes over one change: build the least code that works, then delete the slop that crept in anyway.
+Two passes over one change: build the minimum complete result, then cut slop
+from the task-owned diff.
 
 ## 1. While writing — the lazy ladder
 
-Follow `<skills-dir>/lazy/SKILL.md` as written: climb the ladder (YAGNI → reuse → stdlib → platform → installed dep → clear minimum code) and run its risk gate before shipping. Do not restate the rules here; read that file.
+Follow `<skills-dir>/lazy/SKILL.md` as written: think first, climb the ladder
+(YAGNI → reuse → stdlib → platform → installed dep → clear minimum code), and
+verify the goal before shipping. Do not restate the rules here; read that file.
 
 If your context already carries a `LAZY MODE ACTIVE` header, the ruleset is injected and you are following it; otherwise read that file now. Intensity is `/lazy lite|full|ultra`.
 
@@ -28,9 +31,18 @@ Triage every finding per `<skills-dir>/slop-check/SKILL.md`:
 - Keep a justified swallowed error only with a comment inside the catch saying why.
 - A genuine false positive stays as-is; say so briefly. Never rewrite correct code to silence the checker, and never weaken or disable a check.
 
-The triage report that skill asks for is requested explanation, not unrequested prose: give it in full, then apply its manual review checklist — dead code, speculative generality, reimplemented platform, edit-artifacts — which no mechanical scan catches.
+Apply the manual checklist — dead code, speculative generality, reimplemented
+platform, and edit-artifacts — to the task-owned diff. Report only findings that
+matter; this is a review pass, not a demand for extra prose or a net-negative
+feature change.
 
-The checker reads TypeScript and JavaScript only. Java, Python, Ruby, Rust, and Go get the same manual pass by hand — never report them clean on the strength of a scan that did not read them. For every language the change actually touches, read its pinned or installed version from the toolchain file, manifest, lockfile, or runtime. Before version-sensitive advice, check that language's latest stable release at its official source and keep advice valid for the version in use. If the latest release cannot be checked, say so and do not guess.
+The checker reads TypeScript and JavaScript only. Java, Python, Ruby, Rust, and Go
+get the same manual pass by hand — never report them clean on the strength of a
+scan that did not read them. For every language the change actually touches,
+read its pinned or installed version from the toolchain file, manifest, lockfile,
+or runtime and keep replacements compatible. If a needed version fact cannot be
+checked, say so and do not guess; latest-version research is only needed when
+the user asks for current-version advice.
 
 One caller alone is not a reason to inline or delete a function or file. Keep it separate when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. Inline or delete only when none of those hold.
 
@@ -40,7 +52,12 @@ Before finishing a TypeScript or JavaScript change, read and apply [TS/JS simpli
 
 ## Tests that earn their place
 
-List the changed behavior, its edge cases, and its failure modes, and cover each one. Use the repo's existing test tools. Keep the tests that can fail for a real regression; drop tautologies and mock-call checks that only repeat their own setup. For non-trivial changed logic, run one mutation check: flip a branch, boundary, operator, or return value, confirm a test fails, then revert the mutation before shipping. Use the repo's mutation tool if it has one, otherwise mutate by hand. No new dependency for this.
+List the changed behavior, its edge cases, and its failure modes, and cover each
+one. Use the repo's existing test tools. Keep tests that can catch a real
+regression; drop tautologies and mock-call checks that only repeat setup. When
+existing red-green checks already prove the risky regression, mutation work is
+optional; otherwise a small meaningful mutation check can confirm the test
+earns its place. Never add a dependency for it.
 
 ## When the manual run is needed
 
@@ -62,7 +79,8 @@ report that, never claim it was clean.
 For new input formats, implement the specified contract without inventing extra
 formats. For existing parsers, preserve accepted formats unless the task changes
 them. An omitted detail in a new task is not permission to reject inputs that
-already worked. Revalidate after a trust boundary without changing that contract.
+already worked. Preserve explicit false/zero/empty values. Revalidate after a
+trust boundary without changing that contract.
 
 ## Order matters
 
