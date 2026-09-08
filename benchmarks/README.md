@@ -1,6 +1,6 @@
 # AI behavior checks
 
-Ten small coding tasks, each run with the compact rules off and on. This measures
+Fourteen small coding tasks, each run with the compact rules off and on. This measures
 prompt behavior, **not** automatic hook delivery, editor integration, or broad
 coding ability. Package unit tests cover the hooks separately.
 
@@ -29,7 +29,7 @@ node benchmarks/run.mjs /tmp/lazy-eval-config.json /tmp/lazy-eval-smoke explicit
 The output folder must not exist. It contains a fresh Git repo for each task,
 prompt text, client stdout/stderr, held-out check output, and `results.json`.
 Workspaces remain available for review. The runner never edits your real repo.
-The default full run makes **60 agent calls** (10 tasks × 3 trials × 2 arms).
+The default full run makes **84 agent calls** (14 tasks × 3 trials × 2 arms).
 It uses the account/budget of the command you configure. Unit tests make no AI calls.
 
 The example uses Claude's `--safe-mode` to disable user prompts, plugins,
@@ -59,6 +59,29 @@ or expected fixes. Inspect outputs for task leakage and denied tool calls (`perm
 | trust-boundary | validated JSON data, no string coercion |
 | partial-cleanup | cleanup after attach failure, original error |
 | new-file-errors | new file, explicit values, filesystem/JSON errors |
+| dependency-duplication | selection behavior without repeating the dependency's tree traversal |
+| collection-cleanup | no collection-time acquisition; cleanup on success, setup failure, and test failure |
+| empty-error | empty string errors stay empty; empty object messages still use the fallback |
+| necessary-guard | malformed JSON produces one 400 response and preserves task state |
+
+The last four cases come from review of
+[playwright-leak-finder PR #3](https://github.com/JustasMonkev/playwright-leak-finder/pull/3)
+and [wdio-mocha-split-runner PR #2](https://github.com/JustasMonkev/-jm-wdio-mocha-split-runner/pull/2).
+They isolate the observed mechanisms without installing either framework:
+`suite.cjs` models Mocha 10.8.2's `hasOnly` traversal; injected synchronous hooks
+model collection, filtering, setup, and teardown. They do not cover real
+Vitest process cleanup or Mocha's TypeScript declarations.
+
+`necessary-guard` is deliberately correct at baseline. Leaving it unchanged is
+a pass; deleting its parse-failure guard must fail. The other three cases start
+broken. Tests prove a working correction passes and a targeted mutation fails
+for each case. This checks the graders, not whether an AI finds the fixes.
+These are known regression cases, not unseen holdouts for measuring generalization.
+For `dependency-duplication`, also inspect whether the solution delegates to
+`suite.hasOnly()`: the behavior grader accepts an equivalent single traversal,
+but retaining a handwritten copy still misses the dependency-reuse objective.
+See the [Luna smoke results](luna-pr-regressions.md) for the first paired run and
+its separate manual findings.
 
 ## Read the evidence
 
@@ -69,7 +92,7 @@ or expected fixes. Inspect outputs for task leakage and denied tool calls (`perm
 3. Compare time, cost, and size only for pairs where **both** runs passed, using
    the same model. Report missing or mismatched model evidence, not a gain.
 4. Use several trials. Keep some new real-world tasks out of prompt tuning, then
-   test those before release. These ten tiny tasks cannot prove general gains.
+   test those before release. These tiny tasks cannot prove general gains.
 
 `tokens` includes reported input, output, cache creation, and cache-read tokens.
 `costUsd` comes from Claude's JSON result; it is not necessarily your invoice on
@@ -83,8 +106,9 @@ the next run; interrupted runs retain earlier evidence. SIGINT/SIGTERM stops
 the active process tree and ends the run. Do not publish secrets
 from a custom command or its logs.
 
-The test suite proves every original fixture fails, a working fix passes, and
-a deliberate mutation is caught. Fake-client tests only check this runner;
+The test suite checks each expected baseline verdict and working fix, including
+the already-correct guard fixture, and catches deliberate mutations.
+Fake-client tests only check this runner;
 they are **not** evidence of AI quality. No speed or quality gain is assumed.
 
 Approach: [Anthropic's agent evaluation guide](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents).
