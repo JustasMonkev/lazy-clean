@@ -163,16 +163,26 @@ for (const suite of [root, child, leaf]) {
     check: `const {register} = require('./spec.cjs');
 for (const scenario of ['filtered', 'success', 'start failure', 'setup failure', 'test failure']) {
   let setup, teardown, body, started = 0, closed = 0, requested = 0;
+  let phase = 'collection';
   const failure = new Error(scenario);
   register({
     beforeAll(fn) { setup = fn; }, afterAll(fn) { teardown = fn; }, test(fn) { body = fn; },
     start() {
+      assert.equal(phase, 'setup', 'acquisition must run in setup');
       started++;
       if (scenario === 'start failure') throw failure;
       return {
-        ready() { if (scenario === 'setup failure') throw failure; },
-        request() { requested++; if (scenario === 'test failure') throw failure; },
-        close() { closed++; },
+        ready() {
+          assert.equal(phase, 'setup', 'readiness must run in setup');
+          if (scenario === 'setup failure') throw failure;
+        },
+        request() {
+          assert.equal(phase, 'test', 'request must run in the test');
+          assert.equal(closed, 0, 'request must not use a closed server');
+          requested++;
+          if (scenario === 'test failure') throw failure;
+        },
+        close() { assert.equal(phase, 'teardown', 'cleanup must run in teardown'); closed++; },
       };
     },
   });
@@ -181,7 +191,10 @@ for (const scenario of ['filtered', 'success', 'start failure', 'setup failure',
     assert.equal(closed, 0);
     continue;
   }
-  const run = () => { try { setup(); body(); } finally { teardown(); } };
+  const run = () => {
+    try { phase = 'setup'; setup(); phase = 'test'; body(); }
+    finally { phase = 'teardown'; teardown(); }
+  };
   if (scenario.endsWith('failure')) assert.throws(run, error => error === failure);
   else run();
   assert.equal(started, 1);
@@ -201,7 +214,7 @@ for (const scenario of ['filtered', 'success', 'start failure', 'setup failure',
     },
     check: `const {message} = require('./error.cjs');
 for (const value of ['', 'boom', ' ', '0']) assert.equal(message(value), value);
-assert.equal(message({message: 'boom'}), 'boom');
+for (const value of ['boom', 1, true, {}, []]) assert.equal(message({message: value}), value);
 for (const value of [undefined, null, {}, {message: ''}, {message: false}, {message: 0}]) {
   assert.equal(message(value), 'Unknown error.');
 }`,

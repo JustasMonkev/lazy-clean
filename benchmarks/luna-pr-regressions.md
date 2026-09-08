@@ -42,6 +42,11 @@ function hasExclusive(suite) {
 }
 ```
 
+After PR review, all eight saved outputs were re-graded with checks that reject
+cleanup before teardown/use after close and preserve truthy non-string object
+messages. All eight still passed. No model calls were repeated; the measurements
+below remain those of the original run.
+
 ## Recorded measurements
 
 | Arm | Behavior checks | Total wall time | Reported tokens, including cache reads |

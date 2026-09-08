@@ -29,9 +29,20 @@ const fixes = {
   'necessary-guard': ['route.cjs', null],
 };
 const mutations = {
-  'dependency-duplication': 'exports.hasExclusive = suite => { suite.hasOnly(); return suite.hasOnly(); };',
-  'collection-cleanup': fixes['collection-cleanup'][1].replace('afterAll(() => server?.close());', 'afterAll(() => {});'),
-  'empty-error': "exports.message = error => (typeof error === 'string' ? error : error?.message) || 'Unknown error.';",
+  'dependency-duplication': ['exports.hasExclusive = suite => { suite.hasOnly(); return suite.hasOnly(); };'],
+  'collection-cleanup': [
+    fixes['collection-cleanup'][1].replace('afterAll(() => server?.close());', 'afterAll(() => {});'),
+    fixes['collection-cleanup'][1]
+      .replace('server.ready();', 'try { server.ready(); } finally { server.close(); }')
+      .replace('afterAll(() => server?.close());', 'afterAll(() => {});'),
+    fixes['collection-cleanup'][1]
+      .replace('beforeAll(() => { server = start(); server.ready(); });', 'beforeAll(() => {});')
+      .replace('test(() => server.request());', 'test(() => { server = start(); server.ready(); server.request(); });'),
+  ],
+  'empty-error': [
+    "exports.message = error => (typeof error === 'string' ? error : error?.message) || 'Unknown error.';",
+    "exports.message = error => typeof error === 'string' ? error : (typeof error?.message === 'string' && error.message) || 'Unknown error.';",
+  ],
 };
 const root = mkdtempSync(join(tmpdir(), 'lazy-eval-test-'));
 try {
@@ -90,10 +101,10 @@ try {
     if (task.id === 'existing-tests') writeFileSync(join(cwd, 'test.cjs'), task.files['test.cjs'] + 'assert.equal(sum([]),0);\n');
     const result = await grade(task, cwd);
     assert.equal(result.pass, true, `${task.id}: ${result.output}`);
-    const mutation = task.id === 'necessary-guard'
-      ? source.replace('if (body === undefined) return;', '')
-      : mutations[task.id];
-    if (mutation) {
+    const taskMutations = task.id === 'necessary-guard'
+      ? [source.replace('if (body === undefined) return;', '')]
+      : mutations[task.id] ?? [];
+    for (const mutation of taskMutations) {
       writeFileSync(join(cwd, file), mutation);
       const rejected = await grade(task, cwd);
       assert.equal(rejected.pass, false, `${task.id}: mutation passed`);
