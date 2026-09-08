@@ -18,6 +18,31 @@ const fixes = {
   'trust-boundary': ['price.cjs', 'exports.parsePrice=raw=>{const x=JSON.parse(raw)?.price;if(typeof x!=="number"||!Number.isFinite(x)||x<0)throw new TypeError("price");return x;};'],
   'partial-cleanup': ['watch.cjs', 'exports.watch=(s,fn)=>{s.on("data",fn);try{s.on("end",fn);}catch(e){s.off("data",fn);throw e;}return()=>{s.off("data",fn);s.off("end",fn);};};'],
   'new-file-errors': ['config.cjs', 'exports.readConfig=path=>JSON.parse(require("node:fs").readFileSync(path,"utf8"));'],
+  'dependency-duplication': ['selection.cjs', 'exports.hasExclusive = suite => suite.hasOnly();'],
+  'collection-cleanup': ['spec.cjs', `exports.register = ({beforeAll, afterAll, test, start}) => {
+  let server;
+  beforeAll(() => { server = start(); server.ready(); });
+  afterAll(() => server?.close());
+  test(() => server.request());
+};`],
+  'empty-error': ['error.cjs', `exports.message = error => typeof error === 'string' ? error : error?.message || 'Unknown error.';`],
+  'necessary-guard': ['route.cjs', null],
+};
+const mutations = {
+  'dependency-duplication': ['exports.hasExclusive = suite => { suite.hasOnly(); return suite.hasOnly(); };'],
+  'collection-cleanup': [
+    fixes['collection-cleanup'][1].replace('afterAll(() => server?.close());', 'afterAll(() => {});'),
+    fixes['collection-cleanup'][1]
+      .replace('server.ready();', 'try { server.ready(); } finally { server.close(); }')
+      .replace('afterAll(() => server?.close());', 'afterAll(() => {});'),
+    fixes['collection-cleanup'][1]
+      .replace('beforeAll(() => { server = start(); server.ready(); });', 'beforeAll(() => {});')
+      .replace('test(() => server.request());', 'test(() => { server = start(); server.ready(); server.request(); });'),
+  ],
+  'empty-error': [
+    "exports.message = error => (typeof error === 'string' ? error : error?.message) || 'Unknown error.';",
+    "exports.message = error => typeof error === 'string' ? error : (typeof error?.message === 'string' && error.message) || 'Unknown error.';",
+  ],
 };
 const root = mkdtempSync(join(tmpdir(), 'lazy-eval-test-'));
 try {
@@ -64,17 +89,29 @@ try {
   assert.equal(committed.status, 0, committed.stderr);
   assert.equal(committed.stdout, 'original');
   assert.equal(readFileSync(join(fixture, 'app.cjs'), 'utf8'), 'user edit');
-  assert.equal(tasks.length, 10);
-  assert.equal(new Set(tasks.map(task => task.id)).size, 10);
+  assert.deepEqual(tasks.map(task => task.id).sort(), Object.keys(fixes).sort());
+  assert.equal(new Set(tasks.map(task => task.id)).size, tasks.length);
   for (const task of tasks) {
     const cwd = join(root, task.id);
     prepare(task, cwd);
-    assert.equal((await grade(task, cwd)).pass, false, `${task.id}: broken fixture passed`);
-    const [file, source] = fixes[task.id];
+    assert.equal((await grade(task, cwd)).pass, task.id === 'necessary-guard', `${task.id}: unexpected baseline verdict`);
+    const [file, fix] = fixes[task.id];
+    const source = fix ?? task.files[file];
     writeFileSync(join(cwd, file), source);
     if (task.id === 'existing-tests') writeFileSync(join(cwd, 'test.cjs'), task.files['test.cjs'] + 'assert.equal(sum([]),0);\n');
     const result = await grade(task, cwd);
     assert.equal(result.pass, true, `${task.id}: ${result.output}`);
+    const taskMutations = task.id === 'necessary-guard'
+      ? [source.replace('if (body === undefined) return;', '')]
+      : mutations[task.id] ?? [];
+    for (const mutation of taskMutations) {
+      writeFileSync(join(cwd, file), mutation);
+      const rejected = await grade(task, cwd);
+      assert.equal(rejected.pass, false, `${task.id}: mutation passed`);
+      assert.equal(rejected.error, null, `${task.id}: grader failed instead of detecting the mutation`);
+      writeFileSync(join(cwd, file), source);
+      assert.equal((await grade(task, cwd)).pass, true, `${task.id}: restored fix failed`);
+    }
     // A concrete false-value mutation must be caught, then the fixed source restored.
     if (task.id === 'explicit-values') {
       writeFileSync(join(cwd, file), source.replace('x.enabled??true', 'x.enabled||true'));
@@ -187,9 +224,9 @@ try {
   const balancedOut = join(root, 'balanced-results');
   assert.equal(await main([config, balancedOut]), 0);
   const balancedRows = JSON.parse(readFileSync(join(balancedOut, 'results.json'), 'utf8')).results;
-  assert.equal(balancedRows.length, 60);
+  assert.equal(balancedRows.length, tasks.length * 3 * 2);
   const firstArms = balancedRows.filter((row, index) => index % 2 === 0).map(row => row.arm);
-  assert.equal(firstArms.filter(arm => arm === 'off').length, 15, 'default run must balance first-arm cache effects');
+  assert.equal(firstArms.filter(arm => arm === 'off').length, firstArms.length / 2, 'default run must balance first-arm cache effects');
   for (let index = 0; index < balancedRows.length; index += 2) {
     assert.notEqual(balancedRows[index].arm, balancedRows[index + 1].arm);
     assert.equal(balancedRows[index].task, balancedRows[index + 1].task);
@@ -206,7 +243,7 @@ try {
   await assert.rejects(main([config, join(root, 'bad-task'), 'missing']), /unknown task/u);
   writeFileSync(config, JSON.stringify({ command: [], model: 'bad', trials: 0 }));
   await assert.rejects(main([config]), /invalid/u);
-  console.log('benchmarks: 10 broken/fixed tasks, mutation, runner failures, metrics, and paired evidence passed');
+  console.log(`benchmarks: ${tasks.length} task baselines, fixes, mutations, runner failures, metrics, and paired evidence passed`);
 } finally {
   rmSync(root, { recursive: true, force: true });
 }

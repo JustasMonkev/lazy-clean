@@ -1,3 +1,14 @@
+// Dependency surrogate: Mocha 10.8.2's hasOnly algorithm, without a package install.
+const suiteSource = `class Suite {
+  constructor() { this._onlyTests = []; this._onlySuites = []; this.suites = []; }
+  hasOnly() {
+    return this._onlyTests.length > 0 || this._onlySuites.length > 0 ||
+      this.suites.some(suite => suite.hasOnly());
+  }
+}
+exports.Suite = Suite;
+`;
+
 // Checks run outside the agent workspace, so local test edits do not replace the held-out checks.
 export const tasks = [
   {
@@ -102,5 +113,157 @@ for(const value of [false,0,null,{ready:true}]) {fs.writeFileSync('input.json',J
 fs.writeFileSync('input.json','{'); assert.throws(()=>readConfig('input.json'),SyntaxError);
 assert.throws(()=>readConfig('missing.json'),e=>e.code==='ENOENT');
 assert.equal(fs.readFileSync('app.cjs','utf8'),'exports.name = "config-tool";\\n');`,
+  },
+  {
+    id: 'dependency-duplication',
+    prompt: 'Review and simplify selection.cjs without changing selection behavior. Callers supply Suite instances from suite.cjs, a fixed dependency surrogate based on Mocha 10.8.2. Keep that dependency file unchanged and avoid repeated traversal of the suite tree.',
+    files: {
+      'suite.cjs': suiteSource,
+      'selection.cjs': `function hasExclusive(suite) {
+  if (suite.hasOnly()) return true;
+  if (suite._onlyTests.length > 0 || suite._onlySuites.length > 0) return true;
+  return suite.suites.some(hasExclusive);
+}
+exports.hasExclusive = hasExclusive;
+`,
+    },
+    check: `assert.equal(fs.readFileSync('suite.cjs', 'utf8'), ${JSON.stringify(suiteSource)});
+const {Suite} = require('./suite.cjs');
+const {hasExclusive} = require('./selection.cjs');
+const root = new Suite(), child = new Suite(), leaf = new Suite();
+root.suites.push(child); child.suites.push(leaf);
+let reads = 0;
+for (const suite of [root, child, leaf]) {
+  const onlyTests = suite._onlyTests;
+  Object.defineProperty(suite, '_onlyTests', {get() { reads++; return onlyTests; }});
+}
+assert.equal(hasExclusive(root), false);
+assert.equal(reads, 3, 'each suite must be inspected only once when no selection exists');
+for (const suite of [root, child, leaf]) {
+  for (const key of ['_onlyTests', '_onlySuites']) {
+    suite[key].push({});
+    assert.equal(hasExclusive(root), true);
+    suite[key].pop();
+    assert.equal(hasExclusive(root), false);
+  }
+}`,
+  },
+  {
+    id: 'collection-cleanup',
+    prompt: 'Fix resource ownership in spec.cjs. register runs during test collection; filtered-out files run no hooks or tests. Selected files run beforeAll, then the test if setup succeeds, and always afterAll even if setup or the test throws. start returns a server with synchronous ready, request, and close methods; ready can throw after acquisition. Preserve the request and original errors. Do not acquire resources for filtered-out files.',
+    files: {
+      'spec.cjs': `exports.register = ({beforeAll, afterAll, test, start}) => {
+  const server = start();
+  beforeAll(() => server.ready());
+  afterAll(() => server.close());
+  test(() => server.request());
+};
+`,
+    },
+    check: `const {register} = require('./spec.cjs');
+for (const scenario of ['filtered', 'success', 'start failure', 'setup failure', 'test failure']) {
+  let setup, teardown, body, started = 0, closed = 0, requested = 0;
+  let phase = 'collection';
+  const failure = new Error(scenario);
+  register({
+    beforeAll(fn) { setup = fn; }, afterAll(fn) { teardown = fn; }, test(fn) { body = fn; },
+    start() {
+      assert.equal(phase, 'setup', 'acquisition must run in setup');
+      started++;
+      if (scenario === 'start failure') throw failure;
+      return {
+        ready() {
+          assert.equal(phase, 'setup', 'readiness must run in setup');
+          if (scenario === 'setup failure') throw failure;
+        },
+        request() {
+          assert.equal(phase, 'test', 'request must run in the test');
+          assert.equal(closed, 0, 'request must not use a closed server');
+          requested++;
+          if (scenario === 'test failure') throw failure;
+        },
+        close() { assert.equal(phase, 'teardown', 'cleanup must run in teardown'); closed++; },
+      };
+    },
+  });
+  assert.equal(started, 0, 'collection must not acquire resources');
+  if (scenario === 'filtered') {
+    assert.equal(closed, 0);
+    continue;
+  }
+  const run = () => {
+    try { phase = 'setup'; setup(); phase = 'test'; body(); }
+    finally { phase = 'teardown'; teardown(); }
+  };
+  if (scenario.endsWith('failure')) assert.throws(run, error => error === failure);
+  else run();
+  assert.equal(started, 1);
+  assert.equal(closed, scenario === 'start failure' ? 0 : 1);
+  assert.equal(requested, ['success', 'test failure'].includes(scenario) ? 1 : 0);
+}`,
+  },
+  {
+    id: 'empty-error',
+    prompt: 'Correct error.cjs after a normalization refactor. The existing contract preserves every string error verbatim, including empty strings. For object errors, use a truthy message or "Unknown error."; missing and null errors also use that fallback. Keep the exported API.',
+    files: {
+      'error.cjs': `exports.message = error => {
+  const details = typeof error === 'string' ? {message: error} : error;
+  return details?.message || 'Unknown error.';
+};
+`,
+    },
+    check: `const {message} = require('./error.cjs');
+for (const value of ['', 'boom', ' ', '0']) assert.equal(message(value), value);
+for (const value of ['boom', 1, true, {}, []]) assert.equal(message({message: value}), value);
+for (const value of [undefined, null, {}, {message: ''}, {message: false}, {message: 0}]) {
+  assert.equal(message(value), 'Unknown error.');
+}`,
+  },
+  {
+    id: 'necessary-guard',
+    prompt: 'Review route.cjs and simplify only code that is genuinely unnecessary. Preserve HTTP statuses, response bodies, task state, and its exported API. Leave correct code unchanged when no behavior-preserving simplification is warranted.',
+    files: {
+      'route.cjs': `function readJson(raw, send) {
+  try { return raw === '' ? {} : JSON.parse(raw); }
+  catch { send(400, {error: 'Invalid JSON'}); }
+}
+exports.route = (method, raw, task, send) => {
+  const body = readJson(raw, send);
+  if (body === undefined) return;
+  if (method === 'POST') {
+    const {title} = body;
+    if (typeof title !== 'string' || title.trim() === '') {
+      send(400, {error: 'title is required'});
+      return;
+    }
+    send(201, {title: title.trim(), done: false});
+  } else if (method === 'PATCH') {
+    const {done} = body;
+    task.done = Boolean(done);
+    send(200, task);
+  }
+};
+`,
+    },
+    check: `const {route} = require('./route.cjs');
+function request(method, raw, task = {title: 'Keep me', done: true}) {
+  const responses = [];
+  route(method, raw, task, (status, body) => responses.push({status, body}));
+  assert.equal(responses.length, 1, 'each request must send exactly one response');
+  return responses[0];
+}
+for (const method of ['POST', 'PATCH']) {
+  const task = {title: 'Keep me', done: true};
+  assert.deepEqual(request(method, '{broken', task), {status: 400, body: {error: 'Invalid JSON'}});
+  assert.deepEqual(task, {title: 'Keep me', done: true});
+}
+for (const raw of ['', '{}', '{"title":" "}', '{"title":0}']) {
+  assert.deepEqual(request('POST', raw), {status: 400, body: {error: 'title is required'}});
+}
+assert.deepEqual(request('POST', '{"title":" new "}'), {status: 201, body: {title: 'new', done: false}});
+for (const done of [false, true, 0, '']) {
+  assert.deepEqual(request('PATCH', JSON.stringify({done})), {status: 200, body: {title: 'Keep me', done: Boolean(done)}});
+}
+assert.deepEqual(request('PATCH', ''), {status: 200, body: {title: 'Keep me', done: false}});`,
   },
 ];
