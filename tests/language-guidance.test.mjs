@@ -132,6 +132,9 @@ const DELIVERY_CONTRACT = [
   ["defines a plan and verifiable finish", /step.*check plan/iu],
   ["uses task-owned surgical scope", /task-owned/iu],
   ["preserves explicit values", /explicit false\/zero\/empty/iu],
+  ["delivers the SOLID boundary check", /design checks/iu],
+  ["preserves useful single-implementation boundaries", /one implementation alone is not waste/iu],
+  ["separates behavior and design review", /judge behavior and design separately/iu],
 ];
 for (const mode of ["lite", "full", "ultra"]) {
   for (const [surface, text] of [
@@ -158,6 +161,16 @@ ok("off injects nothing", instructions.getLazyInstructions("off") === "" && inst
 // The filter drops mode-keyed lines; a rule bullet shaped like a worked example
 // would vanish from every other level. Nothing added here may be mode-keyed.
 const skillBody = read("skills/lazy/SKILL.md");
+const designCheckPath = path.join(ROOT, "skills/lazy/references/design-checks.md");
+assert.ok(fs.existsSync(designCheckPath), "design reference must ship with the skill");
+for (const file of [...RULES_FILES, ".opencode/command/lazy.md"]) {
+  ok(`${file} routes to the shipped design reference`, read(file).includes("<skills-dir>/lazy/references/design-checks.md"));
+}
+for (const mode of ["lite", "full", "ultra"]) {
+  for (const text of [instructions.getLazyInstructions(mode), instructions.getFallbackInstructions(mode)]) {
+    ok(`design reference resolves in ${mode}`, text.includes(designCheckPath));
+  }
+}
 const levels = ["lite", "full", "ultra"].map((mode) => instructions.filterSkillBodyForMode(skillBody, mode));
 const guidanceLines = (text) => text.split("\n").filter((line) => /one caller|mutation|installed version|task-owned|red → green/iu.test(line));
 assert.ok(guidanceLines(skillBody).length > 0, "SKILL.md must carry the guidance for this check to mean anything");

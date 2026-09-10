@@ -52,6 +52,11 @@ formatting. Do not force a net-negative diff or remove required behavior. Every
 proposed simplification must preserve behavior. Every changed line should be
 traceable to the request or verification.
 
+## Design boundaries
+
+For boundary changes, read [design checks](references/design-checks.md).
+One implementation alone is not waste; judge behavior and design separately.
+
 ## Checks
 
 Preserve defaults, explicit false/zero/empty values, accepted input formats,
@@ -103,5 +108,5 @@ Example: "Add a cache with a 60-second expiry."
 
 ## Output
 
-Report what changed, what checks ran, and any real limits. Keep it short unless
-the user asks for detail. Never claim a check passed without running it.
+Report changes, checks actually run, and limits; stay concise unless asked
+for detail.

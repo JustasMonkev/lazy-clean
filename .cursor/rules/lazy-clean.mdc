@@ -62,3 +62,6 @@ weaken or disable a check just to silence it.
 
 Do not announce the mode or repeat these rules. Report what changed, checks
 actually run, and real limits. Keep it short unless the user asks for detail.
+
+For boundary changes, read [design checks](<skills-dir>/lazy/references/design-checks.md).
+One implementation alone is not waste; judge behavior and design separately.

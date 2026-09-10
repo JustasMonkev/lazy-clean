@@ -7,3 +7,8 @@ Review only the task-owned code changes for over-engineering, not correctness. M
 Detect which of TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go the diff touches. Read each pinned or installed version from its toolchain file, manifest, lockfile, or runtime and keep replacements compatible. If a needed version fact cannot be checked, say so and do not guess; check the latest release only when the user asks for current-version advice.
 
 One caller is never a finding by itself. Keep a separate function or file when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. Behavior, edge, and failure tests that catch a real regression are not bloat; keep meaningful mutation evidence when existing red-green checks do not already prove the risky behavior, and treat it as optional when they do.
+
+One production implementation is not evidence of waste. Before removing a
+boundary, check what external details and independent reasons for change its
+callers would inherit. Keep useful consumer-owned contracts and narrow
+capabilities; judge behavior and design separately.

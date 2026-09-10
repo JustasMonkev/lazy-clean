@@ -112,8 +112,9 @@ task-owned diff without forcing net-negative feature changes. Detailed
 code changes, not every task. All levels preserve requested scope, existing
 input formats, and the repo's test tools; none treats one-line code as a goal.
 
-[Run the AI behavior checks](benchmarks/README.md) to compare ten tasks with the
-rules off/on, three trials each. Compare correctness first, then time, cost,
+[Run the AI behavior checks](benchmarks/README.md) to compare fourteen core tasks with the
+rules off/on, three trials each. A separate six-task SOLID set checks module
+boundaries and contracts; see [the design experiment](benchmarks/solid-guidance.md). Compare correctness first, then time, cost,
 and size for paired passing runs. This fork makes no measured improvement
 claim without real comparable runs. `npm test` checks the benchmark machinery
 without calling an AI service.

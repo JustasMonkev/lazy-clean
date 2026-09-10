@@ -19,7 +19,7 @@ Same as lazy-review:
 - `delete:` dead code, unused flexibility, speculative feature. Replacement: nothing.
 - `stdlib:` hand-rolled thing the standard library ships. Name the function.
 - `native:` dependency or code doing what the platform already does. Name the feature.
-- `yagni:` abstraction with one implementation, config nobody sets, layer that only forwards.
+- `yagni:` abstraction with no useful boundary, config nobody sets, layer that exposes no simpler contract.
 - `shrink:` same logic, fewer lines. Show the shorter form.
 
 ## Hunt
@@ -35,7 +35,7 @@ file when it names a domain idea, hides tricky logic, isolates a side effect or
 boundary, earns its keep in tests or readability, or is required by a framework
 contract. Report it only when none of those hold.
 
-Deps the stdlib or platform already ships, single-implementation interfaces,
+Deps the stdlib or platform already ships, interfaces that isolate no meaningful dependency or change,
 factories with one product, wrappers that only delegate, dead flags and config,
 hand-rolled stdlib.
 
@@ -57,3 +57,9 @@ and performance are explicitly out of scope. Route them to a normal review
 pass. Lists findings, applies nothing. One-shot — it sets no mode, so there is
 nothing to revert. To act on the list, say "apply the findings"; the fixes then
 follow the lazy ladder and the surgical-changes rule.
+
+One production implementation is not evidence of waste. Before removing an
+adapter, check what external details or independently changing policy its
+callers would need to learn. Keep a consumer-owned contract that isolates those
+details, even when its adapter only forwards. A clean scan or fewer lines does
+not establish design quality.

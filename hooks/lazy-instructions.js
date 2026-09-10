@@ -83,6 +83,9 @@ deleting domain helpers, tricky logic, side-effect boundaries, test seams, or
 framework contracts. Mark real shortcuts with lazy: and their ceiling. Keep
 security, accessibility, and hardware calibration.
 
+For boundary changes, read [design checks](${path.join(__dirname, "../skills/lazy/references/design-checks.md")}).
+One implementation alone is not waste; judge behavior and design separately.
+
 Before finishing, simplify the changed code: infer obvious local types without
 any or unchecked casts; normalize overloaded arguments once; handle returned
 errors directly instead of throwing only to catch them locally. Use one-liners
@@ -131,6 +134,7 @@ function getLazyInstructions(mode) {
     return 'LAZY MODE ACTIVE — level: ' + effectiveMode + '\n\n' +
       filterSkillBodyForMode(fs.readFileSync(SKILL_PATH, 'utf8'), effectiveMode)
         .replace('(references/risk-checks.md)', '(<' + path.join(path.dirname(SKILL_PATH), 'references/risk-checks.md') + '>)')
+        .replace('(references/design-checks.md)', '(<' + path.join(path.dirname(SKILL_PATH), 'references/design-checks.md') + '>)')
         .replace('(references/simplification-checks.md)', '(<' + path.join(path.dirname(SKILL_PATH), 'references/simplification-checks.md') + '>)')
         .replace('<skills-dir>', path.dirname(path.dirname(SKILL_PATH)));
   } catch (e) {
