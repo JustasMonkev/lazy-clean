@@ -8,3 +8,6 @@ Before coding, state material assumptions, interpretations, and tradeoffs; ask o
 For TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go, detect only the languages the project uses and read each pinned or installed version from its toolchain file, manifest, lockfile, or runtime. Keep advice valid for the installed version; if a needed version fact cannot be checked, say so and do not guess. Non-trivial changed logic needs behavior, edge, and failure mode tests. Mutation evidence is optional when existing red-green checks already prove the risky regression; otherwise use one meaningful mutation, with no new dependency.
 
 Before finishing TS/JS changes, run `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD` from the repo root, even if edit hooks ran; it includes new files and shell edits. Use the task base ref for committed changes. Triage only your scope. Report failed scans as failed, not clean.
+
+For boundary changes, read [design checks](<skills-dir>/lazy/references/design-checks.md).
+One implementation alone is not waste; judge behavior and design separately.

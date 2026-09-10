@@ -116,3 +116,21 @@ CLI flags: [Claude Code reference](https://code.claude.com/docs/en/cli-reference
 
 Exit 0 means the benchmark completed, not that all tasks passed. Exit 2 means
 setup or measurement failed; an interrupted run exits 130. Use the saved per-task verdicts.
+
+## SOLID task set
+
+Set `"taskSet": "solid"` in the same config to select six tasks about existing
+API reuse, formatter extension, substitutable stores, an isolated checkout
+capability, read-only consumers, and preservation of a necessary guard.
+The default stays `"taskSet": "core"` with the fourteen original tasks.
+A full SOLID run makes 36 calls (6 tasks × 3 trials × 2 arms).
+
+Runtime checks establish the requested behavior. Review the `design` rubric in
+`solid-tasks.mjs` separately; a passing runtime check is not a design verdict.
+For the two reused tasks, check public-method reuse and justified preservation
+of the existing guard. `npm test` exercises baselines, working fixes, deliberate
+contract-breaking mutations, and selection of the SOLID set without AI calls.
+
+The runner compares rules off/on. The [recorded Luna experiment](solid-guidance.md)
+compares the existing and revised rules using fresh subagents; it is a separate
+protocol, with shared host instructions and six tasks per agent.

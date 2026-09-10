@@ -5,7 +5,8 @@ import { mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, lstatS
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { tasks } from './tasks.mjs';
+import { tasks as coreTasks } from './tasks.mjs';
+import { tasks as solidTasks } from './solid-tasks.mjs';
 
 const require = createRequire(import.meta.url);
 const { getLazyInstructions } = require('../hooks/lazy-instructions.js');
@@ -141,19 +142,20 @@ export async function main(args) {
     return args.includes('--help') ? 0 : 2;
   }
   const config = JSON.parse(readFileSync(args[0], 'utf8'));
-  const { command, model, trials = 3, timeoutMs = 180000, mode = 'full' } = config;
+  const { command, model, trials = 3, timeoutMs = 180000, mode = 'full', taskSet = 'core' } = config;
   if (!Array.isArray(command) || !command.length || command.some(x => typeof x !== 'string' || x.includes('\0')) || !command[0]
     || typeof model !== 'string' || !model.trim() || !Number.isInteger(trials) || trials < 1 || trials > 10
-    || !Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 600000 || !['lite', 'full', 'ultra'].includes(mode)) {
-    throw new Error('invalid command, model, trials (1–10), timeoutMs (100–600000), or mode');
+    || !Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 600000 || !['lite', 'full', 'ultra'].includes(mode) || !['core', 'solid'].includes(taskSet)) {
+    throw new Error('invalid command, model, trials (1–10), timeoutMs (100–600000), mode, or taskSet');
   }
+  const tasks = taskSet === 'solid' ? solidTasks : coreTasks;
   const selected = args[2] ? tasks.filter(task => task.id === args[2]) : tasks;
   if (!selected.length) throw new Error('unknown task id');
   // Refuse to overwrite prior evidence. Workspaces are retained for inspection.
   const output = args[1] ? resolve(args[1]) : mkdtempSync(join(tmpdir(), 'lazy-eval-'));
   if (args[1]) mkdirSync(output);
   const report = { schema: 1, created: new Date().toISOString(), commit: git(root, ['rev-parse', 'HEAD']).trim(),
-    dirty: git(root, ['status', '--porcelain']).length > 0, config: { command, model, trials, timeoutMs, mode }, results: [] };
+    dirty: git(root, ['status', '--porcelain']).length > 0, config: { command, model, trials, timeoutMs, mode, taskSet }, results: [] };
   const save = () => writeFileSync(join(output, 'results.json'), JSON.stringify(report, null, 2) + '\n');
   save();
   for (const [taskIndex, task] of selected.entries()) {

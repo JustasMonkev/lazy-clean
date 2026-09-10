@@ -37,7 +37,7 @@ Tags:
 - `delete:` dead code, unused flexibility, speculative feature. Replacement: nothing.
 - `stdlib:` hand-rolled thing the standard library ships. Name the function.
 - `native:` dependency or code doing what the platform already does. Name the feature.
-- `yagni:` abstraction with one implementation, config nobody sets, layer that only forwards.
+- `yagni:` abstraction with no useful boundary, config nobody sets, layer that exposes no simpler contract.
 - `shrink:` same logic, fewer lines. Show the shorter form.
 
 ## Examples
@@ -46,7 +46,7 @@ Tags:
 
 ✅ `L4: native: moment.js for one en-US/UTC medium-date format. Intl.DateTimeFormat('en-US', { timeZone: 'UTC', dateStyle: 'medium' }), preserving the format contract.`
 
-✅ `repo.py:L88: yagni: wrapper that only forwards to the single SQLite repository. Call it directly, preserving the transaction boundary.`
+✅ `repo.py:L88: yagni: wrapper that only forwards to the single SQLite repository. Call it directly only if the consumer already owns that database detail; preserve transaction and dependency boundaries.`
 
 ✅ `L30-34: shrink: wrapper passes arguments unchanged to parseInt with radix 10. Call parseInt directly, preserving the radix.`
 
@@ -72,3 +72,9 @@ correctness/security audit is not this pass.
 Does not apply the fixes, only lists them — say "apply the findings" and they
 are applied under the lazy ladder and the surgical-changes rule. One-shot: it
 sets no mode, so there is nothing to revert.
+
+One production implementation is not evidence of waste. Before removing an
+adapter, check what external details or independently changing policy its
+callers would need to learn. Keep a consumer-owned contract that isolates those
+details, even when its adapter only forwards. A clean scan or fewer lines does
+not establish design quality.

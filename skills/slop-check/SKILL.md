@@ -74,3 +74,8 @@ Pointless code: `no-useless-rethrow`, `no-empty-catch`, `no-catch-fake-success`,
 Faked behavior and test slop: `no-arbitrary-sleep`, `no-env-secret-fallback`, `no-module-mocking`, `no-tautological-assertion`.
 
 Comment slop: `no-filler-comments`, `no-narration-comments`, `no-change-note-comments`, `no-backcompat-comments`, `no-restating-comments`, `no-obvious-doc-comments`, `no-typed-jsdoc`, `no-unjustified-suppression`, `no-unjustified-ignore`, `no-emoji`.
+
+One production implementation is not evidence of waste. Before removing a
+boundary, check what external details and independent reasons for change its
+callers would inherit. Keep useful consumer-owned contracts and narrow
+capabilities; judge behavior and design separately.
