@@ -135,6 +135,9 @@ const DELIVERY_CONTRACT = [
   ["delivers the SOLID boundary check", /design checks/iu],
   ["preserves useful single-implementation boundaries", /one implementation alone is not waste/iu],
   ["separates behavior and design review", /judge behavior and design separately/iu],
+  ["includes design substance without a reference read", /group behavior by reason to change.*policy independent.*ordinary parameters.*capabilities.*Interchangeable implementations.*inputs, results, errors, and lifecycle/iu],
+  ["requires saved regression coverage", /map changed requirements, edge cases, and failure modes to rerunnable tests.*add missing coverage.*inline probes alone are not coverage/iu],
+  ["retains unfinished checks after compaction", /unfinished checks through handoffs and compaction/iu],
 ];
 for (const mode of ["lite", "full", "ultra"]) {
   for (const [surface, text] of [

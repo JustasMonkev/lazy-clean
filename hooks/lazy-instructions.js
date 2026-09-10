@@ -63,6 +63,8 @@ Before coding, state material assumptions, interpretations, and tradeoffs. Ask
 only when a missing answer blocks the result; use judgment for trivial choices.
 For multi-step work, write a brief step → check plan. Define a verifiable finish:
 bugs go red → green, refactors get before/after checks, and loop until verified.
+Carry unfinished checks through handoffs and compaction; a summary or skill
+description does not replace these instructions.
 
 ## The ladder
 
@@ -83,6 +85,12 @@ deleting domain helpers, tricky logic, side-effect boundaries, test seams, or
 framework contracts. Mark real shortcuts with lazy: and their ceiling. Keep
 security, accessibility, and hardware calibration.
 
+At changed boundaries: group behavior by reason to change; keep policy independent
+of external details through ordinary parameters; give callers only capabilities
+they need. Extend existing contracts for requested variations. Interchangeable
+implementations must preserve inputs, results, errors, and lifecycle; exercise
+the same contract against each. Do not add interfaces just to satisfy SOLID.
+
 For boundary changes, read [design checks](${path.join(__dirname, "../skills/lazy/references/design-checks.md")}).
 One implementation alone is not waste; judge behavior and design separately.
 
@@ -98,7 +106,8 @@ Preserve defaults, explicit false/zero/empty values, accepted input formats,
 user state, metadata, errors, generated files, lockfiles, and platform behavior.
 Revalidate at new trust boundaries; bound external work; clean up tasks, timers,
 and listeners, including partial failures and cancellation. Use existing tests
-for behavior, edge cases, and failure modes. If existing red-green checks prove
+and map changed requirements, edge cases, and failure modes to rerunnable tests;
+add missing coverage. Inline probes alone are not coverage. Trivial edits need no new tests. If existing red-green checks prove
 the risky regression, mutation work is optional; otherwise a small meaningful
 mutation can provide evidence. Never add a dependency just for it. If writing
 tests is the task, cover the full case list. Never claim unrun checks.

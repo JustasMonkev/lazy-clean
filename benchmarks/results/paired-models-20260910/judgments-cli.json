@@ -1,0 +1,2806 @@
+{
+  "review": "Initial blind CLI artifact judgments",
+  "rubric": "RUBRIC.md (frozen 100-point rubric; hard gates applied first)",
+  "reviewScope": [
+    "README.md",
+    "RUBRIC.md",
+    "index.json",
+    "cli/ only"
+  ],
+  "artifacts": [
+    {
+      "artifact": "artifact-001",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 98.5,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 100,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 31,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 45,
+          "evidence": "JSON error checks assert a prefix and SyntaxError cause type, but not that the full wrapper message retains the original cause message (also file branch at 140-143).",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes.",
+        "A real valid-JSON filename collision tests file-first precedence rather than only ordinary file loading.",
+        "Saved deterministic filesystem failure injection avoids relying on chmod for read-error coverage."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-002",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 5.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 97.5,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 48,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 22,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 50,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 71,
+          "evidence": "JSON fallback tests match only message text. There is no saved invalid-JSON regular-file case, TypeError identity assertion, or original SyntaxError cause assertion.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 1
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes.",
+        "Saved deterministic filesystem failure injection avoids relying on chmod for read-error coverage."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-003",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 14,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 5.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 96.5,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 96,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 78,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 67,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 88,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 25,
+          "evidence": "JSON wrapper messages and cause.message are compared, but a plain object with the same message can satisfy the cause checks at 32 and 120; the original SyntaxError identity/type is not protected.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "candidate-source.ts",
+          "line": 23,
+          "evidence": "isRegularFile carries a mutable possibly-undefined Stats value, assigns undefined again in catch, then converts it via optional chaining/nullish fallback. The redundant state and repeated failure encoding are unnecessary for this boolean predicate; the shared helper itself is useful.",
+          "deduction": {
+            "dimension": "readability",
+            "subdimension": "readability",
+            "points": 1
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes.",
+        "Saved deterministic filesystem failure injection avoids relying on chmod for read-error coverage."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-005",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.0,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 98.0,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 58,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 51,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 37,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 29,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes.",
+        "Saved deterministic filesystem failure injection avoids relying on chmod for read-error coverage."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-015",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 98.5,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 38,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 104,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 41,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes.",
+        "A real valid-JSON filename collision tests file-first precedence rather than only ordinary file loading.",
+        "Saved deterministic filesystem failure injection avoids relying on chmod for read-error coverage."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-016",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 4.5,
+        "isolationRerunnabilityCleanup": 3
+      },
+      "total": 95.5,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 85,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 33,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 21,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 77,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 90,
+          "evidence": "Literal and file JSON error checks assert only the wrapper prefix and cause instanceof Error (99 and 112), not SyntaxError or exact original-message preservation.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 52,
+          "evidence": "Saved fallback fixtures cover ENOENT/missing targets but no non-ENOENT probe failure (for example EACCES, ENOTDIR, invalid-NUL path, or an injected stat error) for either transformer. The probe-errors-escape reference mutant is killed by ENOENT cases; that kill does not establish general probe-error coverage.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 72,
+          "evidence": "Read-failure assertions match the path and an EACCES/EPERM fragment, but do not compare the original read message in full (also JSON at 157-158).",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 60,
+          "evidence": "Both read-failure tests rely on chmod(000). The CSV test has no root/platform guard and the JSON test only returns on Windows. These pass in the archived non-root run but do not reproducibly force a read failure under privileged runners.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 1
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage.",
+        "Permission-dependent saved read-failure evidence was valid in the archived non-root run, but is not portable to privileged/platform reruns."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-017",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 5.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 97.5,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.regular-file.test.cjs",
+          "line": 103,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.regular-file.test.cjs",
+          "line": 64,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.regular-file.test.cjs",
+          "line": 15,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.regular-file.test.cjs",
+          "line": 103,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.regular-file.test.cjs",
+          "line": 144,
+          "evidence": "The suite tests only literal-flavored JSON parse failures; no regular file with malformed JSON exercises the file-specific parse-error message/cause branch.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes.",
+        "Saved deterministic filesystem failure injection avoids relying on chmod for read-error coverage."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-019",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 4
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 4.5,
+        "isolationRerunnabilityCleanup": 3
+      },
+      "total": 94.5,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/json-transformers.test.cjs",
+          "line": 76,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/csv-transformers.test.cjs",
+          "line": 64,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/csv-transformers.test.cjs",
+          "line": 25,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/json-transformers.test.cjs",
+          "line": 38,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/json-transformers.test.cjs",
+          "line": 80,
+          "evidence": "File and literal JSON error assertions use startsWith and selected cause type checks, not full original-error text preservation; file assertions are at 84-86.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/csv-transformers.test.cjs",
+          "line": 56,
+          "evidence": "Saved fallback fixtures cover ENOENT/missing targets but no non-ENOENT probe failure (for example EACCES, ENOTDIR, invalid-NUL path, or an injected stat error) for either transformer. The probe-errors-escape reference mutant is killed by ENOENT cases; that kill does not establish general probe-error coverage.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/csv-transformers.test.cjs",
+          "line": 72,
+          "evidence": "Permission-failure tests check argparse identity and a nonempty text suffix, not that the suffix is the original read failure message; JSON has the same check at 99-102.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/csv-transformers.test.cjs",
+          "line": 72,
+          "evidence": "Both read-failure cases use chmod(000) and return without an assertion under root (CSV 73-74; JSON 91-92), silently losing the riskiest branch on privileged reruns.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 1
+          }
+        },
+        {
+          "severity": "low",
+          "file": "handoff.txt",
+          "line": 22,
+          "evidence": "The final handoff reports the focused command and passing tests but omits the required shared limitation that this runner transpiles/executes only and is not a full Appium build/typecheck. This is a reporting omission, not a fabricated passing build claim.",
+          "deduction": {
+            "dimension": "scope",
+            "subdimension": "scope",
+            "points": 1
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage.",
+        "Permission-dependent saved read-failure evidence was valid in the archived non-root run, but is not portable to privileged/platform reruns."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-021",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 5.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 97.5,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 47,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 33,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 39,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 52,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 27,
+          "evidence": "JSON error helpers check a prefix and SyntaxError cause but never assert the outer TypeError identity or the complete original-error message (file branch at 62-64).",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes.",
+        "Saved deterministic filesystem failure injection avoids relying on chmod for read-error coverage."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-022",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.0,
+        "isolationRerunnabilityCleanup": 2
+      },
+      "total": 96.0,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 76,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 24,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 76,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 93,
+          "evidence": "Literal/file JSON errors assert startsWith plus SyntaxError cause, so a changed or dropped Original error suffix still passes; see 97-99 and 106-108.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "medium",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 11,
+          "evidence": "The suite uses one fixed fixture directory, deletes it in before(), and deletes it again in after() (22 and 33). Two invocations in the same checkout can remove one another's fixtures; mkdtemp-style per-run isolation is absent.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 2
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes.",
+        "Saved deterministic filesystem failure injection avoids relying on chmod for read-error coverage."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-023",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 4.0,
+        "isolationRerunnabilityCleanup": 3
+      },
+      "total": 95.0,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 96,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 18,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 25,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 115,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 101,
+          "evidence": "Only invalid literal JSON is tested. There is no malformed regular JSON file checking the required file-specific parse-error context and cause.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 51,
+          "evidence": "Saved fallback fixtures cover ENOENT/missing targets but no non-ENOENT probe failure (for example EACCES, ENOTDIR, invalid-NUL path, or an injected stat error) for either transformer. The probe-errors-escape reference mutant is killed by ENOENT cases; that kill does not establish general probe-error coverage.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 123,
+          "evidence": "The JSON fallback fixture list contains a directory, missing path, and dangling link, but no symlink to an existing directory.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 85,
+          "evidence": "Read-failure tests check argparse identity, a path match, and message length, which also pass with an invented read-message suffix (same JSON pattern at 165-167).",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 70,
+          "evidence": "The chmod-based read-failure cases explicitly skip under root/Windows, so the saved suite loses that branch in those environments. The archived run did execute both and their mutation kills remain valid.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 1
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage.",
+        "Permission-dependent saved read-failure evidence was valid in the archived non-root run, but is not portable to privileged/platform reruns."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-025",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 13.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 4.0,
+        "isolationRerunnabilityCleanup": 1
+      },
+      "total": 93.0,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 61,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 34,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 22,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 57,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 65,
+          "evidence": "Only non-file JSON failures are asserted, with broad message/cause checks. No malformed regular JSON file tests the file-specific parse-error message or its original SyntaxError cause.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 40,
+          "evidence": "Saved fallback fixtures cover ENOENT/missing targets but no non-ENOENT probe failure (for example EACCES, ENOTDIR, invalid-NUL path, or an injected stat error) for either transformer. The probe-errors-escape reference mutant is killed by ENOENT cases; that kill does not establish general probe-error coverage.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 40,
+          "evidence": "Neither transformer has a saved symlink-to-directory fixture; symlinks to regular files and dangling symlinks exercise different classifications.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 91,
+          "evidence": "Read-failure tests check argparse identity and path only (98 and 108); removing or changing the original read message would still pass.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 91,
+          "evidence": "Read-failure tests are not even registered unless getuid exists and is nonzero. Privileged/platform reruns silently omit that preservation evidence.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 1
+          }
+        },
+        {
+          "severity": "medium",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 28,
+          "evidence": "makeFixture creates a temporary directory, files and later links, but the complete saved file has no after hook, finally cleanup, or rmSync. Every candidate/baseline/mutation rerun leaves its fixture tree behind.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 2
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage.",
+        "Permission-dependent saved read-failure evidence was valid in the archived non-root run, but is not portable to privileged/platform reruns."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-026",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "FAIL",
+          "evidence": [
+            "Saved test source at lines 40 and 47 passes altered nonexistent paths, not the created CSV directory or directory symlink.",
+            "logs/reference-runs/baseline/tests.log: JSON directory assertion fails behaviorally; logs/reference-runs/csv-directory-fix-missing/tests.log: all 18 tests pass (exit 0); logs/reference-runs/json-directory-fix-missing/tests.log: directory assertion fails."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 9.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 4
+      },
+      "testPoints": {
+        "regression": 4,
+        "preservationAndAlternatePaths": 4.5,
+        "isolationRerunnabilityCleanup": 1
+      },
+      "total": 88.5,
+      "rankingEligible": false,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 97,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 62,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 97,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 161,
+          "evidence": "The file error checks use a prefix and cause instanceof Error, while the literal error omits a cause assertion; exact original SyntaxError/message preservation is not established.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 50,
+          "evidence": "Saved fallback fixtures cover ENOENT/missing targets but no non-ENOENT probe failure (for example EACCES, ENOTDIR, invalid-NUL path, or an injected stat error) for either transformer. The probe-errors-escape reference mutant is killed by ENOENT cases; that kill does not establish general probe-error coverage.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 111,
+          "evidence": "There is no JSON symlink-to-directory case. The CSV symlink case also appends literal text to the link (47), so no saved invocation classifies an existing directory symlink.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 73,
+          "evidence": "Read-failure tests check argparse identity and the path prefix only (82 and 152), not preservation of the original read message.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 73,
+          "evidence": "Read-failure cases require chmod(000) to deny access and have no root guard. A privileged rerun fails for fixture permissions rather than candidate behavior; the archived non-root results remain valid.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 1
+          }
+        },
+        {
+          "severity": "medium",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 14,
+          "evidence": "makeTempDir allocates a fresh directory in each filesystem test, but the complete saved file has no fixture teardown or removal. All those directories/files/links survive each rerun.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 2
+          }
+        },
+        {
+          "severity": "high",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 40,
+          "evidence": "The CSV directory test calls transformers.csv(`${dir},,x ,`) rather than the existing directory; the directory-symlink test similarly appends ` ,foo` at 47. These strings are nonexistent paths. logs/reference-runs/csv-directory-fix-missing/tests.log passes all 18 tests, while the baseline fails only JSON. The mandatory saved directory regression is therefore absent for CSV.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "regression",
+            "points": 4
+          }
+        },
+        {
+          "severity": "low",
+          "file": "handoff.txt",
+          "line": 19,
+          "evidence": "The handoff lists directories and directory symlinks as covered for both transformers, but the CSV tests use suffixed nonexistent strings and no JSON directory-symlink test exists. The 18/18 passing-run claim is supported; the coverage claim is overstated, not treated as fabricated execution.",
+          "deduction": {
+            "dimension": "scope",
+            "subdimension": "scope",
+            "points": 1
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "The shared readRegularFileIfExists boundary distinguishes undefined from empty file content and retains the read-error boundary; the saved empty-CSV-file case protects that sentinel choice."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage.",
+        "Permission-dependent saved read-failure evidence was valid in the archived non-root run, but is not portable to privileged/platform reruns.",
+        "Numeric total is provisional diagnostic feedback only; the failed savedRegression gate makes this artifact non-ranking."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 0,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-027",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 5.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 97.5,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 54,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 19,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 24,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 54,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 93,
+          "evidence": "JSON file errors assert name, message prefix, and SyntaxError cause, but not the original cause message in the full wrapper; literal error checks have the same suffix gap.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes.",
+        "Saved deterministic filesystem failure injection avoids relying on chmod for read-error coverage."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-031",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 5.0,
+        "isolationRerunnabilityCleanup": 3
+      },
+      "total": 96.0,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 65,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 61,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 30,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 28,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 14,
+          "evidence": "JSON error checks require only a truthy cause (20 and 41) and wrapper name/prefix. An unrelated value as cause or altered original-error suffix would still pass.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 110,
+          "evidence": "Read-failure assertions check name, path prefix, and a permission-error fragment; they do not preserve the complete original read message.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 94,
+          "evidence": "Both read-failure assertions depend on chmod(000) denying access and have no root/platform guard. This is a repeatability limit of the saved suite, not a candidate production defect.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 1
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage.",
+        "Permission-dependent saved read-failure evidence was valid in the archived non-root run, but is not portable to privileged/platform reruns."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-032",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.0,
+        "readability": 14,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.0,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 97.0,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 78,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 39,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 43,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 78,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "candidate-source.ts",
+          "line": 74,
+          "evidence": "isRegularFile stores and mutates a regularFile boolean solely to return it after the try/catch. This adds redundant state to the small predicate; no penalty is applied for retaining a shared helper or documenting the fallback.",
+          "deduction": {
+            "dimension": "readability",
+            "subdimension": "readability",
+            "points": 1
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes.",
+        "Saved deterministic filesystem failure injection avoids relying on chmod for read-error coverage."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-034",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.0,
+        "isolationRerunnabilityCleanup": 2
+      },
+      "total": 96.0,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 132,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 90,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 23,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 132,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "medium",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 11,
+          "evidence": "The suite uses a fixed cli-transformers-fixtures directory and recursively removes it at setup/teardown (21 and 33). Concurrent reruns in the same checkout share destructive fixture state.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 2
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes.",
+        "Saved deterministic filesystem failure injection avoids relying on chmod for read-error coverage."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    },
+    {
+      "artifact": "artifact-036",
+      "task": "cli",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testPoints": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.0,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 98.0,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 50,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 40,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 43,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "saved-tests/cli-transformers.test.cjs",
+          "line": 139,
+          "evidence": "JSON parse-error tests compare context and cause text but never assert the outer error is TypeError; a generic Error with the same message and cause would satisfy them.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "strengths": [
+        "The regular-file policy is shared between both transformers and follows symlinks without widening the fallback to read/parse failures.",
+        "Production parsing and exported behavior remain unchanged; all frozen hidden behavior checks pass.",
+        "Saved tests execute the actual compiled module and use the real argparse dependency.",
+        "Saved tests detect both individual directory regressions and all frozen reference mutation behaviors; behavioral failures were reviewed, not inferred from nonzero exit codes.",
+        "A real valid-JSON filename collision tests file-first precedence rather than only ordinary file loading.",
+        "Saved deterministic filesystem failure injection avoids relying on chmod for read-error coverage."
+      ],
+      "limits": [
+        "Focused transpilation/runtime verification, not a full historical Appium build/typecheck.",
+        "Judgment uses the frozen v4 candidate/baseline/reference reruns and their logs; no additional judge-written behavioral suite or post-feedback repair was applied.",
+        "Reference mutation kills describe this finite pool only; they do not establish full alternate-path coverage."
+      ],
+      "designApplicability": {
+        "SRP": "Applicable: classification/probe fallback is separated from read-error and parse-error boundaries; the shared reader in 026 preserves these boundaries too.",
+        "OCP": "No speculative extension machinery introduced; no interface or configuration required.",
+        "LSP": "Applicable to preserved exported inputs, outputs, errors, and synchronous lifecycle; source review and hidden verification pass.",
+        "ISP": "N/A: no interface-design problem is introduced.",
+        "DIP": "No filesystem abstraction is required for this small synchronous utility; test injection need not be promoted to production architecture."
+      },
+      "verification": {
+        "graderVersion": 4,
+        "sourcePatchAndHashMatch": true,
+        "compiledHashMatch": true,
+        "savedExecutedTestsHashMatch": true,
+        "candidateTestExit": 0,
+        "hiddenExit": 0,
+        "referenceMutationExits": {
+          "baseline": 1,
+          "csv-directory-fix-missing": 1,
+          "json-directory-fix-missing": 1,
+          "probe-errors-escape": 1,
+          "read-errors-fall-back": 1
+        }
+      }
+    }
+  ],
+  "summary": {
+    "reviewed": 18,
+    "rankingEligible": 17,
+    "gateFailures": {
+      "savedRegression": [
+        "artifact-026"
+      ]
+    },
+    "passingScoreRange": [
+      93.0,
+      98.5
+    ],
+    "scoreTies": [
+      {
+        "total": 98.5,
+        "artifacts": [
+          "artifact-001",
+          "artifact-015"
+        ]
+      },
+      {
+        "total": 97.5,
+        "artifacts": [
+          "artifact-002",
+          "artifact-017",
+          "artifact-021",
+          "artifact-027"
+        ]
+      },
+      {
+        "total": 98.0,
+        "artifacts": [
+          "artifact-005",
+          "artifact-036"
+        ]
+      },
+      {
+        "total": 96.0,
+        "artifacts": [
+          "artifact-022",
+          "artifact-031",
+          "artifact-034"
+        ]
+      }
+    ]
+  },
+  "scoringNotes": [
+    "No reward for short code, verbose handoffs, helper removal, or additional test count. All production behavior scores are grounded in complete patch/source review plus the frozen passing hidden checks.",
+    "Saved tests use the required 8 regression / 8 preservation-and-alternate-path / 4 isolation allocation. Partial coverage is scored separately from the mandatory both-transformer directory regression gate.",
+    "Within the 8 coverage points, the same checks were applied to every suite: file/symlink/non-file classifications and a non-ENOENT probe failure (2); multiline and literal CSV trimming plus literal newline and empty-file preservation (2); JSON output categories including falsy values (1); actual file-first precedence (1); parse-error contexts/identity/original messages (1); read-error identity/path/original message (1).",
+    "Point deductions identify omitted or weak saved assertions, not hypothetical candidate source regressions. No new production regression was proposed or used to alter a gate.",
+    "Scope omissions are distinguished from materially false verification claims. The static-checker claims in 001, 003, 016, 023, 025, 031, 032, 034 and 036 were checked against final available evidence; intentional warnings and actual final clean scoped scans were treated as such.",
+    "Equal totals are ties under the available evidence, not claims that every test file is identical. Artifacts 002 and 036 have identical production source but different saved tests."
+  ]
+}

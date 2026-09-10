@@ -1,0 +1,2438 @@
+{
+  "scoreScale": 100,
+  "calibrationAppliedBeforeUnblinding": true,
+  "artifacts": [
+    {
+      "artifact": "artifact-022",
+      "id": "luna-cli-r1-off",
+      "model": "gpt-5.6-luna",
+      "family": "luna",
+      "task": "cli",
+      "repetition": 1,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 96.0,
+      "rankingEligible": true,
+      "seconds": 155.496,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 94,
+        "productionNumstat": "15\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 133
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-003",
+      "id": "luna-cli-r1-on",
+      "model": "gpt-5.6-luna",
+      "family": "luna",
+      "task": "cli",
+      "repetition": 1,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 14,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 96.5,
+      "rankingEligible": true,
+      "seconds": 330.781,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 92,
+        "productionNumstat": "13\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 124
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-021",
+      "id": "luna-cli-r2-off",
+      "model": "gpt-5.6-luna",
+      "family": "luna",
+      "task": "cli",
+      "repetition": 2,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 97.5,
+      "rankingEligible": true,
+      "seconds": 170.199,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 90,
+        "productionNumstat": "11\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 122
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-031",
+      "id": "luna-cli-r2-on",
+      "model": "gpt-5.6-luna",
+      "family": "luna",
+      "task": "cli",
+      "repetition": 2,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 96.0,
+      "rankingEligible": true,
+      "seconds": 354.339,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 90,
+        "productionNumstat": "11\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 121
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-002",
+      "id": "luna-cli-r3-off",
+      "model": "gpt-5.6-luna",
+      "family": "luna",
+      "task": "cli",
+      "repetition": 3,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 97.5,
+      "rankingEligible": true,
+      "seconds": 163.601,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 90,
+        "productionNumstat": "11\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 116
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-032",
+      "id": "luna-cli-r3-on",
+      "model": "gpt-5.6-luna",
+      "family": "luna",
+      "task": "cli",
+      "repetition": 3,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.0,
+        "readability": 14,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 97.0,
+      "rankingEligible": true,
+      "seconds": 262.793,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 92,
+        "productionNumstat": "13\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 149
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-018",
+      "id": "luna-url-r1-off",
+      "model": "gpt-5.6-luna",
+      "family": "luna",
+      "task": "url",
+      "repetition": 1,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 2 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 96,
+      "rankingEligible": true,
+      "seconds": 123.77,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 77
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-006",
+      "id": "luna-url-r1-on",
+      "model": "gpt-5.6-luna",
+      "family": "luna",
+      "task": "url",
+      "repetition": 1,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 2 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 97,
+      "rankingEligible": true,
+      "seconds": 149.79,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 63
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-008",
+      "id": "luna-url-r2-off",
+      "model": "gpt-5.6-luna",
+      "family": "luna",
+      "task": "url",
+      "repetition": 2,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 3/3.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 3/3; unmodified baseline produces 2 behavioral failure(s) out of 3, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 95,
+      "rankingEligible": true,
+      "seconds": 91.866,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 62
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-011",
+      "id": "luna-url-r2-on",
+      "model": "gpt-5.6-luna",
+      "family": "luna",
+      "task": "url",
+      "repetition": 2,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 5/5.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 5/5; unmodified baseline produces 2 behavioral failure(s) out of 5, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 19,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 99,
+      "rankingEligible": true,
+      "seconds": 174.011,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 81
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-010",
+      "id": "luna-url-r3-off",
+      "model": "gpt-5.6-luna",
+      "family": "luna",
+      "task": "url",
+      "repetition": 3,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 2/2.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 2/2; unmodified baseline produces 1 behavioral failure(s) out of 2, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 95,
+      "rankingEligible": true,
+      "seconds": 138.167,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 66
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-020",
+      "id": "luna-url-r3-on",
+      "model": "gpt-5.6-luna",
+      "family": "luna",
+      "task": "url",
+      "repetition": 3,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 1 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 98,
+      "rankingEligible": true,
+      "seconds": 179.737,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 83
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-005",
+      "id": "sol-cli-r1-off",
+      "model": "gpt-5.6-sol",
+      "family": "sol",
+      "task": "cli",
+      "repetition": 1,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 98.0,
+      "rankingEligible": true,
+      "seconds": 230.845,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 94,
+        "productionNumstat": "15\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 161
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-001",
+      "id": "sol-cli-r1-on",
+      "model": "gpt-5.6-sol",
+      "family": "sol",
+      "task": "cli",
+      "repetition": 1,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 98.5,
+      "rankingEligible": true,
+      "seconds": 503.193,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 90,
+        "productionNumstat": "11\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 157
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-015",
+      "id": "sol-cli-r2-off",
+      "model": "gpt-5.6-sol",
+      "family": "sol",
+      "task": "cli",
+      "repetition": 2,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 98.5,
+      "rankingEligible": true,
+      "seconds": 328.834,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 93,
+        "productionNumstat": "14\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 172
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-034",
+      "id": "sol-cli-r2-on",
+      "model": "gpt-5.6-sol",
+      "family": "sol",
+      "task": "cli",
+      "repetition": 2,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 96.0,
+      "rankingEligible": true,
+      "seconds": 444.825,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 91,
+        "productionNumstat": "12\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 196
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-027",
+      "id": "sol-cli-r3-off",
+      "model": "gpt-5.6-sol",
+      "family": "sol",
+      "task": "cli",
+      "repetition": 3,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 97.5,
+      "rankingEligible": true,
+      "seconds": 178.418,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 95,
+        "productionNumstat": "16\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 186
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-036",
+      "id": "sol-cli-r3-on",
+      "model": "gpt-5.6-sol",
+      "family": "sol",
+      "task": "cli",
+      "repetition": 3,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 98.0,
+      "rankingEligible": true,
+      "seconds": 482.839,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 90,
+        "productionNumstat": "11\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 163
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-024",
+      "id": "sol-url-r1-off",
+      "model": "gpt-5.6-sol",
+      "family": "sol",
+      "task": "url",
+      "repetition": 1,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 2 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 100,
+      "rankingEligible": true,
+      "seconds": 122.706,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 86
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-009",
+      "id": "sol-url-r1-on",
+      "model": "gpt-5.6-sol",
+      "family": "sol",
+      "task": "url",
+      "repetition": 1,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 2 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 100,
+      "rankingEligible": true,
+      "seconds": 178.871,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 90
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-004",
+      "id": "sol-url-r2-off",
+      "model": "gpt-5.6-sol",
+      "family": "sol",
+      "task": "url",
+      "repetition": 2,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 2 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 100,
+      "rankingEligible": true,
+      "seconds": 106.402,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 104
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-029",
+      "id": "sol-url-r2-on",
+      "model": "gpt-5.6-sol",
+      "family": "sol",
+      "task": "url",
+      "repetition": 2,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 6/6.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 6/6; unmodified baseline produces 3 behavioral failure(s) out of 6, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 19,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 99,
+      "rankingEligible": true,
+      "seconds": 227.934,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 104
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-033",
+      "id": "sol-url-r3-off",
+      "model": "gpt-5.6-sol",
+      "family": "sol",
+      "task": "url",
+      "repetition": 3,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 5/5.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 5/5; unmodified baseline produces 3 behavioral failure(s) out of 5, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 98,
+      "rankingEligible": true,
+      "seconds": 182.849,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 78
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-012",
+      "id": "sol-url-r3-on",
+      "model": "gpt-5.6-sol",
+      "family": "sol",
+      "task": "url",
+      "repetition": 3,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 6/6.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 6/6; unmodified baseline produces 3 behavioral failure(s) out of 6, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 100,
+      "rankingEligible": true,
+      "seconds": 199.993,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 88
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-017",
+      "id": "glm-cli-r1-off",
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "family": "glm",
+      "task": "cli",
+      "repetition": 1,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 97.5,
+      "rankingEligible": true,
+      "seconds": 280.125,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 96,
+        "productionNumstat": "17\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 182
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-016",
+      "id": "glm-cli-r1-on",
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "family": "glm",
+      "task": "cli",
+      "repetition": 1,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 95.5,
+      "rankingEligible": true,
+      "seconds": 112.151,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 95,
+        "productionNumstat": "16\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 167
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-019",
+      "id": "glm-cli-r2-off",
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "family": "glm",
+      "task": "cli",
+      "repetition": 2,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 4
+      },
+      "total": 94.5,
+      "rankingEligible": true,
+      "seconds": 222.619,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 95,
+        "productionNumstat": "16\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 190
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-023",
+      "id": "glm-cli-r2-on",
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "family": "glm",
+      "task": "cli",
+      "repetition": 2,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 95.0,
+      "rankingEligible": true,
+      "seconds": 164.901,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 95,
+        "productionNumstat": "16\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 174
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-026",
+      "id": "glm-cli-r3-off",
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "family": "glm",
+      "task": "cli",
+      "repetition": 3,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "FAIL",
+          "evidence": [
+            "Saved test source at lines 40 and 47 passes altered nonexistent paths, not the created CSV directory or directory symlink.",
+            "logs/reference-runs/baseline/tests.log: JSON directory assertion fails behaviorally; logs/reference-runs/csv-directory-fix-missing/tests.log: all 18 tests pass (exit 0); logs/reference-runs/json-directory-fix-missing/tests.log: directory assertion fails."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 9.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 4
+      },
+      "total": 88.5,
+      "rankingEligible": false,
+      "seconds": 203.619,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 97,
+        "productionNumstat": "29\t14\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 185
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 0,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-025",
+      "id": "glm-cli-r3-on",
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "family": "glm",
+      "task": "cli",
+      "repetition": 3,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch match the baseline plus the reviewed patch; independently verified source and compiled hashes match trusted-grade.json provenance.",
+            "logs/compile.log:1 records TypeScript 6.0.3 / Node v26.5.0 CommonJS transpilation; trusted v4 compile and runtime loads exit 0; parseCsvLine and transformers exports retained."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "logs/hidden.log: all 7 frozen hidden groups pass, with zero failures/skips.",
+            "Full baseline-plus-patch source review confirms symlink-following stat classification, fallback only for non-files/probe errors, and read failures outside the fallback boundary. Existing CSV/JSON parsers, messages, causes, outputs and exports are retained. No novel production contract regression was found."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen saved-tests match .task-tests byte-for-byte and the provenance hashes; logs/candidate-tests.log passes the submitted saved suite.",
+            "logs/reference-runs/baseline/tests.log is behavioral-red, not an import/harness failure. The separately reviewed csv-directory-fix-missing and json-directory-fix-missing logs both fail the corresponding directory fallback assertion, establishing coverage for both transformers."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "trusted-grade.json: no changed scaffold, unexpected tracked/untracked source paths, frozen-input changes, compiled-output changes, or reference-output changes; only the target production module and saved verification are task-owned.",
+            "Actual candidate imports the real argparse dependency. No copied implementation in tests, hidden-test access, fabricated passing check, or weakened harness was established. Filtered worker-check omissions are not treated as fabrication.",
+            "Final handoff passing-test claims match worker-checks.json and v4 candidate-test logs; documented heuristic warnings are not misgraded as clean scans."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 13.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 93.0,
+      "rankingEligible": true,
+      "seconds": 113.518,
+      "sourceSizes": {
+        "baselineLines": 82,
+        "candidateLines": 94,
+        "productionNumstat": "15\t3\tpackages/appium/lib/schema/cli-transformers.ts",
+        "savedTestLines": 111
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "csv-directory-fix-missing": 1,
+        "json-directory-fix-missing": 1,
+        "probe-errors-escape": 1,
+        "read-errors-fall-back": 1
+      }
+    },
+    {
+      "artifact": "artifact-013",
+      "id": "glm-url-r1-off",
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "family": "glm",
+      "task": "url",
+      "repetition": 1,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 3/3.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:5 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 3/3; unmodified baseline produces 1 behavioral failure(s) out of 3, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit.",
+            "Minor ES5 target-description error is scored under scope; actual compile execution and runtime tests are supported, with no full typecheck claimed."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16,
+        "readability": 15,
+        "design": 10,
+        "scope": 4
+      },
+      "total": 95,
+      "rankingEligible": true,
+      "seconds": 79.682,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 20,
+        "productionNumstat": "4\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 80
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-028",
+      "id": "glm-url-r1-on",
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "family": "glm",
+      "task": "url",
+      "repetition": 1,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 22/22.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:5 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 22/22; unmodified baseline produces 13 behavioral failure(s) out of 22, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 98,
+      "rankingEligible": true,
+      "seconds": 136.635,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 20,
+        "productionNumstat": "4\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 111
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-030",
+      "id": "glm-url-r2-off",
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "family": "glm",
+      "task": "url",
+      "repetition": 2,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 5/5.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:5 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 5/5; unmodified baseline produces 2 behavioral failure(s) out of 5, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 19,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 99,
+      "rankingEligible": true,
+      "seconds": 107.617,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 20,
+        "productionNumstat": "4\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 101
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-014",
+      "id": "glm-url-r2-on",
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "family": "glm",
+      "task": "url",
+      "repetition": 2,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 20/20.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 20/20; unmodified baseline produces 13 behavioral failure(s) out of 20, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15,
+        "readability": 14,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 94,
+      "rankingEligible": true,
+      "seconds": 86.533,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 71
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-035",
+      "id": "glm-url-r3-off",
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "family": "glm",
+      "task": "url",
+      "repetition": 3,
+      "arm": "off",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 7/7.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:5 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 7/7; unmodified baseline produces 3 behavioral failure(s) out of 7, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 19,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "total": 99,
+      "rankingEligible": true,
+      "seconds": 79.242,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 20,
+        "productionNumstat": "4\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 113
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    },
+    {
+      "artifact": "artifact-007",
+      "id": "glm-url-r3-on",
+      "model": "zai-coding-plan/glm-5.3-flash",
+      "family": "glm",
+      "task": "url",
+      "repetition": 3,
+      "arm": "on",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 2 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit.",
+            "Minor regex-description error is scored under scope; it does not change the code or fabricate a passing test."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18,
+        "readability": 15,
+        "design": 10,
+        "scope": 4
+      },
+      "total": 97,
+      "rankingEligible": true,
+      "seconds": 73.019,
+      "sourceSizes": {
+        "baselineLines": 17,
+        "candidateLines": 17,
+        "productionNumstat": "1\t1\tpackages/base-driver/lib/protocol/validators.ts",
+        "savedTestLines": 87
+      },
+      "checks": {
+        "compile": 0,
+        "hidden": 0,
+        "candidateTests": 0
+      },
+      "referenceMutants": {
+        "baseline": 1,
+        "string-policy-tightened": 1
+      }
+    }
+  ]
+}
