@@ -1,7 +1,12 @@
 // Lifecycle hosts can leave stdin open. Bound bytes and waiting on every path.
 function readHookInput(callback) {
-  let input = '';
+  const chunks = [];
+  let data = null;
   let bytes = 0;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  let complete = false;
   let done = false;
   const timer = setTimeout(finish, 1000);
   timer.unref();
@@ -13,11 +18,36 @@ function readHookInput(callback) {
   function onData(chunk) {
     bytes += Buffer.byteLength(chunk);
     if (bytes > 32e6) {
-      input = '';
       finish();
       return;
     }
-    input += chunk;
+    if (complete) return;
+    chunks.push(chunk);
+    // Find the object boundary once; JSON.parse still validates the full payload.
+    for (const char of chunk) {
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (char === '\\') escaped = true;
+        else if (char === '"') inString = false;
+      } else if (char === '"') inString = true;
+      else if (char === '{') depth += 1;
+      else if (char === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          complete = true;
+          break;
+        }
+      }
+    }
+    if (!complete) return;
+    let parsed;
+    try {
+      parsed = JSON.parse(chunks.join('').replace(/^\uFEFF/, ''));
+    } catch (e) { return; /* malformed input uses the fallback at EOF or timeout */ }
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      data = parsed;
+      finish();
+    }
   }
 
   function finish() {
@@ -28,11 +58,6 @@ function readHookInput(callback) {
     process.stdin.removeListener('end', finish);
     process.stdin.removeListener('error', finish);
     process.stdin.destroy();
-    let data = null;
-    try {
-      const parsed = JSON.parse(input.replace(/^\uFEFF/, ''));
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) data = parsed;
-    } catch (e) { /* absent or malformed payload uses the caller's legacy fallback */ }
     callback(data);
   }
 }

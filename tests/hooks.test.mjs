@@ -14,6 +14,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import vm from "node:vm";
+import { PassThrough } from "node:stream";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
@@ -162,6 +163,43 @@ function parses(text) {
     // The throw IS the answer: this predicate asks whether the text parses.
     return false;
   }
+}
+
+// --- hook input --------------------------------------------------------------
+
+for (const { name, chunks, expected, fallback } of [
+  { name: "complete object", chunks: ['{"session_id":"A"}'], expected: { session_id: "A" } },
+  { name: "chunked BOM object", chunks: ['\uFEFF{', '"nested":{"text":"}\\\""},', '"off":false,"zero":0,"empty":""}  \n'],
+    expected: { nested: { text: '}"' }, off: false, zero: 0, empty: "" } },
+  { name: "split escape", chunks: ['{"text":"brace } and quote \\', '" and slash \\', '\\","array":[{},{}]}'],
+    expected: { text: 'brace } and quote " and slash \\', array: [{}, {}] } },
+  { name: "empty input", chunks: [], expected: null, fallback: true },
+  { name: "partial object", chunks: ['{"session_id":'], expected: null, fallback: true },
+  { name: "malformed object", chunks: ['{oops}'], expected: null, fallback: true },
+  { name: "non-object input", chunks: ['[]'], expected: null, fallback: true },
+]) {
+  const stdin = new PassThrough();
+  let timeout;
+  let cleared = false;
+  const context = {
+    process: { stdin }, Buffer, module: { exports: {} },
+    setTimeout(callback) { timeout = callback; return { unref() {} }; },
+    clearTimeout() { cleared = true; },
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(HOOKS, "lazy-input.js"), "utf8"), context);
+  const received = [];
+  context.module.exports.readHookInput((data) => received.push(data));
+  for (const [index, chunk] of chunks.entries()) {
+    stdin.write(chunk);
+    if (index < chunks.length - 1) eq(`${name}: waits for the remaining chunks`, received.length, 0);
+  }
+  eq(`${name}: callback count before timeout or EOF`, received.length, fallback ? 0 : 1);
+  if (fallback) timeout();
+  eq(`${name}: parsed payload`, JSON.stringify(received), JSON.stringify([expected]));
+  ok(`${name}: clears timer and destroys stdin`, cleared && stdin.destroyed);
+  eq(`${name}: removes input listeners`, ["data", "end", "error"].map((event) => stdin.listenerCount(event)), [0, 0, 0]);
+  timeout();
+  eq(`${name}: completes only once`, received.length, 1);
 }
 
 // --- lazy-config -------------------------------------------------------------
@@ -1776,9 +1814,17 @@ if (!canRunBash) {
 const PROMPT_MS = process.platform === "win32" ? 10_000 : 3000;
 const asyncBox = freshHome("noeof");
 {
+  const box = freshHome("large-noeof");
+  const payload = JSON.stringify({ prompt: "/lazy ultra", padding: "}".repeat(16e6) });
+  const result = await runHookNoEof("lazy-mode-tracker.js", payload, box.env);
+  eq("16 MB valid input without EOF changes mode", [result.status, result.stdout],
+    [0, "LAZY MODE CHANGED — level: ultra"]);
+  ok("16 MB valid input retains its mode", fs.existsSync(box.flag) && fs.readFileSync(box.flag, "utf8") === "ultra");
+}
+{
   fs.rmSync(asyncBox.flag, { force: true });
   const res = await runHookNoEof("lazy-mode-tracker.js", '{"prompt":"/lazy ultra"}', asyncBox.env);
-  eq("mode-tracker recovers without EOF (1s fallback)",
+  eq("mode-tracker recovers without EOF",
     [res.status, res.stdout, fs.readFileSync(asyncBox.flag, "utf8")],
     [0, "LAZY MODE CHANGED — level: ultra", "ultra"]);
   ok("mode-tracker exits promptly without EOF", res.ms < PROMPT_MS, `${res.ms}ms`);
