@@ -1,0 +1,8 @@
+FAIL ultra survives resume: The input did not match the regular expression /level: ultra/. Input:
+FAIL ultra survives compact: The input did not match the regular expression /level: ultra/. Input:
+FAIL lite survives resume: The input did not match the regular expression /level: lite/. Input:
+FAIL lite survives compact: The input did not match the regular expression /level: lite/. Input:
+FAIL off survives resume: The input was expected to not match the regular expression /LAZY MODE ACTIVE/. Input:
+FAIL off survives compact: The input was expected to not match the regular expression /LAZY MODE ACTIVE/. Input:
+FAIL B startup cannot reset A: The input did not match the regular expression /ultra/. Input:
+FAIL A subagent inherits A not B: The input did not match the regular expression /level: ultra/. Input:

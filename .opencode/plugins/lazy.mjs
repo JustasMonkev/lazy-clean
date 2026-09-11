@@ -21,26 +21,14 @@ const require = createRequire(import.meta.url);
 const { getLazyInstructions } = require('../../hooks/lazy-instructions');
 const { getDefaultMode, normalizeMode, writeDefaultMode } = require('../../hooks/lazy-config');
 const { parseCommandFile } = require('./lazy-frontmatter.cjs');
+const { modeState } = require('../../hooks/lazy-state');
 
-// OpenCode has no flag-file convention of its own; keep mode beside its config.
-const statePath = path.join(
+const stateDir = path.join(
   process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'),
   'opencode',
-  '.lazy-active',
 );
-
-function readMode() {
-  try {
-    return normalizeMode(fs.readFileSync(statePath, 'utf8').trim()) || getDefaultMode();
-  } catch (e) {
-    return getDefaultMode();
-  }
-}
-
-function writeMode(mode) {
-  fs.mkdirSync(path.dirname(statePath), { recursive: true });
-  fs.writeFileSync(statePath, mode);
-}
+const statePath = path.join(stateDir, '.lazy-active');
+const readMode = (state) => normalizeMode(state.readMode()) || getDefaultMode();
 
 export default async ({ client } = {}) => {
   const log = (level, message) => {
@@ -54,7 +42,18 @@ export default async ({ client } = {}) => {
     } catch (e) { /* logging must never break a turn */ }
   };
 
+  const injected = new WeakMap();
   const lazySkillsDir = path.resolve(__dirname, '../../skills');
+  const sessionState = (sessionID) => {
+    const state = modeState(stateDir, sessionID);
+    try {
+      state.migrateLegacyMode();
+      return state;
+    } catch (e) {
+      log('error', 'lazy: could not migrate the legacy session level (' + e.message + ')');
+      return null;
+    }
+  };
 
   return {
     // Register slash commands + skills directory.
@@ -80,23 +79,29 @@ export default async ({ client } = {}) => {
     },
 
     // Append the ruleset to the system prompt every turn.
-    'experimental.chat.system.transform': async (_input, output) => {
-      const mode = readMode();
+    'experimental.chat.system.transform': async (input, output) => {
+      const state = sessionState(input && input.sessionID);
+      if (!state) return;
+      const mode = readMode(state);
+      if (state.scoped && !normalizeMode(state.readMode())) {
+        try { state.setMode(mode); } catch (e) { log('error', 'lazy: could not retain this session level (' + e.message + ')'); }
+      }
+      const previous = injected.get(output.system);
+      if (previous) {
+        const index = output.system.indexOf(previous);
+        if (index !== -1) output.system.splice(index, 1);
+        injected.delete(output.system);
+      }
       if (mode === 'off') return;
       const instructions = getLazyInstructions(mode);
-      if (output.system.length > 0) {
-        output.system[output.system.length - 1] += '\n\n' + instructions;
-      } else {
-        output.system.push(instructions);
-      }
+      output.system.push(instructions);
+      injected.set(output.system, instructions);
     },
 
-    // Persist `/lazy <level>` so the next turn's injection follows it.
-    // lazy: mode applies from the next message, not the current one — the
-    // transform reads the flag the command writes. Good enough; switch to a
-    // synchronous store if same-turn switching ever matters.
     'command.execute.before': async (input) => {
       if (!input || input.command !== 'lazy') return;
+      const state = sessionState(input.sessionID);
+      if (!state) return;
       const args = String(input.arguments || '').trim().split(/\s+/).filter(Boolean);
 
       // `/lazy default <level>` persists across sessions, same as the Claude
@@ -107,30 +112,21 @@ export default async ({ client } = {}) => {
           log('info', 'lazy: "' + (args[1] || '') + '" is not a default level (off|lite|full|ultra)');
           return;
         }
-        // This does NOT pin the level the chat is running at, and the asymmetry
-        // with the Claude hook is deliberate. There, lazy-activate.js rewrites
-        // the flag file at SessionStart, so a pin lasts exactly one session and
-        // the new default takes over at the next one. OpenCode gives this
-        // plugin no session-start event and statePath is ONE global file, so a
-        // pin written here never expires: `/lazy default ultra` wrote the old
-        // live level to it, and every later chat then read that instead of the
-        // new default — the command defeating the only thing it promises.
-        // Saying that this chat moves too is the smaller surprise.
-        // Not existsSync: readMode() falls back to the default for an empty or
-        // invalid file just as it does for a missing one, so the question is
-        // whether a valid level is persisted, not whether a file is there.
-        let sessionLevel = null;
-        try { sessionLevel = normalizeMode(fs.readFileSync(statePath, 'utf8').trim()); } catch (e) { /* no state yet */ }
-        // A persisted level is CLEARED, and that is the whole point of the
-        // command working at all here. statePath is one global file with no
-        // session boundary, so a `/lazy lite` run in any chat, ever, outranked
-        // the config from then on: `/lazy default ultra` saved ultra, logged
-        // success, and every later chat still started at lite. Forever.
-        //
-        // Leaving it would mean preserving a level that cannot be attributed to
-        // this chat — the file does not record which chat wrote it — at the
-        // price of the command never taking effect. So it goes, and the report
-        // says so rather than letting the user discover it later.
+        if (state.scoped) {
+          try {
+            if (!normalizeMode(state.readMode())) state.setMode(readMode(state));
+            const saved = writeDefaultMode(persisted) || persisted;
+            const override = normalizeMode(process.env.LAZY_DEFAULT_MODE);
+            log('info', override && override !== saved
+              ? 'lazy: default saved as ' + saved + ', but LAZY_DEFAULT_MODE=' + override + ' overrides it'
+              : 'lazy default ' + saved + ' (new sessions only; this session stays ' + readMode(state) + ')');
+          } catch (e) {
+            log('error', 'lazy: could not change the default (' + e.message + ')');
+          }
+          return;
+        }
+        // Older hosts without sessionID keep the documented global fallback.
+        const sessionLevel = normalizeMode(state.readMode());
         let cleared = null;
         // An unwritable config directory threw straight into OpenCode's hook
         // runner; the Claude tracker already catches this case and reports it.
@@ -174,7 +170,7 @@ export default async ({ client } = {}) => {
       // Bare `/lazy` reports; it must not overwrite the live level with the
       // config default the way it used to.
       if (args.length === 0) {
-        log('info', 'lazy ' + readMode());
+        log('info', 'lazy ' + readMode(state));
         return;
       }
 
@@ -188,7 +184,7 @@ export default async ({ client } = {}) => {
         return;
       }
       try {
-        writeMode(mode);
+        state.setMode(mode);
         log('info', 'lazy ' + mode);
       } catch (e) {
         log('error', 'lazy: could not switch to ' + mode + ' (' + e.message + ')');

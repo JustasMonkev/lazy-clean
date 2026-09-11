@@ -11,86 +11,95 @@ const path = require('path');
 const { getDefaultMode, getClaudeDir, isShellSafe } = require('./lazy-config');
 const { getLazyInstructions } = require('./lazy-instructions');
 const {
-  clearMode,
+  getSessionState,
   isCodex,
   isCopilot,
-  setMode,
   writeHookOutput,
 } = require('./lazy-runtime');
 
 const claudeDir = getClaudeDir();
 const settingsPath = path.join(claudeDir, 'settings.json');
 
-const mode = getDefaultMode();
+const { readHookInput } = require('./lazy-input');
 
-// "off" mode — skip activation entirely, don't write flag or emit rules
-if (mode === 'off') {
-  clearMode();
-  const hookOutput = (isCodex || isCopilot) ? '' : 'OK';
-  writeHookOutput('SessionStart', 'off', hookOutput);
-  process.exit(0);
-}
+readHookInput((data) => {
+  const { readMode, setMode, clearMode, scoped } = getSessionState(data && data.session_id);
+  const restoring = data && (data.source === 'resume' || data.source === 'compact');
+  // Legacy hooks represent off by absence; identified sessions persist off explicitly.
+  const mode = restoring ? (readMode() || (scoped ? getDefaultMode() : 'off')) : getDefaultMode();
 
-// 1. Write flag file
-try {
-  setMode(mode);
-} catch (e) {
-  // Silent fail -- flag is best-effort, don't block the hook
-}
-
-// 2. Emit the lazy ruleset, filtered to the active intensity level.
-let output = getLazyInstructions(mode);
-
-// 3. Detect missing statusline config — nudge Claude to help set it up
-if (!isCodex && !isCopilot) try {
-  let hasStatusline = false;
-  if (fs.existsSync(settingsPath)) {
-    // Strip UTF-8 BOM some editors prepend on Windows (breaks JSON.parse)
-    const raw = fs.readFileSync(settingsPath, 'utf8').replace(/^\uFEFF/, '');
-    const settings = JSON.parse(raw);
-    if (settings.statusLine) {
-      hasStatusline = true;
-    }
+  // Identified sessions retain explicit off; legacy callers keep absence-as-off.
+  if (mode === 'off') {
+    if (scoped) {
+      try { setMode('off'); } catch (e) { /* activation remains advisory */ }
+    } else clearMode();
+    const hookOutput = (isCodex || isCopilot) ? '' : 'OK';
+    writeHookOutput('SessionStart', 'off', hookOutput);
+    return;
   }
 
-  // Nudge at most once — the flag file marks that the user has already seen
-  // (and implicitly declined) the statusline setup offer. Repeating it every
-  // session start turns a helpful hint into a nag.
-  const nudgeFlagPath = path.join(claudeDir, '.lazy-statusline-nudged');
-  if (!hasStatusline && !fs.existsSync(nudgeFlagPath)) {
-    try { fs.writeFileSync(nudgeFlagPath, ''); } catch (e) { /* best-effort: without the flag the hint simply shows again */ }
-    const isWindows = process.platform === 'win32';
-    const scriptName = isWindows ? 'lazy-statusline.ps1' : 'lazy-statusline.sh';
-    const scriptPath = path.join(__dirname, scriptName);
-    if (isShellSafe(scriptPath)) {
-      const command = isWindows
-        ? `powershell -ExecutionPolicy Bypass -File "${scriptPath}"`
-        : `bash "${scriptPath}"`;
-      const statusLineSnippet =
-        '"statusLine": { "type": "command", "command": ' + JSON.stringify(command) + ' }';
-      output += "\n\n" +
-        "STATUSLINE SETUP NEEDED: The lazy plugin includes a statusline badge showing active mode " +
-        "(e.g. [LAZY], [LAZY:ULTRA]). It is not configured yet. " +
-        "To enable, add this to " + settingsPath + ": " +
-        statusLineSnippet + " " +
-        "Proactively offer to set this up for the user on first interaction.";
-    } else {
-      // lazy: install path has shell metacharacters — don't embed it in a
-      // command snippet; have the agent wire it up by hand instead.
-      output += "\n\n" +
-        "STATUSLINE SETUP NEEDED: The lazy plugin includes a statusline badge showing active mode. " +
-        "Its install path contains characters unsafe to embed in a shell command, so configure it manually: " +
-        "add a statusLine command of type \"command\" that runs " + scriptName +
-        " from the plugin's hooks directory to " + settingsPath + ", quoting/escaping the path for your shell. " +
-        "Proactively offer to set this up for the user on first interaction.";
-    }
+  // 1. Write flag file
+  try {
+    setMode(mode);
+  } catch (e) {
+    // Silent fail -- flag is best-effort, don't block the hook
   }
-} catch (e) {
-  // Silent fail — don't block session start over statusline detection
-}
 
-try {
-  writeHookOutput('SessionStart', mode, output);
-} catch (e) {
-  // Silent fail — stdout closed/EPIPE at hook exit must not surface as a hook failure
-}
+  // 2. Emit the lazy ruleset, filtered to the active intensity level.
+  let output = getLazyInstructions(mode);
+
+  // 3. Detect missing statusline config — nudge Claude to help set it up
+  if (!isCodex && !isCopilot) try {
+    let hasStatusline = false;
+    if (fs.existsSync(settingsPath)) {
+      // Strip UTF-8 BOM some editors prepend on Windows (breaks JSON.parse)
+      const raw = fs.readFileSync(settingsPath, 'utf8').replace(/^\uFEFF/, '');
+      const settings = JSON.parse(raw);
+      if (settings.statusLine) {
+        hasStatusline = true;
+      }
+    }
+
+    // Nudge at most once — the flag file marks that the user has already seen
+    // (and implicitly declined) the statusline setup offer. Repeating it every
+    // session start turns a helpful hint into a nag.
+    const nudgeFlagPath = path.join(claudeDir, '.lazy-statusline-nudged');
+    if (!hasStatusline && !fs.existsSync(nudgeFlagPath)) {
+      try { fs.writeFileSync(nudgeFlagPath, ''); } catch (e) { /* best-effort: without the flag the hint simply shows again */ }
+      const isWindows = process.platform === 'win32';
+      const scriptName = isWindows ? 'lazy-statusline.ps1' : 'lazy-statusline.sh';
+      const scriptPath = path.join(__dirname, scriptName);
+      if (isShellSafe(scriptPath)) {
+        const command = isWindows
+          ? `powershell -ExecutionPolicy Bypass -File "${scriptPath}"`
+          : `bash "${scriptPath}"`;
+        const statusLineSnippet =
+          '"statusLine": { "type": "command", "command": ' + JSON.stringify(command) + ' }';
+        output += "\n\n" +
+          "STATUSLINE SETUP NEEDED: The lazy plugin includes a statusline badge showing active mode " +
+          "(e.g. [LAZY], [LAZY:ULTRA]). It is not configured yet. " +
+          "To enable, add this to " + settingsPath + ": " +
+          statusLineSnippet + " " +
+          "Proactively offer to set this up for the user on first interaction.";
+      } else {
+        // lazy: install path has shell metacharacters — don't embed it in a
+        // command snippet; have the agent wire it up by hand instead.
+        output += "\n\n" +
+          "STATUSLINE SETUP NEEDED: The lazy plugin includes a statusline badge showing active mode. " +
+          "Its install path contains characters unsafe to embed in a shell command, so configure it manually: " +
+          "add a statusLine command of type \"command\" that runs " + scriptName +
+          " from the plugin's hooks directory to " + settingsPath + ", quoting/escaping the path for your shell. " +
+          "Proactively offer to set this up for the user on first interaction.";
+      }
+    }
+  } catch (e) {
+    // Silent fail — don't block session start over statusline detection
+  }
+
+  try {
+    writeHookOutput('SessionStart', mode, output);
+  } catch (e) {
+    // Silent fail — stdout closed/EPIPE at hook exit must not surface as a hook failure
+  }
+
+});

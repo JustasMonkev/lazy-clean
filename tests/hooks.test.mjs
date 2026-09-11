@@ -14,6 +14,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import vm from "node:vm";
+import { PassThrough } from "node:stream";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
@@ -162,6 +163,43 @@ function parses(text) {
     // The throw IS the answer: this predicate asks whether the text parses.
     return false;
   }
+}
+
+// --- hook input --------------------------------------------------------------
+
+for (const { name, chunks, expected, fallback } of [
+  { name: "complete object", chunks: ['{"session_id":"A"}'], expected: { session_id: "A" } },
+  { name: "chunked BOM object", chunks: ['\uFEFF{', '"nested":{"text":"}\\\""},', '"off":false,"zero":0,"empty":""}  \n'],
+    expected: { nested: { text: '}"' }, off: false, zero: 0, empty: "" } },
+  { name: "split escape", chunks: ['{"text":"brace } and quote \\', '" and slash \\', '\\","array":[{},{}]}'],
+    expected: { text: 'brace } and quote " and slash \\', array: [{}, {}] } },
+  { name: "empty input", chunks: [], expected: null, fallback: true },
+  { name: "partial object", chunks: ['{"session_id":'], expected: null, fallback: true },
+  { name: "malformed object", chunks: ['{oops}'], expected: null, fallback: true },
+  { name: "non-object input", chunks: ['[]'], expected: null, fallback: true },
+]) {
+  const stdin = new PassThrough();
+  let timeout;
+  let cleared = false;
+  const context = {
+    process: { stdin }, Buffer, module: { exports: {} },
+    setTimeout(callback) { timeout = callback; return { unref() {} }; },
+    clearTimeout() { cleared = true; },
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(HOOKS, "lazy-input.js"), "utf8"), context);
+  const received = [];
+  context.module.exports.readHookInput((data) => received.push(data));
+  for (const [index, chunk] of chunks.entries()) {
+    stdin.write(chunk);
+    if (index < chunks.length - 1) eq(`${name}: waits for the remaining chunks`, received.length, 0);
+  }
+  eq(`${name}: callback count before timeout or EOF`, received.length, fallback ? 0 : 1);
+  if (fallback) timeout();
+  eq(`${name}: parsed payload`, JSON.stringify(received), JSON.stringify([expected]));
+  ok(`${name}: clears timer and destroys stdin`, cleared && stdin.destroyed);
+  eq(`${name}: removes input listeners`, ["data", "end", "error"].map((event) => stdin.listenerCount(event)), [0, 0, 0]);
+  timeout();
+  eq(`${name}: completes only once`, received.length, 1);
 }
 
 // --- lazy-config -------------------------------------------------------------
@@ -495,7 +533,7 @@ eq("state file: the same id is always the same file", qoderStateFile("sess"), qo
 
 // setMode / readMode / clearMode round-trip and read failure modes. readMode
 // validates: the flag file is hand-editable, so anything that is not a level
-// must reach callers as null (off) rather than verbatim.
+// must reach callers as null (no persisted level) rather than verbatim.
 const stateBox = freshHome("modestate");
 withEnv(stateBox.env, () => {
   delete require.cache[require.resolve(path.join(HOOKS, "lazy-runtime.js"))];
@@ -721,9 +759,9 @@ ok("qoder reports the level a bare /lazy just initialized",
   bare.startsWith("LAZY MODE ACTIVE — level: full") && !bare.includes("LAZY MODE OFF"), bare.slice(0, 120));
 eq("a bare /lazy on qoder still initializes the flag", r.flag, "full");
 r = track({ prompt: "/lazy" }, { flag: null, config: null, env: { ...qoder, LAZY_DEFAULT_MODE: "off" } });
-eq("a bare /lazy with an off default reports off and writes nothing",
+eq("a bare /lazy with an off default reports and pins off",
   [r.flag, JSON.parse(r.stdout).hookSpecificOutput.additionalContext],
-  [null, "LAZY MODE OFF — start with /lazy lite|full|ultra."]);
+  ["off", "LAZY MODE OFF — start with /lazy lite|full|ultra."]);
 
 // `/lazy default` changes what LATER sessions start at. Qoder's initializer
 // above reads the default to pick the live level, so writing a new one used to
@@ -796,6 +834,24 @@ ok("an env override that agrees is not reported as a conflict",
   ok("a later qoder session adopts the new default",
     /LAZY MODE ACTIVE — level: ultra/.test(later.stdout), later.stdout.slice(0, 160));
   eq("the later session pins its own state", stateOf("sessionB"), "ultra");
+}
+
+for (const mode of ["off", "ultra"]) {
+  const box = freshHome(`qoder-legacy-${mode}`);
+  const sessionId = `legacy-${mode}`;
+  const state = path.join(box.home, ".qoder", qoderStateFile(sessionId));
+  fs.mkdirSync(path.dirname(state), { recursive: true });
+  fs.writeFileSync(state, mode);
+  const result = runHook("lazy-mode-tracker.js", JSON.stringify({ prompt: "hello" }), {
+    ...box.env,
+    QODER_SESSION_ID: sessionId,
+  });
+  const context = parses(result.stdout)
+    ? JSON.parse(result.stdout).hookSpecificOutput?.additionalContext || ""
+    : result.stdout;
+  ok(`Qoder reads a legacy UTF-8 state file for ${mode}`,
+    mode === "off" ? result.status === 0 && context === "" : /level: ultra/.test(context),
+    `${result.status}: ${context}`);
 }
 
 // The state directory and the config directory fail independently here too, and
@@ -955,7 +1011,7 @@ ok("matcher: alternation", injected(s));
 s = subagent('{"agent_type":"general-purpose"}', { matcher: "^explore$" });
 eq("matcher: definite mismatch skips injection", [s.status, s.stdout], [0, ""]);
 for (const [name, payload] of [
-  ["missing agent_type", '{"session_id":"x"}'],
+  ["missing agent_type", '{}'],
   ["empty agent_type", '{"agent_type":""}'],
   ["malformed JSON", "{oops"],
   ["empty stdin", ""],
@@ -1372,41 +1428,10 @@ e = editCheck(toolPayload(floodTs));
 ok("a findings-heavy file still gets a capped report",
   e.stdout.includes("more on these lines, not listed."), e.stdout.slice(0, 200));
 
-// Neither statusline may coerce the stored preference: getHideStatus() requires
-// the property to be strictly boolean true. The .sh path is exercised above;
-// PowerShell is not installed here, so this is a drift guard on the source.
-{
-  const ps1 = fs.readFileSync(path.join(ROOT, "hooks", "lazy-statusline.ps1"), "utf8");
-  ok("the PowerShell statusline requires a boolean hideStatus", /-is \[bool\]/.test(ps1));
-  // All three answer the same question on every render, so a file sized between
-  // two different caps would make them disagree about the badge.
-  {
-    const limit = String(config.CONFIG_SIZE_LIMIT);
-    ok("the PowerShell statusline caps the config size at the shared limit",
-      ps1.includes(limit), limit);
-    ok("the Bash statusline caps the config size at the shared limit",
-      fs.readFileSync(path.join(HOOKS, "lazy-statusline.sh"), "utf8").includes(limit), limit);
-  }
-  // The FLAG cap, which is a different limit from the config one. There is no
-  // pwsh here to run the PowerShell statusline against, so this asserts the two
-  // scripts carry the same number -- the drift that would make one of them stall
-  // where the other rejects.
-  {
-    const sh = fs.readFileSync(path.join(HOOKS, "lazy-statusline.sh"), "utf8");
-    const flagCap = /read -r -n (\d+) -d/u.exec(sh);
-    ok("the Bash statusline caps the mode flag", flagCap !== null, sh.slice(0, 200));
-    // Off by one on purpose: `read -n N` succeeding means the file holds at
-    // least N chars, i.e. length > N-1, which is the ps1's `-gt N-1`. Equal
-    // raw numbers would reject an exactly-at-cap flag in bash that readMode()
-    // and the ps1 both accept.
-    ok("the PowerShell statusline caps the mode flag at the same size",
-      ps1.includes(`.Length -gt ${flagCap[1] - 1}`), flagCap && flagCap[1]);
-  }
-  // PowerShell member access is case-insensitive, so `.hideStatus` answered for
-  // a `HideStatus` key that getHideStatus() ignores. Static guard: there is no
-  // pwsh in CI, so this asserts the source shape rather than the behaviour.
-  ok("the PowerShell statusline matches the key case-sensitively",
-    /-ceq 'hideStatus'/.test(ps1) && !/\)\.hideStatus/.test(ps1), ps1.slice(0, 200));
+// Both platform launchers delegate to the same behavior-tested statusline.
+for (const file of ["lazy-statusline.sh", "lazy-statusline.ps1"]) {
+  const launcher = fs.readFileSync(path.join(HOOKS, file), "utf8");
+  ok(`${file} uses the shared statusline`, launcher.includes("lazy-statusline.js"));
 }
 
 // The OpenCode template is what /lazy-debt actually runs there, so it has to
@@ -1789,9 +1814,17 @@ if (!canRunBash) {
 const PROMPT_MS = process.platform === "win32" ? 10_000 : 3000;
 const asyncBox = freshHome("noeof");
 {
+  const box = freshHome("large-noeof");
+  const payload = JSON.stringify({ prompt: "/lazy ultra", padding: "}".repeat(16e6) });
+  const result = await runHookNoEof("lazy-mode-tracker.js", payload, box.env);
+  eq("16 MB valid input without EOF changes mode", [result.status, result.stdout],
+    [0, "LAZY MODE CHANGED — level: ultra"]);
+  ok("16 MB valid input retains its mode", fs.existsSync(box.flag) && fs.readFileSync(box.flag, "utf8") === "ultra");
+}
+{
   fs.rmSync(asyncBox.flag, { force: true });
   const res = await runHookNoEof("lazy-mode-tracker.js", '{"prompt":"/lazy ultra"}', asyncBox.env);
-  eq("mode-tracker recovers without EOF (1s fallback)",
+  eq("mode-tracker recovers without EOF",
     [res.status, res.stdout, fs.readFileSync(asyncBox.flag, "utf8")],
     [0, "LAZY MODE CHANGED — level: ultra", "ultra"]);
   ok("mode-tracker exits promptly without EOF", res.ms < PROMPT_MS, `${res.ms}ms`);
@@ -1866,6 +1899,237 @@ const asyncBox = freshHome("noeof");
     child.on("close", (status) => { clearTimeout(killer); resolve({ status, stdout }); });
   });
   ok("a 40MB subagent payload exits 0 and fails open", res.status === 0 && parses(res.stdout));
+}
+
+// Lifecycle identity must survive a new hook process, not just a module cache.
+for (const host of ["native", "codex", "copilot"]) {
+  const box = freshHome(`lifecycle-${host}`);
+  const env = { ...box.env };
+  if (host === "codex") env.PLUGIN_DATA = path.join(box.home, "codex-data");
+  if (host === "copilot") env.COPILOT_PLUGIN_DATA = path.join(box.home, "copilot-data");
+  const invoke = (script, session_id, fields) => runHook(script, JSON.stringify({ session_id, ...fields }), env);
+  const start = (id, source) => invoke("lazy-activate.js", id, { source });
+  const command = (id, prompt) => invoke("lazy-mode-tracker.js", id, { prompt });
+  for (const mode of ["lite", "full", "ultra", "off"]) {
+    start("A", "startup");
+    command("A", `/lazy ${mode}`);
+    for (const source of ["compact", "resume"]) {
+      const restored = start("A", source);
+      ok(`${host}: ${source} preserves ${mode}`, mode === "off"
+        ? !restored.stdout.includes("LAZY MODE ACTIVE")
+        : restored.stdout.includes(`level: ${mode}`));
+    }
+  }
+  start("A", "startup");
+  command("A", "/lazy ultra");
+  start("B", "startup");
+  ok(`${host}: B does not reset A`, start("A", "resume").stdout.includes("level: ultra"));
+  const sub = invoke("lazy-subagent.js", "A", { agent_type: "general-purpose" });
+  ok(`${host}: subagent inherits A`, host === "copilot" ? sub.stdout === "{}" : sub.stdout.includes("level: ultra"));
+  const badge = invoke("lazy-statusline.js", "A", {});
+  ok(`${host}: badge reflects A rather than B`, badge.stdout.includes("[LAZY:ULTRA]"));
+  command("A", "/lazy default lite");
+  ok(`${host}: default keeps A`, start("A", "resume").stdout.includes("level: ultra"));
+  ok(`${host}: default keeps B`, start("B", "resume").stdout.includes("level: full"));
+  ok(`${host}: default reaches new C`, start("C", "startup").stdout.includes("level: lite"));
+  ok(`${host}: clear resets A`, start("A", "clear").stdout.includes("level: lite"));
+  for (const id of ["../A", "a/b", "a:b", "日本語"]) {
+    start(id, "startup");
+    command(id, "/lazy ultra");
+  }
+  command("a/b", "/lazy off");
+  ok(`${host}: colliding sanitized names stay distinct`, start("a:b", "resume").stdout.includes("level: ultra"));
+}
+
+{
+  const box = freshHome("unicode-session-collision");
+  const invoke = (script, session_id, fields) =>
+    runHook(script, JSON.stringify({ session_id, ...fields }), box.env);
+  const set = (session_id, mode) => invoke("lazy-mode-tracker.js", session_id, { prompt: `/lazy ${mode}` });
+  const resume = (session_id) => invoke("lazy-activate.js", session_id, { source: "resume" });
+
+  set("\ud800", "ultra");
+  set("\ud801", "lite");
+  set("\ufffd", "off");
+  ok("lone-surrogate session IDs retain independent modes",
+    resume("\ud800").stdout.includes("level: ultra") &&
+    resume("\ud801").stdout.includes("level: lite") &&
+    !resume("\ufffd").stdout.includes("LAZY MODE ACTIVE"));
+}
+
+for (const mode of ["off", "ultra"]) {
+  for (const entry of ["transform", "report", "default", "switch"]) {
+    const box = freshHome(`opencode-migration-${mode}-${entry}`);
+    const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
+      import assert from 'node:assert/strict';
+      import fs from 'node:fs';
+      import path from 'node:path';
+      import stateModule from ${JSON.stringify(pathToFileURL(path.join(HOOKS, 'lazy-state.js')).href)};
+      import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, '.opencode/plugins/lazy.mjs')).href)};
+      const directory = path.join(process.env.XDG_CONFIG_HOME, 'opencode');
+      const legacy = stateModule.modeState(directory);
+      legacy.setMode(${JSON.stringify(mode)});
+      stateModule.modeState(directory, 'B').setMode('lite');
+      const logs = [];
+      let hooks = await plugin({client:{app:{log:({body}) => logs.push(body)}}});
+      const command = arguments_ => hooks['command.execute.before']({command:'lazy', sessionID:'A', arguments:arguments_});
+      const render = async sessionID => {
+        const output = {system:[]};
+        await hooks['experimental.chat.system.transform']({sessionID}, output);
+        return output.system.join('\\n');
+      };
+      assert.match(await render('B'), /level: lite/);
+      assert.equal(legacy.readMode(), ${JSON.stringify(mode)});
+      const entry = ${JSON.stringify(entry)};
+      if (entry === 'report') await command('');
+      if (entry === 'default') await command('default lite');
+      if (entry === 'switch') await command('full');
+      const expected = entry === 'switch' ? 'full' : ${JSON.stringify(mode)};
+      const output = await render('A');
+      assert.equal(stateModule.modeState(directory, 'A').readMode(), expected);
+      assert.equal(legacy.readMode(), null);
+      assert.equal(fs.existsSync(path.join(directory, '.lazy-active')), false);
+      if (expected === 'off') assert.equal(output, '');
+      else assert.ok(output.includes('level: ' + expected));
+      if (entry === 'report') assert.ok(logs.some(log => log.message === 'lazy ' + expected));
+      hooks = await plugin();
+      assert.equal(await render('A'), output);
+      assert.match(await render('C'), entry === 'default' ? /level: lite/ : /level: full/);
+    `], { env: baseEnv(box.env), encoding: "utf8", timeout: 10000 });
+    eq(`OpenCode migrates legacy ${mode} once through ${entry}`, result.status, 0);
+    if (result.status !== 0) console.error(result.stderr);
+  }
+}
+
+{
+  const box = freshHome("opencode-migration-retry");
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
+    import assert from 'node:assert/strict';
+    import fs from 'node:fs';
+    import path from 'node:path';
+    import stateModule from ${JSON.stringify(pathToFileURL(path.join(HOOKS, 'lazy-state.js')).href)};
+    import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, '.opencode/plugins/lazy.mjs')).href)};
+    const directory = path.join(process.env.XDG_CONFIG_HOME, 'opencode');
+    const legacy = stateModule.modeState(directory);
+    legacy.setMode('ultra');
+    const blocked = path.join(directory, ${JSON.stringify(qoderStateFile('A'))});
+    fs.mkdirSync(blocked);
+    const logs = [];
+    const hooks = await plugin({client:{app:{log:({body}) => logs.push(body)}}});
+    const output = {system:['upstream']};
+    await hooks['experimental.chat.system.transform']({sessionID:'A'}, output);
+    await hooks['command.execute.before']({command:'lazy', sessionID:'A', arguments:'default off'});
+    assert.deepEqual(output.system, ['upstream']);
+    assert.equal(legacy.readMode(), 'ultra');
+    assert.equal(fs.existsSync(path.join(process.env.XDG_CONFIG_HOME, 'lazy', 'config.json')), false);
+    assert.ok(logs.some(log => log.level === 'error' && /migrat/.test(log.message)));
+    fs.rmdirSync(blocked);
+    await hooks['experimental.chat.system.transform']({sessionID:'A'}, output);
+    assert.match(output.system.join('\\n'), /level: ultra/);
+    assert.equal(stateModule.modeState(directory, 'A').readMode(), 'ultra');
+    assert.equal(legacy.readMode(), null);
+  `], { env: baseEnv(box.env), encoding: "utf8", timeout: 10000 });
+  eq("OpenCode preserves legacy state and retries a failed migration", result.status, 0);
+  if (result.status !== 0) console.error(result.stderr);
+}
+
+{
+  const box = freshHome("opencode-session-lifecycle");
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
+    import assert from 'node:assert/strict';
+    import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, '.opencode/plugins/lazy.mjs')).href)};
+    let hooks = await plugin();
+    const command = (sessionID, arguments_) => hooks['command.execute.before']({command:'lazy', sessionID, arguments:arguments_});
+    const render = async (sessionID, output = {system:['upstream']}) => {
+      await hooks['experimental.chat.system.transform']({sessionID}, output);
+      return output;
+    };
+    const level = async id => (await render(id)).system.join('\\n');
+    await render('B');
+    await command('A', 'ultra');
+    assert.match(await level('A'), /level: ultra/);
+    assert.match(await level('B'), /level: full/);
+    await command('A', 'default lite');
+    assert.match(await level('A'), /level: ultra/);
+    assert.match(await level('B'), /level: full/);
+    assert.match(await level('C'), /level: lite/);
+    const output = await render('A');
+    await render('A', output);
+    assert.equal(output.system.length, 2);
+    assert.equal(output.system[0], 'upstream');
+    await command('A', 'off');
+    await render('A', output);
+    assert.deepEqual(output.system, ['upstream']);
+    hooks = await plugin();
+    assert.doesNotMatch(await level('A'), /LAZY MODE ACTIVE/);
+    assert.match(await level('B'), /level: full/);
+    await command('a/b', 'ultra');
+    await command('a:b', 'off');
+    assert.match(await level('a/b'), /level: ultra/);
+    assert.doesNotMatch(await level('a:b'), /LAZY MODE ACTIVE/);
+  `], { env: baseEnv(box.env), encoding: "utf8", timeout: 10000 });
+  eq("OpenCode isolates sessions, retains defaults/off across restart, and replaces its own injection", result.status, 0);
+  if (result.status !== 0) console.error(result.stderr);
+}
+
+{
+  const box = freshHome("scoped-no-eof");
+  runHook("lazy-activate.js", '{"session_id":"A","source":"startup"}', box.env);
+  runHook("lazy-mode-tracker.js", '{"session_id":"A","prompt":"/lazy ultra"}', box.env);
+  for (const [script, payload] of [
+    ["lazy-activate.js", '{"session_id":"A","source":"compact"}'],
+    ["lazy-subagent.js", '{"session_id":"A","agent_type":"general-purpose"}'],
+    ["lazy-statusline.js", '{"session_id":"A"}'],
+  ]) {
+    const result = await runHookNoEof(script, payload, box.env);
+    ok(`${script}: scoped input without EOF retains its level`, result.status === 0 && /ultra/i.test(result.stdout));
+    ok(`${script}: scoped input without EOF is bounded`, result.ms < PROMPT_MS);
+  }
+  const bom = runHook("lazy-activate.js", '\uFEFF{"session_id":"A","source":"resume"}', box.env);
+  ok("a BOM-prefixed resume retains scoped mode", bom.stdout.includes("level: ultra"));
+  for (const payload of ['{oops', 'null', '[]', '{"source":"startup","session_id":{}}']) {
+    runHook("lazy-activate.js", payload, box.env);
+    const result = runHook("lazy-activate.js", '{"session_id":"A","source":"resume"}', box.env);
+    ok(`malformed or unidentified input cannot reset A: ${payload}`, result.stdout.includes("level: ultra"));
+  }
+}
+
+if (process.platform !== "win32") {
+  const box = freshHome("statusline-fifo");
+  fs.writeFileSync(box.flag, "ultra");
+  fs.mkdirSync(path.dirname(box.config), { recursive: true });
+  const fifo = spawnSync("mkfifo", [box.config], { encoding: "utf8" });
+  eq("FIFO regression fixture created", fifo.status, 0);
+  if (fifo.status === 0) {
+    const badge = spawnSync("bash", [STATUSLINE], { input: "{}", encoding: "utf8", env: baseEnv(box.env), timeout: 2000 });
+    ok("a config FIFO cannot block the badge", badge.status === 0 && badge.stdout.includes("[LAZY:ULTRA]"));
+  }
+}
+
+{
+  const box = freshHome("concurrent-sessions");
+  const writes = await Promise.all(Array.from({ length: 12 }, (_, i) => {
+    const session_id = i % 2 ? "A" : "B";
+    const mode = i % 2 ? "ultra" : "lite";
+    return runHookNoEof("lazy-mode-tracker.js", JSON.stringify({ session_id, prompt: `/lazy ${mode}` }), box.env);
+  }));
+  ok("concurrent session writers exit successfully", writes.every((result) => result.status === 0));
+  for (const [session_id, mode] of [["A", "ultra"], ["B", "lite"]]) {
+    const result = runHook("lazy-activate.js", JSON.stringify({ session_id, source: "resume" }), box.env);
+    ok(`concurrent writers retain ${session_id}'s ${mode}`, result.stdout.includes(`level: ${mode}`));
+  }
+  const files = fs.readdirSync(path.join(box.home, ".claude"));
+  ok("atomic session writes leave no temporary files", files.every((file) => !/\.\d+\.[a-f0-9]{12}$/u.test(file)));
+}
+
+{
+  const box = freshHome("qoder-inherited-off");
+  writeConfig(box, '{"defaultMode":"off"}');
+  const prompt = (id, text) => runHook("lazy-mode-tracker.js", JSON.stringify({ prompt: text }), { ...box.env, QODER_SESSION_ID: id });
+  eq("Qoder A starts silently with default off", prompt("A", "hello").stdout, "");
+  prompt("B", "/lazy default ultra");
+  eq("Qoder B cannot re-enable A's inherited off", prompt("A", "hello").stdout, "");
+  ok("Qoder new C receives B's default", prompt("C", "hello").stdout.includes("level: ultra"));
 }
 
 // --- summary -----------------------------------------------------------------

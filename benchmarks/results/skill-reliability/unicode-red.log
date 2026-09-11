@@ -1,0 +1,3 @@
+FAIL lone-surrogate session IDs retain independent modes
+
+663 passed, 1 failed

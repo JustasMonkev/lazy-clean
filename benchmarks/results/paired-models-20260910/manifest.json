@@ -1,0 +1,29 @@
+{
+  "at": "2026-09-10T17:48:44.889492+00:00",
+  "reportSha256": "ee892b66bd6fd017ec84a68097f3251f3a91f574565fc880450d4c2cdaaa580f",
+  "files": {
+    "README.md": "ac8819bfe0e2b0aa6f1bdc49b1b9f493d91a0cdcbe897a24a3ad4dbf67a34b78",
+    "blind-artifact-freeze.json": "dbe8a9e4fee51892afcc5b0c08eb0c6c1fa27b01602bc1c9a5c9eff12d4c3ba6",
+    "blind-map.json": "a8b0c3e8d887f8abc2d42a8e283e98ea3cd3a7c79f5389e8608eecd97db35800",
+    "execution-audit.json": "e99711b4f29976ef4a0731ff68b1de1081d72729b8a5a9c2e063cc03c979279c",
+    "final-blind-scores.json": "c82fa3d0368d9c0263fea2bcf489025a2dd601b19bc2a3d196c7c08816d2a913",
+    "grading-amendment.md": "417dea2fad047e71dece24d00943c032a96318d763d28d3f6bbaa87db0bbb2f8",
+    "harness-audit.md": "726549ee0642d3b941605e2581cb8f9c17cd6d22f4d7eb444423be9ad43495ed",
+    "judging-packets.json": "c383983bae15e1f2a9671b95280e46c278625f4e4b0d1291cbf1311132244877",
+    "judgments-calibration.json": "c64a29025ce646a1de54b8b096acc4c75dc8e41b2a8672efebd5757cd4118abd",
+    "judgments-calibration.md": "39af0e4ec566170d5971e5e48555a77e0e8a01824c1fb0b99fd81f8cecd12d9b",
+    "judgments-cli.json": "ff7559cad10cb0b966c954d8db767d32047aed14edd364c927c11570c3245567",
+    "judgments-url.json": "f4ba03ca3378b4f448805d29e2d121244332c0e7c5b656ad0628a575b22f1da5",
+    "lazy-paired-eval-design.md": "93d6a54386f14d7bf6f80c97f95fd17398b7c9b2ae356c52a1922a22e7009a66",
+    "lazy-paired-hidden-cli.cjs": "88c78839b613340e82a873b617891d9f6bb009ff763cd1e4af98557c5fa6dcf7",
+    "lazy-paired-hidden-url.cjs": "0e6990718144a53d25f625adf097dd9cddc61c43a79b4fd30e1655f08870d124",
+    "primary-judgment-freeze.json": "a8e2870eb06314a848ba9d559a84094384cf97f9eb502c9834ef70450096749c",
+    "protocol.json": "7407b484485f812193c6e47355f454c656097f9ff661b8fb339187f49ee04dfa",
+    "reproduction.json": "312b8ad11347eecab8766f4c360233d136c06afe183bbd8e9adda6b8d2a7df09",
+    "scores.json": "d3afaa30eb17b501642cd566408a1249ffbd64ac61630af5f7ee92190ed5fb80",
+    "skill-use.json": "733ab151700583010f0ec0ae1ac39434fe0dcb17db6b870940abf5a4c65ec4f4",
+    "study.json": "ce4643db18262e0531e0003c0d8a27c05ba9b31a1b064b77484dcfdd245347bd",
+    "submissions.json": "63701b74dc1a411acff6c6d7f18b85bd4f0d3418278b74502379a8040b1a67e5",
+    "summary.json": "384f56a826791994b9864429c3744599cd4f0ded23a1099f17a2e867352a0351"
+  }
+}

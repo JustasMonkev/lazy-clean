@@ -1,0 +1,147 @@
+{
+  "codex": {
+    "reviewCommand": "codex review --uncommitted",
+    "exit": 0,
+    "verdict": "No actionable regressions",
+    "log": "/tmp/lazy-codex-approved-review.log",
+    "sourceSha256": {
+      ".opencode/plugins/lazy.mjs": "15fec683b7b180b6b0de7f2d6b5f732d10499fde608d71afb492705caa2e757f",
+      "hooks/lazy-activate.js": "c3f644fd8119e54eaa625f24092675747748374eca71821016e143c82fc9926b",
+      "hooks/lazy-config.js": "43cea01aad56ec9d75c00471e1c49f8d5fc135ba8fdfd1491993e8616c802028",
+      "hooks/lazy-input.js": "3e75a73ac28f06c9fdaa14d41ec8bc75c438488455872371011e1415a2a3330c",
+      "hooks/lazy-instructions.js": "cee7e7ffb1db7df9d0176881d1a32f7572db5947cde27d45e4bebc0d5173443b",
+      "hooks/lazy-mode-tracker.js": "9fa54526b07cd25f0a9e18cf0c22e72215698433eab4c918778144ac7c1e8316",
+      "hooks/lazy-runtime.js": "59467bfa9edc9a731e5df2bb6534b85e917ac34f9b2331d96e332142dac4115a",
+      "hooks/lazy-state.js": "d2323c231b554f9d1ad0df7d80477b85bcb6533619d58b7dfb85bbcf3fa0bb6f",
+      "hooks/lazy-statusline.js": "8989db37c01525e61c1ca4780050644dbd593ddd18b1f465bfa46688593ffa35",
+      "hooks/lazy-statusline.ps1": "fdc7e289e936bdac85f7c96f2c887b4a6d890ced100cd2f286edb14b14e8c5a9",
+      "hooks/lazy-statusline.sh": "a2b6f70d4c7da4abccc5fad98dbf28b027096f17abb03d837d849584e611f4ef",
+      "hooks/lazy-subagent.js": "c1e0d53886343afd5eee92acc4c77bef0bd29404ba3ee99e8a6b3b5ec8110e46",
+      "tests/hooks.test.mjs": "f583a3dd87cd861b471401657309f381c1d184a5f5afbcbe422e9b0888693aff",
+      "tests/language-guidance.test.mjs": "b02f06c60a4fdedf798cdef69ce373921a58cafcd980c237311e641b59633fb2"
+    }
+  },
+  "glm": {
+    "model": "zai-coding-plan/glm-5.3-flash",
+    "agent": "build",
+    "variant": "max",
+    "isolatedDirectory": "/private/tmp/lazy-glm-writer",
+    "sourceChanges": false,
+    "candidateSourceHashesMatchCodex": true,
+    "attempts": [
+      {
+        "name": "approved first attempt",
+        "result": "internal OpenCode external-path permission failure despite CLI exit 0"
+      },
+      {
+        "name": "canonical-path retry",
+        "exit": 124,
+        "result": "600-second timeout after direct npm test exit 0, before verdict"
+      },
+      {
+        "name": "same-session final continuation",
+        "exit": 0,
+        "result": "completed final response without further tools or edits"
+      }
+    ],
+    "finalVerdict": "**VERDICT: NO FIX NEEDED** \u2014 the candidate's shared input/state/output helpers are correct; the focused question resolves against a net-negative edit.\n\n**Evidence traced (writeHookOutput callers \u00d7 hosts, per hooks/lazy-runtime.js:35-78):**\n- All 6 call sites verified against every host envelope: `lazy-activate.js:37,100` (native raw `OK`/ruleset; Codex `hookSpecificOutput`; Copilot `additionalContext`/`{}` on empty), `lazy-mode-tracker.js:71,194,200` (single-JSON-per-invocation on Qoder holds \u2014 tests at tests/hooks.test.mjs:907-915; Copilot's documented drop of non-SessionStart output is intentional and pinned at :562-563), `lazy-subagent.js:27` (Copilot `{}` pinned at :1864). Empty-context SubagentStart still emits JSON (:557-559). No caller can pass `undefined` context (default `''`).\n- `readHookInput` (hooks/lazy-input.js): byte-counted 32MB bound (stronger than HEAD's char count), 1s unref'd timer, error/EOF paths, destroy-before-callback \u2014 stdout still flushes because the pending write keeps the loop alive; proven by the no-EOF tests asserting complete parseable JSON (tests:1754-1838).\n- `modeState` (hooks/lazy-state.js): stat-before-read with `isFile()` + 4096 cap, read errors \u2192 null (off); atomic temp+`wx`+0600 write with `finally` temp cleanup; every `setMode` caller try/catches and verifies via `readMode()`; concurrency test asserts no temp litter (tests:1953-1967). Non-string session ids never reach `sessionStateFile` (`validSessionId` guard); digest disambiguates sanitized collisions (tested).\n\n**Noted but deliberately not changed (inherited, not candidate-introduced, zero behavior delta):**\n- `writeHookOutput(event, mode, context)`'s unused `mode` parameter is byte-identical to HEAD (`git show HEAD:hooks/lazy-runtime.js`) and is the live probe-test contract (tests:408); the `readMode() || 'off'` calls feeding it cost one small stat+read per prompt. Removing it touches 6 call sites + tests for no behavior change \u2014 the churn lazy/SKILL.md's \"do not force a net-negative diff\" forbids.\n- Redundant `state.readMode()` re-read in `.opencode/plugins/lazy.mjs:75` \u2014 cosmetic only.\n\n**Checks actually run (exit statuses direct):** `npm test` \u2192 0 (663 hooks + full suite; the `FAIL` lines in the tail are the benchmark harness's expected classification of unfixed \"off\" variants, whose summaries report passed); `npm run slop-check` \u2192 clean (23 files); `node skills/slop-check/scripts/check.mjs --since=HEAD` \u2192 clean (12 files); `git diff --check` \u2192 clean; `node tests/hooks.test.mjs` \u2192 663 passed, 0 failed. Old/new statusline output byte-comparable (`printf` without `\\n` at HEAD:lazy-statusline.sh:296-298 vs bare `process.stdout.write`).\n\n**Limits:** PowerShell launcher asserted by content only (no pwsh in env); the post-exit EPIPE race on `process.stdout` is not deterministically reproducible and is unchanged from HEAD; `edit-check.js` keeps its own inline stdin reader \u2014 outside the owned file list, noted not deleted.",
+    "limits": [
+      "Skill read observed; full adherence not established",
+      "No GLM implementation patch",
+      "PowerShell and live-host compaction not executed"
+    ]
+  },
+  "rawLogs": {
+    "/tmp/lazy-glm-approved-events.jsonl": "9d5a3becde2c9155bb7e479e44fc10174cba616279811aa426485ab4f1ad417c",
+    "/tmp/lazy-glm-retry-events.jsonl": "88ceef234340adcd910231e4cea71b48233e8b0614d0aba10d9d7486766e4f64",
+    "/tmp/lazy-glm-final-events.jsonl": "2d4e3e65d2d98ccd9cdf71dcf3b1b2052852ec3f346af55c486465fd2dae51cc",
+    "/tmp/lazy-glm-final-stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/tmp/lazy-codex-approved-review.log": "01a21822542c4fc291e624e25a65b187f2578b5f62182bcf50e32247b56efbca"
+  },
+  "astraGlmJudgment": {
+    "verdict": "NOT CLEAN (pre-fix candidate)",
+    "reviewQualityScore": 5,
+    "codeDeltaQuality": null,
+    "correctnessFinding": "Hash.update(id) UTF8 replacement causes distinct lone surrogates and U+FFFD to share session state; independently found by SOL and reproduced by Astra. GLM missed it.",
+    "reportCorrections": [
+      "Not all setMode callers verify by rereading",
+      "null means missing state, not universally off",
+      "Do not force a net-negative diff does not forbid removing an unused argument",
+      "Standalone hooks and package slop output were piped through tail, not direct child exit capture; later full npm test exit was captured directly"
+    ],
+    "limits": [
+      "Subjective review quality score, not model or skill effectiveness",
+      "No GLM source delta",
+      "Judgment covers pre-fix source hashes only"
+    ]
+  },
+  "codexIntermediateUnicodeReview": {
+    "command": "codex review --uncommitted",
+    "exit": 0,
+    "verdict": "P2: Preserve existing Qoder state when changing session hash",
+    "log": "/tmp/lazy-codex-final-review.log",
+    "scope": "intermediate blanket UTF16 hash; superseded by compatibility correction"
+  },
+  "codexFinalCompatibilityReview": {
+    "reviewCommand": "codex review --uncommitted",
+    "exit": 0,
+    "verdict": "No actionable regressions",
+    "log": "/tmp/lazy-codex-compat-final-review.log",
+    "sourceSha256": {
+      ".opencode/plugins/lazy.mjs": "15fec683b7b180b6b0de7f2d6b5f732d10499fde608d71afb492705caa2e757f",
+      "hooks/lazy-activate.js": "c3f644fd8119e54eaa625f24092675747748374eca71821016e143c82fc9926b",
+      "hooks/lazy-config.js": "43cea01aad56ec9d75c00471e1c49f8d5fc135ba8fdfd1491993e8616c802028",
+      "hooks/lazy-input.js": "3e75a73ac28f06c9fdaa14d41ec8bc75c438488455872371011e1415a2a3330c",
+      "hooks/lazy-instructions.js": "cee7e7ffb1db7df9d0176881d1a32f7572db5947cde27d45e4bebc0d5173443b",
+      "hooks/lazy-mode-tracker.js": "9fa54526b07cd25f0a9e18cf0c22e72215698433eab4c918778144ac7c1e8316",
+      "hooks/lazy-runtime.js": "59467bfa9edc9a731e5df2bb6534b85e917ac34f9b2331d96e332142dac4115a",
+      "hooks/lazy-state.js": "6d606923aba9577b54722bba034900231fefd2efa3662686be3caa01a88de19c",
+      "hooks/lazy-statusline.js": "8989db37c01525e61c1ca4780050644dbd593ddd18b1f465bfa46688593ffa35",
+      "hooks/lazy-statusline.ps1": "fdc7e289e936bdac85f7c96f2c887b4a6d890ced100cd2f286edb14b14e8c5a9",
+      "hooks/lazy-statusline.sh": "a2b6f70d4c7da4abccc5fad98dbf28b027096f17abb03d837d849584e611f4ef",
+      "hooks/lazy-subagent.js": "c1e0d53886343afd5eee92acc4c77bef0bd29404ba3ee99e8a6b3b5ec8110e46",
+      "tests/hooks.test.mjs": "53ddf1488ef2c76059f2bc042eb85f4a37901c062b89dc43b0d5e692b785e682",
+      "tests/language-guidance.test.mjs": "b02f06c60a4fdedf798cdef69ce373921a58cafcd980c237311e641b59633fb2"
+    },
+    "limits": [
+      "PowerShell and live-host lifecycle unverified",
+      "Optional delegated review failed network access; not counted as passed"
+    ]
+  },
+  "astraFinalRuntimeJudgment": {
+    "verdict": "CLEAN",
+    "score": 9,
+    "scope": "final compatibility-preserving source",
+    "independentChecks": [
+      "Legacy ASCII/Japanese/emoji/replacement-character IDs",
+      "Isolated lone-surrogate IDs",
+      "666 passed, 0 failed hook log",
+      "git diff --check"
+    ]
+  },
+  "solFinalJudgment": {
+    "verdict": "CLEAN",
+    "score": 9,
+    "scope": "final compatibility-preserving source",
+    "independentProbes": [
+      "Process-boundary compaction retains A ultra and B off",
+      "Statusline matches session",
+      "Legacy Qoder hash compatibility and malformed surrogate namespace",
+      "Bounded hook input cleanup",
+      "Installed OpenCode sessionID hook types"
+    ]
+  },
+  "finalWorktreeAudit": {
+    "diffWhitespace": {
+      "exit": 0,
+      "output": ""
+    },
+    "noStagedChanges": {
+      "exit": 0,
+      "output": ""
+    },
+    "head": "ec008bca92241cacb29dee3e04d7d2e95340de03",
+    "appiumStatus": "?? .zvec-grep/\n",
+    "reviewedSourcesUnchanged": true
+  }
+}

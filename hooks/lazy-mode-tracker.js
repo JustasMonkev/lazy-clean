@@ -3,18 +3,14 @@
 // Inspects user input for /lazy commands and writes mode to flag file
 
 const { getDefaultMode, isDeactivationCommand, normalizeMode, writeDefaultMode } = require('./lazy-config');
-const { clearMode, isQoder, readMode, setMode, writeHookOutput } = require('./lazy-runtime');
+const { getSessionState, isQoder, writeHookOutput } = require('./lazy-runtime');
+const { readHookInput } = require('./lazy-input');
 const { getLazyInstructions } = require('./lazy-instructions');
 
-let input = '';
-let done = false;
-
-function finish() {
-  if (done) return;
-  done = true;
+readHookInput((data) => {
+  if (!data) return;
+  const { clearMode, readMode, setMode, scoped } = getSessionState(data.session_id);
   try {
-    // Strip UTF-8 BOM some shells prepend when piping (breaks JSON.parse)
-    const data = JSON.parse(input.replace(/^\uFEFF/, ''));
     let prompt = (data.prompt || '').trim().toLowerCase();
 
     // Claude Code dispatches /lazy as a skill: data.prompt then carries
@@ -34,25 +30,15 @@ function finish() {
     // say and exactly one write happens at the end: writing from the branches
     // emitted two concatenated objects on Qoder, where the ruleset below is
     // also written, and neither could be parsed.
-    // On Claude Code and Codex an absent flag IS off, because lazy-activate.js
-    // rewrites it at SessionStart. Qoder has no SessionStart, so this hook
-    // derives the level from the config default whenever no flag exists — which
-    // made "absent" mean BOTH "the user turned lazy off" and "this session has
-    // not started yet". `/lazy off` therefore lasted exactly one prompt: the
-    // next one re-derived `full` and turned lazy back on, and `/lazy default`
-    // re-enabled it the same way. Qoder gets an explicit `off` on disk; the
-    // other hosts keep the absent-is-off contract.
-    // Returns whether lazy is ACTUALLY off now, read back from disk rather than
-    // assumed. Both writes swallow their own failures -- clearMode() ignores a
-    // failed unlink by design -- so a state file that could not be written left
-    // the previous level in place while the hook still answered LAZY MODE OFF,
-    // and the next prompt injected the ruleset again.
+    // Session-scoped state needs explicit off so restore cannot mistake it for
+    // an uninitialized session. Legacy no-ID callers retain absence-as-off.
+    // Verify writes before reporting a successful switch.
     const turnOff = () => {
-      if (isQoder) {
+      if (isQoder || scoped) {
         try {
           setMode('off');
         } catch (e) { /* checked below, not assumed */ }
-        // On Qoder an absent flag means "derive from the default", not off, so
+        // In scoped state absence means "not initialized", not off, so
         // only an explicit `off` on disk counts as deactivated here.
         return readMode() === 'off';
       }
@@ -93,7 +79,7 @@ function finish() {
         if (arg === 'default') {
           const dmode = parts[2];
           if (dmode === 'off' || dmode === 'lite' || dmode === 'full' || dmode === 'ultra') {
-            // On Qoder the live level is derived from the config default
+            // A missing scoped level is derived from the config default
             // whenever no flag exists, so this session has to be pinned BEFORE
             // the default moves. Pinning afterwards left a failed pin with the
             // new default already written, and the next prompt adopted it — the
@@ -101,7 +87,7 @@ function finish() {
             // `off` is pinned like any level: absent means "derive", not "off",
             // once the value it would derive from has changed.
             let pinned = true;
-            if (isQoder && !readMode()) {
+            if ((isQoder || scoped) && !readMode()) {
               try {
                 setMode(getDefaultMode());
               } catch (e) {
@@ -153,7 +139,7 @@ function finish() {
       if (handled) {
         // The branch above already said what happened.
       } else if (isReportOnly) {
-        notice = mode ? 'LAZY MODE ACTIVE — level: ' + mode : 'LAZY MODE OFF — start with /lazy lite|full|ultra.';
+        notice = mode && mode !== 'off' ? 'LAZY MODE ACTIVE — level: ' + mode : 'LAZY MODE OFF — start with /lazy lite|full|ultra.';
       } else if (mode && mode !== 'off') {
         // A failed write must say so, same as the off path below: setMode()
         // throwing landed in the outer silent catch, so /lazy ultra printed
@@ -193,13 +179,8 @@ function finish() {
         // as changing what LATER sessions start at, so it must not decide this
         // one's level.
         currentMode = getDefaultMode();
-        // `off` is left unwritten here — no flag IS off, and writing one would
-        // make every session start by creating state. The one case that does
-        // need an explicit `off` is `/lazy default`, which pins above before it
-        // moves the value this line reads.
-        if (currentMode !== 'off') {
-          try { setMode(currentMode); } catch (e) { /* best-effort: the ruleset below still goes out */ }
-        }
+        // Pin off too: another session may change the shared default later.
+        try { setMode(currentMode); } catch (e) { /* best-effort: the ruleset below still goes out */ }
       }
       // The report-only notice above was computed before this initialization
       // ran, so a bare `/lazy` on the first Qoder prompt said OFF in the same
@@ -220,21 +201,4 @@ function finish() {
   } catch (e) {
     // Silent fail
   }
-}
-
-process.stdin.on('data', chunk => {
-  input += chunk;
-  // Bound stdin: no real hook payload approaches 32MB; a runaway pipe would OOM the string.
-  if (input.length > 32e6) { finish(); process.stdin.destroy(); }
 });
-process.stdin.on('end', finish);
-
-// Never hang the session. On Windows, Claude Code runs this hook through a
-// PowerShell `if {}` wrapper that can swallow the piped prompt JSON, so stdin
-// 'end' never fires and the hook blocks forever — freezing the session (#443).
-// On error, or after a short fallback, process whatever arrived (recovering the
-// mode if data came without EOF) and exit. unref() keeps the timer from adding
-// latency to the normal path, where 'end' fires first. Mirrors the best-effort,
-// never-block contract the other lifecycle hooks already follow.
-process.stdin.on('error', () => { finish(); process.stdin.destroy(); });
-setTimeout(() => { finish(); process.stdin.destroy(); }, 1000).unref();

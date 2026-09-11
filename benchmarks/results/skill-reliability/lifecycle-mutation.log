@@ -1,0 +1,8 @@
+PASS ultra survives resume
+PASS ultra survives compact
+PASS lite survives resume
+PASS lite survives compact
+PASS off survives resume
+PASS off survives compact
+FAIL B startup cannot reset A: The input did not match the regular expression /ultra/. Input:
+FAIL A subagent inherits A not B: The input did not match the regular expression /level: ultra/. Input:

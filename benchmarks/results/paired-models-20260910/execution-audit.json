@@ -1,0 +1,562 @@
+{
+  "at": "2026-09-10T17:30:08.604296+00:00",
+  "runs": [
+    {
+      "id": "luna-url-r1-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "/bin/zsh -lc \"sed -n '1,240p' task-tools/skills/lazy/references/simplification-checks.md\"",
+        "/bin/zsh -lc \"sed -n '1,260p' task-tools/skills/lazy/references/risk-checks.md\"",
+        "/bin/zsh -lc \"sed -n '1,260p' task-tools/skills/lazy/references/design-checks.md\"",
+        "/bin/zsh -lc \"sed -n '1,180p' task-tools/test.cjs && sed -n '1,180p' task-tools/task.json && sed -n '1,180p' task-tools/skills/slop-check/SKILL.md\"",
+        "/bin/zsh -lc 'node \"/private/tmp/lazy-paired-20260910/runs/luna-url-r1-on/work/task-tools/skills/slop-check/scripts/check.mjs\" --since=HEAD'"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "luna-url-r1-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "sol-url-r1-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "sol-url-r1-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "/bin/zsh -lc \"sed -n '1,240p' packages/base-driver/lib/protocol/validators.ts && rg -n \\\"setUrl|validators\\\\.setUrl|Url or Uri must start\\\" packages/base-driver .task-tests 2>/dev/null || true && sed -n '1,240p' task-tools/skills/lazy/references/design-checks.md && sed -n '1,240p' task-tools/skills/lazy/references/simplification-checks.md && sed -n '1,240p' task-tools/skills/lazy/references/risk-checks.md\"",
+        "/bin/zsh -lc 'node task-tools/skills/slop-check/scripts/check.mjs --since=HEAD'"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "glm-url-r1-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "{\"command\": \"node -e \\\"\\nconst fs=require('fs'),ts=require('typescript'),cp=require('child_process');\\nconst orig=cp.execSync('git show HEAD:packages/base-driver/lib/protocol/validators.ts').toString();\\nconst out=ts.transpileModule(orig,{fileName:'validators.ts',compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}});\\nfs.writeFileSync('.task-build/red.cjs',out.outputText);\\n\\\" && CANDIDATE_MODULE=\\\"$PWD/.task-build/red.cjs\\\" node --test --test-timeout=10000 .task-tests/setUrl.test.cjs 2>&1 | grep -E '^\\u2139 (tests|pass|fail)' ; node \\\"task-tools/skills/slop-check/scripts/check.mjs\\\" --since=HEAD -- packages/base-driver/lib/protocol/validators.ts .task-tests/setUrl.test.cjs\", \"workdir\": \"/private/tmp/lazy-paired-20260910/runs/glm-url-r1-on/work\"}"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "glm-url-r1-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "luna-cli-r1-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "luna-cli-r1-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "/bin/zsh -lc \"printf '%s\\\\n' '--- status ---'; git status --short; printf '%s\\\\n' '--- target ---'; sed -n '1,240p' packages/appium/lib/schema/cli-transformers.ts; printf '%s\\\\n' '--- references ---'; rg -n \\\"csv|json|cli-transformers|csvTransformer|jsonTransformer|ArgumentTypeError\\\" packages/appium/lib packages/appium/test test 2>/dev/null | head -240; printf '%s\\\\n' '--- guidance ---'; sed -n '1,240p' task-tools/skills/lazy/references/design-checks.md; sed -n '1,240p' task-tools/skills/lazy/references/simplification-checks.md; sed -n '1,260p' task-tools/skills/lazy/references/risk-checks.md\"",
+        "/bin/zsh -lc \"printf '%s\\\\n' '--- production diff ---'; git diff -- packages/appium/lib/schema/cli-transformers.ts; printf '%s\\\\n' '--- production ---'; sed -n '1,180p' packages/appium/lib/schema/cli-transformers.ts; printf '%s\\\\n' '--- saved test ---'; sed -n '1,280p' .task-tests/cli-transformers.test.cjs; printf '%s\\\\n' '--- status ---'; git status --short; printf '%s\\\\n' '--- scoped slop check ---'; node \\\"/private/tmp/lazy-paired-20260910/runs/luna-cli-r1-on/work/task-tools/skills/slop-check/scripts/check.mjs\\\" --since=HEAD\"",
+        "/bin/zsh -lc \"node task-tools/skills/slop-check/scripts/check.mjs --since=HEAD; printf '%s\\\\n' '--- scoped production/test scan ---'; node task-tools/skills/slop-check/scripts/check.mjs packages/appium/lib/schema/cli-transformers.ts .task-tests/cli-transformers.test.cjs\"",
+        "/bin/zsh -lc 'node \"/private/tmp/lazy-paired-20260910/runs/luna-cli-r1-on/work/task-tools/skills/slop-check/scripts/check.mjs\" --since=HEAD'"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "sol-cli-r1-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "/bin/zsh -lc \"sed -n '1,260p' task-tools/skills/lazy/references/design-checks.md && sed -n '1,320p' task-tools/skills/lazy/references/risk-checks.md && sed -n '1,320p' task-tools/skills/lazy/references/simplification-checks.md\"",
+        "/bin/zsh -lc \"rg -n \\\"csvTransformer|jsonTransformer|cli-transformers\\\" packages .task-tests task-tools --glob '\"'!task-tools/skills/**'\"'\"",
+        "/bin/zsh -lc 'node \"/private/tmp/lazy-paired-20260910/runs/sol-cli-r1-on/work/task-tools/skills/slop-check/scripts/check.mjs\" --since=HEAD'",
+        "/bin/zsh -lc 'node \"/private/tmp/lazy-paired-20260910/runs/sol-cli-r1-on/work/task-tools/skills/slop-check/scripts/check.mjs\" --since=HEAD'"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "sol-cli-r1-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "glm-cli-r1-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "glm-cli-r1-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "{\"command\": \"node task-tools/test.cjs && node \\\"/private/tmp/lazy-paired-20260910/runs/glm-cli-r1-on/work/task-tools/skills/slop-check/scripts/check.mjs\\\" --since=HEAD\"}"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "luna-url-r2-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "luna-url-r2-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "/bin/zsh -lc \"printf '%s\\\\n' '--- lazy skill ---' && sed -n '1,240p' task-tools/skills/lazy/SKILL.md && printf '%s\\\\n' '--- design checks ---' && sed -n '1,240p' task-tools/skills/lazy/references/design-checks.md && printf '%s\\\\n' '--- simplification checks ---' && sed -n '1,260p' task-tools/skills/lazy/references/simplification-checks.md && printf '%s\\\\n' '--- risk checks ---' && sed -n '1,260p' task-tools/skills/lazy/references/risk-checks.md && printf '%s\\\\n' '--- protocol validator callers ---' && rg -n -C 8 \\\"validators|validate.*Params|payloadParams|setUrl\\\" packages/base-driver/lib/protocol packages/base-driver/lib | sed -n '1,320p'\"",
+        "/bin/zsh -lc \"printf '%s\\\\n' '--- task diff ---' && git diff -- packages/base-driver/lib/protocol/validators.ts && printf '%s\\\\n' '--- saved test ---' && sed -n '1,260p' .task-tests/validators.test.cjs && printf '%s\\\\n' '--- status ---' && git status --short --untracked-files=all && printf '%s\\\\n' '--- slop check ---' && node \\\"/private/tmp/lazy-paired-20260910/runs/luna-url-r2-on/work/task-tools/skills/slop-check/scripts/check.mjs\\\" --since=HEAD\"",
+        "/bin/zsh -lc \"sed -n '1,260p' task-tools/skills/slop-check/scripts/check.mjs && printf '%s\\\\n' '--- explicit checker help/args probe ---' && node task-tools/skills/slop-check/scripts/check.mjs --help 2>&1 | sed -n '1,120p'\"",
+        "/bin/zsh -lc 'node \"/private/tmp/lazy-paired-20260910/runs/luna-url-r2-on/work/task-tools/skills/slop-check/scripts/check.mjs\" --since=HEAD'"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "sol-url-r2-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "/bin/zsh -lc \"sed -n '1,240p' task-tools/skills/lazy/references/design-checks.md && sed -n '1,260p' task-tools/skills/lazy/references/simplification-checks.md && sed -n '1,260p' task-tools/skills/lazy/references/risk-checks.md\"",
+        "/bin/zsh -lc 'node \"/private/tmp/lazy-paired-20260910/runs/sol-url-r2-on/work/task-tools/skills/slop-check/scripts/check.mjs\" --since=HEAD'",
+        "/bin/zsh -lc 'node \"/private/tmp/lazy-paired-20260910/runs/sol-url-r2-on/work/task-tools/skills/slop-check/scripts/check.mjs\" --since=HEAD'"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "sol-url-r2-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "glm-url-r2-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "glm-url-r2-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "{\"command\": \"node \\\"/private/tmp/lazy-paired-20260910/runs/glm-url-r2-on/work/task-tools/skills/slop-check/scripts/check.mjs\\\" --since=HEAD\"}"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "luna-cli-r2-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "/bin/zsh -lc \"sed -n '1,240p' task-tools/skills/lazy/references/simplification-checks.md\nsed -n '1,260p' task-tools/skills/lazy/references/risk-checks.md\nsed -n '1,240p' task-tools/skills/lazy/references/design-checks.md\nsed -n '1,220p' packages/appium/lib/schema/cli-args.ts\nrg -n \\\"transformers\\\\.csv|transformers\\\\.json|parseCsvLine\\\" packages --glob '*test*' --glob '*.ts'\"",
+        "/bin/zsh -lc \"sed -n '1,220p' task-tools/task.json\nsed -n '1,240p' task-tools/skills/slop-check/SKILL.md\nsed -n '1,220p' task-tools/skills/lazy/SKILL.md\nrg --files -g 'package.json' -g 'tsconfig*.json' -g '.gitignore' | head -80\"",
+        "/bin/zsh -lc 'node task-tools/skills/slop-check/scripts/check.mjs --since=HEAD'",
+        "/bin/zsh -lc \"rg -n \\\"no-catch-fake-success|no-message-only-rethrow|since|candidate\\\" task-tools/skills/slop-check/scripts/check.mjs | head -120\nsed -n '1,240p' task-tools/skills/slop-check/scripts/check.mjs | tail -80\ngit diff -- packages/appium/lib/schema/cli-transformers.ts\ngit status --short\"",
+        "/bin/zsh -lc 'node task-tools/skills/slop-check/scripts/check.mjs --since=HEAD packages/appium/lib/schema/cli-transformers.ts .task-tests/cli-transformers.test.cjs'",
+        "/bin/zsh -lc \"sed -n '1020,1085p' task-tools/skills/slop-check/scripts/check.mjs\nsed -n '1810,1860p' task-tools/skills/slop-check/scripts/check.mjs\nsed -n '2070,2135p' task-tools/skills/slop-check/scripts/check.mjs\"",
+        "/bin/zsh -lc \"rg -n \\\"SKIPPED_DIRECTORIES|SOURCE_EXTENSIONS|function collect|collectFiles|lintSource\\\" task-tools/skills/slop-check/scripts/check.mjs | head -100\nsed -n '1980,2070p' task-tools/skills/slop-check/scripts/check.mjs\nsed -n '2230,2295p' task-tools/skills/slop-check/scripts/check.mjs\"",
+        "/bin/zsh -lc \"sed -n '1,45p' task-tools/skills/slop-check/scripts/check.mjs\nsed -n '1430,1460p' task-tools/skills/slop-check/scripts/check.mjs\"",
+        "/bin/zsh -lc 'find .task-build -maxdepth 1 -type f -print\nrm .task-build/candidate.cjs\nrmdir .task-build\nnode task-tools/skills/slop-check/scripts/check.mjs --since=HEAD'"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "luna-cli-r2-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "sol-cli-r2-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "sol-cli-r2-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "/bin/zsh -lc \"sed -n '1,240p' packages/appium/lib/schema/cli-transformers.ts && rg -n \\\"csvTransformer|jsonTransformer|cli-transformers\\\" packages/appium --glob '\"'!lib/schema/cli-transformers.ts'\"' --glob '\"'!node_modules'\"' && sed -n '1,240p' task-tools/skills/lazy/references/design-checks.md && sed -n '1,260p' task-tools/skills/lazy/references/simplification-checks.md && sed -n '1,260p' task-tools/skills/lazy/references/risk-checks.md\"",
+        "/bin/zsh -lc 'git diff -- packages/appium/lib/schema/cli-transformers.ts\ngit diff --no-index -- /dev/null .task-tests/cli-transformers.test.cjs || true\ngit status --short\nnode task-tools/skills/slop-check/scripts/check.mjs --since=HEAD'",
+        "/bin/zsh -lc \"sed -n '1,280p' task-tools/skills/slop-check/scripts/check.mjs\nls -la .task-build\nls -la .task-build/node_modules\"",
+        "/bin/zsh -lc 'node task-tools/test.cjs\nnode task-tools/skills/slop-check/scripts/check.mjs packages/appium/lib/schema/cli-transformers.ts .task-tests/cli-transformers.test.cjs --since=HEAD'",
+        "/bin/zsh -lc 'rg -n \"no-catch-fake-success|fake-success\" task-tools/skills/slop-check/scripts/check.mjs'",
+        "/bin/zsh -lc \"sed -n '1015,1070p' task-tools/skills/slop-check/scripts/check.mjs\"",
+        "/bin/zsh -lc 'node task-tools/test.cjs\nnode task-tools/skills/slop-check/scripts/check.mjs packages/appium/lib/schema/cli-transformers.ts .task-tests/cli-transformers.test.cjs --since=HEAD\ngit diff --check -- packages/appium/lib/schema/cli-transformers.ts\nnode --check .task-tests/cli-transformers.test.cjs'",
+        "/bin/zsh -lc 'node task-tools/skills/slop-check/scripts/check.mjs --since=HEAD'"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "glm-cli-r2-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "{\"command\": \"node task-tools/test.cjs && node \\\"/private/tmp/lazy-paired-20260910/runs/glm-cli-r2-on/work/task-tools/skills/slop-check/scripts/check.mjs\\\" --since=HEAD -- packages/appium/lib/schema/cli-transformers.ts .task-tests/cli-transformers.test.cjs\"}"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "glm-cli-r2-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "luna-url-r3-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "/bin/zsh -lc \"pwd && git status --short && sed -n '1,240p' packages/base-driver/lib/protocol/validators.ts && printf '\\\\n--- local references ---\\\\n' && rg -n \\\"setUrl|Url or Uri must start\\\" packages/base-driver test tests .task-tests 2>/dev/null | head -160 && printf '\\\\n--- required guidance ---\\\\n' && sed -n '1,240p' task-tools/skills/lazy/references/simplification-checks.md && printf '\\\\n--- risk guidance ---\\\\n' && sed -n '1,260p' task-tools/skills/lazy/references/risk-checks.md\"",
+        "/bin/zsh -lc 'node task-tools/test.cjs && node \"/private/tmp/lazy-paired-20260910/runs/luna-url-r3-on/work/task-tools/skills/slop-check/scripts/check.mjs\" --since=HEAD'",
+        "/bin/zsh -lc 'node task-tools/test.cjs && node \"/private/tmp/lazy-paired-20260910/runs/luna-url-r3-on/work/task-tools/skills/slop-check/scripts/check.mjs\" --since=HEAD'"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "luna-url-r3-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "sol-url-r3-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "sol-url-r3-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "/bin/zsh -lc \"sed -n '1,240p' packages/base-driver/lib/protocol/validators.ts && rg -n \\\"setUrl|Url or Uri must start\\\" packages/base-driver .task-tests 2>/dev/null || true && git status --short && sed -n '1,220p' task-tools/skills/lazy/references/design-checks.md && sed -n '1,240p' task-tools/skills/lazy/references/simplification-checks.md && sed -n '1,240p' task-tools/skills/lazy/references/risk-checks.md\"",
+        "/bin/zsh -lc 'node task-tools/skills/slop-check/scripts/check.mjs --since=HEAD'"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "glm-url-r3-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "{\"command\": \"node \\\"/private/tmp/lazy-paired-20260910/runs/glm-url-r3-on/work/task-tools/skills/slop-check/scripts/check.mjs\\\" --since=HEAD\"}"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "glm-url-r3-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "luna-cli-r3-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "luna-cli-r3-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "/bin/zsh -lc \"printf '%s\\\\n' '--- design checks ---' && sed -n '1,240p' task-tools/skills/lazy/references/design-checks.md && printf '%s\\\\n' '--- simplification checks ---' && sed -n '1,260p' task-tools/skills/lazy/references/simplification-checks.md && printf '%s\\\\n' '--- risk checks ---' && sed -n '1,280p' task-tools/skills/lazy/references/risk-checks.md && printf '%s\\\\n' '--- test harness ---' && sed -n '1,260p' task-tools/test.cjs && printf '%s\\\\n' '--- caller ---' && sed -n '80,170p' packages/appium/lib/schema/cli-args.ts && printf '%s\\\\n' '--- package/test files ---' && find .task-tests -maxdepth 2 -type f -print 2>/dev/null | sort && find task-tools -maxdepth 2 -type f -print | sort\"",
+        "/bin/zsh -lc \"node \\\"/private/tmp/lazy-paired-20260910/runs/luna-cli-r3-on/work/task-tools/skills/slop-check/scripts/check.mjs\\\" --since=HEAD; printf '%s\\\\n' '--- status ---'; git status --short; printf '%s\\\\n' '--- production diff ---'; git diff -- packages/appium/lib/schema/cli-transformers.ts; printf '%s\\\\n' '--- saved test ---'; sed -n '1,240p' .task-tests/cli-transformers.test.cjs\"",
+        "/bin/zsh -lc 'node \"/private/tmp/lazy-paired-20260910/runs/luna-cli-r3-on/work/task-tools/skills/slop-check/scripts/check.mjs\" --since=HEAD'",
+        "/bin/zsh -lc \"rm -r .task-build && node \\\"/private/tmp/lazy-paired-20260910/runs/luna-cli-r3-on/work/task-tools/skills/slop-check/scripts/check.mjs\\\" --since=HEAD; printf '%s\\\\n' '--- status ---'; git status --short; printf '%s\\\\n' '--- leftover task fixtures ---'; find .task-tests -maxdepth 1 -mindepth 1 -print | sort\""
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "sol-cli-r3-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "/bin/zsh -lc \"sed -n '1,240p' packages/appium/lib/schema/cli-transformers.ts && rg -n \\\"csvTransformer|jsonTransformer|cli-transformers\\\" packages/appium --glob '\"'!lib/schema/cli-transformers.ts'\"' && sed -n '1,240p' task-tools/skills/lazy/references/design-checks.md && sed -n '1,260p' task-tools/skills/lazy/references/simplification-checks.md && sed -n '1,280p' task-tools/skills/lazy/references/risk-checks.md\"",
+        "/bin/zsh -lc 'node \"/private/tmp/lazy-paired-20260910/runs/sol-cli-r3-on/work/task-tools/skills/slop-check/scripts/check.mjs\" --since=HEAD'",
+        "/bin/zsh -lc 'node \"/private/tmp/lazy-paired-20260910/runs/sol-cli-r3-on/work/task-tools/skills/slop-check/scripts/check.mjs\" --since=HEAD'"
+      ],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "sol-cli-r3-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "glm-cli-r3-off",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [],
+      "hiddenAccessCommands": []
+    },
+    {
+      "id": "glm-cli-r3-on",
+      "headMatchesBaseline": true,
+      "stagedDiffExit": 0,
+      "promptHashMatches": true,
+      "baselineHashMatches": true,
+      "candidateHashMatches": true,
+      "executionExit": 0,
+      "terminalResponse": true,
+      "runtimeErrorCount": 0,
+      "guidanceCommands": [
+        "{\"command\": \"node task-tools/test.cjs && node \\\"/private/tmp/lazy-paired-20260910/runs/glm-cli-r3-on/work/task-tools/skills/slop-check/scripts/check.mjs\\\" --since=HEAD -- packages/appium/lib/schema/cli-transformers.ts .task-tests/cli-transformers.test.cjs\", \"workdir\": \"/private/tmp/lazy-paired-20260910/runs/glm-cli-r3-on/work\"}"
+      ],
+      "hiddenAccessCommands": []
+    }
+  ],
+  "previouslyReviewedSourceChanged": [],
+  "urlBlindFreezeChanged": [],
+  "appiumStatus": "?? .zvec-grep/\n",
+  "limit": "Command-input audit, not a sandbox filesystem access log; cannot prove absence of unobservable reads.",
+  "suppliedSkillResourcesChanged": [],
+  "suppliedSkillResourcesSha256": {
+    "/Users/justas/Desktop/compare/lazy-clean/skills/lazy/SKILL.md": "edc0c22d5da769548679ea54a4d55eccd73c4c697d8850c823f129713f15b1b1",
+    "/Users/justas/Desktop/compare/lazy-clean/skills/slop-check/SKILL.md": "3c33526582e9a401d90f63647c6bd1b6c84059d753382c04fcef7c3bc1de23f7",
+    "/Users/justas/Desktop/compare/lazy-clean/skills/slop-check/scripts/check.mjs": "dcb47b9f351f754cac1083ac8237bac19aadb530c91678a90c05b822c268fc1c",
+    "/Users/justas/Desktop/compare/lazy-clean/skills/slop-check/scripts/check.test.mjs": "6e9baf9a2da77ebbe3096418d5497cb9aab8c9c6bb67b691c1ad07247d65540e",
+    "/Users/justas/Desktop/compare/lazy-clean/skills/lazy/references/risk-checks.md": "c3dc292982208f084b736ef269753f07f5d8c7b18c48d921406298b214b3b7d0",
+    "/Users/justas/Desktop/compare/lazy-clean/skills/lazy/references/simplification-checks.md": "13d2a3417e15b2b7966fc7de17faeb3ce4d66b787b813338baebfceeec61cd66",
+    "/Users/justas/Desktop/compare/lazy-clean/skills/lazy/references/design-checks.md": "7ad0c94258cde32d993f828f5bcb80dec98a199eab83730bf127ebfadd0d8370"
+  }
+}

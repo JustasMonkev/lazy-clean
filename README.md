@@ -71,7 +71,7 @@ Requires `node` 18+ on `PATH`. No dependencies to install.
 
 | Event | What happens |
 | --- | --- |
-| `SessionStart` (startup/resume/clear/compact) | lazy ruleset injected at the current level |
+| `SessionStart` | startup/clear initialize the default; resume/compact restore the session level |
 | `SubagentStart` | same ruleset injected into the subagent |
 | `UserPromptSubmit` | `/lazy …` commands parsed, level flag updated |
 | `PostToolUse` on `Write`/`Edit`/`MultiEdit` | `skills/slop-check/scripts/check.mjs` runs on the edited file |
@@ -143,17 +143,30 @@ Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `
 /lazy          # report current level
 ```
 
-`/lazy default <lite|full|ultra|off>` persists the level across sessions. On OpenCode the session level itself also persists until changed, since there is no session boundary to reset it at.
+`/lazy default <lite|full|ultra|off>` sets the default for new sessions. When the
+host supplies a session ID, each session retains its own level (including `off`)
+across resume, compaction, and process restarts. Changing the default does not
+change already initialized sessions. Subagents and the badge use the same session
+state when the host supplies that identity.
+
+On OpenCode upgrades, the first session needing initial state inherits the legacy
+global mode. Successful migration removes the global flag; later sessions use the
+configured default. Existing scoped modes are never overwritten.
+
+Hosts without session IDs retain the legacy global flag: concurrent chats cannot
+be isolated there. On no-ID OpenCode, changing the default clears that global
+override and affects the current chat too; the command reports this explicitly.
+Session files are not expired by age, because an old session can still be resumed.
 
 ## Statusline badge
 
-The plugin ships a statusline script that shows the active level (`[LAZY]`, `[LAZY:ULTRA]`). It is not wired up automatically: on first session the hook offers to add a `statusLine` entry to your `settings.json` pointing at `hooks/lazy-statusline.sh` (or `.ps1` on Windows), and it makes that offer at most once.
+The Bash and PowerShell statusline launchers use the shared Node state/config reader. The plugin ships a statusline script that shows the active level (`[LAZY]`, `[LAZY:ULTRA]`). It is not wired up automatically: on first session the hook offers to add a `statusLine` entry to your `settings.json` pointing at `hooks/lazy-statusline.sh` (or `.ps1` on Windows), and it makes that offer at most once.
 
 Hide the badge while keeping lazy active with `LAZY_HIDE_STATUS=1`, or `"hideStatus": true` in `~/.config/lazy/config.json` (`%APPDATA%\lazy\config.json` on Windows).
 
 ## Disable
 
-- Lazy only: `/lazy off` (or say "stop lazy" / "normal mode"). Level resets at session end unless set as default.
+- Lazy only: `/lazy off` (or say "stop lazy" / "normal mode"). It stays off in that session, including after resume/compaction; new sessions use the default.
 - Slop-check only: remove the `PostToolUse` entry from `hooks/lazy-clean.json`.
 - Everything: disable the plugin in `/plugin`, or drop the `--plugin-dir` flag.
 

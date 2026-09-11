@@ -1,0 +1,2087 @@
+{
+  "review": "Frozen strict blind URL artifact review",
+  "finalizedBeforeIdentityDisclosure": true,
+  "task": "url",
+  "rubric": "Preregistered RUBRIC.md: gates first, correctness 30 / preservation 20 / saved tests 20 / readability 15 / applicable design 10 / scope and truth 5.",
+  "scope": "All 18 assigned URL artifacts. Read only packet README.md, RUBRIC.md, index.json and url/ subtree; no identity map, other benchmark directories, raw model logs, source/test edits or new reference mutants.",
+  "method": [
+    "Inspected every full frozen source, source patch, saved test and redacted handoff, plus trusted grade metadata/logs and relevant worker-check evidence.",
+    "Verified source/compiled/saved-test hashes, frozen-versus-executed test hashes, no timeouts, and scoped inventories for every artifact.",
+    "All production fixes meet the same contract. Readability scores do not distinguish match versus test or one-line versus multiline formatting. Keeping an explicit empty-string guard in artifact-033 remains locally understandable and is not penalized.",
+    "Saved-test deductions distinguish missing requested input/branch coverage from an actual production defect. Truthy number/boolean omissions matter because the original !url guard already correctly handles falsy examples.",
+    "Throwing-only no-invocation tripwires establish the final error but cannot exclude swallowed hook access. A zero-access counter or equivalent observation supplies that missing evidence; this is a coverage observation, not a claim that the submitted code calls hooks.",
+    "No score target, model/condition identity, duration, token count, line count or inferred provenance was used. Scores express this small task's rubric, not universal engineering quality."
+  ],
+  "designApplicability": {
+    "SRP": "Applicable narrowly: input classification and existing URL policy remain a local validator responsibility, without unrelated duties or new architecture.",
+    "OCP": "N/A: no requested extension mechanism; none is required or awarded for its own sake.",
+    "LSP": "Applicable only as preservation of existing exported validator inputs/results/errors. Runtime non-string behavior is intentionally corrected by contract; string and network behavior are retained.",
+    "ISP": "N/A: no interface split is needed.",
+    "DIP": "N/A: this synchronous local validator has no new external dependency boundary and needs no injectable interface.",
+    "designScoreBasis": "All artifacts retain an appropriately scoped validation boundary and avoid policy drift or speculative machinery. The 10-point dimension assesses that concrete fit; it does not allocate free points to inapplicable SOLID slogans."
+  },
+  "artifacts": [
+    {
+      "artifact": "artifact-004",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 2 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 100,
+      "rankingEligible": true,
+      "findings": [],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Strict Error constructor/name/message assertions across primitive, boxed, and function inputs.",
+        "Counters and a proxy verify zero input-owned access; saved tests cover embedded about:/data:, undefined return, invalid strings, and network validation."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "0cead50d1caec2cfc8d772a319c64bca54e80c94f39c09e8ed118d13b99ec67d",
+        "compiledSha256": "6dfebbe8660a2e19b95807727041b8b91ffe6c5e2893a7839037b2f64b0dadf0",
+        "frozenTestsSha256": {
+          "set-url-validator.test.cjs": "fb44718267aa536f10462727bb348734c641104695b1142a319e2147e89db08f"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 4,
+            "pass": 4,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 4,
+            "pass": 2,
+            "fail": 2
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 4,
+            "pass": 3,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-006",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 2 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 5,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 97,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-006/saved-tests/validators-set-url.test.cjs",
+          "line": 23,
+          "evidence": "The primitive table contains only 0 and false for numbers/booleans. Both already take the normal-error branch in the baseline; no saved assertion exercises a truthy number or true, the requested failing branches for those two primitive kinds.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-006/saved-tests/validators-set-url.test.cjs",
+          "line": 23,
+          "evidence": "No boxed String is supplied anywhere in this saved suite. A boxed valid URL is a distinctive non-string that owns/inherits a working match method and was accepted by the baseline.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Actual baseline red and candidate green were run by the worker.",
+        "Proxy access counter detects swallowed property access; embedded legacy strings and representative network behavior are saved."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "0cead50d1caec2cfc8d772a319c64bca54e80c94f39c09e8ed118d13b99ec67d",
+        "compiledSha256": "6dfebbe8660a2e19b95807727041b8b91ffe6c5e2893a7839037b2f64b0dadf0",
+        "frozenTestsSha256": {
+          "validators-set-url.test.cjs": "0775b824cefad41572a3f80b70cf1d41b6f047e6038ad4450b117d93c937013e"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 4,
+            "pass": 4,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 4,
+            "pass": 2,
+            "fail": 2
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 4,
+            "pass": 3,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-007",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 2 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit.",
+            "Minor regex-description error is scored under scope; it does not change the code or fabricate a passing test."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18,
+        "readability": 15,
+        "design": 10,
+        "scope": 4
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 6,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 97,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-007/saved-tests/validators.setUrl.test.cjs",
+          "line": 8,
+          "evidence": "The complete saved suite ends at line 87 and tests only setUrl. There is no saved assertion for the explicitly preserved setNetworkConnection export. Trusted hidden network coverage passes, so this is a saved-coverage deduction, not a production regression.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-007/handoff.txt",
+          "line": 11,
+          "evidence": "The handoff calls scheme:// unanchored together with about:/data:. The frozen regex anchors only the scheme:// alternative; ordinary embedded https:// without about:/data: is rejected. The code is correct; the description is inaccurate.",
+          "deduction": {
+            "dimension": "scope",
+            "points": 1
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Broad primitive/boxed/function inputs and nonstandard schemes are saved.",
+        "Returning match/toString/valueOf spies assert zero calls; exact error details distinguish the baseline TypeError."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "0cead50d1caec2cfc8d772a319c64bca54e80c94f39c09e8ed118d13b99ec67d",
+        "compiledSha256": "6dfebbe8660a2e19b95807727041b8b91ffe6c5e2893a7839037b2f64b0dadf0",
+        "frozenTestsSha256": {
+          "validators.setUrl.test.cjs": "b63ba45da1a346e7837eeb35c5c299ad8fd3cc6b470074d0d18b1ca3f9f8390f"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 4,
+            "pass": 4,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 4,
+            "pass": 2,
+            "fail": 2
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 4,
+            "pass": 3,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-008",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 3/3.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 3/3; unmodified baseline produces 2 behavioral failure(s) out of 3, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 7,
+        "preservationAndAlternatePaths": 4,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 95,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-008/saved-tests/validators.set-url.test.cjs",
+          "line": 18,
+          "evidence": "The only number inputs are 0 and NaN, both falsy and already normally rejected by the baseline. There is no saved truthy-number regression case such as 42.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-008/saved-tests/validators.set-url.test.cjs",
+          "line": 52,
+          "evidence": "The string test contains accepted inputs only and the file ends at line 62. No invalid string, including the empty string formerly handled by !url, is asserted to remain rejected.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-008/saved-tests/validators.set-url.test.cjs",
+          "line": 52,
+          "evidence": "No saved test invokes setNetworkConnection. The independent preserved export is covered only by the trusted hidden suite.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Exact Error constructor/name/message checks include boxed strings, functions, Symbol and bigint.",
+        "A proxy counter verifies no inspection; embedded about:/data: acceptance and undefined success are saved."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "d27584994ba8ef5b827c9000d8b0256881bf42261f261c60635876ebd1544a95",
+        "compiledSha256": "29dfe6f877108527a56a4250cd05f3b8e7ffe55d847d3dbe0dc23bfa4379c82b",
+        "frozenTestsSha256": {
+          "validators.set-url.test.cjs": "10a59c3c7208dffcdcf9b1acd03738c7415b5e627f1b95974b1e2a41a540bea5"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 3,
+            "pass": 1,
+            "fail": 2
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 3,
+            "pass": 2,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-009",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 2 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 100,
+      "rankingEligible": true,
+      "findings": [],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Strict Error prototype/name/message checks and proxy counter protect rejection and zero access.",
+        "Saved preservation includes embedded about:/data:, uppercase ABOUT rejection, anchored ordinary scheme rejection, undefined success, and all allowed network values plus a numeric-string rejection."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "0cead50d1caec2cfc8d772a319c64bca54e80c94f39c09e8ed118d13b99ec67d",
+        "compiledSha256": "6dfebbe8660a2e19b95807727041b8b91ffe6c5e2893a7839037b2f64b0dadf0",
+        "frozenTestsSha256": {
+          "validators.test.cjs": "311d918c55049e781d08ee2b623b85fb9950a630a62132816abe58e2b9ce08eb"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 4,
+            "pass": 4,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 4,
+            "pass": 2,
+            "fail": 2
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 4,
+            "pass": 3,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-010",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 2/2.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 2/2; unmodified baseline produces 1 behavioral failure(s) out of 2, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 5,
+        "preservationAndAlternatePaths": 6,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 95,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-010/saved-tests/validators-set-url.test.cjs",
+          "line": 12,
+          "evidence": "The input table contains false but not true. False was already normally rejected by the baseline; the truthy-boolean failure branch is not saved.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-010/saved-tests/validators-set-url.test.cjs",
+          "line": 12,
+          "evidence": "No function input is supplied in this saved suite. Functions are a separate typeof category within the requested reject-every-non-string contract.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-010/saved-tests/validators-set-url.test.cjs",
+          "line": 25,
+          "evidence": "The hostile getter and coercion hooks only throw. The assertion checks the final error but no call/read counter. Accessing a hook, catching its exception, then emitting the required Error would remain undetected by these saved assertions.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-010/saved-tests/validators-set-url.test.cjs",
+          "line": 52,
+          "evidence": "The complete saved suite ends at line 66 without invoking setNetworkConnection; the requested unrelated-validator preservation has no saved check.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Saved cases include boxed strings, null-prototype objects, Symbol and bigint, with exact ordinary-Error checks.",
+        "Legacy embedded strings, invalid strings and empty string are saved with undefined success assertions."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "d27584994ba8ef5b827c9000d8b0256881bf42261f261c60635876ebd1544a95",
+        "compiledSha256": "29dfe6f877108527a56a4250cd05f3b8e7ffe55d847d3dbe0dc23bfa4379c82b",
+        "frozenTestsSha256": {
+          "validators-set-url.test.cjs": "661a938f49bfc59167628a0347f962c52e048f316f40a6f1d9c91e7a9eef8210"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 2,
+            "pass": 2,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 2,
+            "pass": 1,
+            "fail": 1
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 2,
+            "pass": 1,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-011",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 5/5.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 5/5; unmodified baseline produces 2 behavioral failure(s) out of 5, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 19,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 7,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 99,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-011/saved-tests/validators.test.cjs",
+          "line": 21,
+          "evidence": "The primitive table includes false but not true. False was already normally rejected by the baseline; no saved test exercises the truthy-boolean failure branch.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "A getter/coercion counter explicitly checks zero calls.",
+        "Saved assertions cover exact Error identity, boxed strings/functions, embedded special schemes, undefined return, empty/invalid strings, and all allowed network values."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "0cead50d1caec2cfc8d772a319c64bca54e80c94f39c09e8ed118d13b99ec67d",
+        "compiledSha256": "6dfebbe8660a2e19b95807727041b8b91ffe6c5e2893a7839037b2f64b0dadf0",
+        "frozenTestsSha256": {
+          "validators.test.cjs": "2a366bff88957f44c0072f90bcb27b86f936f28f6fd70d2f25b2611c969f9f18"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 5,
+            "pass": 5,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 5,
+            "pass": 3,
+            "fail": 2
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 5,
+            "pass": 4,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-012",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 6/6.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 6/6; unmodified baseline produces 3 behavioral failure(s) out of 6, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 100,
+      "rankingEligible": true,
+      "findings": [],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Separates primitive, object/function, hostile-input, accepted-string, rejected-string and network behavior into clear tests.",
+        "Proxy counter and exact Error constructor/name/message checks give strong core regression evidence."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "0cead50d1caec2cfc8d772a319c64bca54e80c94f39c09e8ed118d13b99ec67d",
+        "compiledSha256": "6dfebbe8660a2e19b95807727041b8b91ffe6c5e2893a7839037b2f64b0dadf0",
+        "frozenTestsSha256": {
+          "validators.test.cjs": "a671ff99cfcadc35953607beb0c6e9ce7a2415edbe4acce42bba681dd544580c"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 6,
+            "pass": 6,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 6,
+            "pass": 3,
+            "fail": 3
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 6,
+            "pass": 5,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-013",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 3/3.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:5 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 3/3; unmodified baseline produces 1 behavioral failure(s) out of 3, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit.",
+            "Minor ES5 target-description error is scored under scope; actual compile execution and runtime tests are supported, with no full typecheck claimed."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16,
+        "readability": 15,
+        "design": 10,
+        "scope": 4
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 5,
+        "preservationAndAlternatePaths": 7,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 95,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-013/saved-tests/validators.setUrl.test.cjs",
+          "line": 35,
+          "evidence": "Neither Symbol nor bigint appears in the saved inputs. These are two distinct non-string primitive categories, including coercion-sensitive Symbol, not merely additional numeric examples.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-013/saved-tests/validators.setUrl.test.cjs",
+          "line": 21,
+          "evidence": "The hostile hooks only throw and there is no call counter. The saved checks establish the final error but cannot detect hook invocation whose exception is caught and replaced with the expected Error.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-013/saved-tests/validators.setUrl.test.cjs",
+          "line": 67,
+          "evidence": "Every accepted URL is checked with doesNotThrow, never against undefined. A changed successful return value would pass the saved suite despite the explicit return-preservation requirement.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-013/handoff.txt",
+          "line": 14,
+          "evidence": "The handoff says the inspected compile output is clean ES5. The recorded worker compile output contains arrow functions, and logs/compile.log records target ES2022. Transpilation did pass and the report correctly disclaims typechecking; this is a minor target-description error, not fabricated passing verification.",
+          "deduction": {
+            "dimension": "scope",
+            "points": 1
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Saved inputs include accepted-looking owned match objects, boxed strings and hostile coercion hooks.",
+        "Both embedded special schemes and unusual _+.-/digit scheme forms are protected; baseline and tightened-policy fixtures fail for behavioral reasons."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "44989356c9ff8765d13b7d4be74e12fd54a27ee884ef503b13b2b9ac4cdbfb44",
+        "compiledSha256": "395722ef294895d014aa08b529c82169d0c10ce14db0aaa3d1fbdc129a5fa610",
+        "frozenTestsSha256": {
+          "validators.setUrl.test.cjs": "be282eac32a03e5063841478df57bf2d0a45f1e22ea531e254f9bef55dd7a8a1"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 3,
+            "pass": 2,
+            "fail": 1
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 3,
+            "pass": 2,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-014",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 20/20.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 20/20; unmodified baseline produces 13 behavioral failure(s) out of 20, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15,
+        "readability": 14,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 6,
+        "preservationAndAlternatePaths": 5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 94,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-014/saved-tests/validators.seturl.test.cjs",
+          "line": 8,
+          "evidence": "There is no boxed String case in the saved rejected table or later tests. A boxed valid URL has a functioning inherited match and was accepted by the original implementation.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-014/saved-tests/validators.seturl.test.cjs",
+          "line": 60,
+          "evidence": "The no-invocation test uses throwing hooks with no call counter; it only checks the eventual validation error. Hook access followed by catch-and-rethrow of the expected Error is not excluded.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-014/saved-tests/validators.seturl.test.cjs",
+          "line": 56,
+          "evidence": "Accepted URLs are checked only with doesNotThrow, so the required successful undefined return is not saved as an assertion.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-014/saved-tests/validators.seturl.test.cjs",
+          "line": 7,
+          "evidence": "All saved tests concern setUrl; none invokes setNetworkConnection. Hidden verification proves current preservation, but the saved suite does not protect that explicitly preserved export.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-014/saved-tests/validators.seturl.test.cjs",
+          "line": 29,
+          "evidence": "The test name is built by a long nested conditional with repeated String conversion and optional constructor access; several different hostile objects all get the same Object label. This makes a failing parameter harder to identify than a simple explicit case label.",
+          "deduction": {
+            "dimension": "readability",
+            "points": 1
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Individually registered cases show the intended non-string failures independently.",
+        "Both embedded special schemes and a nonstandard scheme are saved, along with exact URL error name/message checks."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion.",
+        "The supplementary scratch/network-smoke claim is not independently established by this filtered packet; no deduction or integrity failure is inferred from its omission."
+      ],
+      "evidence": {
+        "sourceSha256": "0cead50d1caec2cfc8d772a319c64bca54e80c94f39c09e8ed118d13b99ec67d",
+        "compiledSha256": "6dfebbe8660a2e19b95807727041b8b91ffe6c5e2893a7839037b2f64b0dadf0",
+        "frozenTestsSha256": {
+          "validators.seturl.test.cjs": "b9f4fbfb25255fdcf5e83c7951222d7e4262f55b186b8ac02c8bc34b5dc1e523"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 20,
+            "pass": 20,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 20,
+            "pass": 7,
+            "fail": 13
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 20,
+            "pass": 19,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-018",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 2 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 7,
+        "preservationAndAlternatePaths": 5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 96,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-018/saved-tests/set-url-validator.test.cjs",
+          "line": 37,
+          "evidence": "Hostile getter/coercion methods only throw; no counter asserts zero access. The final expected-error assertion would still pass if hook errors were caught and replaced with that Error.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-018/saved-tests/set-url-validator.test.cjs",
+          "line": 72,
+          "evidence": "The only invalid string tested is example.test/path. The empty string is not tested even though the changed line replaces the original !url branch that handled it.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-018/saved-tests/set-url-validator.test.cjs",
+          "line": 8,
+          "evidence": "The entire saved suite tests only setUrl and contains no setNetworkConnection assertion.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Representative primitive, boxed, matching-object and function inputs are saved.",
+        "Both embedded about:/data: strings and successful undefined returns are asserted against the actual module."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "d27584994ba8ef5b827c9000d8b0256881bf42261f261c60635876ebd1544a95",
+        "compiledSha256": "29dfe6f877108527a56a4250cd05f3b8e7ffe55d847d3dbe0dc23bfa4379c82b",
+        "frozenTestsSha256": {
+          "set-url-validator.test.cjs": "e973907b05277c3b439397b2beb6a96aa0502b594fc3da7295822bc7dbcc4ac3"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 4,
+            "pass": 4,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 4,
+            "pass": 2,
+            "fail": 2
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 4,
+            "pass": 3,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-020",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 1 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 6,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 98,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-020/saved-tests/validators.test.cjs",
+          "line": 16,
+          "evidence": "The input table includes false but not true. False already produces the expected Error in the baseline; the truthy-boolean regression branch is not saved.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-020/saved-tests/validators.test.cjs",
+          "line": 33,
+          "evidence": "The match method, proxy traps, and coercion hook only throw, with no counters. The suite checks the resulting Error but cannot detect accessing a hook and swallowing/replacing the hook exception.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Saved hostile inputs include property/prototype proxy traps and Symbol.toPrimitive.",
+        "Preservation assertions cover embedded special schemes, empty/invalid strings, undefined returns and all allowed network values."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "d27584994ba8ef5b827c9000d8b0256881bf42261f261c60635876ebd1544a95",
+        "compiledSha256": "29dfe6f877108527a56a4250cd05f3b8e7ffe55d847d3dbe0dc23bfa4379c82b",
+        "frozenTestsSha256": {
+          "validators.test.cjs": "007558c1d38e0e1dfa7804d405114fcb9b9a4ce7df1bfaf04db71f38c572661a"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 4,
+            "pass": 4,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 4,
+            "pass": 3,
+            "fail": 1
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 4,
+            "pass": 3,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-024",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 4/4.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 4/4; unmodified baseline produces 2 behavioral failure(s) out of 4, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 100,
+      "rankingEligible": true,
+      "findings": [],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Exact Error constructor/name/message assertions cover all primitive kinds, boxed strings and functions.",
+        "Proxy access inventory must remain empty; saved tests include embedded special schemes, empty/invalid strings, undefined return and network validation."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "0cead50d1caec2cfc8d772a319c64bca54e80c94f39c09e8ed118d13b99ec67d",
+        "compiledSha256": "6dfebbe8660a2e19b95807727041b8b91ffe6c5e2893a7839037b2f64b0dadf0",
+        "frozenTestsSha256": {
+          "validators-set-url.test.cjs": "22a3c6c029cb2bf9448d2bf06d55b3aceb6147657069054633a7d8a2a2d030f6"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 4,
+            "pass": 4,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 4,
+            "pass": 2,
+            "fail": 2
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 4,
+            "pass": 3,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-028",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 22/22.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:5 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 22/22; unmodified baseline produces 13 behavioral failure(s) out of 22, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 6,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 98,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-028/saved-tests/setUrl.test.cjs",
+          "line": 8,
+          "evidence": "The saved primitive table includes bigint but no Symbol, leaving that distinct coercion-sensitive primitive category without regression coverage.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-028/saved-tests/setUrl.test.cjs",
+          "line": 38,
+          "evidence": "All three no-invocation tests use throwing hooks and assert only the final message, without counters. They do not establish that a hook was never called if its exception is caught and translated.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Individually named non-string cases and separate hook/getter tests provide useful failure localization.",
+        "Broad legacy scheme preservation includes uppercase, punctuation, underscore and leading-digit schemes; undefined return and network behavior are exercised."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "44989356c9ff8765d13b7d4be74e12fd54a27ee884ef503b13b2b9ac4cdbfb44",
+        "compiledSha256": "395722ef294895d014aa08b529c82169d0c10ce14db0aaa3d1fbdc129a5fa610",
+        "frozenTestsSha256": {
+          "setUrl.test.cjs": "aa17ea0f1d7344b893eeb4b72ad75fc07e4b55b6d966d20f5dda933ffa3e03e1"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 22,
+            "pass": 22,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 22,
+            "pass": 9,
+            "fail": 13
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 22,
+            "pass": 21,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-029",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 6/6.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 6/6; unmodified baseline produces 3 behavioral failure(s) out of 6, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 100,
+      "rankingEligible": true,
+      "findings": [],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Strict Error prototype/name/message assertions cover primitives, boxed objects, functions and null-prototype objects.",
+        "Returning match spy, coercion/getter counters and proxy counter all assert zero access; saved tests protect unusual schemes, special-scheme case sensitivity, empty strings, undefined returns and network behavior."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "0cead50d1caec2cfc8d772a319c64bca54e80c94f39c09e8ed118d13b99ec67d",
+        "compiledSha256": "6dfebbe8660a2e19b95807727041b8b91ffe6c5e2893a7839037b2f64b0dadf0",
+        "frozenTestsSha256": {
+          "validators.test.cjs": "8a7a75a6276786589d0e2cbd72d80b405ee54a16a66361a8f786fe4a5ddc9f62"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 6,
+            "pass": 6,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 6,
+            "pass": 3,
+            "fail": 3
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 6,
+            "pass": 5,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-030",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 5/5.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:5 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 5/5; unmodified baseline produces 2 behavioral failure(s) out of 5, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 19,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 7,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 99,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-030/saved-tests/validators.seturl.test.cjs",
+          "line": 24,
+          "evidence": "No bigint value appears in the saved rejected-input table or remaining tests, leaving that distinct non-string primitive category untested.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Getter and coercion counters verify that error normalization does not hide input inspection.",
+        "Saved preservation includes unusual schemes, embedded about:/data:, undefined return, invalid strings, and exact network-error details."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "44989356c9ff8765d13b7d4be74e12fd54a27ee884ef503b13b2b9ac4cdbfb44",
+        "compiledSha256": "395722ef294895d014aa08b529c82169d0c10ce14db0aaa3d1fbdc129a5fa610",
+        "frozenTestsSha256": {
+          "validators.seturl.test.cjs": "72d86044d9089107381d16d489240e98505a808f8e5f729303f816229ece62f9"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 5,
+            "pass": 5,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 5,
+            "pass": 3,
+            "fail": 2
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 5,
+            "pass": 4,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-033",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 5/5.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:4 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 5/5; unmodified baseline produces 3 behavioral failure(s) out of 5, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 6,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 98,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-033/saved-tests/set-url-validator.test.cjs",
+          "line": 19,
+          "evidence": "The saved suite ends at line 78 and tests only setUrl. The handoff mentions a network smoke check, but no network assertion is saved and rerunnable in the delivered suite.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Exact ordinary-Error checks include every typeof category and boxed strings.",
+        "Returning method spies and a proxy counter verify zero access; saved strings protect embedded special schemes, ordinary-scheme anchoring, uppercase ABOUT rejection and undefined return."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion.",
+        "The supplementary scratch/network-smoke claim is not independently established by this filtered packet; no deduction or integrity failure is inferred from its omission."
+      ],
+      "evidence": {
+        "sourceSha256": "a0d109c188433f9b66fe2dc615f2c4d911824399478592179014dd4c4edff394",
+        "compiledSha256": "61fee5aa71ef540702263f9c1b6b94ad294bf8170460cf84fd582098c4233b5c",
+        "frozenTestsSha256": {
+          "set-url-validator.test.cjs": "ad46a9709b74ca6c6423ed797cfd95ece065d6edcd61e1353a5a8db193a071db"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 5,
+            "pass": 5,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 5,
+            "pass": 2,
+            "fail": 3
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 5,
+            "pass": 4,
+            "fail": 1
+          }
+        }
+      }
+    },
+    {
+      "artifact": "artifact-035",
+      "task": "url",
+      "gates": {
+        "deliverable": {
+          "status": "PASS",
+          "evidence": [
+            "candidate-source.ts and source.patch retain validators.setUrl/setNetworkConnection; trusted compile exit 0, no timeout; candidate runtime suite passes 7/7.",
+            "Recomputed candidate.cjs hash matches the trusted fresh compile provenance."
+          ]
+        },
+        "behavior": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted hidden suite passes all 3 grouped tests: ordinary non-string rejection, exact legacy string policy, and network preservation.",
+            "candidate-source.ts:5 short-circuits all non-strings before property access or coercion; the unchanged regex is evaluated only for primitive strings. Original throw text, implicit undefined success and network code are retained. No independently established contract regression."
+          ]
+        },
+        "savedRegression": {
+          "status": "PASS",
+          "evidence": [
+            "Frozen actual-module saved suite passes 7/7; unmodified baseline produces 3 behavioral failure(s) out of 7, including non-string ordinary-Error mismatch or input-owned access, not import/harness failure.",
+            "Tightened string-policy reference produces 1 behavioral failure(s): embedded about:/data: acceptance is protected. Logs: logs/candidate-tests.log, logs/mutation-baseline.log, logs/mutation-string-policy-tightened.log."
+          ]
+        },
+        "integrity": {
+          "status": "PASS",
+          "evidence": [
+            "Trusted grade v3 reports unchanged harness scaffolding, no unexpected tracked/untracked paths, no grading-time frozen-input or compiled-output changes, and matching work/frozen source.",
+            "Judge recomputed source, compiled-output and saved-test SHA-256 values and verified equality with provenance; frozen test hashes equal executed test hashes.",
+            "Worker evidence includes a successful run of the supplied actual-module saved-test harness; claimed main green check is supported. No material false passing-check claim or integrity violation is established by the available audit."
+          ]
+        }
+      },
+      "points": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 19,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "testQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 7,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "total": 99,
+      "rankingEligible": true,
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-035/saved-tests/validators.seturl.test.cjs",
+          "line": 82,
+          "evidence": "All successful URL calls use doesNotThrow, with no assertion of the required undefined return. A successful return-value change would pass the delivered tests.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        }
+      ],
+      "strengths": [
+        "Direct early type guard fixes the shared protocol-boundary cause without a new abstraction or dependency; successful behavior and unrelated source are preserved.",
+        "Strict Error prototype/name/message checks and returning method spies cover deceptive objects, String subclasses and boxed strings.",
+        "The saved suite distinguishes genuine embedded about:/data: acceptance from merely placing them inside an already-valid HTTP URL; representative network numeric-string rejections are included."
+      ],
+      "limits": [
+        "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+        "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+        "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+        "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion."
+      ],
+      "evidence": {
+        "sourceSha256": "44989356c9ff8765d13b7d4be74e12fd54a27ee884ef503b13b2b9ac4cdbfb44",
+        "compiledSha256": "395722ef294895d014aa08b529c82169d0c10ce14db0aaa3d1fbdc129a5fa610",
+        "frozenTestsSha256": {
+          "validators.seturl.test.cjs": "76e67707d5c7ae9a0e0dbae2630113424df1ac51ce20fa659cb783a59a39ba04"
+        },
+        "trustedRunCounts": {
+          "candidate-tests": {
+            "tests": 7,
+            "pass": 7,
+            "fail": 0
+          },
+          "hidden": {
+            "tests": 3,
+            "pass": 3,
+            "fail": 0
+          },
+          "mutation-baseline": {
+            "tests": 7,
+            "pass": 4,
+            "fail": 3
+          },
+          "mutation-string-policy-tightened": {
+            "tests": 7,
+            "pass": 6,
+            "fail": 1
+          }
+        }
+      }
+    }
+  ],
+  "ranking": [
+    {
+      "score": 100,
+      "artifacts": [
+        "artifact-004",
+        "artifact-009",
+        "artifact-012",
+        "artifact-024",
+        "artifact-029"
+      ],
+      "tieExplanation": "Same rubric total; no further ordering is supported. See each artifact's evidence-backed deductions for different strengths/gaps."
+    },
+    {
+      "score": 99,
+      "artifacts": [
+        "artifact-011",
+        "artifact-030",
+        "artifact-035"
+      ],
+      "tieExplanation": "Same rubric total; no further ordering is supported. See each artifact's evidence-backed deductions for different strengths/gaps."
+    },
+    {
+      "score": 98,
+      "artifacts": [
+        "artifact-020",
+        "artifact-028",
+        "artifact-033"
+      ],
+      "tieExplanation": "Same rubric total; no further ordering is supported. See each artifact's evidence-backed deductions for different strengths/gaps."
+    },
+    {
+      "score": 97,
+      "artifacts": [
+        "artifact-006",
+        "artifact-007"
+      ],
+      "tieExplanation": "Same rubric total; no further ordering is supported. See each artifact's evidence-backed deductions for different strengths/gaps."
+    },
+    {
+      "score": 96,
+      "artifacts": [
+        "artifact-018"
+      ],
+      "tieExplanation": "Only artifact at this rubric total; this is not evidence of statistically significant superiority."
+    },
+    {
+      "score": 95,
+      "artifacts": [
+        "artifact-008",
+        "artifact-010",
+        "artifact-013"
+      ],
+      "tieExplanation": "Same rubric total; no further ordering is supported. See each artifact's evidence-backed deductions for different strengths/gaps."
+    },
+    {
+      "score": 94,
+      "artifacts": [
+        "artifact-014"
+      ],
+      "tieExplanation": "Only artifact at this rubric total; this is not evidence of statistically significant superiority."
+    }
+  ],
+  "overallLimits": [
+    "Focused TypeScript 6.0.3 to CommonJS/ES2022 transpilation and Node v26.5.0 runtime verification only; no full Appium build or typecheck. This is a shared harness limitation, not a deduction.",
+    "Trusted coordinator candidate/baseline/reference runs and matching frozen hashes were used. No additional runtime probes or new mutation pool were introduced by this judge.",
+    "worker-checks.json is a filtered command extraction, not an exhaustive record. Missing scratch/smoke commands are not evidence of fabrication and receive no deduction.",
+    "Finite saved and hidden examples do not prove every possible string/input; grouped failing tests stop at their first failed assertion.",
+    "One blind judge for this URL set. Integer differences are rubric judgments; ties are retained rather than broken by cosmetic distinctions."
+  ]
+}
