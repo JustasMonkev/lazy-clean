@@ -22,7 +22,7 @@ function validSessionId(id) {
 function modeState(directory, sessionId) {
   const scoped = validSessionId(sessionId);
   const statePath = path.join(directory, scoped ? sessionStateFile(sessionId) : '.lazy-active');
-  return {
+  const state = {
     scoped,
     readMode() {
       try {
@@ -48,7 +48,24 @@ function modeState(directory, sessionId) {
     clearMode() {
       try { fs.unlinkSync(statePath); } catch (e) { /* already absent or checked by the caller */ }
     },
+    migrateLegacyMode() {
+      if (!scoped || state.readMode() || !modeState(directory).readMode()) return;
+      const legacyPath = path.join(directory, '.lazy-active');
+      try {
+        // Publish the complete legacy file without overwriting a concurrent scoped write.
+        fs.linkSync(legacyPath, statePath);
+      } catch (e) {
+        if (e.code === 'ENOENT' || (e.code === 'EEXIST' && state.readMode())) return;
+        throw e;
+      }
+      try {
+        fs.unlinkSync(legacyPath);
+      } catch (e) {
+        if (e.code !== 'ENOENT') throw e;
+      }
+    },
   };
+  return state;
 }
 
 module.exports = { modeState };

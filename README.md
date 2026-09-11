@@ -149,6 +149,10 @@ across resume, compaction, and process restarts. Changing the default does not
 change already initialized sessions. Subagents and the badge use the same session
 state when the host supplies that identity.
 
+On OpenCode upgrades, the first session needing initial state inherits the legacy
+global mode. Successful migration removes the global flag; later sessions use the
+configured default. Existing scoped modes are never overwritten.
+
 Hosts without session IDs retain the legacy global flag: concurrent chats cannot
 be isolated there. On no-ID OpenCode, changing the default clears that global
 override and affects the current chat too; the command reports this explicitly.

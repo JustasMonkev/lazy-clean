@@ -44,6 +44,16 @@ export default async ({ client } = {}) => {
 
   const injected = new WeakMap();
   const lazySkillsDir = path.resolve(__dirname, '../../skills');
+  const sessionState = (sessionID) => {
+    const state = modeState(stateDir, sessionID);
+    try {
+      state.migrateLegacyMode();
+      return state;
+    } catch (e) {
+      log('error', 'lazy: could not migrate the legacy session level (' + e.message + ')');
+      return null;
+    }
+  };
 
   return {
     // Register slash commands + skills directory.
@@ -70,7 +80,8 @@ export default async ({ client } = {}) => {
 
     // Append the ruleset to the system prompt every turn.
     'experimental.chat.system.transform': async (input, output) => {
-      const state = modeState(stateDir, input && input.sessionID);
+      const state = sessionState(input && input.sessionID);
+      if (!state) return;
       const mode = readMode(state);
       if (state.scoped && !normalizeMode(state.readMode())) {
         try { state.setMode(mode); } catch (e) { log('error', 'lazy: could not retain this session level (' + e.message + ')'); }
@@ -89,7 +100,8 @@ export default async ({ client } = {}) => {
 
     'command.execute.before': async (input) => {
       if (!input || input.command !== 'lazy') return;
-      const state = modeState(stateDir, input.sessionID);
+      const state = sessionState(input.sessionID);
+      if (!state) return;
       const args = String(input.arguments || '').trim().split(/\s+/).filter(Boolean);
 
       // `/lazy default <level>` persists across sessions, same as the Claude

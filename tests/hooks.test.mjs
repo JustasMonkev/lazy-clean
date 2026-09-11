@@ -1957,6 +1957,82 @@ for (const host of ["native", "codex", "copilot"]) {
     !resume("\ufffd").stdout.includes("LAZY MODE ACTIVE"));
 }
 
+for (const mode of ["off", "ultra"]) {
+  for (const entry of ["transform", "report", "default", "switch"]) {
+    const box = freshHome(`opencode-migration-${mode}-${entry}`);
+    const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
+      import assert from 'node:assert/strict';
+      import fs from 'node:fs';
+      import path from 'node:path';
+      import stateModule from ${JSON.stringify(pathToFileURL(path.join(HOOKS, 'lazy-state.js')).href)};
+      import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, '.opencode/plugins/lazy.mjs')).href)};
+      const directory = path.join(process.env.XDG_CONFIG_HOME, 'opencode');
+      const legacy = stateModule.modeState(directory);
+      legacy.setMode(${JSON.stringify(mode)});
+      stateModule.modeState(directory, 'B').setMode('lite');
+      const logs = [];
+      let hooks = await plugin({client:{app:{log:({body}) => logs.push(body)}}});
+      const command = arguments_ => hooks['command.execute.before']({command:'lazy', sessionID:'A', arguments:arguments_});
+      const render = async sessionID => {
+        const output = {system:[]};
+        await hooks['experimental.chat.system.transform']({sessionID}, output);
+        return output.system.join('\\n');
+      };
+      assert.match(await render('B'), /level: lite/);
+      assert.equal(legacy.readMode(), ${JSON.stringify(mode)});
+      const entry = ${JSON.stringify(entry)};
+      if (entry === 'report') await command('');
+      if (entry === 'default') await command('default lite');
+      if (entry === 'switch') await command('full');
+      const expected = entry === 'switch' ? 'full' : ${JSON.stringify(mode)};
+      const output = await render('A');
+      assert.equal(stateModule.modeState(directory, 'A').readMode(), expected);
+      assert.equal(legacy.readMode(), null);
+      assert.equal(fs.existsSync(path.join(directory, '.lazy-active')), false);
+      if (expected === 'off') assert.equal(output, '');
+      else assert.ok(output.includes('level: ' + expected));
+      if (entry === 'report') assert.ok(logs.some(log => log.message === 'lazy ' + expected));
+      hooks = await plugin();
+      assert.equal(await render('A'), output);
+      assert.match(await render('C'), entry === 'default' ? /level: lite/ : /level: full/);
+    `], { env: baseEnv(box.env), encoding: "utf8", timeout: 10000 });
+    eq(`OpenCode migrates legacy ${mode} once through ${entry}`, result.status, 0);
+    if (result.status !== 0) console.error(result.stderr);
+  }
+}
+
+{
+  const box = freshHome("opencode-migration-retry");
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
+    import assert from 'node:assert/strict';
+    import fs from 'node:fs';
+    import path from 'node:path';
+    import stateModule from ${JSON.stringify(pathToFileURL(path.join(HOOKS, 'lazy-state.js')).href)};
+    import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, '.opencode/plugins/lazy.mjs')).href)};
+    const directory = path.join(process.env.XDG_CONFIG_HOME, 'opencode');
+    const legacy = stateModule.modeState(directory);
+    legacy.setMode('ultra');
+    const blocked = path.join(directory, ${JSON.stringify(qoderStateFile('A'))});
+    fs.mkdirSync(blocked);
+    const logs = [];
+    const hooks = await plugin({client:{app:{log:({body}) => logs.push(body)}}});
+    const output = {system:['upstream']};
+    await hooks['experimental.chat.system.transform']({sessionID:'A'}, output);
+    await hooks['command.execute.before']({command:'lazy', sessionID:'A', arguments:'default off'});
+    assert.deepEqual(output.system, ['upstream']);
+    assert.equal(legacy.readMode(), 'ultra');
+    assert.equal(fs.existsSync(path.join(process.env.XDG_CONFIG_HOME, 'lazy', 'config.json')), false);
+    assert.ok(logs.some(log => log.level === 'error' && /migrat/.test(log.message)));
+    fs.rmdirSync(blocked);
+    await hooks['experimental.chat.system.transform']({sessionID:'A'}, output);
+    assert.match(output.system.join('\\n'), /level: ultra/);
+    assert.equal(stateModule.modeState(directory, 'A').readMode(), 'ultra');
+    assert.equal(legacy.readMode(), null);
+  `], { env: baseEnv(box.env), encoding: "utf8", timeout: 10000 });
+  eq("OpenCode preserves legacy state and retries a failed migration", result.status, 0);
+  if (result.status !== 0) console.error(result.stderr);
+}
+
 {
   const box = freshHome("opencode-session-lifecycle");
   const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
