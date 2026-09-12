@@ -1817,6 +1817,66 @@ for (const [label, source] of [
 ]) {
   expectRule(`reviews ${label}`, source, ACCUMULATOR_COPY);
 }
+// Reducer arguments can contain comma-separated TypeScript syntax. The scan
+// must keep generic/assertion commas inside the second argument while still
+// splitting ordinary argument commas at the call's top level.
+for (const [label, source] of [
+  [
+    "a generic object assertion as the initial value",
+    "// SAFETY: the reducer output is validated as a keyed item record\nitems.reduce((acc, item) => Object.assign({}, acc, item), {} as Record<string, Item>);",
+  ],
+  [
+    "a generic object satisfies assertion as the initial value",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), {} satisfies Record<string, Item>);",
+  ],
+  [
+    "a multiline generic assertion as the initial value",
+    "// SAFETY: the reducer output is validated as a keyed item record\nitems.reduce(\n  (acc, item) => Object.assign({}, acc, item),\n  {} as Record<string, Item>\n);",
+  ],
+  [
+    "nested calls and comma expressions beside the initial value",
+    "items.reduce((acc, item) => Object.assign({}, acc, merge(item, pick(item, key))), seed({}, a, b));",
+  ],
+]) {
+  expectRule(`reviews ${label}`, source, ACCUMULATOR_COPY);
+}
+expectNoRule(
+  "preserves an unmatched generic assertion in a reducer",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), {} as Record<string, Item);",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "preserves a three-argument reducer with a comparison comma",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), lower < middle, upper > (limit));",
+  ACCUMULATOR_COPY,
+  "sample.js",
+);
+// Each declarator has its own initializer. Commas in a declaration, nested
+// expressions, and assignments must not make the scanner attach the wrong
+// value to a later name.
+for (const [label, source] of [
+  ["a later array declarator", "const marker = 1, users = []; users.filter(active).map(email);"],
+  ["a later reducer initial declarator", "const marker = 0, initial = []; items.reduce((acc, item) => acc.concat(item), initial);"],
+  ["a typed let reducer initial declarator", "let marker = 0, initial: Item[] = []; items.reduce((acc, item) => acc.concat(item), initial);"],
+  ["a typed var array declarator", "var marker = 0, users: User[] = load(); users.filter(active).map(email);"],
+  ["an alias after its array declarator", "const marker = 1, users = []; const alias = users; alias.filter(active).map(email);"],
+  ["a later declarator after an object initializer", "const marker = { nested: [] }, users = []; users.filter(active).map(email);"],
+  ["a later declarator after a generic earlier initializer", "const initial = make<Map<string, Item>>(), users = []; users.filter(active).map(email);"],
+  ["a destructured first declarator", "const{ seed } = config, users = []; users.filter(active).map(email);"],
+]) {
+  expectRule(`reviews ${label}`, source, label.includes("reducer") ? ACCUMULATOR_COPY : ARRAY_PIPELINE);
+}
+for (const [label, source] of [
+  ["a property array in a declaration", "const box = { users: [] }; box.users.filter(active).map(email);"],
+  ["a destructured array in a declaration", "const [users] = [[]]; users.filter(active).map(email);"],
+  ["an assignment after an uninitialized declaration", "let users; users = []; users.filter(active).map(email);"],
+  ["an unknown reducer initial declarator", "const marker = 0, initial = getInitial(); items.reduce((acc, item) => acc.concat(item), initial);"],
+  ["a factory before a later shadowing Array declaration", "const users = Array.from(values); const Array = custom; users.filter(active).map(email);"],
+  ["a factory before a same-declaration Array shadow", "const users = Array.from(values), Array = custom; users.filter(active).map(email);"],
+  ["an inner array escaping an earlier initializer", "const marker = (() => { const inner = []; return 0; })(), users = []; inner.filter(active).map(email);"],
+]) {
+  expectNoRule(`does not infer ${label}`, source, label.includes("reducer") ? ACCUMULATOR_COPY : ARRAY_PIPELINE);
+}
 expectRule(
   "reviews a native factory with type arguments",
   "Array.from<User>(values).filter(active).map<string>(email);",
@@ -1897,6 +1957,43 @@ for (const source of [
   "let users = Array.from(values); users = other; users.filter(active).map(email);",
 ]) {
   expectNoRule(`does not trust a shadowed, qualified, or reassigned array factory: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "import type { Collection as Array } from 'custom'; function collect(users: Array<User>) { return users.filter(active).map(email); }",
+  "import{Array} from 'custom'; Array.from(values).filter(active).map(email);",
+  "import type{Collection as Array} from 'custom'; function collect(users: Array<User>) { return users.filter(active).map(email); }",
+  "import {'collection' as Array} from 'custom'; Array.from(values).filter(active).map(email);",
+  "import type {'collection' as Array} from 'custom'; function collect(users: Array<User>) { return users.filter(active).map(email); }",
+  "import type { Collection as ReadonlyArray } from 'custom'; function collect(users: ReadonlyArray<User>) { return users.filter(active).map(email); }",
+  "import type { Collection as Array, Entry as ReadonlyArray } from 'custom'; function collect(users: Array<User>) { return users.filter(active).map(email); }",
+  "import type {\n  Collection as Array,\n  Entry as ReadonlyArray,\n} from 'custom'; function collect(users: ReadonlyArray<User>) { return users.filter(active).map(email); }",
+]) {
+  expectNoRule(`does not trust a type-only array alias: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "function collect(...users: User[]) { return users.filter(active).map(email); }",
+  "function collect(...users) { return users.filter(active).map(email); }",
+  "function collect(...users: User) { return users.filter(active).map(email); }",
+  "function collect(...users: User[]) { users = other; return users.filter(active).map(email); }",
+]) {
+  expectRule(`reviews a runtime array rest parameter: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "function collect(...users) { users = other; return users.filter(active).map(email); }",
+  "const users: User[] = load(); function collect(...users) { return users.filter(active).map(email); } users.filter(active).map(email);",
+  "function collect(users) { return users.filter(active).map(email); }",
+]) {
+  expectNoRule(`preserves non-array rest or unknown parameter evidence: ${source}`, source, ARRAY_PIPELINE);
+}
+{
+  const source = `function collect(...users: User[]) {
+  users.filter(active).map(email);
+  users = refreshUsers();
+  users.filter(active).map(email);
+}`;
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 2, "typed rest parameters retain array evidence across writes");
+  console.log("ok   typed rest parameter follows the annotated across-write contract");
 }
 for (const source of [
   "const users = []; users.values().filter(active).map(email).toArray();",
