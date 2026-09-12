@@ -1043,6 +1043,55 @@ for (const [name, source, changed, rule] of [
   ok(`array findings never block ${name}`, output && output.decision === undefined && output.hookSpecificOutput.permissionDecision === undefined);
 }
 
+// The changed line can be the receiver/initial value several lines away from
+// the diagnostic anchor. This defeats the hook's three-line upward padding and
+// proves the checker span, rather than a nearby callback edit, is doing the work.
+const receiverSpan = [
+  "const customCollection = getCollection();",
+  "const result = customCollection",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "  .filter(value => value > 0)",
+  "  .map(value => value * 2);",
+  "const preexisting = Reflect.get(source, key);",
+  "",
+].join("\n");
+const reducerInitialSpan = [
+  "const customCollection = getCollection();",
+  "const items = [1, 2];",
+  "const result = items.reduce(",
+  "  (acc, item) => {",
+  "    return acc.concat(item);",
+  "  },",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "  customCollection,",
+  ");",
+  "const preexisting = Reflect.get(source, key);",
+  "",
+].join("\n");
+for (const [name, source, oldString, newString, rule] of [
+  ["receiver-only filter/map", receiverSpan, "const result = customCollection", "const result = []", "no-array-filter-map"],
+  ["initial-only reducer", reducerInitialSpan, "  customCollection,", "  [],", "no-reduce-accumulator-copy"],
+]) {
+  const file = write(`span-${name.split(" ")[0]}.js`, source.replace(oldString, newString));
+  const payloads = [
+    ["Write", { tool_name: "Write", tool_input: { file_path: file } }],
+    ["Edit", { tool_name: "Edit", tool_input: { file_path: file, old_string: oldString, new_string: newString } }],
+    ["MultiEdit", { tool_name: "MultiEdit", tool_input: { file_path: file, edits: [{ old_string: oldString, new_string: newString }] } }],
+  ];
+  for (const [tool, payload] of payloads) {
+    const result = editCheck(payload);
+    ok(`${tool} reports a ${name} beyond hook padding`, result.status === 0 && result.stdout.includes(rule), result.stdout);
+  }
+}
+
 // Only the lines this tool call wrote are reported.
 const ranges = write("ranges.ts", "const ok = 1;\nconst bad: any = 2;\nconst also: any = 3;\nconst more: any = 4;\n");
 e = editCheck({ tool_name: "Edit", tool_input: { file_path: ranges, old_string: "x", new_string: "const bad: any = 2;" } });

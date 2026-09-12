@@ -1525,7 +1525,12 @@ function arrayExpressionEnd(text, start, isTypeScript = false) {
       at = end - 1;
     } else if (text[at] === "\n") {
       const next = text.slice(at + 1, limit).trimStart();
-      if (!/^(?:\?\.|\.)/u.test(next) && !text.slice(start, at).trimEnd().endsWith(".")) return at;
+      const previous = text.slice(start, at).trimEnd();
+      // A newline ends an initializer only when neither side continues it.
+      // Prefix ++/-- and ! can start a new statement; binary operators cannot.
+      const leading = /^(?:[([`.,?:*/%&|^<>=]|!(?==)|\+(?!\+)|-(?!-)|(?:in|instanceof)\b)/u.test(next);
+      const trailing = /[?.:,*/%&|^<>=]$|(?<!\+)\+$|(?<!-)-$|\b(?:in|instanceof|await|new|typeof|void|delete|yield)$/u.test(previous);
+      if (!leading && !trailing && !(isTypeScript && /^(?:as|satisfies)\b/u.test(next))) return at;
     } else if (",;)]}".includes(text[at])) return at;
   }
   return limit;
@@ -1635,7 +1640,7 @@ function arrayTypeSpanEnd(text, at, start) {
       return end;
     }
   }
-  if (text[at] === ":" && /^(?:\.\.\.\s*)?[A-Za-z_$][\w$]*\s*\??\s*$/u.test(text.slice(start, at).trimStart())) {
+  if (text[at] === ":" && /^(?:(?:public|protected|private|readonly|override)\s+)*(?:\.\.\.\s*)?[A-Za-z_$][\w$]*\s*\??\s*$/u.test(text.slice(start, at).trimStart())) {
     return arrayTypeEnd(text, at + 1);
   }
   if (text[at] === "<" && /[\w$]$/u.test(text.slice(start, at).trimEnd())) {
@@ -1655,7 +1660,7 @@ function arrayFunctionTail(text, start) {
   return end - start < SCAN_LIMIT ? end : -1;
 }
 
-function arrayBindingEvidence(masked, isTypeScript = false) {
+function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
   const bindings = new Map();
   const writes = new Map();
   const functionBodies = new Set();
@@ -1718,7 +1723,10 @@ function arrayBindingEvidence(masked, isTypeScript = false) {
     while (/\s/u.test(masked[bodyStart] ?? "")) bodyStart += 1;
     if (masked[bodyStart] === "{" && !/\bcatch$/u.test(prefix)) functionBodies.add(bodyStart);
     const scopeEnd = masked[bodyStart] === "{" ? balancedEnd(masked, bodyStart) : arrayExpressionEnd(masked, bodyStart, isTypeScript);
-    for (const parameter of arrayArguments(parameters, isTypeScript)) {
+    for (let parameter of arrayArguments(parameters, isTypeScript)) {
+      if (isTypeScript && /\bconstructor$/u.test(prefix)) {
+        parameter = parameter.replace(/^(?:(?:public|protected|private|readonly|override)\s+)+(?=[A-Za-z_$][\w$]*\s*(?:[?:=]|$))/u, "");
+      }
       const rest = parameter.startsWith("...");
       const binding = rest ? parameter.slice(3).trimStart() : parameter;
       if (binding[0] === "{" || binding[0] === "[") {
@@ -1782,11 +1790,36 @@ function arrayBindingEvidence(masked, isTypeScript = false) {
     next += 1;
   }
   const writePattern = new RegExp(`${IDENT_BEFORE}([\\w$]+)\\s*(?:${ASSIGN_OPERATORS}|\\+\\+|--)|(?:\\+\\+|--)\\s*([\\w$]+)${IDENT_AFTER}`, "gu");
-  for (const match of masked.matchAll(writePattern)) {
-    const name = match[1] ?? match[2];
+  const recordWrite = (name, offset) => {
     const positions = writes.get(name);
-    if (positions) positions.push(match.index);
-    else writes.set(name, [match.index]);
+    if (positions) positions.push(offset);
+    else writes.set(name, [offset]);
+  };
+  for (const match of masked.matchAll(writePattern)) {
+    recordWrite(match[1] ?? match[2], match.index);
+  }
+  for (const match of masked.matchAll(/\bfor\s*(?:await\s*)?\(\s*([A-Za-z_$][\w$]*)\s+(?:in|of)\b/gu)) {
+    recordWrite(match[1], match.index);
+  }
+  const propertyWrite = new RegExp(`^\\s*(?:${ASSIGN_OPERATORS}|\\+\\+|--)`, "u");
+  for (const match of masked.matchAll(/(?<![\w$.#])(Array|Object)\s*(?:\.\s*([A-Za-z_$][\w$]*)|\[)/gu)) {
+    const before = masked.slice(Math.max(0, match.index - SCAN_LIMIT), match.index).trimEnd();
+    if (/[.#]$/u.test(before)) continue;
+    let end = match.index + match[0].length;
+    let method = match[2];
+    if (!method) {
+      const open = end - 1;
+      end = balancedEnd(masked, open);
+      if (end === -1) continue;
+      const key = source.slice(open + 1, end - 1).trim();
+      const literal = /^(['"])([^'"\\]*)\1$/u.exec(key);
+      // A computed write can replace any trusted method; literal keys affect
+      // only that method. Read the key from source after locating it in code.
+      method = literal ? literal[2] : "*";
+    }
+    const after = masked.slice(end, end + SCAN_LIMIT);
+    const loopTarget = /\bfor\s*(?:await\s*)?\(\s*$/u.test(before) && /^\s+(?:in|of)\b/u.test(after);
+    if (propertyWrite.test(after) || /(?:\+\+|--)$/u.test(before) || loopTarget) recordWrite(`${match[1]}.${method}`, match.index);
   }
   return { bindings, writes };
 }
@@ -1831,13 +1864,14 @@ function* iterateArrayFindings(ctx) {
   const { lineStarts } = ctx;
   const masked = ctx.isTypeScript ? maskArrayTypeArguments(ctx.masked) : ctx.masked;
   if (!/\.\s*(?:reduce(?:Right)?|map|filter)\s*\(/u.test(masked)) return;
-  const { bindings, writes } = arrayBindingEvidence(masked, ctx.isTypeScript);
-  const nativeGlobal = (name) => !bindings.has(name) && !writes.has(name) && !ctx.declaredNames.has(name);
+  const { bindings, writes } = arrayBindingEvidence(masked, ctx.isTypeScript, ctx.source);
+  const nativeGlobal = (name, method) => !bindings.has(name) && !writes.has(name) && !ctx.declaredNames.has(name)
+    && (!method || !writes.has(`${name}.${method}`) && !writes.has(`${name}.*`));
   const knownArray = (expression, at, visited = new Set()) => {
     const text = unwrapArraySyntax(expression, ctx.isTypeScript);
     if (text[0] === "[" && balancedEnd(text, 0) === text.length) return true;
-    const factory = /^(?:Array\s*(?:\?\.|\.)\s*(?:from|of)|new\s+Array)\s*\(/u.exec(text);
-    if (factory && nativeGlobal("Array") && balancedEnd(text, factory[0].length - 1) === text.length) return true;
+    const factory = /^(?:Array\s*(?:\?\.|\.)\s*(from|of)|new\s+Array)\s*\(/u.exec(text);
+    if (factory && nativeGlobal("Array", factory[1]) && balancedEnd(text, factory[0].length - 1) === text.length) return true;
     if (visited.size > 20) return false;
     if (/^[A-Za-z_$][\w$]*$/u.test(text)) {
       const binding = bindings.get(text);
@@ -1887,6 +1921,7 @@ function* iterateArrayFindings(ctx) {
     if (end === -1) continue;
     yield {
       ...offsetToPosition(lineStarts, match.index), endLine: offsetToPosition(lineStarts, end - 1).line,
+      startLine: offsetToPosition(lineStarts, groupStart).line,
       rule: "no-array-filter-map",
       message: "Consecutive array filter/map passes allocate an intermediate array. Consider one pass only after checking callback ordering, indexes, sparse-array behavior, and side effects. Iterator helpers also require runtime support; this is not an automatic rewrite.",
     };
@@ -1895,6 +1930,8 @@ function* iterateArrayFindings(ctx) {
     const open = match.index + match[0].length - 1;
     const end = balancedEnd(masked, open);
     if (end === -1) continue;
+    const receiverStart = arrayReceiverStart(masked, match.index, ctx.isTypeScript);
+    const startLine = offsetToPosition(lineStarts, receiverStart === -1 ? match.index : receiverStart).line;
     const args = arrayArguments(masked.slice(open + 1, end - 1), ctx.isTypeScript);
     if (args.length < 1 || args.length > 2) continue;
     const callback = unwrapArraySyntax(args[0], ctx.isTypeScript);
@@ -1960,11 +1997,11 @@ function* iterateArrayFindings(ctx) {
         const copyArgs = arrayArguments(body.slice(copy.index + copy[0].length, copyEnd - 1), ctx.isTypeScript);
         const owner = copy[2];
         const method = copy[3];
-        if (owner === "Object" && method === "assign" && nativeGlobal(owner)) {
+        if (owner === "Object" && method === "assign" && nativeGlobal(owner, method)) {
           const target = unwrapArraySyntax(copyArgs[0] ?? "", ctx.isTypeScript);
           copies = target[0] === "{" && balancedEnd(target, 0) === target.length
             && copyArgs.slice(1).some((argument) => isAccumulator(argument, copy.index));
-        } else if (owner === "Array" && method === "from" && nativeGlobal(owner)) {
+        } else if (owner === "Array" && method === "from" && nativeGlobal(owner, method)) {
           copies = isAccumulator(copyArgs[0] ?? "", copy.index);
         } else if (!["assign", "from"].includes(method)) {
           copies = knownArray(args[1] ?? "", match.index) && isAccumulator(owner, copy.index);
@@ -1973,7 +2010,8 @@ function* iterateArrayFindings(ctx) {
       if (!copies) continue;
       yield {
         ...offsetToPosition(lineStarts, bodyOffset + copy.index),
-        endLine: offsetToPosition(lineStarts, bodyOffset + copyEnd - 1).line,
+        startLine,
+        endLine: offsetToPosition(lineStarts, end - 1).line,
         rule: "no-reduce-accumulator-copy",
         message: "Copying the reducer accumulator each iteration can make growing results quadratic. Consider mutating a fresh, locally owned accumulator only when no caller or retained snapshot observes it; preserve ordering and sparse-array semantics.",
       };
@@ -2394,6 +2432,7 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
   const bindsAny = declaredNames.has("any") || PARAMETER_ANY.test(masked) || DESTRUCTURED_ANY.test(masked);
   const ctx = {
     path: filePath,
+    source,
     declaredNames,
     bindsAny,
     isTypeScript: TYPESCRIPT_EXTENSIONS.has(extension),
@@ -2727,11 +2766,10 @@ function main() {
     }
     linted += 1;
     const fileFindings = lintSource(source, displayPath(file), { disabled });
-    // Same overlap test the PostToolUse hook uses: a block rule reports at the
-    // keyword that opens the block, so testing the anchor line alone dropped
-    // findings whose body is exactly what `git diff` reports as changed.
+    // Evidence can precede the diagnostic anchor (a receiver) or follow it
+    // (a reducer seed). Match the same evidence span as the PostToolUse hook.
     const touched = (finding) => {
-      for (let line = finding.line; line <= (finding.endLine ?? finding.line); line += 1) {
+      for (let line = finding.startLine ?? finding.line; line <= (finding.endLine ?? finding.line); line += 1) {
         if (changed.has(line)) return true;
       }
       return false;

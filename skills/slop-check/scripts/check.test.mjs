@@ -1704,9 +1704,10 @@ for (const source of [
     "}, {});";
   const findings = lintSource(source, "sample.js").filter((finding) => finding.rule === ACCUMULATOR_COPY);
   assert.equal(findings.length, 1, "a deferred method must not hide a direct reducer copy");
+  assert.equal(findings[0].startLine, 1);
   assert.equal(findings[0].line, 3);
   assert.equal(findings[0].column, 16);
-  assert.equal(findings[0].endLine, 3);
+  assert.equal(findings[0].endLine, 5);
   console.log("ok   reports the direct copy span beside a deferred method");
 }
 for (const source of [
@@ -2154,6 +2155,120 @@ users.filter(active).map(email);`,
   assert.equal(findings.length, expectedLines.length, `${label} should review its typed pipelines only`);
   assert.deepEqual(findings.map((finding) => finding.line), expectedLines, `${label} findings should stay inside its scope`);
   console.log(`ok   ${label} evidence ends at its boundary`);
+}
+
+// A newline after an initializer only terminates the declaration when the
+// next token cannot continue its expression. Keep continuations quiet while
+// retaining array evidence after genuine ASI (including comment trivia).
+for (const source of [
+  "const users = []\n && customCollection; users.filter(active).map(email);",
+  "const users = []\n || customCollection; users.filter(active).map(email);",
+  "const users = []\n ? customCollection : otherCollection; users.filter(active).map(email);",
+  "const users = (customCollection)\n .concat([]); users.filter(active).map(email);",
+  "const users = make([])\n (customCollection); users.filter(active).map(email);",
+  "const users = source\n [index]; users.filter(active).map(email);",
+  "const users = []\n [0]; users.filter(active).map(email);",
+  "const users = [] /* comment */\n && customCollection; users.filter(active).map(email);",
+  "const users = []\n /* comment */ || customCollection; users.filter(active).map(email);",
+]) {
+  expectNoRule(`does not truncate a multiline initializer: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "const users = []\n!ready; users.filter(active).map(email);",
+  "const users = []\n++ready; users.filter(active).map(email);",
+  "const users = []\n// comment\n!ready; users.filter(active).map(email);",
+  "const users = []\n/* comment */\n++ready; users.filter(active).map(email);",
+]) {
+  expectRule(`retains a real ASI array after unary syntax: ${source}`, source, ARRAY_PIPELINE);
+}
+
+// Reassigning one built-in method invalidates only that method's evidence.
+expectNoRule(
+  "suppresses a reassigned Array.from factory",
+  "Array.from = customFrom; Array.from(values).filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "keeps Array.of evidence after Array.from reassignment",
+  "Array.from = customFrom; Array.of(values).filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "suppresses a compound Array.of reassignment",
+  "Array.of += customOf; Array.of(values).filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "suppresses a computed static Array.from reassignment",
+  'Array["from"] = customFrom; Array.from(values).filter(active).map(email);',
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "keeps Array.from evidence for an unrelated property write",
+  "Array.map = customMap; Array.from(values).filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "suppresses a reassigned Object.assign reducer copy",
+  "Object.assign = customAssign; items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "keeps Array.from reducer evidence after Object.assign reassignment",
+  "Object.assign = customAssign; items.reduce((acc, item) => Array.from(acc), []);",
+  ACCUMULATOR_COPY,
+);
+
+// A reducer accumulator's identity is lost when a loop writes the binding or
+// an alias. `for await` has the same bare-target shape as ordinary for-of.
+for (const source of [
+  "items.reduce((acc, item) => { for (acc of [item]) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for (acc in item) {} return Object.assign({}, acc); }, {});",
+]) {
+  expectNoRule(`preserves reducer identity after loop writes: ${source}`, source, ACCUMULATOR_COPY);
+}
+expectNoRule(
+  "tracks a valid for-await rest-parameter write",
+  "async function collect(...users) { for await (users of stream) {} return users.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "reviews an immutable rest-parameter pipeline",
+  "async function collect(...users) { return users.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "does not truncate a reducer alias initializer",
+  "items.reduce((acc, item) => { const alias = acc\n && item; return [...alias]; }, []);",
+  ACCUMULATOR_COPY,
+);
+
+// Constructor parameter properties expose their bare binding to the body;
+// member access still needs a real type flow proof. Modifiers may be ordered
+// around the name, while similarly named identifiers must remain untouched.
+for (const source of [
+  "class Users { constructor(private readonly users: User[]) { users.filter(active).map(email); } }",
+  "class Users { constructor(public readonly users: User[]) { users.filter(active).map(email); } }",
+  "class Users { constructor(protected readonly users: User[]) { users.filter(active).map(email); } }",
+  "class Users { constructor(readonly users: User[]) { users.filter(active).map(email); } }",
+  "class Users { constructor(public override readonly users: User[]) { users.filter(active).map(email); } }",
+]) {
+  expectRule(`reviews a typed constructor property pipeline: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "class Users { constructor(private readonly users: User[]) { this.users.filter(active).map(email); } }",
+  "class Users { constructor(private readonly users: User) { users.filter(active).map(email); } }",
+  "class Users { constructor(private readonly Array: Factory) { Array.from(values).filter(active).map(email); } }",
+]) {
+  expectNoRule(`does not over-infer constructor property syntax: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "class Users { constructor(readonly: User[]) { readonly.filter(active).map(email); } }",
+  "class Users { constructor(public: User[]) { public.filter(active).map(email); } }",
+  "class Users { constructor(readonlyValue: User[]) { readonlyValue.filter(active).map(email); } }",
+  "class Users { constructor(publicity: User[]) { publicity.filter(active).map(email); } }",
+]) {
+  expectRule(`keeps an identifier that resembles a modifier: ${source}`, source, ARRAY_PIPELINE);
 }
 {
   const source = "const users = [];\nusers.filter(active).map(email).filter(present);";
