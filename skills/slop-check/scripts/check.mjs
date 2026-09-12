@@ -1771,13 +1771,13 @@ function* iterateArrayFindings(ctx) {
       const binding = bindings.get(text);
       if (!binding || binding.start >= at || visited.has(text)) return false;
       if (binding.scopeEnd !== undefined && at >= binding.scopeEnd) return false;
-      if (writes.get(text)?.some((write) => write !== binding.write)) return false;
       if (binding.scope && at >= binding.scope.end) return false;
       visited.add(text);
       if (/^(?:readonly\s+)?(?:[\w$.]+(?:\[\])+|(?:Array|ReadonlyArray)<[^<>|]+>|\[[^\]]*\])$/u.test(binding.annotation)) {
         const generic = /^(?:readonly\s+)?(Array|ReadonlyArray)</u.exec(binding.annotation);
         if (!generic || !bindings.has(generic[1]) && !ctx.declaredNames.has(generic[1])) return true;
       }
+      if (writes.get(text)?.some((write) => write !== binding.write)) return false;
       return knownArray(binding.value, binding.start, visited);
     }
     const call = /(?:\?\.|\.)\s*(map|filter|flatMap|slice|concat|toSorted|toReversed|toSpliced)\s*\(/gu;
@@ -1790,11 +1790,27 @@ function* iterateArrayFindings(ctx) {
   for (const match of masked.matchAll(/(?:\?\.|\.)\s*(map|filter)\s*\(/gu)) {
     const innerEnd = balancedEnd(masked, match.index + match[0].length - 1);
     if (innerEnd === -1) continue;
-    const outer = /^\s*(?:\?\.|\.)\s*(map|filter)\s*\(/u.exec(masked.slice(innerEnd, innerEnd + SCAN_LIMIT));
-    if (!outer || outer[1] === match[1]) continue;
     const start = arrayReceiverStart(masked, match.index);
-    if (start === -1 || !knownArray(masked.slice(start, match.index), match.index)) continue;
-    const end = balancedEnd(masked, innerEnd + outer[0].length - 1);
+    if (start === -1) continue;
+    let groupStart = start;
+    let outerStart = innerEnd;
+    // Only cross parentheses around this whole pass, never a wrapping call,
+    // an argument list, or a larger expression that happens to end with it.
+    for (let count = 0; count < 20; count += 1) {
+      let close = outerStart;
+      while (/\s/u.test(masked[close] ?? "")) close += 1;
+      if (masked[close] !== ")") break;
+      let open = groupStart - 1;
+      while (open >= 0 && /\s/u.test(masked[open])) open -= 1;
+      if (masked[open] !== "(" || balancedEnd(masked, open) !== close + 1
+        || arrayReceiverStart(masked, close + 1) !== open) break;
+      groupStart = open;
+      outerStart = close + 1;
+    }
+    const outer = /^\s*(?:\?\.|\.)\s*(map|filter)\s*\(/u.exec(masked.slice(outerStart, outerStart + SCAN_LIMIT));
+    if (!outer || outer[1] === match[1]) continue;
+    if (!knownArray(masked.slice(start, match.index), match.index)) continue;
+    const end = balancedEnd(masked, outerStart + outer[0].length - 1);
     if (end === -1) continue;
     yield {
       ...offsetToPosition(lineStarts, match.index), endLine: offsetToPosition(lineStarts, end - 1).line,

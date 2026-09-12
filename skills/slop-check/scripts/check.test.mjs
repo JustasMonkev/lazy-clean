@@ -1713,6 +1713,40 @@ expectNoRule(
   "function collect(users?: User) { return users?.filter(active).map(email); }",
   ARRAY_PIPELINE,
 );
+// Parentheses around the whole inner pass are transparent, while parentheses
+// that belong to a larger expression must not turn a wrapped call into an
+// array pipeline.
+for (const [label, source] of [
+  ["an exact grouped literal pass", "([1, 2].filter(active)).map(email);"],
+  ["multiple groups around a literal pass", "((([1, 2].filter(active)))).map(email);"],
+  ["a grouped reverse pass", "([1, 2].map(email)).filter(active);"],
+  ["a grouped typed identifier with type arguments", "const users: User[] = load(); (users.filter<User>(active)).map<string>(email);"],
+]) {
+  expectRule(`reviews ${label}`, source, ARRAY_PIPELINE);
+}
+for (const [label, source] of [
+  ["a grouped wrapper call", "const users: User[] = load(); convert((users.filter(active))).map(email);"],
+  ["a grouped function argument", "const users: User[] = load(); run((users.filter(active)), other).map(email);"],
+  ["a grouped conditional", "const users: User[] = load(); (ok ? other : users.filter(active)).map(email);"],
+  ["a grouped sequence", "const users: User[] = load(); (prepare(), users.filter(active)).map(email);"],
+]) {
+  expectNoRule(`preserves ${label} boundary`, source, ARRAY_PIPELINE);
+}
+{
+  const source = "const users: User[] = load();\n(users.filter(active)).map(email).filter(present);";
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 2, "grouped passes retain one finding per adjacent pair");
+  assert.equal(findings[0].line, 2);
+  assert.equal(findings[0].endLine, 2);
+  console.log("ok   grouped passes preserve adjacency count and span");
+}
+{
+  const source = "// slop-check-ignore no-array-filter-map -- deliberate callback ordering\n([1, 2].filter(active)).map(email);";
+  const findings = lintSource(source, "sample.ts");
+  assert.equal(findings.some((finding) => finding.rule === ARRAY_PIPELINE), false);
+  assert.equal(findings.suppressed.filter((finding) => finding.rule === ARRAY_PIPELINE).length, 1);
+  console.log("ok   grouped pass preserves suppression");
+}
 // Braced control-flow conditions have parentheses that are not parameter
 // lists. A mistaken parameter parse marked the binding ambiguous and erased
 // both the guarded use and a later use of the known top-level array.
@@ -1935,6 +1969,34 @@ for (const [label, source, expectedLine] of [
   [
     "a reassigned var",
     "function collect() { { var users: User[] = load(); } users = other; return users.filter(active).map(email); }",
+    1,
+  ],
+  [
+    "a reassigned let keeps User[] evidence before and after the write",
+    `let users: User[] = [];
+users.filter(active).map(email);
+users = refreshUsers();
+users.filter(active).map(email);`,
+    [2, 4],
+  ],
+  [
+    "a reassigned var keeps readonly User[] evidence before and after the write",
+    `function collect() {
+  var users: readonly User[] = load();
+  users.filter(active).map(email);
+  users = refreshUsers();
+  users.filter(active).map(email);
+}`,
+    [3, 5],
+  ],
+  [
+    "a reassigned typed parameter keeps Array<User> evidence before and after the write",
+    `function collect(users: Array<User>) {
+  users.filter(active).map(email);
+  users = refreshUsers();
+  users.filter(active).map(email);
+}`,
+    [2, 4],
   ],
 ]) {
   if (expectedLine === undefined) {
@@ -1942,8 +2004,9 @@ for (const [label, source, expectedLine] of [
     continue;
   }
   const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
-  assert.equal(findings.length, 1, `${label} should review its inner pipeline only`);
-  assert.equal(findings[0].line, expectedLine, `${label} finding should stay inside its scope`);
+  const expectedLines = Array.isArray(expectedLine) ? expectedLine : [expectedLine];
+  assert.equal(findings.length, expectedLines.length, `${label} should review its typed pipelines only`);
+  assert.deepEqual(findings.map((finding) => finding.line), expectedLines, `${label} findings should stay inside its scope`);
   console.log(`ok   ${label} evidence ends at its boundary`);
 }
 {
