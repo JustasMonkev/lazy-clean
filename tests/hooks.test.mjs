@@ -1031,6 +1031,18 @@ ok("an uppercase .TS file is scanned at all", e.status === 0 && e.stdout.include
 // every TypeScript-only rule.
 ok("an uppercase .TS file gets the TypeScript rules", e.stdout.includes("no-any"));
 
+for (const [name, source, changed, rule] of [
+  ["accumulator.js", "const result = [1, 2].reduce((acc, value) => {\n\n\n\n\n  return acc.concat(value);\n}, []);\n", "  return acc.concat(value);", "no-reduce-accumulator-copy"],
+  ["pipeline.js", "const result = [1, 2]\n  .filter(value => value > 0)\n\n\n\n\n  .map(value => value * 2);\n", "  .map(value => value * 2);", "no-array-filter-map"],
+]) {
+  const file = write(name, source);
+  const result = editCheck({ tool_name: "Edit", tool_input: { file_path: file, old_string: "", new_string: changed } });
+  eq(`array check stays advisory for ${name}`, result.status, 0);
+  ok(`an Edit reports the changed multiline operation in ${name}`, result.stdout.includes(rule), result.stdout);
+  const output = result.stdout ? JSON.parse(result.stdout) : null;
+  ok(`array findings never block ${name}`, output && output.decision === undefined && output.hookSpecificOutput.permissionDecision === undefined);
+}
+
 // Only the lines this tool call wrote are reported.
 const ranges = write("ranges.ts", "const ok = 1;\nconst bad: any = 2;\nconst also: any = 3;\nconst more: any = 4;\n");
 e = editCheck({ tool_name: "Edit", tool_input: { file_path: ranges, old_string: "x", new_string: "const bad: any = 2;" } });

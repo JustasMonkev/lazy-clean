@@ -709,6 +709,56 @@ check("--json stays a bare array when findings are suppressed", () => {
   assert.deepEqual(JSON.parse(result.stdout), []);
 });
 
+check("array performance findings are advisory, serialized, and individually configurable", () => {
+  write("array-performance.js", [
+    "const result = [1, 2].reduce((acc, value) => acc.concat(value), []);",
+    "const doubled = [1, 2].filter(value => value > 0).map(value => value * 2);",
+    "",
+  ].join("\n"));
+  const result = run(["--json", "array-performance.js"]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout).map(({ rule, severity, line }) => ({ rule, severity, line })), [
+    { rule: "no-reduce-accumulator-copy", severity: "review", line: 1 },
+    { rule: "no-array-filter-map", severity: "review", line: 2 },
+  ]);
+  const filtered = run(["--json", "--disable=no-array-filter-map", "array-performance.js"]);
+  assert.equal(filtered.status, 1, filtered.stderr);
+  assert.deepEqual(JSON.parse(filtered.stdout).map(finding => finding.rule), ["no-reduce-accumulator-copy"]);
+  const disabled = run(["--disable=no-array-filter-map,no-reduce-accumulator-copy", "array-performance.js"]);
+  assert.equal(disabled.status, 0, disabled.stderr);
+  assert.match(disabled.stdout, /2 suppressed/u);
+});
+
+check("--since sees changed multiline array operations without reporting untouched copies", () => {
+  const repo = join(root, "array-diff");
+  mkdirSync(repo);
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const reducer = [
+    "const legacy = [1].reduce((acc, value) => [...acc, value], []);",
+    "const result = [1, 2].reduce((acc, value) => {",
+    "  return acc;",
+    "}, []);",
+    "",
+  ].join("\n");
+  const pipeline = "const doubled = [1, 2]\n  .filter(value => value > 0);\n";
+  git("init", "-q");
+  git("config", "user.email", "test@example.com");
+  git("config", "user.name", "test");
+  writeFileSync(join(repo, "reduce.js"), reducer);
+  writeFileSync(join(repo, "pipeline.js"), pipeline);
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  writeFileSync(join(repo, "reduce.js"), reducer.replace("return acc;", "return [...acc, value];"));
+  writeFileSync(join(repo, "pipeline.js"), pipeline.replace(";", "\n  .map(value => value * 2);"));
+  const result = run(["--since=HEAD", "--json"], repo);
+  assert.equal(result.status, 1, result.stderr);
+  const findings = JSON.parse(result.stdout);
+  assert.deepEqual(findings.map(finding => finding.rule).sort(), ["no-array-filter-map", "no-reduce-accumulator-copy"]);
+  const copy = findings.find(finding => finding.rule === "no-reduce-accumulator-copy");
+  assert.ok(copy.line > 1 && copy.line <= 3 && (copy.endLine || copy.line) >= 3,
+    "the changed reducer body is reported instead of the unchanged legacy copy");
+});
+
 if (failures > 0) {
   console.error(`\n${failures} test(s) failed`);
   process.exit(1);

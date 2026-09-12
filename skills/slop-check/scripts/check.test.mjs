@@ -1392,9 +1392,8 @@ console.log("ok   reports correct line numbers");
 const ruleNames = (text) => new Set([...text.matchAll(/(?:\bname|\brule):\s*"([a-z0-9-]+)"/gu)].map((m) => m[1]));
 const implemented = ruleNames(readFileSync(join(here, "check.mjs"), "utf8"));
 const documented = new Set(
-  [...readFileSync(join(here, "..", "SKILL.md"), "utf8").matchAll(/`([a-z][a-z0-9-]+)`/gu)]
-    .map((m) => m[1])
-    .filter((name) => /^(?:no|require)-/u.test(name)),
+  [...readFileSync(join(here, "..", "SKILL.md"), "utf8").matchAll(/`((?:no|require)-[a-z0-9-]*)`/gu)]
+    .map((m) => m[1]),
 );
 assert.deepEqual(
   [...implemented].filter((name) => !documented.has(name)).sort(), [],
@@ -1575,6 +1574,154 @@ expectSuppression(
   const positions = lintSource(source, "check.mjs").map((f) => `${f.line}:${f.column}:${f.rule}`);
   assert.equal(new Set(positions).size, positions.length, "one position reported twice for one rule");
   console.log("ok   no position is reported twice for one rule");
+}
+
+
+// Array rules are advisory: copying may preserve snapshots, and combining
+// passes can change callbacks, sparse arrays, or ownership.
+const ACCUMULATOR_COPY = "no-reduce-accumulator-copy";
+const ARRAY_PIPELINE = "no-array-filter-map";
+for (const source of [
+  "items.reduce((acc, item) => [...acc, item], []);",
+  "items.reduce((acc, item) => ({ ...acc, [item.id]: item }), {});",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  "items.reduceRight((acc, item) => Object.assign({}, item, acc), {});",
+  "items.reduce(acc => Object.assign({}, acc), {});",
+  "items.reduce(function (acc, item) { return Object.assign({}, item, acc); }, {});",
+  "items.reduce((acc = {}, item) => Object.assign({}, acc, item), {});",
+  "items.reduce((acc, item) => { const alias = acc; const state = alias; return Object.assign({}, state, item); }, {});",
+  "items.reduce((acc, item) => { const next = Object.assign({}, acc); next[item.id] = item; return next; }, {});",
+  "items.reduce((acc, item) => acc.concat([item]), []);",
+  "items.reduce((acc, item) => { const next = acc.slice(); next.push(item); return next; }, []);",
+  "const initial = []; items.reduce((acc, item) => acc.concat(item), initial);",
+  "const initial =\n []; items.reduce((acc, item) => acc.concat(item), initial);",
+  "items.reduce((acc, item) => { const next = Array.from(acc); next.push(item); return next; }, []);",
+  "items.reduce((acc, item) => acc.toSpliced(acc.length, 0, item), []);",
+  "items.reduce((acc, item) => acc.toSorted(), []);",
+  "items.reduce((acc, item) => acc.toReversed(), []);",
+  "items.reduce((acc, item) => acc.with(0, item), []);",
+  "items.reduce((acc, item) => { const alias = acc; return [...alias, item]; }, []);",
+  "items.reduce((acc: Item[], item: Item) => acc.concat(item), []);",
+  "items.reduce((acc, item): Item[] => acc.concat(item), []);",
+  "items.reduce(function (acc, item): Item[] { return acc.concat(item); }, []);",
+]) {
+  expectRule(`reviews copying the accumulator: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const source of [
+  "items.reduce((acc, item) => { acc.push(item); return acc; }, []);",
+  "items.reduce((acc, item) => Object.assign(acc, item), {});",
+  "items.reduce((acc, item) => Object.assign(acc, acc, item), {});",
+  "items.reduce((acc, item) => { acc[item.id] = { ...item }; return acc; }, {});",
+  "items.reduce((acc, item) => { acc.push(Object.assign({}, item)); return acc; }, []);",
+  "items.reduce((acc, item) => { acc.push(item.slice()); return acc; }, []);",
+  "items.reduce((acc, item) => acc.concat(item), '');",
+  "items.reduce((acc, item) => acc.concat(item), customCollection);",
+  "function copy(acc) { return Object.assign({}, acc); }",
+  "items.map((acc, item) => Object.assign({}, acc));",
+  "items.reduce((acc, item) => { function copy(acc) { return Object.assign({}, acc); } return acc; }, {});",
+  "items.reduce((acc, item) => { const snapshot = () => Object.assign({}, acc); return acc; }, {});",
+  "items.reduce((acc, item) => { { const acc = {}; Object.assign({}, acc); } return acc; }, {});",
+  "const Object = custom; items.reduce((acc, item) => Object.assign({}, acc), {});",
+  "function run(Object) { return items.reduce((acc, item) => Object.assign({}, acc), {}); }",
+  "const run = (Array) => items.reduce((acc, item) => Array.from(acc), []);",
+  "items.reduce((acc, item) => { let alias = acc; alias = item; return Object.assign({}, alias); }, {});",
+  "items.reduce((acc, item) => { acc = item; return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => consume(...acc), []);",
+  "items.reduce((acc, item)(Object.assign({}, acc)), {});",
+  "items.reduce((acc, item) => consume(item, ...acc), []);",
+  "items.reduce((acc, item) => custom.Object.assign({}, acc), {});",
+  "Object = custom; items.reduce((acc, item) => Object.assign({}, acc), {});",
+  "import Object from 'custom'; items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  "import * as Array from 'custom'; items.reduce(acc => Array.from(acc), []);",
+  "items.reduce((acc, item) => custom . Object.assign({}, acc), {});",
+  "items.reduce(acc => custom . Array.from(acc), []);",
+  "items.reduce((acc, item) => { [acc] = item; return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { ({acc} = item); return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => consume({acc}), []);",
+  "items.reduce((acc, item) => { const alias = acc; { const alias = item; Object.assign({}, alias); } return acc; }, {});",
+  'const example = "items.reduce((acc, item) => [...acc, item], []);";',
+  "// items.reduce((acc, item) => [...acc, item], []);",
+]) {
+  expectNoRule(`preserves a non-copy or ambiguous reducer: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const source of [
+  "[].filter(active).map(email);",
+  "[].map(user => user.active ? user.email : undefined).filter(email => email !== undefined);",
+  "const users = []; users.map(email).filter(Boolean);",
+  "const users = []; const alias = users; alias.filter(active).map(email);",
+  "function collect(users: User[]) { return users.filter(active).map(email); }",
+  "function collect(users: readonly User[]) { return users.map(email).filter(present); }",
+  "function collect(users: ReadonlyArray<User>) { return users.filter(active).map(email); }",
+  "function collect(users: Array<User>) { return users.filter(active).map(email); }",
+  "function collect(users: string[][]) { return users.filter(active).map(email); }",
+  "const users: User[] = fetchUsers(); users.filter(active).map(email);",
+  "const users: readonly User[] = fetchUsers(); users.filter(active).map(email);",
+  "const users = []; users.slice().filter(active).map(email);",
+  "const users = []; users?.filter(active)?.map(email);",
+  "const users = [] as const; users.filter(active).map(email);",
+  "[1, [2, 3]].filter(active).map(email);",
+]) {
+  expectRule(`reviews adjacent passes on a known array: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "const users = []; users.values().filter(active).map(email).toArray();",
+  "Iterator.from(users).filter(active).map(email).toArray();",
+  "function collect(users: IteratorObject<User>) { return users.filter(active).map(email).toArray(); }",
+  "const users = []; users.flatMap(user => user.active ? [user.email] : []);",
+  "const users = []; users.map(email); users.filter(active);",
+  "const users = []; users.map(email).map(normalize);",
+  "const users = []; users.filter(active).filter(verified);",
+  "const custom = { filter() { return this; }, map() {} }; custom.filter(active).map(email);",
+  "function collect(unknownReceiver) { return unknownReceiver.filter(active).map(email); }",
+  "const users = fetchUsers(); users.filter(active).map(email);",
+  "const users = []; function collect(users) { return users.filter(active).map(email); }",
+  "const users = []; const collect = users => users.filter(active).map(email);",
+  "const users = []; const collect = function users() { return users.filter(active).map(email); };",
+  "const users = []; const collect = class users { get() { return users.filter(active).map(email); } };",
+  "type Array<T> = Collection<T>; function collect(users: Array<User>) { return users.filter(active).map(email); }",
+  "type ReadonlyArray<T> = Collection<T>; function collect(users: ReadonlyArray<User>) { return users.filter(active).map(email); }",
+  "const users = []; function collect({users}) { return users.filter(active).map(email); }",
+  "const users = []; function collect({value: users} = config()) { return users.filter(active).map(email); }",
+  "const users = []; const collect = ([users] = config()) => users.filter(active).map(email);",
+  "const users = []; const collect = (users = config()) => users.filter(active).map(email);",
+  "function collect(users: User[]) { return users; } users.filter(active).map(email);",
+  "let users = []; users = iterator; users.filter(active).map(email);",
+  "const first = second; const second = first; first.filter(active).map(email);",
+  "const users = []; object.users.filter(active).map(email);",
+  "const users = []; object . users.filter(active).map(email);",
+  "const users = []; object[users].filter(active).map(email);",
+  "function collect(users: User[] | Collection) { return users.filter(active).map(email); }",
+  "const users: User[] | Collection = fetchUsers(); users.filter(active).map(email);",
+  "let users: User[]; [users] = data; users.filter(active).map(email);",
+  'const example = "[].filter(active).map(email);";',
+]) {
+  expectNoRule(`preserves separate, lazy, or unproven passes: ${source}`, source, ARRAY_PIPELINE);
+}
+{
+  const source = "const users = [];\nusers.filter(active).map(email).filter(present);";
+  const findings = lintSource(source, "sample.js").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 2, "each adjacent mixed pair is reviewed once");
+  assert.ok(findings.every((finding) => finding.line === 2 && finding.severity === "review"));
+}
+{
+  const source = "const rows = [];\n" + "rows.filter(active).map(email);\n".repeat(10000);
+  const start = performance.now();
+  const findings = lintSource(source, "sample.js").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 10000, "distant uses retain their top-level array evidence");
+  assert.ok(performance.now() - start < 2000, "array evidence should not rescan the declaration-to-use gap per pipeline");
+}
+for (const [rule, source] of [
+  [ACCUMULATOR_COPY, "items.reduce((acc, item) => [...acc, item], []);"],
+  [ARRAY_PIPELINE, "[].filter(active).map(email);"],
+]) {
+  const finding = lintSource(source, "sample.js").find((item) => item.rule === rule);
+  assert.equal(finding?.severity, "review", `${rule} must never prescribe an automatic rewrite`);
+  const disabled = lintSource(source, "sample.js", { disabled: new Set([rule]) });
+  assert.equal(disabled.some((item) => item.rule === rule), false);
+  assert.equal(disabled.suppressed.filter((item) => item.rule === rule).length, 1);
+  const ignored = lintSource(`// slop-check-ignore ${rule} -- preserves callback observations\n${source}`, "sample.js");
+  assert.equal(ignored.some((item) => item.rule === rule), false);
+  assert.equal(ignored.suppressed.filter((item) => item.rule === rule).length, 1);
 }
 
 if (failures > 0) {
