@@ -1583,6 +1583,8 @@ const ACCUMULATOR_COPY = "no-reduce-accumulator-copy";
 const ARRAY_PIPELINE = "no-array-filter-map";
 for (const source of [
   "items.reduce((acc, item) => [...acc, item], []);",
+  "items.reduce((acc, item) => [...acc, item], [],);",
+  "items.reduce((acc, item) => [...acc, item],);",
   "items.reduce((acc, item) => ({ ...acc, [item.id]: item }), {});",
   "items.reduce((acc, item) => Object.assign({}, acc, item), {});",
   "items.reduceRight((acc, item) => Object.assign({}, item, acc), {});",
@@ -1606,6 +1608,13 @@ for (const source of [
   "items.reduce(function (acc, item): Item[] { return acc.concat(item); }, []);",
 ]) {
   expectRule(`reviews copying the accumulator: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const source of [
+  "items.reduce((acc, item) => [...acc, item], [], seed);",
+  "items.reduce((acc, item) => [...acc, item],, [],);",
+  "items.reduce((acc, item) => [...acc, item],,);",
+]) {
+  expectNoRule(`preserves reducer argument boundaries: ${source}`, source, ACCUMULATOR_COPY);
 }
 for (const source of [
   "items.reduce((acc, item) => { acc.push(item); return acc; }, []);",
@@ -1633,6 +1642,7 @@ for (const source of [
   "Object = custom; items.reduce((acc, item) => Object.assign({}, acc), {});",
   "import Object from 'custom'; items.reduce((acc, item) => Object.assign({}, acc, item), {});",
   "import * as Array from 'custom'; items.reduce(acc => Array.from(acc), []);",
+  "module Object { export const assign = customAssign; } items.reduce((acc, item) => Object.assign({}, acc, item), {});",
   "items.reduce((acc, item) => custom . Object.assign({}, acc), {});",
   "items.reduce(acc => custom . Array.from(acc), []);",
   "items.reduce((acc, item) => { [acc] = item; return Object.assign({}, acc); }, {});",
@@ -1644,6 +1654,21 @@ for (const source of [
 ]) {
   expectNoRule(`preserves a non-copy or ambiguous reducer: ${source}`, source, ACCUMULATOR_COPY);
 }
+expectNoRule(
+  "does not trust a namespace Array factory",
+  "namespace Array { export const from = customFrom; } Array.from(values).filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "does not trust a namespace ReadonlyArray annotation",
+  "namespace ReadonlyArray { export const custom = true; } function collect(users: ReadonlyArray<User>) { return users.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "keeps native Array for a string-named ambient module",
+  'module "Array" { export const from = customFrom; } Array.from(values).filter(active).map(email);',
+  ARRAY_PIPELINE,
+);
 // Method bodies run later, so a deferred snapshot of `acc` is not a copy made
 // on each reducer iteration. Direct copies beside those methods remain visible.
 for (const source of [
@@ -1708,11 +1733,35 @@ expectRule(
   "function collect(users?: User[]) { return users?.filter(active).map(email); }",
   ARRAY_PIPELINE,
 );
+for (const [label, source] of [
+  ["a non-null optional array parameter", "function collect(users?: User[]) { return users!.filter(active).map(email); }"],
+  ["a non-null optional ReadonlyArray parameter", "function collect(users?: ReadonlyArray<User>) { return users!.filter(active).map(email); }"],
+  ["a grouped non-null optional array parameter", "function collect(users?: User[]) { return (users!).filter(active).map(email); }"],
+  ["a non-null array method result", "const users = []; users.slice()!.filter(active).map(email);"],
+  ["an alias of a non-null optional array", "function collect(users?: User[]) { const alias = users!; return alias.filter(active).map(email); }"],
+]) {
+  expectRule(`reviews ${label}`, source, ARRAY_PIPELINE);
+}
+expectRule(
+  "reviews a non-null reducer initial value",
+  "const initial = []; items.reduce((acc, item) => acc.concat(item), initial!);",
+  ACCUMULATOR_COPY,
+);
 expectNoRule(
   "does not infer an optional non-array parameter as an array",
   "function collect(users?: User) { return users?.filter(active).map(email); }",
   ARRAY_PIPELINE,
 );
+for (const [label, source, filePath] of [
+  ["an unknown non-null receiver", "function collect(users?: User) { return users!.filter(active).map(email); }", "sample.ts"],
+  ["a custom non-null receiver", "custom!.filter(active).map(email);", "sample.ts"],
+  ["a grouped prefix negation receiver", "const users: User[] = load(); (!users).filter(active).map(email);", "sample.ts"],
+  ["a JavaScript unknown receiver", "const users = []; users!.filter(active).map(email);", "sample.js"],
+  ["an asserted wrapper receiver", "const users = []; wrap!(users).filter(active).map(email);", "sample.ts"],
+  ["an asserted indexed receiver", "const users = []; source![users].filter(active).map(email);", "sample.ts"],
+]) {
+  expectNoRule(`does not infer ${label}`, source, ARRAY_PIPELINE, filePath);
+}
 // Parentheses around the whole inner pass are transparent, while parentheses
 // that belong to a larger expression must not turn a wrapped call into an
 // array pipeline.

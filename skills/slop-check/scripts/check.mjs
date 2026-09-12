@@ -1542,19 +1542,24 @@ function arrayArguments(text, isTypeScript = false) {
       if (end === -1) return [];
       at = end - 1;
     } else if (text[at] === ",") {
-      parts.push(text.slice(start, at).trim());
+      const part = text.slice(start, at).trim();
+      if (!part) return [];
+      parts.push(part);
       start = at + 1;
     }
   }
-  parts.push(text.slice(start).trim());
+  const last = text.slice(start).trim();
+  if (last) parts.push(last);
   return parts;
 }
 
-function unwrapArraySyntax(expression) {
+function unwrapArraySyntax(expression, isTypeScript = false) {
   let text = expression.trim();
   for (let count = 0; count < 20; count += 1) {
     if (text[0] === "(" && balancedEnd(text, 0) === text.length) {
       text = text.slice(1, -1).trim();
+    } else if (isTypeScript && text.endsWith("!")) {
+      text = text.slice(0, -1).trimEnd();
     } else {
       const assertion = /\s+(?:as|satisfies)\s+(?:const|[\w$.]+(?:\[\])?)$/u.exec(text);
       if (!assertion) break;
@@ -1564,9 +1569,9 @@ function unwrapArraySyntax(expression) {
   return text;
 }
 
-function arrayReceiverStart(text, end, depth = 0) {
+function arrayReceiverStart(text, end, isTypeScript = false, depth = 0) {
   if (depth > 20) return -1;
-  while (end > 0 && /\s/u.test(text[end - 1])) end -= 1;
+  while (end > 0 && (/\s/u.test(text[end - 1]) || isTypeScript && text[end - 1] === "!")) end -= 1;
   const last = text[end - 1];
   if (last !== ")" && last !== "]") {
     const identifier = /[A-Za-z_$][\w$]*$/u.exec(text.slice(Math.max(0, end - SCAN_LIMIT), end));
@@ -1585,9 +1590,12 @@ function arrayReceiverStart(text, end, depth = 0) {
       const constructor = /\bnew\s+Array\s*$/u.exec(text.slice(Math.max(0, at - SCAN_LIMIT), at));
       if (constructor) return at - constructor[0].length;
       const method = /(?:\?\.|\.)\s*[A-Za-z_$][\w$]*\s*$/u.exec(text.slice(Math.max(0, at - SCAN_LIMIT), at));
-      if (method) return arrayReceiverStart(text, at - method[0].length, depth + 1);
+      if (method) return arrayReceiverStart(text, at - method[0].length, isTypeScript, depth + 1);
     }
-    const before = text.slice(Math.max(0, at - SCAN_LIMIT), at).trimEnd();
+    let before = text.slice(Math.max(0, at - SCAN_LIMIT), at).trimEnd();
+    // An asserted call/index owner still owns its arguments. A bang on the
+    // next line can instead negate a new expression, so keep that boundary.
+    if (isTypeScript) before = before.replace(/(\S)(?:[^\S\r\n]*!)+$/u, "$1");
     // A call/index result is not the literal or parenthesized argument inside it.
     if (/[\w$\])?.]$/u.test(before) && !/\b(?:return|throw|yield|await|case)\s*$/u.test(before)) return -1;
     return at;
@@ -1735,6 +1743,9 @@ function arrayBindingEvidence(masked, isTypeScript = false) {
     }
   }
   for (const match of masked.matchAll(/\b(?:function|class)\s+([A-Za-z_$][\w$]*)/gu)) add(match[1], null);
+  if (isTypeScript) {
+    for (const match of masked.matchAll(/\b(?:namespace|module)\s+([A-Za-z_$][\w$]*)/gu)) add(match[1], null);
+  }
   for (const match of masked.matchAll(/\bimport\b\s*(?:type\b\s*)?(?:\*\s*as\s+)?([A-Za-z_$][\w$]*)/gu)) add(match[1], null);
   for (const match of masked.matchAll(/[{[]/gu)) {
     if (match[0] === "[" && /[\w$\])]/u.test(masked[match.index - 1] ?? "")) continue;
@@ -1823,7 +1834,7 @@ function* iterateArrayFindings(ctx) {
   const { bindings, writes } = arrayBindingEvidence(masked, ctx.isTypeScript);
   const nativeGlobal = (name) => !bindings.has(name) && !writes.has(name) && !ctx.declaredNames.has(name);
   const knownArray = (expression, at, visited = new Set()) => {
-    const text = unwrapArraySyntax(expression);
+    const text = unwrapArraySyntax(expression, ctx.isTypeScript);
     if (text[0] === "[" && balancedEnd(text, 0) === text.length) return true;
     const factory = /^(?:Array\s*(?:\?\.|\.)\s*(?:from|of)|new\s+Array)\s*\(/u.exec(text);
     if (factory && nativeGlobal("Array") && balancedEnd(text, factory[0].length - 1) === text.length) return true;
@@ -1852,7 +1863,7 @@ function* iterateArrayFindings(ctx) {
   for (const match of masked.matchAll(/(?:\?\.|\.)\s*(map|filter)\s*\(/gu)) {
     const innerEnd = balancedEnd(masked, match.index + match[0].length - 1);
     if (innerEnd === -1) continue;
-    const start = arrayReceiverStart(masked, match.index);
+    const start = arrayReceiverStart(masked, match.index, ctx.isTypeScript);
     if (start === -1) continue;
     let groupStart = start;
     let outerStart = innerEnd;
@@ -1860,12 +1871,12 @@ function* iterateArrayFindings(ctx) {
     // an argument list, or a larger expression that happens to end with it.
     for (let count = 0; count < 20; count += 1) {
       let close = outerStart;
-      while (/\s/u.test(masked[close] ?? "")) close += 1;
-      if (masked[close] !== ")") break;
+      while (/\s/u.test(masked[close] ?? "") || ctx.isTypeScript && masked[close] === "!") close += 1;
+      if (masked[close] !== ")") { outerStart = close; break; }
       let open = groupStart - 1;
       while (open >= 0 && /\s/u.test(masked[open])) open -= 1;
       if (masked[open] !== "(" || balancedEnd(masked, open) !== close + 1
-        || arrayReceiverStart(masked, close + 1) !== open) break;
+        || arrayReceiverStart(masked, close + 1, ctx.isTypeScript) !== open) break;
       groupStart = open;
       outerStart = close + 1;
     }
@@ -1886,7 +1897,7 @@ function* iterateArrayFindings(ctx) {
     if (end === -1) continue;
     const args = arrayArguments(masked.slice(open + 1, end - 1), ctx.isTypeScript);
     if (args.length < 1 || args.length > 2) continue;
-    const callback = unwrapArraySyntax(args[0]);
+    const callback = unwrapArraySyntax(args[0], ctx.isTypeScript);
     const head = /^(?:function(?:\s+[A-Za-z_$][\w$]*)?\s*)?\(/u.exec(callback);
     let parameters;
     let bodyStart;
@@ -1918,7 +1929,7 @@ function* iterateArrayFindings(ctx) {
     const local = arrayBindingEvidence(body, ctx.isTypeScript);
     if (local.bindings.has(accumulator) || local.writes.has(accumulator)) continue;
     const isAccumulator = (expression, at, visited = new Set()) => {
-      const name = unwrapArraySyntax(expression);
+      const name = unwrapArraySyntax(expression, ctx.isTypeScript);
       if (name === accumulator) return true;
       const binding = local.bindings.get(name);
       if (!binding || binding.start >= at || visited.has(name) || visited.size > 20) return false;
@@ -1950,7 +1961,7 @@ function* iterateArrayFindings(ctx) {
         const owner = copy[2];
         const method = copy[3];
         if (owner === "Object" && method === "assign" && nativeGlobal(owner)) {
-          const target = unwrapArraySyntax(copyArgs[0] ?? "");
+          const target = unwrapArraySyntax(copyArgs[0] ?? "", ctx.isTypeScript);
           copies = target[0] === "{" && balancedEnd(target, 0) === target.length
             && copyArgs.slice(1).some((argument) => isAccumulator(argument, copy.index));
         } else if (owner === "Array" && method === "from" && nativeGlobal(owner)) {
