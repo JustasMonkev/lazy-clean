@@ -1713,6 +1713,52 @@ expectNoRule(
   "function collect(users?: User) { return users?.filter(active).map(email); }",
   ARRAY_PIPELINE,
 );
+// Braced control-flow conditions have parentheses that are not parameter
+// lists. A mistaken parameter parse marked the binding ambiguous and erased
+// both the guarded use and a later use of the known top-level array.
+for (const [label, source] of [
+  [
+    "an if condition",
+    "const users: User[] = load(); if (users) { users.filter(active).map(email); } users.filter(active).map(email);",
+  ],
+  [
+    "a while condition",
+    "const users: User[] = load(); while (users) { users.filter(active).map(email); } users.filter(active).map(email);",
+  ],
+  [
+    "a switch condition",
+    "const users: User[] = load(); switch (users) { case 1: { users.filter(active).map(email); } } users.filter(active).map(email);",
+  ],
+]) {
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 2, `${label} should preserve both array uses`);
+  console.log(`ok   ${label} does not turn its condition into a parameter list`);
+}
+{
+  const source =
+    "function collect(users?: User[]) {\n" +
+    "  if (users) { return users.filter(active).map(email); }\n" +
+    "  return users.filter(active).map(email);\n" +
+    "}";
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 2, "optional typed parameter and later use should both be reviewed");
+  console.log("ok   optional typed guard evidence and later use coexist");
+}
+// A real parameter or catch binding still shadows an outer array binding.
+for (const [label, source] of [
+  [
+    "a shadowing parameter",
+    "const users: User[] = load(); function collect(users) { return users.filter(active).map(email); } users.filter(active).map(email);",
+  ],
+  [
+    "a shadowing catch binding",
+    "const users: User[] = load(); try { run(); } catch (users) { users.filter(active).map(email); } users.filter(active).map(email);",
+  ],
+]) {
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 0, `${label} should conservatively make both duplicate bindings ambiguous`);
+  console.log(`ok   preserves ${label}`);
+}
 expectRule(
   "reviews a multiline typed expression arrow through optional member access",
   "const collect = (users: User[]) => users\n  ?.filter(active).map(email);",
@@ -1723,6 +1769,54 @@ expectRule(
   "const collect = (users: User[]) => users\n  .filter(active).map(email);",
   ARRAY_PIPELINE,
 );
+for (const [label, source] of [
+  ["a literal satisfies array", "const users = [] satisfies User[]; users.filter(active).map(email);"],
+  ["a factory satisfies array", "const users = Array.from(values) satisfies User[]; users.filter(active).map(email);"],
+  ["explicit filter and map type arguments", "[].filter<User>(active).map<string>(email);"],
+  ["balanced nested type arguments", "[].filter<Map<string, User[]>>(active).map<string>(email);"],
+]) {
+  expectRule(`reviews ${label}`, source, ARRAY_PIPELINE);
+}
+for (const [label, source] of [
+  ["a generic reduce", "items.reduce<Item[]>((acc, item) => [...acc, item], []);"],
+  ["a generic reduceRight", "items.reduceRight<Item[]>((acc, item) => [...acc, item], []);"],
+]) {
+  expectRule(`reviews ${label}`, source, ACCUMULATOR_COPY);
+}
+expectRule(
+  "reviews a native factory with type arguments",
+  "Array.from<User>(values).filter(active).map<string>(email);",
+  ARRAY_PIPELINE,
+);
+for (const [label, source] of [
+  ["a type-only satisfies assertion", "const users = get() satisfies User[]; users.filter(active).map(email);"],
+  ["a malformed generic", "const items = []; items.filter<User<string>(active).map(email);"],
+  ["an unproven generic receiver", "unknown.filter<User>(active).map<string>(email);"],
+  ["a noncall member", "const items = []; items.filter<User>;"],
+]) {
+  expectNoRule(`preserves ${label}`, source, ARRAY_PIPELINE);
+}
+expectNoRule(
+  "preserves JavaScript comparison operators",
+  "const items = []; items.filter < User > (active).map < string > (email);",
+  ARRAY_PIPELINE,
+  "sample.js",
+);
+{
+  const source = "const users = [] satisfies User[];\nusers\n  .filter<User>(active).map<string>(email);";
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 1, "typed call arguments should retain one finding");
+  assert.equal(findings[0].line, 3);
+  assert.equal(findings[0].endLine, 3);
+  console.log("ok   typed call arguments preserve the finding span");
+}
+{
+  const source = "// slop-check-ignore no-array-filter-map -- deliberate callback ordering\nconst users = [] satisfies User[]; users.filter<User>(active).map<string>(email);";
+  const findings = lintSource(source, "sample.ts");
+  assert.equal(findings.some((finding) => finding.rule === ARRAY_PIPELINE), false);
+  assert.equal(findings.suppressed.filter((finding) => finding.rule === ARRAY_PIPELINE).length, 1);
+  console.log("ok   typed call arguments preserve suppression");
+}
 {
   const source =
     "const collect = (users: User[]) => users\n  ?.filter(active).map(email);\nusers.filter(active).map(email);";
@@ -1803,6 +1897,54 @@ for (const source of [
   'const example = "[].filter(active).map(email);";',
 ]) {
   expectNoRule(`preserves separate, lazy, or unproven passes: ${source}`, source, ARRAY_PIPELINE);
+}
+expectRule(
+  "a var array in a nested block keeps function scope",
+  "function collect() { { var users: User[] = load(); } return users.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+for (const [label, source, expectedLine] of [
+  [
+    "a nested function",
+    "function outer() {\n  function inner() {\n    { var users: User[] = load(); }\n    return users.filter(active).map(email);\n  }\n  return users.filter(active).map(email);\n}",
+    4,
+  ],
+  [
+    "an arrow function",
+    "function outer() {\n  const inner = () => {\n    { var users: User[] = load(); }\n    return users.filter(active).map(email);\n  };\n  return users.filter(active).map(email);\n}",
+    4,
+  ],
+  [
+    "a method",
+    "class Service {\n  collect() {\n    { var users: User[] = load(); }\n    return users.filter(active).map(email);\n  }\n  other() { return users.filter(active).map(email); }\n}",
+    4,
+  ],
+  [
+    "a static block",
+    "class Service {\n  static {\n    { var users: User[] = load(); }\n    users.filter(active).map(email);\n  }\n  collect() { return users.filter(active).map(email); }\n}",
+    4,
+  ],
+  [
+    "a block-scoped const",
+    "function collect() { { const users: User[] = load(); } return users.filter(active).map(email); }",
+  ],
+  [
+    "a block-scoped let",
+    "function collect() { { let users: User[] = load(); } return users.filter(active).map(email); }",
+  ],
+  [
+    "a reassigned var",
+    "function collect() { { var users: User[] = load(); } users = other; return users.filter(active).map(email); }",
+  ],
+]) {
+  if (expectedLine === undefined) {
+    expectNoRule(`does not leak ${label} array evidence`, source, ARRAY_PIPELINE);
+    continue;
+  }
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 1, `${label} should review its inner pipeline only`);
+  assert.equal(findings[0].line, expectedLine, `${label} finding should stay inside its scope`);
+  console.log(`ok   ${label} evidence ends at its boundary`);
 }
 {
   const source = "const users = [];\nusers.filter(active).map(email).filter(present);";

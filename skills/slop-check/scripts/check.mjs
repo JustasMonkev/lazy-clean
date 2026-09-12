@@ -1552,7 +1552,7 @@ function unwrapArraySyntax(expression) {
     if (text[0] === "(" && balancedEnd(text, 0) === text.length) {
       text = text.slice(1, -1).trim();
     } else {
-      const assertion = /\s+as\s+(?:const|[\w$.]+(?:\[\])?)$/u.exec(text);
+      const assertion = /\s+(?:as|satisfies)\s+(?:const|[\w$.]+(?:\[\])?)$/u.exec(text);
       if (!assertion) break;
       text = text.slice(0, assertion.index).trim();
     }
@@ -1598,9 +1598,25 @@ function arrayAnnotationEnd(text, start) {
   return end + /^(?:\s*\[\s*\])*/u.exec(text.slice(end, end + SCAN_LIMIT))[0].length;
 }
 
+function arrayFunctionTail(text, start) {
+  let end = start;
+  while (/\s/u.test(text[end] ?? "")) end += 1;
+  if (text[end] === ":") {
+    do {
+      end += 1;
+      const top = /^\s*(?:any|unknown)\b/u.exec(text.slice(end, end + SCAN_LIMIT));
+      end = top ? end + top[0].length : arrayAnnotationEnd(text, end);
+      if (end === -1) return -1;
+      while (/\s/u.test(text[end] ?? "")) end += 1;
+    } while (text[end] === "|" || text[end] === "&");
+  }
+  return end - start < SCAN_LIMIT ? end : -1;
+}
+
 function arrayBindingEvidence(masked) {
   const bindings = new Map();
   const writes = new Map();
+  const functionBodies = new Set();
   const add = (name, binding) => {
     if (bindings.has(name)) bindings.set(name, null);
     else bindings.set(name, binding);
@@ -1620,6 +1636,7 @@ function arrayBindingEvidence(masked) {
     while (/\s/u.test(masked[valueStart] ?? "")) valueStart += 1;
     add(match[2], {
       start: match.index, write: match.index + match[0].lastIndexOf(match[2]),
+      kind: match[1],
       annotation, value: masked[at] === "=" && match[1] === "const"
         ? masked.slice(valueStart, arrayExpressionEnd(masked, valueStart)).trim() : "",
     });
@@ -1629,14 +1646,19 @@ function arrayBindingEvidence(masked) {
   for (const match of masked.matchAll(/\(|\b([A-Za-z_$][\w$]*)\s*=>/gu)) {
     let parameters = match[1];
     let bodyStart = match.index + match[0].length;
+    const prefix = masked.slice(Math.max(0, match.index - SCAN_LIMIT), match.index).trimEnd();
+    if (!parameters && /\b(?:if|for(?:\s+await)?|while|switch|with)$/u.test(prefix)) continue;
     if (!parameters) {
       const end = balancedEnd(masked, match.index);
       if (end === -1) continue;
-      const tail = /^\s*(?::\s*[^=;{}]+)?(?:=>\s*|(?=\{))/u.exec(masked.slice(end, end + SCAN_LIMIT));
-      if (!tail) continue;
+      bodyStart = arrayFunctionTail(masked, end);
+      if (bodyStart === -1) continue;
+      if (masked.slice(bodyStart, bodyStart + 2) === "=>") bodyStart += 2;
+      else if (masked[bodyStart] !== "{") continue;
       parameters = masked.slice(match.index + 1, end - 1);
-      bodyStart = end + tail[0].length;
     }
+    while (/\s/u.test(masked[bodyStart] ?? "")) bodyStart += 1;
+    if (masked[bodyStart] === "{" && !/\bcatch$/u.test(prefix)) functionBodies.add(bodyStart);
     const scopeEnd = masked[bodyStart] === "{" ? balancedEnd(masked, bodyStart) : arrayExpressionEnd(masked, bodyStart);
     for (const parameter of arrayArguments(parameters)) {
       if (parameter[0] === "{" || parameter[0] === "[") {
@@ -1666,17 +1688,25 @@ function arrayBindingEvidence(masked) {
     if (binding && binding.scopeEnd === undefined) unscoped.push(binding);
   }
   const scopes = [{ end: masked.length }];
+  const functionScopes = [scopes[0]];
+  for (const match of masked.matchAll(/\bstatic\s*(?=\{)/gu)) functionBodies.add(match.index + match[0].length);
   let next = 0;
   for (const brace of masked.matchAll(/[{}]/gu)) {
     while (next < unscoped.length && unscoped[next].start < brace.index) {
-      unscoped[next].scope = scopes.at(-1);
+      unscoped[next].scope = unscoped[next].kind === "var" ? functionScopes.at(-1) : scopes.at(-1);
       next += 1;
     }
-    if (brace[0] === "{") scopes.push({ end: masked.length });
-    else if (scopes.length > 1) scopes.pop().end = brace.index;
+    if (brace[0] === "{") {
+      scopes.push({ end: masked.length });
+      if (functionBodies.has(brace.index)) functionScopes.push(scopes.at(-1));
+    } else if (scopes.length > 1) {
+      const scope = scopes.pop();
+      scope.end = brace.index;
+      if (functionScopes.at(-1) === scope) functionScopes.pop();
+    }
   }
   while (next < unscoped.length) {
-    unscoped[next].scope = scopes.at(-1);
+    unscoped[next].scope = unscoped[next].kind === "var" ? functionScopes.at(-1) : scopes.at(-1);
     next += 1;
   }
   const writePattern = new RegExp(`${IDENT_BEFORE}([\\w$]+)\\s*(?:${ASSIGN_OPERATORS}|\\+\\+|--)|(?:\\+\\+|--)\\s*([\\w$]+)${IDENT_AFTER}`, "gu");
@@ -1695,19 +1725,9 @@ function maskReducerMethods(body) {
     if (body[open] !== "(") continue;
     const prefix = body.slice(0, open).trimEnd();
     if (/\b(?:if|for(?:\s+await)?|while|switch|catch|with)$/u.test(prefix)) continue;
-    let start = balancedEnd(body, open);
-    if (start === -1) continue;
-    while (/\s/u.test(body[start] ?? "")) start += 1;
-    if (body[start] === ":") {
-      do {
-        start += 1;
-        const top = /^\s*(?:any|unknown)\b/u.exec(body.slice(start));
-        start = top ? start + top[0].length : arrayAnnotationEnd(body, start);
-        if (start === -1) break;
-        while (/\s/u.test(body[start] ?? "")) start += 1;
-      } while (body[start] === "|" || body[start] === "&");
-      if (start === -1) continue;
-    }
+    const close = balancedEnd(body, open);
+    if (close === -1) continue;
+    const start = arrayFunctionTail(body, close);
     if (body[start] !== "{") continue;
     const end = balancedEnd(body, start);
     if (end === -1) continue;
@@ -1721,8 +1741,23 @@ function maskReducerMethods(body) {
   return masked.join("");
 }
 
+function maskArrayTypeArguments(text) {
+  let masked;
+  for (const match of text.matchAll(/(?:\.\s*(?:reduceRight|reduce|map|filter|flatMap|slice|concat|toSorted|toReversed|toSpliced|with|assign|from|of)|\bnew\s+Array)\s*</gu)) {
+    const start = match.index + match[0].length - 1;
+    const end = balancedEnd(text, start);
+    if (end === -1 || !/^\s*\(/u.test(text.slice(end, end + SCAN_LIMIT))) continue;
+    masked ??= text.split("");
+    for (let at = start; at < end; at += 1) {
+      if (text[at] !== "\n" && text[at] !== "\r") masked[at] = " ";
+    }
+  }
+  return masked ? masked.join("") : text;
+}
+
 function* iterateArrayFindings(ctx) {
-  const { masked, lineStarts } = ctx;
+  const { lineStarts } = ctx;
+  const masked = ctx.isTypeScript ? maskArrayTypeArguments(ctx.masked) : ctx.masked;
   if (!/\.\s*(?:reduce(?:Right)?|map|filter)\s*\(/u.test(masked)) return;
   const { bindings, writes } = arrayBindingEvidence(masked);
   const nativeGlobal = (name) => !bindings.has(name) && !writes.has(name) && !ctx.declaredNames.has(name);
