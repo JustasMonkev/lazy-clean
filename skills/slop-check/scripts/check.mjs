@@ -1521,7 +1521,10 @@ function arrayExpressionEnd(text, start) {
       const end = balancedEnd(text, at);
       if (end === -1) return at;
       at = end - 1;
-    } else if (",;\n)]}".includes(text[at])) return at;
+    } else if (text[at] === "\n") {
+      const next = text.slice(at + 1, limit).trimStart();
+      if (!/^(?:\?\.|\.)/u.test(next) && !text.slice(start, at).trimEnd().endsWith(".")) return at;
+    } else if (",;)]}".includes(text[at])) return at;
   }
   return limit;
 }
@@ -1575,6 +1578,8 @@ function arrayReceiverStart(text, end, depth = 0) {
     nesting -= 1;
     if (nesting !== 0) continue;
     if (last === ")") {
+      const constructor = /\bnew\s+Array\s*$/u.exec(text.slice(Math.max(0, at - SCAN_LIMIT), at));
+      if (constructor) return at - constructor[0].length;
       const method = /(?:\?\.|\.)\s*[A-Za-z_$][\w$]*\s*$/u.exec(text.slice(Math.max(0, at - SCAN_LIMIT), at));
       if (method) return arrayReceiverStart(text, at - method[0].length, depth + 1);
     }
@@ -1639,7 +1644,7 @@ function arrayBindingEvidence(masked) {
         for (const name of parameter.slice(0, end).matchAll(/[A-Za-z_$][\w$]*/gu)) add(name[0], null);
         continue;
       }
-      const name = /^([A-Za-z_$][\w$]*)\s*(?::\s*([^=]+))?(?:=|$)/u.exec(parameter);
+      const name = /^([A-Za-z_$][\w$]*)\s*\??\s*(?::\s*([^=]+))?(?:=|$)/u.exec(parameter);
       if (name) add(name[1], { start: match.index, scopeEnd, annotation: name[2]?.trim() ?? "", value: "" });
     }
   }
@@ -1684,13 +1689,48 @@ function arrayBindingEvidence(masked) {
   return { bindings, writes };
 }
 
+function maskReducerMethods(body) {
+  const masked = body.split("");
+  for (let open = 0; open < body.length; open += 1) {
+    if (body[open] !== "(") continue;
+    const prefix = body.slice(0, open).trimEnd();
+    if (/\b(?:if|for(?:\s+await)?|while|switch|catch|with)$/u.test(prefix)) continue;
+    let start = balancedEnd(body, open);
+    if (start === -1) continue;
+    while (/\s/u.test(body[start] ?? "")) start += 1;
+    if (body[start] === ":") {
+      do {
+        start += 1;
+        const top = /^\s*(?:any|unknown)\b/u.exec(body.slice(start));
+        start = top ? start + top[0].length : arrayAnnotationEnd(body, start);
+        if (start === -1) break;
+        while (/\s/u.test(body[start] ?? "")) start += 1;
+      } while (body[start] === "|" || body[start] === "&");
+      if (start === -1) continue;
+    }
+    if (body[start] !== "{") continue;
+    const end = balancedEnd(body, start);
+    if (end === -1) continue;
+    // Defining a method does not execute its parameters or body. Keep offsets
+    // intact so direct copies elsewhere in the reducer retain their spans.
+    for (let at = open; at < end; at += 1) {
+      if (masked[at] !== "\n" && masked[at] !== "\r") masked[at] = " ";
+    }
+    open = end - 1;
+  }
+  return masked.join("");
+}
+
 function* iterateArrayFindings(ctx) {
   const { masked, lineStarts } = ctx;
   if (!/\.\s*(?:reduce(?:Right)?|map|filter)\s*\(/u.test(masked)) return;
   const { bindings, writes } = arrayBindingEvidence(masked);
+  const nativeGlobal = (name) => !bindings.has(name) && !writes.has(name) && !ctx.declaredNames.has(name);
   const knownArray = (expression, at, visited = new Set()) => {
     const text = unwrapArraySyntax(expression);
     if (text[0] === "[" && balancedEnd(text, 0) === text.length) return true;
+    const factory = /^(?:Array\s*(?:\?\.|\.)\s*(?:from|of)|new\s+Array)\s*\(/u.exec(text);
+    if (factory && nativeGlobal("Array") && balancedEnd(text, factory[0].length - 1) === text.length) return true;
     if (visited.size > 20) return false;
     if (/^[A-Za-z_$][\w$]*$/u.test(text)) {
       const binding = bindings.get(text);
@@ -1759,7 +1799,7 @@ function* iterateArrayFindings(ctx) {
     const parameter = /^([A-Za-z_$][\w$]*)\s*(?::|=|$)/u.exec(arrayArguments(parameters)[0] ?? "");
     if (!parameter) continue;
     const accumulator = parameter[1];
-    const body = callback.slice(bodyStart);
+    const body = maskReducerMethods(callback.slice(bodyStart));
     // Without scopes, an inner function or shadowed accumulator is ambiguous.
     if (/=>|\bfunction\b/u.test(body)) continue;
     const local = arrayBindingEvidence(body);
@@ -1796,11 +1836,11 @@ function* iterateArrayFindings(ctx) {
         const copyArgs = arrayArguments(body.slice(copy.index + copy[0].length, copyEnd - 1));
         const owner = copy[2];
         const method = copy[3];
-        if (owner === "Object" && method === "assign" && !bindings.has(owner) && !writes.has(owner) && !ctx.declaredNames.has(owner)) {
+        if (owner === "Object" && method === "assign" && nativeGlobal(owner)) {
           const target = unwrapArraySyntax(copyArgs[0] ?? "");
           copies = target[0] === "{" && balancedEnd(target, 0) === target.length
             && copyArgs.slice(1).some((argument) => isAccumulator(argument, copy.index));
-        } else if (owner === "Array" && method === "from" && !bindings.has(owner) && !writes.has(owner) && !ctx.declaredNames.has(owner)) {
+        } else if (owner === "Array" && method === "from" && nativeGlobal(owner)) {
           copies = isAccumulator(copyArgs[0] ?? "", copy.index);
         } else if (!["assign", "from"].includes(method)) {
           copies = knownArray(args[1] ?? "", match.index) && isAccumulator(owner, copy.index);

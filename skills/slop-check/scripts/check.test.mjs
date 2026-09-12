@@ -1644,6 +1644,46 @@ for (const source of [
 ]) {
   expectNoRule(`preserves a non-copy or ambiguous reducer: ${source}`, source, ACCUMULATOR_COPY);
 }
+// Method bodies run later, so a deferred snapshot of `acc` is not a copy made
+// on each reducer iteration. Direct copies beside those methods remain visible.
+for (const source of [
+  "items.reduce((acc, item) => { item.snapshot = { copy() { return Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { async copy() { return Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { *copy() { yield Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { get copy() { return Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { set copy(value) { Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { copy(): unknown { return Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { copy(): Snapshot | undefined { return Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = class { copy() { return Object.assign({}, acc); } } ; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = class { async copy() { return Object.assign({}, acc); } } ; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { [item.key]() { return Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { \"copy\"() { return Object.assign({}, acc); } }; return acc; }, {});",
+]) {
+  expectNoRule(`ignores accumulator copies deferred to a method: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const source of [
+  "items.reduce((acc, item) => { if (item.ok) { return Object.assign({}, acc, item); } return acc; }, {});",
+  "items.reduce((acc, item) => { switch (item.kind) { case 1: { return Object.assign({}, acc, item); } default: { return acc; } } }, {});",
+  "items.reduce((acc, item) => { try { work(item); } catch (error) { return Object.assign({}, acc, item); } return acc; }, {});",
+  "items.reduce((acc, item) => { while (item.ok) { return Object.assign({}, acc, item); } return acc; }, {});",
+  "items.reduce((acc, item) => { for (const value of item.values) { return Object.assign({}, acc, value); } return acc; }, {});",
+]) {
+  expectRule(`keeps direct copies in control blocks: ${source}`, source, ACCUMULATOR_COPY);
+}
+{
+  const source =
+    "items.reduce((acc, item) => {\n" +
+    "  item.snapshot = { copy() { return Object.assign({}, acc); } };\n" +
+    "  const next = Object.assign({}, acc, item);\n" +
+    "  return next;\n" +
+    "}, {});";
+  const findings = lintSource(source, "sample.js").filter((finding) => finding.rule === ACCUMULATOR_COPY);
+  assert.equal(findings.length, 1, "a deferred method must not hide a direct reducer copy");
+  assert.equal(findings[0].line, 3);
+  assert.equal(findings[0].column, 16);
+  assert.equal(findings[0].endLine, 3);
+  console.log("ok   reports the direct copy span beside a deferred method");
+}
 for (const source of [
   "[].filter(active).map(email);",
   "[].map(user => user.active ? user.email : undefined).filter(email => email !== undefined);",
@@ -1662,6 +1702,73 @@ for (const source of [
   "[1, [2, 3]].filter(active).map(email);",
 ]) {
   expectRule(`reviews adjacent passes on a known array: ${source}`, source, ARRAY_PIPELINE);
+}
+expectRule(
+  "reviews an optional typed array parameter through optional chaining",
+  "function collect(users?: User[]) { return users?.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "does not infer an optional non-array parameter as an array",
+  "function collect(users?: User) { return users?.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "reviews a multiline typed expression arrow through optional member access",
+  "const collect = (users: User[]) => users\n  ?.filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "reviews a multiline typed expression arrow through ordinary member access",
+  "const collect = (users: User[]) => users\n  .filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+{
+  const source =
+    "const collect = (users: User[]) => users\n  ?.filter(active).map(email);\nusers.filter(active).map(email);";
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 1, "typed expression-arrow evidence must end with its expression");
+  assert.equal(findings[0].line, 2);
+  assert.equal(findings[0].endLine, 2);
+  console.log("ok   typed expression-arrow evidence does not leak past its expression");
+}
+{
+  const source =
+    "const collect = (users: User[]) => users\n  .filter(active).map(email)\nusers.filter(active).map(email);";
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 1, "ASI must end typed expression-arrow evidence");
+  assert.equal(findings[0].line, 2);
+  assert.equal(findings[0].endLine, 2);
+  console.log("ok   typed expression-arrow evidence ends at ASI");
+}
+{
+  const source =
+    "const collect = (users: User[]) => users\r\n  ?.filter(active).map(email);\r\nusers.filter(active).map(email);";
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 1, "CRLF must preserve typed expression-arrow scope");
+  assert.equal(findings[0].line, 2);
+  assert.equal(findings[0].endLine, 2);
+  console.log("ok   typed expression-arrow evidence survives CRLF");
+}
+for (const source of [
+  "Array.from(values).filter(active).map(email);",
+  "Array.of(...values).filter(active).map(email);",
+  "new Array(...values).filter(active).map(email);",
+  "const first = Array.from(values); const second = first; second.filter(active).map(email);",
+]) {
+  expectRule(`reviews a native array factory pipeline: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "function collect(Array) { return Array.from(values).filter(active).map(email); }",
+  "const Array = custom; Array.from(values).filter(active).map(email);",
+  "import Array from 'custom'; Array.of(...values).filter(active).map(email);",
+  "function collect(Array) { return new Array(...values).filter(active).map(email); }",
+  "let Array = globalThis.Array; Array = custom; Array.from(values).filter(active).map(email);",
+  "object.Array.from(values).filter(active).map(email);",
+  "custom . Array . from(values).filter(active).map(email);",
+  "let users = Array.from(values); users = other; users.filter(active).map(email);",
+]) {
+  expectNoRule(`does not trust a shadowed, qualified, or reassigned array factory: ${source}`, source, ARRAY_PIPELINE);
 }
 for (const source of [
   "const users = []; users.values().filter(active).map(email).toArray();",
