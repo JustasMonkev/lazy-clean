@@ -1392,9 +1392,8 @@ console.log("ok   reports correct line numbers");
 const ruleNames = (text) => new Set([...text.matchAll(/(?:\bname|\brule):\s*"([a-z0-9-]+)"/gu)].map((m) => m[1]));
 const implemented = ruleNames(readFileSync(join(here, "check.mjs"), "utf8"));
 const documented = new Set(
-  [...readFileSync(join(here, "..", "SKILL.md"), "utf8").matchAll(/`([a-z][a-z0-9-]+)`/gu)]
-    .map((m) => m[1])
-    .filter((name) => /^(?:no|require)-/u.test(name)),
+  [...readFileSync(join(here, "..", "SKILL.md"), "utf8").matchAll(/`((?:no|require)-[a-z0-9-]*)`/gu)]
+    .map((m) => m[1]),
 );
 assert.deepEqual(
   [...implemented].filter((name) => !documented.has(name)).sort(), [],
@@ -1575,6 +1574,1031 @@ expectSuppression(
   const positions = lintSource(source, "check.mjs").map((f) => `${f.line}:${f.column}:${f.rule}`);
   assert.equal(new Set(positions).size, positions.length, "one position reported twice for one rule");
   console.log("ok   no position is reported twice for one rule");
+}
+
+
+// Array rules are advisory: copying may preserve snapshots, and combining
+// passes can change callbacks, sparse arrays, or ownership.
+const ACCUMULATOR_COPY = "no-reduce-accumulator-copy";
+const ARRAY_PIPELINE = "no-array-filter-map";
+for (const source of [
+  "items.reduce((acc, item) => [...acc, item], []);",
+  "items.reduce((acc, item) => [...acc, item], [],);",
+  "items.reduce((acc, item) => [...acc, item],);",
+  "items.reduce((acc, item) => ({ ...acc, [item.id]: item }), {});",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  "items.reduceRight((acc, item) => Object.assign({}, item, acc), {});",
+  "items.reduce(acc => Object.assign({}, acc), {});",
+  "items.reduce(function (acc, item) { return Object.assign({}, item, acc); }, {});",
+  "items.reduce((acc = {}, item) => Object.assign({}, acc, item), {});",
+  "items.reduce((acc, item) => { const alias = acc; const state = alias; return Object.assign({}, state, item); }, {});",
+  "items.reduce((acc, item) => { const next = Object.assign({}, acc); next[item.id] = item; return next; }, {});",
+  "items.reduce((acc, item) => acc.concat([item]), []);",
+  "items.reduce((acc, item) => { const next = acc.slice(); next.push(item); return next; }, []);",
+  "const initial = []; items.reduce((acc, item) => acc.concat(item), initial);",
+  "const initial =\n []; items.reduce((acc, item) => acc.concat(item), initial);",
+  "items.reduce((acc, item) => { const next = Array.from(acc); next.push(item); return next; }, []);",
+  "items.reduce((acc, item) => acc.toSpliced(acc.length, 0, item), []);",
+  "items.reduce((acc, item) => acc.toSorted(), []);",
+  "items.reduce((acc, item) => acc.toReversed(), []);",
+  "items.reduce((acc, item) => acc.with(0, item), []);",
+  "items.reduce((acc, item) => { const alias = acc; return [...alias, item]; }, []);",
+  "items.reduce((acc: Item[], item: Item) => acc.concat(item), []);",
+  "items.reduce((acc, item): Item[] => acc.concat(item), []);",
+  "items.reduce(function (acc, item): Item[] { return acc.concat(item); }, []);",
+]) {
+  expectRule(`reviews copying the accumulator: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const source of [
+  "items.reduce((acc, item) => [...acc, item], [], seed);",
+  "items.reduce((acc, item) => [...acc, item],, [],);",
+  "items.reduce((acc, item) => [...acc, item],,);",
+]) {
+  expectNoRule(`preserves reducer argument boundaries: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const source of [
+  "items.reduce((acc, item) => { acc.push(item); return acc; }, []);",
+  "items.reduce((acc, item) => Object.assign(acc, item), {});",
+  "items.reduce((acc, item) => Object.assign(acc, acc, item), {});",
+  "items.reduce((acc, item) => { acc[item.id] = { ...item }; return acc; }, {});",
+  "items.reduce((acc, item) => { acc.push(Object.assign({}, item)); return acc; }, []);",
+  "items.reduce((acc, item) => { acc.push(item.slice()); return acc; }, []);",
+  "items.reduce((acc, item) => acc.concat(item), '');",
+  "items.reduce((acc, item) => acc.concat(item), customCollection);",
+  "function copy(acc) { return Object.assign({}, acc); }",
+  "items.map((acc, item) => Object.assign({}, acc));",
+  "items.reduce((acc, item) => { function copy(acc) { return Object.assign({}, acc); } return acc; }, {});",
+  "items.reduce((acc, item) => { const snapshot = () => Object.assign({}, acc); return acc; }, {});",
+  "items.reduce((acc, item) => { { const acc = {}; Object.assign({}, acc); } return acc; }, {});",
+  "const Object = custom; items.reduce((acc, item) => Object.assign({}, acc), {});",
+  "function run(Object) { return items.reduce((acc, item) => Object.assign({}, acc), {}); }",
+  "const run = (Array) => items.reduce((acc, item) => Array.from(acc), []);",
+  "items.reduce((acc, item) => { let alias = acc; alias = item; return Object.assign({}, alias); }, {});",
+  "items.reduce((acc, item) => { acc = item; return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => consume(...acc), []);",
+  "items.reduce((acc, item)(Object.assign({}, acc)), {});",
+  "items.reduce((acc, item) => consume(item, ...acc), []);",
+  "items.reduce((acc, item) => custom.Object.assign({}, acc), {});",
+  "Object = custom; items.reduce((acc, item) => Object.assign({}, acc), {});",
+  "import Object from 'custom'; items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  "import * as Array from 'custom'; items.reduce(acc => Array.from(acc), []);",
+  "module Object { export const assign = customAssign; } items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  "items.reduce((acc, item) => custom . Object.assign({}, acc), {});",
+  "items.reduce(acc => custom . Array.from(acc), []);",
+  "items.reduce((acc, item) => { [acc] = item; return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { ({acc} = item); return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => consume({acc}), []);",
+  "items.reduce((acc, item) => { const alias = acc; { const alias = item; Object.assign({}, alias); } return acc; }, {});",
+  'const example = "items.reduce((acc, item) => [...acc, item], []);";',
+  "// items.reduce((acc, item) => [...acc, item], []);",
+]) {
+  expectNoRule(`preserves a non-copy or ambiguous reducer: ${source}`, source, ACCUMULATOR_COPY);
+}
+expectNoRule(
+  "does not trust a namespace Array factory",
+  "namespace Array { export const from = customFrom; } Array.from(values).filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "does not trust a namespace ReadonlyArray annotation",
+  "namespace ReadonlyArray { export const custom = true; } function collect(users: ReadonlyArray<User>) { return users.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "keeps native Array for a string-named ambient module",
+  'module "Array" { export const from = customFrom; } Array.from(values).filter(active).map(email);',
+  ARRAY_PIPELINE,
+);
+// Method bodies run later, so a deferred snapshot of `acc` is not a copy made
+// on each reducer iteration. Direct copies beside those methods remain visible.
+for (const source of [
+  "items.reduce((acc, item) => { item.snapshot = { copy() { return Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { async copy() { return Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { *copy() { yield Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { get copy() { return Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { set copy(value) { Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { copy(): unknown { return Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { copy(): Snapshot | undefined { return Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = class { copy() { return Object.assign({}, acc); } } ; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = class { async copy() { return Object.assign({}, acc); } } ; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { [item.key]() { return Object.assign({}, acc); } }; return acc; }, {});",
+  "items.reduce((acc, item) => { item.snapshot = { \"copy\"() { return Object.assign({}, acc); } }; return acc; }, {});",
+]) {
+  expectNoRule(`ignores accumulator copies deferred to a method: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const source of [
+  "items.reduce((acc, item) => { if (item.ok) { return Object.assign({}, acc, item); } return acc; }, {});",
+  "items.reduce((acc, item) => { switch (item.kind) { case 1: { return Object.assign({}, acc, item); } default: { return acc; } } }, {});",
+  "items.reduce((acc, item) => { try { work(item); } catch (error) { return Object.assign({}, acc, item); } return acc; }, {});",
+  "items.reduce((acc, item) => { while (item.ok) { return Object.assign({}, acc, item); } return acc; }, {});",
+  "items.reduce((acc, item) => { for (const value of item.values) { return Object.assign({}, acc, value); } return acc; }, {});",
+]) {
+  expectRule(`keeps direct copies in control blocks: ${source}`, source, ACCUMULATOR_COPY);
+}
+{
+  const source =
+    "items.reduce((acc, item) => {\n" +
+    "  item.snapshot = { copy() { return Object.assign({}, acc); } };\n" +
+    "  const next = Object.assign({}, acc, item);\n" +
+    "  return next;\n" +
+    "}, {});";
+  const findings = lintSource(source, "sample.js").filter((finding) => finding.rule === ACCUMULATOR_COPY);
+  assert.equal(findings.length, 1, "a deferred method must not hide a direct reducer copy");
+  assert.equal(findings[0].startLine, 1);
+  assert.equal(findings[0].line, 3);
+  assert.equal(findings[0].column, 16);
+  assert.equal(findings[0].endLine, 5);
+  console.log("ok   reports the direct copy span beside a deferred method");
+}
+for (const source of [
+  "[].filter(active).map(email);",
+  "[].map(user => user.active ? user.email : undefined).filter(email => email !== undefined);",
+  "const users = []; users.map(email).filter(Boolean);",
+  "const users = []; const alias = users; alias.filter(active).map(email);",
+  "function collect(users: User[]) { return users.filter(active).map(email); }",
+  "function collect(users: readonly User[]) { return users.map(email).filter(present); }",
+  "function collect(users: ReadonlyArray<User>) { return users.filter(active).map(email); }",
+  "function collect(users: Array<User>) { return users.filter(active).map(email); }",
+  "function collect(users: string[][]) { return users.filter(active).map(email); }",
+  "const users: User[] = fetchUsers(); users.filter(active).map(email);",
+  "const users: readonly User[] = fetchUsers(); users.filter(active).map(email);",
+  "const users = []; users.slice().filter(active).map(email);",
+  "const users = []; users?.filter(active)?.map(email);",
+  "const users = [] as const; users.filter(active).map(email);",
+  "[1, [2, 3]].filter(active).map(email);",
+]) {
+  expectRule(`reviews adjacent passes on a known array: ${source}`, source, ARRAY_PIPELINE);
+}
+expectRule(
+  "reviews an optional typed array parameter through optional chaining",
+  "function collect(users?: User[]) { return users?.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+for (const [label, source] of [
+  ["a non-null optional array parameter", "function collect(users?: User[]) { return users!.filter(active).map(email); }"],
+  ["a non-null optional ReadonlyArray parameter", "function collect(users?: ReadonlyArray<User>) { return users!.filter(active).map(email); }"],
+  ["a grouped non-null optional array parameter", "function collect(users?: User[]) { return (users!).filter(active).map(email); }"],
+  ["a non-null array method result", "const users = []; users.slice()!.filter(active).map(email);"],
+  ["an alias of a non-null optional array", "function collect(users?: User[]) { const alias = users!; return alias.filter(active).map(email); }"],
+]) {
+  expectRule(`reviews ${label}`, source, ARRAY_PIPELINE);
+}
+expectRule(
+  "reviews a non-null reducer initial value",
+  "const initial = []; items.reduce((acc, item) => acc.concat(item), initial!);",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "does not infer an optional non-array parameter as an array",
+  "function collect(users?: User) { return users?.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+for (const [label, source, filePath] of [
+  ["an unknown non-null receiver", "function collect(users?: User) { return users!.filter(active).map(email); }", "sample.ts"],
+  ["a custom non-null receiver", "custom!.filter(active).map(email);", "sample.ts"],
+  ["a grouped prefix negation receiver", "const users: User[] = load(); (!users).filter(active).map(email);", "sample.ts"],
+  ["a JavaScript unknown receiver", "const users = []; users!.filter(active).map(email);", "sample.js"],
+  ["an asserted wrapper receiver", "const users = []; wrap!(users).filter(active).map(email);", "sample.ts"],
+  ["an asserted indexed receiver", "const users = []; source![users].filter(active).map(email);", "sample.ts"],
+]) {
+  expectNoRule(`does not infer ${label}`, source, ARRAY_PIPELINE, filePath);
+}
+// Parentheses around the whole inner pass are transparent, while parentheses
+// that belong to a larger expression must not turn a wrapped call into an
+// array pipeline.
+for (const [label, source] of [
+  ["an exact grouped literal pass", "([1, 2].filter(active)).map(email);"],
+  ["multiple groups around a literal pass", "((([1, 2].filter(active)))).map(email);"],
+  ["a grouped reverse pass", "([1, 2].map(email)).filter(active);"],
+  ["a grouped typed identifier with type arguments", "const users: User[] = load(); (users.filter<User>(active)).map<string>(email);"],
+]) {
+  expectRule(`reviews ${label}`, source, ARRAY_PIPELINE);
+}
+for (const [label, source] of [
+  ["a grouped wrapper call", "const users: User[] = load(); convert((users.filter(active))).map(email);"],
+  ["a grouped function argument", "const users: User[] = load(); run((users.filter(active)), other).map(email);"],
+  ["a grouped conditional", "const users: User[] = load(); (ok ? other : users.filter(active)).map(email);"],
+  ["a grouped sequence", "const users: User[] = load(); (prepare(), users.filter(active)).map(email);"],
+]) {
+  expectNoRule(`preserves ${label} boundary`, source, ARRAY_PIPELINE);
+}
+{
+  const source = "const users: User[] = load();\n(users.filter(active)).map(email).filter(present);";
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 2, "grouped passes retain one finding per adjacent pair");
+  assert.equal(findings[0].line, 2);
+  assert.equal(findings[0].endLine, 2);
+  console.log("ok   grouped passes preserve adjacency count and span");
+}
+{
+  const source = "// slop-check-ignore no-array-filter-map -- deliberate callback ordering\n([1, 2].filter(active)).map(email);";
+  const findings = lintSource(source, "sample.ts");
+  assert.equal(findings.some((finding) => finding.rule === ARRAY_PIPELINE), false);
+  assert.equal(findings.suppressed.filter((finding) => finding.rule === ARRAY_PIPELINE).length, 1);
+  console.log("ok   grouped pass preserves suppression");
+}
+// Braced control-flow conditions have parentheses that are not parameter
+// lists. A mistaken parameter parse marked the binding ambiguous and erased
+// both the guarded use and a later use of the known top-level array.
+for (const [label, source] of [
+  [
+    "an if condition",
+    "const users: User[] = load(); if (users) { users.filter(active).map(email); } users.filter(active).map(email);",
+  ],
+  [
+    "a while condition",
+    "const users: User[] = load(); while (users) { users.filter(active).map(email); } users.filter(active).map(email);",
+  ],
+  [
+    "a switch condition",
+    "const users: User[] = load(); switch (users) { case 1: { users.filter(active).map(email); } } users.filter(active).map(email);",
+  ],
+]) {
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 2, `${label} should preserve both array uses`);
+  console.log(`ok   ${label} does not turn its condition into a parameter list`);
+}
+{
+  const source =
+    "function collect(users?: User[]) {\n" +
+    "  if (users) { return users.filter(active).map(email); }\n" +
+    "  return users.filter(active).map(email);\n" +
+    "}";
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 2, "optional typed parameter and later use should both be reviewed");
+  console.log("ok   optional typed guard evidence and later use coexist");
+}
+// A real parameter or catch binding still shadows an outer array binding.
+for (const [label, source] of [
+  [
+    "a shadowing parameter",
+    "const users: User[] = load(); function collect(users) { return users.filter(active).map(email); } users.filter(active).map(email);",
+  ],
+  [
+    "a shadowing catch binding",
+    "const users: User[] = load(); try { run(); } catch (users) { users.filter(active).map(email); } users.filter(active).map(email);",
+  ],
+]) {
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 0, `${label} should conservatively make both duplicate bindings ambiguous`);
+  console.log(`ok   preserves ${label}`);
+}
+expectRule(
+  "reviews a multiline typed expression arrow through optional member access",
+  "const collect = (users: User[]) => users\n  ?.filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "reviews a multiline typed expression arrow through ordinary member access",
+  "const collect = (users: User[]) => users\n  .filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+for (const [label, source] of [
+  ["a literal satisfies array", "const users = [] satisfies User[]; users.filter(active).map(email);"],
+  ["a factory satisfies array", "const users = Array.from(values) satisfies User[]; users.filter(active).map(email);"],
+  ["explicit filter and map type arguments", "[].filter<User>(active).map<string>(email);"],
+  ["balanced nested type arguments", "[].filter<Map<string, User[]>>(active).map<string>(email);"],
+]) {
+  expectRule(`reviews ${label}`, source, ARRAY_PIPELINE);
+}
+for (const [label, source] of [
+  ["a generic reduce", "items.reduce<Item[]>((acc, item) => [...acc, item], []);"],
+  ["a generic reduceRight", "items.reduceRight<Item[]>((acc, item) => [...acc, item], []);"],
+]) {
+  expectRule(`reviews ${label}`, source, ACCUMULATOR_COPY);
+}
+// Reducer arguments can contain comma-separated TypeScript syntax. The scan
+// must keep generic/assertion commas inside the second argument while still
+// splitting ordinary argument commas at the call's top level.
+for (const [label, source] of [
+  [
+    "a generic object assertion as the initial value",
+    "// SAFETY: the reducer output is validated as a keyed item record\nitems.reduce((acc, item) => Object.assign({}, acc, item), {} as Record<string, Item>);",
+  ],
+  [
+    "a generic object satisfies assertion as the initial value",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), {} satisfies Record<string, Item>);",
+  ],
+  [
+    "a multiline generic assertion as the initial value",
+    "// SAFETY: the reducer output is validated as a keyed item record\nitems.reduce(\n  (acc, item) => Object.assign({}, acc, item),\n  {} as Record<string, Item>\n);",
+  ],
+  [
+    "nested calls and comma expressions beside the initial value",
+    "items.reduce((acc, item) => Object.assign({}, acc, merge(item, pick(item, key))), seed({}, a, b));",
+  ],
+]) {
+  expectRule(`reviews ${label}`, source, ACCUMULATOR_COPY);
+}
+expectNoRule(
+  "preserves an unmatched generic assertion in a reducer",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), {} as Record<string, Item);",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "preserves a three-argument reducer with a comparison comma",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), lower < middle, upper > (limit));",
+  ACCUMULATOR_COPY,
+  "sample.js",
+);
+for (const [label, source] of [
+  [
+    "a three-argument reducer with TypeScript comparisons",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), lower < middle + 1, upper > (limit));",
+  ],
+  [
+    "a three-argument reducer with related comparison operators",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), lower <= middle - 1, upper >= (limit));",
+  ],
+  [
+    "nested parentheses around an arithmetic operand",
+    "items.reduce((acc, item) => [...acc, item], lower < ((middle + 1)), upper > (limit));",
+  ],
+  [
+    "arithmetic in a later union-like operand",
+    "items.reduce((acc, item) => [...acc, item], lower < middle | (more + 1), upper > (limit));",
+  ],
+  [
+    "arithmetic in a later intersection-like operand",
+    "items.reduce((acc, item) => [...acc, item], lower < middle & (more + 1), upper > (limit));",
+  ],
+  [
+    "a comparison after an array method name",
+    "items.reduce((acc, item) => [...acc, item], lower.map < middle + 1, upper > (limit));",
+  ],
+]) {
+  expectNoRule(`does not read ${label} as generic syntax`, source, ACCUMULATOR_COPY);
+}
+expectRule(
+  "keeps a true generic call in a reducer initial value",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), make<Map<string, Item>>());",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "keeps a true generic annotation in a reducer initial value",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), {} as Record<string, Item>);",
+  ACCUMULATOR_COPY,
+);
+for (const [label, source] of [
+  [
+    "a conditional type generic call",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), make<T extends U ? X : Y, Item>());",
+  ],
+  [
+    "an indexed type generic call",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), make<T[keyof T], Item>());",
+  ],
+  [
+    "a function type generic call",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), make<(value: Item) => Item, Item>());",
+  ],
+  [
+    "a tuple type generic call",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), make<[Item, Item], Item>());",
+  ],
+]) {
+  expectRule(`keeps ${label} in a reducer initial value`, source, ACCUMULATOR_COPY);
+}
+// Each declarator has its own initializer. Commas in a declaration, nested
+// expressions, and assignments must not make the scanner attach the wrong
+// value to a later name.
+for (const [label, source] of [
+  ["a later array declarator", "const marker = 1, users = []; users.filter(active).map(email);"],
+  ["a later reducer initial declarator", "const marker = 0, initial = []; items.reduce((acc, item) => acc.concat(item), initial);"],
+  ["a typed let reducer initial declarator", "let marker = 0, initial: Item[] = []; items.reduce((acc, item) => acc.concat(item), initial);"],
+  ["a typed var array declarator", "var marker = 0, users: User[] = load(); users.filter(active).map(email);"],
+  ["an alias after its array declarator", "const marker = 1, users = []; const alias = users; alias.filter(active).map(email);"],
+  ["a later declarator after an object initializer", "const marker = { nested: [] }, users = []; users.filter(active).map(email);"],
+  ["a later declarator after a generic earlier initializer", "const initial = make<Map<string, Item>>(), users = []; users.filter(active).map(email);"],
+  ["a destructured first declarator", "const{ seed } = config, users = []; users.filter(active).map(email);"],
+]) {
+  expectRule(`reviews ${label}`, source, label.includes("reducer") ? ACCUMULATOR_COPY : ARRAY_PIPELINE);
+}
+for (const [label, source] of [
+  ["a property array in a declaration", "const box = { users: [] }; box.users.filter(active).map(email);"],
+  ["a destructured array in a declaration", "const [users] = [[]]; users.filter(active).map(email);"],
+  ["an assignment after an uninitialized declaration", "let users; users = []; users.filter(active).map(email);"],
+  ["an unknown reducer initial declarator", "const marker = 0, initial = getInitial(); items.reduce((acc, item) => acc.concat(item), initial);"],
+  ["a factory before a later shadowing Array declaration", "const users = Array.from(values); const Array = custom; users.filter(active).map(email);"],
+  ["a factory before a same-declaration Array shadow", "const users = Array.from(values), Array = custom; users.filter(active).map(email);"],
+  ["an inner array escaping an earlier initializer", "const marker = (() => { const inner = []; return 0; })(), users = []; inner.filter(active).map(email);"],
+]) {
+  expectNoRule(`does not infer ${label}`, source, label.includes("reducer") ? ACCUMULATOR_COPY : ARRAY_PIPELINE);
+}
+expectRule(
+  "reviews a native factory with type arguments",
+  "Array.from<User>(values).filter(active).map<string>(email);",
+  ARRAY_PIPELINE,
+);
+for (const [label, source] of [
+  ["a type-only satisfies assertion", "const users = get() satisfies User[]; users.filter(active).map(email);"],
+  ["a malformed generic", "const items = []; items.filter<User<string>(active).map(email);"],
+  ["an unproven generic receiver", "unknown.filter<User>(active).map<string>(email);"],
+  ["a noncall member", "const items = []; items.filter<User>;"],
+]) {
+  expectNoRule(`preserves ${label}`, source, ARRAY_PIPELINE);
+}
+expectNoRule(
+  "preserves JavaScript comparison operators",
+  "const items = []; items.filter < User > (active).map < string > (email);",
+  ARRAY_PIPELINE,
+  "sample.js",
+);
+{
+  const source = "const users = [] satisfies User[];\nusers\n  .filter<User>(active).map<string>(email);";
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 1, "typed call arguments should retain one finding");
+  assert.equal(findings[0].line, 3);
+  assert.equal(findings[0].endLine, 3);
+  console.log("ok   typed call arguments preserve the finding span");
+}
+{
+  const source = "// slop-check-ignore no-array-filter-map -- deliberate callback ordering\nconst users = [] satisfies User[]; users.filter<User>(active).map<string>(email);";
+  const findings = lintSource(source, "sample.ts");
+  assert.equal(findings.some((finding) => finding.rule === ARRAY_PIPELINE), false);
+  assert.equal(findings.suppressed.filter((finding) => finding.rule === ARRAY_PIPELINE).length, 1);
+  console.log("ok   typed call arguments preserve suppression");
+}
+{
+  const source =
+    "const collect = (users: User[]) => users\n  ?.filter(active).map(email);\nusers.filter(active).map(email);";
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 1, "typed expression-arrow evidence must end with its expression");
+  assert.equal(findings[0].line, 2);
+  assert.equal(findings[0].endLine, 2);
+  console.log("ok   typed expression-arrow evidence does not leak past its expression");
+}
+{
+  const source =
+    "const collect = (users: User[]) => users\n  .filter(active).map(email)\nusers.filter(active).map(email);";
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 1, "ASI must end typed expression-arrow evidence");
+  assert.equal(findings[0].line, 2);
+  assert.equal(findings[0].endLine, 2);
+  console.log("ok   typed expression-arrow evidence ends at ASI");
+}
+{
+  const source =
+    "const collect = (users: User[]) => users\r\n  ?.filter(active).map(email);\r\nusers.filter(active).map(email);";
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 1, "CRLF must preserve typed expression-arrow scope");
+  assert.equal(findings[0].line, 2);
+  assert.equal(findings[0].endLine, 2);
+  console.log("ok   typed expression-arrow evidence survives CRLF");
+}
+for (const source of [
+  "Array.from(values).filter(active).map(email);",
+  "Array.of(...values).filter(active).map(email);",
+  "new Array(...values).filter(active).map(email);",
+  "const first = Array.from(values); const second = first; second.filter(active).map(email);",
+]) {
+  expectRule(`reviews a native array factory pipeline: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "function collect(Array) { return Array.from(values).filter(active).map(email); }",
+  "const Array = custom; Array.from(values).filter(active).map(email);",
+  "import Array from 'custom'; Array.of(...values).filter(active).map(email);",
+  "function collect(Array) { return new Array(...values).filter(active).map(email); }",
+  "let Array = globalThis.Array; Array = custom; Array.from(values).filter(active).map(email);",
+  "object.Array.from(values).filter(active).map(email);",
+  "custom . Array . from(values).filter(active).map(email);",
+  "let users = Array.from(values); users = other; users.filter(active).map(email);",
+]) {
+  expectNoRule(`does not trust a shadowed, qualified, or reassigned array factory: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "import type { Collection as Array } from 'custom'; function collect(users: Array<User>) { return users.filter(active).map(email); }",
+  "import{Array} from 'custom'; Array.from(values).filter(active).map(email);",
+  "import type{Collection as Array} from 'custom'; function collect(users: Array<User>) { return users.filter(active).map(email); }",
+  "import {'collection' as Array} from 'custom'; Array.from(values).filter(active).map(email);",
+  "import type {'collection' as Array} from 'custom'; function collect(users: Array<User>) { return users.filter(active).map(email); }",
+  "import type { Collection as ReadonlyArray } from 'custom'; function collect(users: ReadonlyArray<User>) { return users.filter(active).map(email); }",
+  "import type { Collection as Array, Entry as ReadonlyArray } from 'custom'; function collect(users: Array<User>) { return users.filter(active).map(email); }",
+  "import type {\n  Collection as Array,\n  Entry as ReadonlyArray,\n} from 'custom'; function collect(users: ReadonlyArray<User>) { return users.filter(active).map(email); }",
+]) {
+  expectNoRule(`does not trust a type-only array alias: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "function collect(...users: User[]) { return users.filter(active).map(email); }",
+  "function collect(...users) { return users.filter(active).map(email); }",
+  "function collect(...users: User) { return users.filter(active).map(email); }",
+  "function collect(...users: User[]) { users = other; return users.filter(active).map(email); }",
+]) {
+  expectRule(`reviews a runtime array rest parameter: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "function collect(...users) { users = other; return users.filter(active).map(email); }",
+  "const users: User[] = load(); function collect(...users) { return users.filter(active).map(email); } users.filter(active).map(email);",
+  "function collect(users) { return users.filter(active).map(email); }",
+]) {
+  expectNoRule(`preserves non-array rest or unknown parameter evidence: ${source}`, source, ARRAY_PIPELINE);
+}
+{
+  const source = `function collect(...users: User[]) {
+  users.filter(active).map(email);
+  users = refreshUsers();
+  users.filter(active).map(email);
+}`;
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 2, "typed rest parameters retain array evidence across writes");
+  console.log("ok   typed rest parameter follows the annotated across-write contract");
+}
+for (const source of [
+  "const users = []; users.values().filter(active).map(email).toArray();",
+  "Iterator.from(users).filter(active).map(email).toArray();",
+  "function collect(users: IteratorObject<User>) { return users.filter(active).map(email).toArray(); }",
+  "const users = []; users.flatMap(user => user.active ? [user.email] : []);",
+  "const users = []; users.map(email); users.filter(active);",
+  "const users = []; users.map(email).map(normalize);",
+  "const users = []; users.filter(active).filter(verified);",
+  "const custom = { filter() { return this; }, map() {} }; custom.filter(active).map(email);",
+  "function collect(unknownReceiver) { return unknownReceiver.filter(active).map(email); }",
+  "const users = fetchUsers(); users.filter(active).map(email);",
+  "const users = []; function collect(users) { return users.filter(active).map(email); }",
+  "const users = []; const collect = users => users.filter(active).map(email);",
+  "const users = []; const collect = function users() { return users.filter(active).map(email); };",
+  "const users = []; const collect = class users { get() { return users.filter(active).map(email); } };",
+  "type Array<T> = Collection<T>; function collect(users: Array<User>) { return users.filter(active).map(email); }",
+  "type ReadonlyArray<T> = Collection<T>; function collect(users: ReadonlyArray<User>) { return users.filter(active).map(email); }",
+  "const users = []; function collect({users}) { return users.filter(active).map(email); }",
+  "const users = []; function collect({value: users} = config()) { return users.filter(active).map(email); }",
+  "const users = []; const collect = ([users] = config()) => users.filter(active).map(email);",
+  "const users = []; const collect = (users = config()) => users.filter(active).map(email);",
+  "function collect(users: User[]) { return users; } users.filter(active).map(email);",
+  "let users = []; users = iterator; users.filter(active).map(email);",
+  "const first = second; const second = first; first.filter(active).map(email);",
+  "const users = []; object.users.filter(active).map(email);",
+  "const users = []; object . users.filter(active).map(email);",
+  "const users = []; object[users].filter(active).map(email);",
+  "function collect(users: User[] | Collection) { return users.filter(active).map(email); }",
+  "const users: User[] | Collection = fetchUsers(); users.filter(active).map(email);",
+  "let users: User[]; [users] = data; users.filter(active).map(email);",
+  'const example = "[].filter(active).map(email);";',
+]) {
+  expectNoRule(`preserves separate, lazy, or unproven passes: ${source}`, source, ARRAY_PIPELINE);
+}
+expectRule(
+  "a var array in a nested block keeps function scope",
+  "function collect() { { var users: User[] = load(); } return users.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+for (const [label, source, expectedLine] of [
+  [
+    "a nested function",
+    "function outer() {\n  function inner() {\n    { var users: User[] = load(); }\n    return users.filter(active).map(email);\n  }\n  return users.filter(active).map(email);\n}",
+    4,
+  ],
+  [
+    "an arrow function",
+    "function outer() {\n  const inner = () => {\n    { var users: User[] = load(); }\n    return users.filter(active).map(email);\n  };\n  return users.filter(active).map(email);\n}",
+    4,
+  ],
+  [
+    "a method",
+    "class Service {\n  collect() {\n    { var users: User[] = load(); }\n    return users.filter(active).map(email);\n  }\n  other() { return users.filter(active).map(email); }\n}",
+    4,
+  ],
+  [
+    "a static block",
+    "class Service {\n  static {\n    { var users: User[] = load(); }\n    users.filter(active).map(email);\n  }\n  collect() { return users.filter(active).map(email); }\n}",
+    4,
+  ],
+  [
+    "a block-scoped const",
+    "function collect() { { const users: User[] = load(); } return users.filter(active).map(email); }",
+  ],
+  [
+    "a block-scoped let",
+    "function collect() { { let users: User[] = load(); } return users.filter(active).map(email); }",
+  ],
+  [
+    "a reassigned var",
+    "function collect() { { var users: User[] = load(); } users = other; return users.filter(active).map(email); }",
+    1,
+  ],
+  [
+    "a reassigned let keeps User[] evidence before and after the write",
+    `let users: User[] = [];
+users.filter(active).map(email);
+users = refreshUsers();
+users.filter(active).map(email);`,
+    [2, 4],
+  ],
+  [
+    "a reassigned var keeps readonly User[] evidence before and after the write",
+    `function collect() {
+  var users: readonly User[] = load();
+  users.filter(active).map(email);
+  users = refreshUsers();
+  users.filter(active).map(email);
+}`,
+    [3, 5],
+  ],
+  [
+    "a reassigned typed parameter keeps Array<User> evidence before and after the write",
+    `function collect(users: Array<User>) {
+  users.filter(active).map(email);
+  users = refreshUsers();
+  users.filter(active).map(email);
+}`,
+    [2, 4],
+  ],
+]) {
+  if (expectedLine === undefined) {
+    expectNoRule(`does not leak ${label} array evidence`, source, ARRAY_PIPELINE);
+    continue;
+  }
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  const expectedLines = Array.isArray(expectedLine) ? expectedLine : [expectedLine];
+  assert.equal(findings.length, expectedLines.length, `${label} should review its typed pipelines only`);
+  assert.deepEqual(findings.map((finding) => finding.line), expectedLines, `${label} findings should stay inside its scope`);
+  console.log(`ok   ${label} evidence ends at its boundary`);
+}
+
+// A newline after an initializer only terminates the declaration when the
+// next token cannot continue its expression. Keep continuations quiet while
+// retaining array evidence after genuine ASI (including comment trivia).
+for (const source of [
+  "const users = []\n && customCollection; users.filter(active).map(email);",
+  "const users = []\n || customCollection; users.filter(active).map(email);",
+  "const users = []\n ? customCollection : otherCollection; users.filter(active).map(email);",
+  "const users = (customCollection)\n .concat([]); users.filter(active).map(email);",
+  "const users = make([])\n (customCollection); users.filter(active).map(email);",
+  "const users = source\n [index]; users.filter(active).map(email);",
+  "const users = []\n [0]; users.filter(active).map(email);",
+  "const users = [] /* comment */\n && customCollection; users.filter(active).map(email);",
+  "const users = []\n /* comment */ || customCollection; users.filter(active).map(email);",
+]) {
+  expectNoRule(`does not truncate a multiline initializer: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "const users = []\n!ready; users.filter(active).map(email);",
+  "const users = []\n++ready; users.filter(active).map(email);",
+  "const users = []\n// comment\n!ready; users.filter(active).map(email);",
+  "const users = []\n/* comment */\n++ready; users.filter(active).map(email);",
+]) {
+  expectRule(`retains a real ASI array after unary syntax: ${source}`, source, ARRAY_PIPELINE);
+}
+
+// Reassigning one built-in method invalidates only that method's evidence.
+expectNoRule(
+  "suppresses a reassigned Array.from factory",
+  "Array.from = customFrom; Array.from(values).filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "keeps Array.of evidence after Array.from reassignment",
+  "Array.from = customFrom; Array.of(values).filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "suppresses a compound Array.of reassignment",
+  "Array.of += customOf; Array.of(values).filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "suppresses a computed static Array.from reassignment",
+  'Array["from"] = customFrom; Array.from(values).filter(active).map(email);',
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "keeps Array.from evidence for an unrelated property write",
+  "Array.map = customMap; Array.from(values).filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "suppresses a reassigned Object.assign reducer copy",
+  "Object.assign = customAssign; items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "keeps Array.from reducer evidence after Object.assign reassignment",
+  "Object.assign = customAssign; items.reduce((acc, item) => Array.from(acc), []);",
+  ACCUMULATOR_COPY,
+);
+
+// A built-in write only changes calls that happen after that write. The
+// evidence also survives aliases initialized before the write, and a literal
+// or wildcard property write only invalidates the matching method evidence.
+for (const [label, source] of [
+  [
+    "an earlier dotted Array.from call",
+    "Array.from(values).filter(active).map(email); Array.from = customFrom;",
+  ],
+  [
+    "an earlier bracketed Array.from call",
+    'Array.from(values).filter(active).map(email); Array["from"] = customFrom;',
+  ],
+  [
+    "an earlier wildcard Array.from call",
+    "Array.from(values).filter(active).map(email); Array[method] = customMethod;",
+  ],
+  [
+    "an earlier Array.of call",
+    "Array.of(...values).filter(active).map(email); Array.of = customOf;",
+  ],
+  [
+    "an earlier bracketed Array.of call",
+    'Array.of(...values).filter(active).map(email); Array["of"] = customOf;',
+  ],
+  [
+    "an earlier wildcard Array.of call",
+    "Array.of(...values).filter(active).map(email); Array[method] = customMethod;",
+  ],
+  [
+    "an earlier dotted Object.assign copy",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), {}); Object.assign = customAssign;",
+  ],
+  [
+    "an earlier bracketed Object.assign copy",
+    'items.reduce((acc, item) => Object.assign({}, acc, item), {}); Object["assign"] = customAssign;',
+  ],
+  [
+    "an earlier wildcard Object.assign copy",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), {}); Object[method] = customMethod;",
+  ],
+  [
+    "an earlier Array.from reducer copy",
+    "items.reduce((acc, item) => Array.from(acc), []); Array.from = customFrom;",
+  ],
+]) {
+  expectRule(`retains ${label} before a later built-in write`, source, label.includes("Object.assign") || label.includes("Array.from reducer") ? ACCUMULATOR_COPY : ARRAY_PIPELINE);
+}
+expectRule(
+  "retains an array pipeline through an alias initialized before a later write",
+  "const users = Array.from(values); Array.from = customFrom; users.filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+for (const [label, source] of [
+  [
+    "a dotted Array.from call after its write",
+    "Array.from = customFrom; Array.from(values).filter(active).map(email);",
+  ],
+  [
+    "a bracketed Array.from call after its write",
+    'Array["from"] = customFrom; Array.from(values).filter(active).map(email);',
+  ],
+  [
+    "a wildcard Array.from call after its write",
+    "Array[method] = customMethod; Array.from(values).filter(active).map(email);",
+  ],
+  [
+    "a dotted Object.assign copy after its write",
+    "Object.assign = customAssign; items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  ],
+  [
+    "a bracketed Object.assign copy after its write",
+    'Object["assign"] = customAssign; items.reduce((acc, item) => Object.assign({}, acc, item), {});',
+  ],
+  [
+    "a wildcard Object.assign copy after its write",
+    "Object[method] = customMethod; items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  ],
+]) {
+  expectNoRule(`suppresses ${label}`, source, label.includes("Object.assign") ? ACCUMULATOR_COPY : ARRAY_PIPELINE);
+}
+for (const [label, source] of [
+  [
+    "an Array.from call after a destructured static write",
+    "for ({method:Array.from} of replacements) {} Array.from(values).filter(active).map(email);",
+  ],
+  [
+    "an Object.assign copy after a destructured static write",
+    "for ([Object.assign] of replacements) {} items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  ],
+]) {
+  expectNoRule(`suppresses ${label}`, source, label.includes("Object.assign") ? ACCUMULATOR_COPY : ARRAY_PIPELINE);
+}
+for (const [label, source] of [
+  [
+    "an earlier Array.from call before a destructured static write",
+    "Array.from(values).filter(active).map(email); for ({method:Array.from} of replacements) {}",
+  ],
+  [
+    "an earlier Object.assign copy before a destructured static write",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), {}); for ([Object.assign] of replacements) {}",
+  ],
+  [
+    "an Array.from call after a destructured property key",
+    "for ({Array: method} of replacements) {} Array.from(values).filter(active).map(email);",
+  ],
+]) {
+  expectRule(`retains ${label}`, source, label.includes("Object.assign") ? ACCUMULATOR_COPY : ARRAY_PIPELINE);
+}
+expectNoRule(
+  "suppresses an Array.from call after a destructured static assignment",
+  "({method: Array.from} = replacements); Array.from(values).filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "suppresses an Object.assign copy after a destructured static assignment",
+  "[Object.assign] = replacements; items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "retains an earlier Array.from call before a later destructured assignment",
+  "Array.from(values).filter(active).map(email); ({method: Array.from} = replacements);",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "retains an earlier Object.assign copy before a later destructured assignment",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), {}); [Object.assign] = replacements;",
+  ACCUMULATOR_COPY,
+);
+
+// A reducer accumulator's identity is lost when a loop writes the binding or
+// an alias. `for await` has the same bare-target shape as ordinary for-of.
+for (const source of [
+  "items.reduce((acc, item) => { for (acc of [item]) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for (acc in item) {} return Object.assign({}, acc); }, {});",
+]) {
+  expectNoRule(`preserves reducer identity after loop writes: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const source of [
+  "items.reduce((acc, item) => { for ({acc} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ({state: {acc}} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ([[acc]] of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ({value:acc} in item) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for({value:[,acc]}of stream){} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ({acc = fallback} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ({...acc} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ([, acc] of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ([...acc] of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ([acc = fallback] of stream) {} return Object.assign({}, acc); }, {});",
+]) {
+  expectNoRule(`preserves reducer identity after a destructured loop write: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const source of [
+  "items.reduce((acc, item) => { for (const {acc: other} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for (let [[other]] of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ({value: other = acc} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ({...other} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ([, other] of stream) {} return Object.assign({}, acc); }, {});",
+]) {
+  expectRule(`retains reducer identity through a non-binding or declared loop target: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const [label, source] of [
+  [
+    "a bare object for-await target",
+    "async function collect(...users) { for await ({users} of stream) {} return users.filter(active).map(email); }",
+  ],
+  [
+    "a nested object for-await target",
+    "async function collect(...users) { for await ({state: {users}} of stream) {} return users.filter(active).map(email); }",
+  ],
+  [
+    "a nested array for-await target",
+    "async function collect(...users) { for await ([[users]] of stream) {} return users.filter(active).map(email); }",
+  ],
+  [
+    "a nested array for-in target",
+    "function collect(...users) { for ([[users]] in source) {} return users.filter(active).map(email); }",
+  ],
+]) {
+  expectNoRule(`invalidates array evidence after ${label}`, source, ARRAY_PIPELINE);
+}
+for (const [label, source] of [
+  [
+    "a property key in a for-await target",
+    "async function collect(...users) { for await ({users: next} of stream) {} return users.filter(active).map(email); }",
+  ],
+  [
+    "a declared object for-await target",
+    "async function collect(...users) { for await (const {users: next} of stream) {} return users.filter(active).map(email); }",
+  ],
+  [
+    "a declared nested array for-await target",
+    "async function collect(...users) { for await (let [[next]] of stream) {} return users.filter(active).map(email); }",
+  ],
+]) {
+  expectRule(`retains array evidence through ${label}`, source, ARRAY_PIPELINE);
+}
+expectNoRule(
+  "tracks a valid for-await rest-parameter write",
+  "async function collect(...users) { for await (users of stream) {} return users.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "reviews an immutable rest-parameter pipeline",
+  "async function collect(...users) { return users.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "does not truncate a reducer alias initializer",
+  "items.reduce((acc, item) => { const alias = acc\n && item; return [...alias]; }, []);",
+  ACCUMULATOR_COPY,
+);
+
+// Array findings are anchored on the receiver for scope and on the first
+// pass for their diagnostic position. Either directly adjacent directive must
+// suppress that same finding, without reaching a later independent pipeline.
+expectSuppression(
+  "an array ignore directly above a multiline receiver suppresses its finding",
+  `const users = [];
+// slop-check-ignore ${ARRAY_PIPELINE} -- callbacks intentionally stay separate
+users
+  .filter(active)
+  .map(email);
+const other = [];
+other.filter(active).map(email);`,
+  { rules: [ARRAY_PIPELINE], suppressed: 1 },
+);
+expectSuppression(
+  "an array ignore directly above filter keeps the existing placement",
+  `const users = [];
+users
+// slop-check-ignore ${ARRAY_PIPELINE} -- callbacks intentionally stay separate
+  .filter(active)
+  .map(email);`,
+  { rules: [], suppressed: 1 },
+);
+expectSuppression(
+  "a reducer ignore directly above a multiline receiver suppresses its finding",
+  `const items = [];
+// slop-check-ignore ${ACCUMULATOR_COPY} -- the reducer intentionally snapshots each step
+items.reduce(
+  (acc, item) => Object.assign({}, acc, item),
+  {}
+);
+items.reduce((acc, item) => Object.assign({}, acc, item), {});`,
+  { rules: [ACCUMULATOR_COPY], suppressed: 1 },
+);
+expectSuppression(
+  "a reducer ignore directly above its body keeps the existing placement",
+  `const items = [];
+items.reduce(
+// slop-check-ignore ${ACCUMULATOR_COPY} -- the reducer intentionally snapshots each step
+  (acc, item) => Object.assign({}, acc, item),
+  {}
+);`,
+  { rules: [], suppressed: 1 },
+);
+expectSuppression(
+  "an interior reducer ignore does not silence the reducer span",
+  `const items = [];
+items.reduce(
+  (acc, item) => {
+    // slop-check-ignore ${ACCUMULATOR_COPY} -- the reducer intentionally snapshots each step
+    const marker = item;
+    return Object.assign({}, acc, item);
+  },
+  {}
+);`,
+  { rules: [ACCUMULATOR_COPY], suppressed: 0 },
+);
+
+// Constructor parameter properties expose their bare binding to the body;
+// member access still needs a real type flow proof. Modifiers may be ordered
+// around the name, while similarly named identifiers must remain untouched.
+for (const source of [
+  "class Users { constructor(private readonly users: User[]) { users.filter(active).map(email); } }",
+  "class Users { constructor(public readonly users: User[]) { users.filter(active).map(email); } }",
+  "class Users { constructor(protected readonly users: User[]) { users.filter(active).map(email); } }",
+  "class Users { constructor(readonly users: User[]) { users.filter(active).map(email); } }",
+  "class Users { constructor(public override readonly users: User[]) { users.filter(active).map(email); } }",
+]) {
+  expectRule(`reviews a typed constructor property pipeline: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "class Users { constructor(private readonly users: User[]) { this.users.filter(active).map(email); } }",
+  "class Users { constructor(private readonly users: User) { users.filter(active).map(email); } }",
+  "class Users { constructor(private readonly Array: Factory) { Array.from(values).filter(active).map(email); } }",
+]) {
+  expectNoRule(`does not over-infer constructor property syntax: ${source}`, source, ARRAY_PIPELINE);
+}
+for (const source of [
+  "class Users { constructor(readonly: User[]) { readonly.filter(active).map(email); } }",
+  "class Users { constructor(public: User[]) { public.filter(active).map(email); } }",
+  "class Users { constructor(readonlyValue: User[]) { readonlyValue.filter(active).map(email); } }",
+  "class Users { constructor(publicity: User[]) { publicity.filter(active).map(email); } }",
+]) {
+  expectRule(`keeps an identifier that resembles a modifier: ${source}`, source, ARRAY_PIPELINE);
+}
+{
+  const source = "const users = [];\nusers.filter(active).map(email).filter(present);";
+  const findings = lintSource(source, "sample.js").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 2, "each adjacent mixed pair is reviewed once");
+  assert.ok(findings.every((finding) => finding.line === 2 && finding.severity === "review"));
+}
+{
+  const source = "const rows = [];\n" + "rows.filter(active).map(email);\n".repeat(10000);
+  const start = performance.now();
+  const findings = lintSource(source, "sample.js").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, 10000, "distant uses retain their top-level array evidence");
+  assert.ok(performance.now() - start < 2000, "array evidence should not rescan the declaration-to-use gap per pipeline");
+}
+for (const [rule, source] of [
+  [ACCUMULATOR_COPY, "items.reduce((acc, item) => [...acc, item], []);"],
+  [ARRAY_PIPELINE, "[].filter(active).map(email);"],
+]) {
+  const finding = lintSource(source, "sample.js").find((item) => item.rule === rule);
+  assert.equal(finding?.severity, "review", `${rule} must never prescribe an automatic rewrite`);
+  const disabled = lintSource(source, "sample.js", { disabled: new Set([rule]) });
+  assert.equal(disabled.some((item) => item.rule === rule), false);
+  assert.equal(disabled.suppressed.filter((item) => item.rule === rule).length, 1);
+  const ignored = lintSource(`// slop-check-ignore ${rule} -- preserves callback observations\n${source}`, "sample.js");
+  assert.equal(ignored.some((item) => item.rule === rule), false);
+  assert.equal(ignored.suppressed.filter((item) => item.rule === rule).length, 1);
 }
 
 if (failures > 0) {

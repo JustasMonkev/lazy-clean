@@ -1511,6 +1511,621 @@ function* iterateCandidateFindings(ctx) {
   }
 }
 
+// lazy: expression scans are bounded by SCAN_LIMIT. Duplicate bindings,
+// nested reducer functions, and computed methods need a scope-aware parser;
+// skip those cases until this standalone checker adopts one.
+function arrayExpressionEnd(text, start, isTypeScript = false) {
+  const limit = Math.min(text.length, start + SCAN_LIMIT);
+  for (let at = start; at < limit; at += 1) {
+    const typeEnd = isTypeScript ? arrayTypeSpanEnd(text, at, start) : -1;
+    if (typeEnd !== -1) at = typeEnd - 1;
+    else if ("([{".includes(text[at])) {
+      const end = balancedEnd(text, at);
+      if (end === -1) return at;
+      at = end - 1;
+    } else if (text[at] === "\n") {
+      const next = text.slice(at + 1, limit).trimStart();
+      const previous = text.slice(start, at).trimEnd();
+      // A newline ends an initializer only when neither side continues it.
+      // Prefix ++/-- and ! can start a new statement; binary operators cannot.
+      const leading = /^(?:[([`.,?:*/%&|^<>=]|!(?==)|\+(?!\+)|-(?!-)|(?:in|instanceof)\b)/u.test(next);
+      const trailing = /[?.:,*/%&|^<>=]$|(?<!\+)\+$|(?<!-)-$|\b(?:in|instanceof|await|new|typeof|void|delete|yield)$/u.test(previous);
+      if (!leading && !trailing && !(isTypeScript && /^(?:as|satisfies)\b/u.test(next))) return at;
+    } else if (",;)]}".includes(text[at])) return at;
+  }
+  return limit;
+}
+
+function arrayArguments(text, isTypeScript = false, allowHoles = false) {
+  const parts = [];
+  let start = 0;
+  for (let at = 0; at < text.length; at += 1) {
+    const typeEnd = isTypeScript ? arrayTypeSpanEnd(text, at, start) : -1;
+    if (typeEnd !== -1) at = typeEnd - 1;
+    else if ("([{".includes(text[at])) {
+      const end = balancedEnd(text, at);
+      if (end === -1) return [];
+      at = end - 1;
+    } else if (text[at] === ",") {
+      const part = text.slice(start, at).trim();
+      if (!part && !allowHoles) return [];
+      if (part) parts.push(part);
+      start = at + 1;
+    }
+  }
+  const last = text.slice(start).trim();
+  if (last) parts.push(last);
+  return parts;
+}
+
+function unwrapArraySyntax(expression, isTypeScript = false) {
+  let text = expression.trim();
+  for (let count = 0; count < 20; count += 1) {
+    if (text[0] === "(" && balancedEnd(text, 0) === text.length) {
+      text = text.slice(1, -1).trim();
+    } else if (isTypeScript && text.endsWith("!")) {
+      text = text.slice(0, -1).trimEnd();
+    } else {
+      const assertion = /\s+(?:as|satisfies)\s+(?:const|[\w$.]+(?:\[\])?)$/u.exec(text);
+      if (!assertion) break;
+      text = text.slice(0, assertion.index).trim();
+    }
+  }
+  return text;
+}
+
+function arrayReceiverStart(text, end, isTypeScript = false, depth = 0) {
+  if (depth > 20) return -1;
+  while (end > 0 && (/\s/u.test(text[end - 1]) || isTypeScript && text[end - 1] === "!")) end -= 1;
+  const last = text[end - 1];
+  if (last !== ")" && last !== "]") {
+    const identifier = /[A-Za-z_$][\w$]*$/u.exec(text.slice(Math.max(0, end - SCAN_LIMIT), end));
+    if (!identifier) return -1;
+    const start = end - identifier[0].length;
+    return /[\w$.#]/u.test(text[start - 1] ?? "") || /[.#]$/u.test(text.slice(Math.max(0, start - SCAN_LIMIT), start).trimEnd()) ? -1 : start;
+  }
+  const opener = last === ")" ? "(" : "[";
+  let nesting = 1;
+  for (let at = end - 2; at >= Math.max(0, end - SCAN_LIMIT); at -= 1) {
+    if (text[at] === last) nesting += 1;
+    if (text[at] !== opener) continue;
+    nesting -= 1;
+    if (nesting !== 0) continue;
+    if (last === ")") {
+      const constructor = /\bnew\s+Array\s*$/u.exec(text.slice(Math.max(0, at - SCAN_LIMIT), at));
+      if (constructor) return at - constructor[0].length;
+      const method = /(?:\?\.|\.)\s*[A-Za-z_$][\w$]*\s*$/u.exec(text.slice(Math.max(0, at - SCAN_LIMIT), at));
+      if (method) return arrayReceiverStart(text, at - method[0].length, isTypeScript, depth + 1);
+    }
+    let before = text.slice(Math.max(0, at - SCAN_LIMIT), at).trimEnd();
+    // An asserted call/index owner still owns its arguments. A bang on the
+    // next line can instead negate a new expression, so keep that boundary.
+    if (isTypeScript) before = before.replace(/(\S)(?:[^\S\r\n]*!)+$/u, "$1");
+    // A call/index result is not the literal or parenthesized argument inside it.
+    if (/[\w$\])?.]$/u.test(before) && !/\b(?:return|throw|yield|await|case)\s*$/u.test(before)) return -1;
+    return at;
+  }
+  return -1;
+}
+
+function arrayAnnotationEnd(text, start) {
+  const prefix = /^\s*(?:readonly\s+)?/u.exec(text.slice(start, start + SCAN_LIMIT));
+  const end = typeEnd(text, start + prefix[0].length);
+  if (end === -1) return -1;
+  return end + /^(?:\s*\[\s*\])*/u.exec(text.slice(end, end + SCAN_LIMIT))[0].length;
+}
+
+function arrayTypeEnd(text, start) {
+  let end = start;
+  do {
+    const top = /^\s*(?:any|unknown)\b/u.exec(text.slice(end, end + SCAN_LIMIT));
+    end = top ? end + top[0].length : arrayAnnotationEnd(text, end);
+    if (end === -1) return -1;
+    while (/\s/u.test(text[end] ?? "")) end += 1;
+    if (text[end] !== "|" && text[end] !== "&") break;
+    end += 1;
+  } while (end - start < SCAN_LIMIT);
+  return end - start < SCAN_LIMIT ? end : -1;
+}
+
+function arrayTypeArgumentEnd(text, start, depth = 0) {
+  if (depth > 20) return -1;
+  while (/\s/u.test(text[start] ?? "")) start += 1;
+  let end;
+  if (text[start] === "(") {
+    const close = balancedEnd(text, start);
+    if (close === -1) return -1;
+    const arrow = /^\s*=>\s*/u.exec(text.slice(close, close + SCAN_LIMIT));
+    if (arrow) return arrayTypeArgumentEnd(text, close + arrow[0].length, depth + 1);
+    const inner = text.slice(start + 1, close - 1).trim();
+    if (!inner || arrayTypeArgumentEnd(inner, 0, depth + 1) !== inner.length) return -1;
+    end = close;
+  } else {
+    const top = /^(?:any|unknown)\b/u.exec(text.slice(start, start + SCAN_LIMIT));
+    end = top ? start + top[0].length : arrayAnnotationEnd(text, start);
+  }
+  if (end === -1) return -1;
+  while (end - start < SCAN_LIMIT) {
+    while (/\s/u.test(text[end] ?? "")) end += 1;
+    if (text[end] !== "[") break;
+    const close = balancedEnd(text, end);
+    if (close === -1) return -1;
+    const index = text.slice(end + 1, close - 1).trim();
+    if (index && arrayTypeArgumentEnd(index, 0, depth + 1) !== index.length) return -1;
+    end = close;
+  }
+  if (text[end] === "|" || text[end] === "&") return arrayTypeArgumentEnd(text, end + 1, depth + 1);
+  const constraint = /^extends\s+/u.exec(text.slice(end, end + SCAN_LIMIT));
+  if (constraint) {
+    end = arrayTypeArgumentEnd(text, end + constraint[0].length, depth + 1);
+    if (end === -1 || text[end] !== "?") return -1;
+    end = arrayTypeArgumentEnd(text, end + 1, depth + 1);
+    if (end === -1 || text[end] !== ":") return -1;
+    return arrayTypeArgumentEnd(text, end + 1, depth + 1);
+  }
+  return end;
+}
+
+function arrayTypeArgumentsEnd(text, start) {
+  const end = balancedEnd(text, start);
+  if (end === -1) return -1;
+  let cursor = start + 1;
+  while (cursor < end - 1) {
+    cursor = arrayTypeArgumentEnd(text, cursor);
+    if (cursor === -1) return -1;
+    if (cursor === end - 1) return end;
+    if (text[cursor] !== ",") return -1;
+    cursor += 1;
+    while (/\s/u.test(text[cursor] ?? "")) cursor += 1;
+    if (cursor === end - 1) return end;
+  }
+  return -1;
+}
+
+// Only type syntax protects a comma. In particular, JavaScript comparisons
+// must not become a generic clause just because their angles happen to pair.
+function arrayTypeSpanEnd(text, at, start) {
+  if ((text[at] === "a" || text[at] === "s") && /\s/u.test(text[at - 1] ?? "")) {
+    const assertion = /^(?:as|satisfies)\s+/u.exec(text.slice(at, at + SCAN_LIMIT));
+    if (assertion) {
+      let end = arrayTypeEnd(text, at + assertion[0].length);
+      // Keep the statement's trailing newline visible to expression scans.
+      while (end > at && /\s/u.test(text[end - 1])) end -= 1;
+      return end;
+    }
+  }
+  if (text[at] === ":" && /^(?:(?:public|protected|private|readonly|override)\s+)*(?:\.\.\.\s*)?[A-Za-z_$][\w$]*\s*\??\s*$/u.test(text.slice(start, at).trimStart())) {
+    return arrayTypeEnd(text, at + 1);
+  }
+  if (text[at] === "<" && /[\w$]$/u.test(text.slice(start, at).trimEnd())) {
+    const end = arrayTypeArgumentsEnd(text, at);
+    if (end !== -1 && /^\s*\(/u.test(text.slice(end, end + SCAN_LIMIT))) return end;
+  }
+  return -1;
+}
+
+function arrayFunctionTail(text, start) {
+  let end = start;
+  while (/\s/u.test(text[end] ?? "")) end += 1;
+  if (text[end] === ":") {
+    end = arrayTypeEnd(text, end + 1);
+    if (end === -1) return -1;
+  }
+  return end - start < SCAN_LIMIT ? end : -1;
+}
+
+function* arrayBindingTargets(pattern, offset = 0, depth = 0) {
+  if (depth > 20) return;
+  const prefix = /^\s*(?:\.\.\.\s*)?/u.exec(pattern)[0].length;
+  let target = pattern.slice(prefix).trimEnd();
+  offset += prefix;
+  for (let at = 0; at < target.length; at += 1) {
+    if ("([{\"'`".includes(target[at])) {
+      if (target[at] === '"' || target[at] === "'" || target[at] === "`") {
+        at = target.indexOf(target[at], at + 1);
+        if (at === -1) return;
+      } else {
+        const end = balancedEnd(target, at);
+        if (end === -1) return;
+        at = end - 1;
+      }
+    } else if (target[at] === ":") {
+      yield* arrayBindingTargets(target.slice(at + 1), offset + at + 1, depth + 1);
+      return;
+    } else if (target[at] === "=") {
+      target = target.slice(0, at).trimEnd();
+      break;
+    }
+  }
+  if ((target[0] === "{" || target[0] === "[") && balancedEnd(target, 0) === target.length) {
+    let cursor = 1;
+    for (const part of arrayArguments(target.slice(1, -1), false, true)) {
+      cursor = target.indexOf(part, cursor);
+      yield* arrayBindingTargets(part, offset + cursor, depth + 1);
+      cursor += part.length;
+    }
+  } else if (/^(?:[A-Za-z_$][\w$]*|(?:Array|Object)\s*(?:\.\s*[A-Za-z_$][\w$]*|\[[\s\S]*\]))$/u.test(target)) yield { target, offset };
+}
+
+function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
+  const bindings = new Map();
+  const writes = new Map();
+  const functionBodies = new Set();
+  const add = (name, binding) => {
+    if (bindings.has(name)) bindings.set(name, null);
+    else bindings.set(name, binding);
+  };
+  const recordWrite = (name, offset) => {
+    const positions = writes.get(name);
+    if (positions) positions.push(offset);
+    else writes.set(name, [offset]);
+  };
+  const propertyKey = (open, end) => {
+    const literal = /^(['"])([^'"\\]*)\1$/u.exec(source.slice(open + 1, end - 1).trim());
+    return literal ? literal[2] : "*";
+  };
+  const recordPropertyTarget = ({ target, offset }) => {
+    const member = /^(Array|Object)\s*(?:\.\s*([A-Za-z_$][\w$]*)|\[)/u.exec(target);
+    if (!member) return false;
+    const method = member[2] ?? propertyKey(offset + target.indexOf("["), offset + target.length);
+    recordWrite(`${member[1]}.${method}`, offset);
+    return true;
+  };
+  for (const match of masked.matchAll(/\b(const|let|var)(?:\s+|(?=[{[]))/gu)) {
+    let at = match.index + match[0].length;
+    while (at - match.index < SCAN_LIMIT) {
+      while (/\s/u.test(masked[at] ?? "")) at += 1;
+      const start = at;
+      const name = /^[A-Za-z_$][\w$]*/u.exec(masked.slice(at, at + SCAN_LIMIT));
+      if (name) at += name[0].length;
+      else if (masked[at] === "{" || masked[at] === "[") {
+        at = balancedEnd(masked, at);
+        if (at === -1) break;
+        for (const { target } of arrayBindingTargets(masked.slice(start, at))) add(target, null);
+      } else break;
+      while (/\s/u.test(masked[at] ?? "")) at += 1;
+      let annotation = "";
+      if (masked[at] === ":") {
+        const typeStart = at + 1;
+        at = arrayTypeEnd(masked, typeStart);
+        if (at === -1 || !/^[=;,)]?$/u.test(masked[at] ?? "")) {
+          if (name) add(name[0], null);
+          break;
+        }
+        annotation = masked.slice(typeStart, at).trim();
+      }
+      let value = "";
+      let valueStart;
+      if (masked[at] === "=" && masked[at + 1] !== "=" && masked[at + 1] !== ">") {
+        valueStart = at + 1;
+        while (/\s/u.test(masked[valueStart] ?? "")) valueStart += 1;
+        at = arrayExpressionEnd(masked, valueStart, isTypeScript);
+        if (match[1] === "const") value = masked.slice(valueStart, at).trim();
+      }
+      if (name) add(name[0], { start, valueStart, write: start, kind: match[1], annotation, value });
+      while (/\s/u.test(masked[at] ?? "")) at += 1;
+      if (masked[at] !== ",") break;
+      at += 1;
+    }
+  }
+  // Repeated/shadowed names are ambiguous without lexical scopes. Recognize
+  // nested defaults too, so an outer array cannot vouch for a new parameter.
+  for (const match of masked.matchAll(/\(|\b([A-Za-z_$][\w$]*)\s*=>/gu)) {
+    let parameters = match[1];
+    let bodyStart = match.index + match[0].length;
+    const prefix = masked.slice(Math.max(0, match.index - SCAN_LIMIT), match.index).trimEnd();
+    if (!parameters && /\b(?:if|for(?:\s+await)?|while|switch|with)$/u.test(prefix)) continue;
+    if (!parameters) {
+      const end = balancedEnd(masked, match.index);
+      if (end === -1) continue;
+      bodyStart = arrayFunctionTail(masked, end);
+      if (bodyStart === -1) continue;
+      if (masked.slice(bodyStart, bodyStart + 2) === "=>") bodyStart += 2;
+      else if (masked[bodyStart] !== "{") continue;
+      parameters = masked.slice(match.index + 1, end - 1);
+    }
+    while (/\s/u.test(masked[bodyStart] ?? "")) bodyStart += 1;
+    if (masked[bodyStart] === "{" && !/\bcatch$/u.test(prefix)) functionBodies.add(bodyStart);
+    const scopeEnd = masked[bodyStart] === "{" ? balancedEnd(masked, bodyStart) : arrayExpressionEnd(masked, bodyStart, isTypeScript);
+    for (let parameter of arrayArguments(parameters, isTypeScript)) {
+      if (isTypeScript && /\bconstructor$/u.test(prefix)) {
+        parameter = parameter.replace(/^(?:(?:public|protected|private|readonly|override)\s+)+(?=[A-Za-z_$][\w$]*\s*(?:[?:=]|$))/u, "");
+      }
+      const rest = parameter.startsWith("...");
+      const binding = rest ? parameter.slice(3).trimStart() : parameter;
+      if (binding[0] === "{" || binding[0] === "[") {
+        const end = balancedEnd(binding, 0);
+        for (const { target } of arrayBindingTargets(binding.slice(0, end))) add(target, null);
+        continue;
+      }
+      const name = /^([A-Za-z_$][\w$]*)\s*\??\s*(?::\s*([^=]+))?(?:=|$)/u.exec(binding);
+      if (name) add(name[1], { start: match.index, scopeEnd, rest, annotation: name[2]?.trim() ?? "", value: "" });
+    }
+  }
+  // Destructured/imported globals may replace Array or Object too. No array
+  // evidence is inferred from destructuring.
+  for (const match of masked.matchAll(/\bimport\b\s*(?:type\b\s*)?(?:[A-Za-z_$][\w$]*\s*,\s*)?\{/gu)) {
+    const open = match.index + match[0].length - 1;
+    const end = balancedEnd(masked, open);
+    if (end === -1) continue;
+    for (const specifier of arrayArguments(masked.slice(open + 1, end - 1))) {
+      const name = /^(?:type\s+)?(?:([A-Za-z_$][\w$]*)|["'][^"']*["'])(?:\s+as\s+([A-Za-z_$][\w$]*))?$/u.exec(specifier);
+      const local = name?.[2] ?? name?.[1];
+      if (local) add(local, null);
+    }
+  }
+  for (const match of masked.matchAll(/\b(?:function|class)\s+([A-Za-z_$][\w$]*)/gu)) add(match[1], null);
+  if (isTypeScript) {
+    for (const match of masked.matchAll(/\b(?:namespace|module)\s+([A-Za-z_$][\w$]*)/gu)) add(match[1], null);
+  }
+  for (const match of masked.matchAll(/\bimport\b\s*(?:type\b\s*)?(?:\*\s*as\s+)?([A-Za-z_$][\w$]*)/gu)) add(match[1], null);
+  for (const match of masked.matchAll(/[{[]/gu)) {
+    if (match[0] === "[" && /[\w$\])]/u.test(masked[match.index - 1] ?? "")) continue;
+    const end = balancedEnd(masked, match.index);
+    if (end === -1 || !/^\s*=(?![=>])/u.test(masked.slice(end, end + SCAN_LIMIT))) continue;
+    for (const target of arrayBindingTargets(masked.slice(match.index, end), match.index)) {
+      if (!recordPropertyTarget(target)) add(target.target, null);
+    }
+  }
+  const unscoped = [];
+  for (const binding of bindings.values()) {
+    if (binding && binding.scopeEnd === undefined) unscoped.push(binding);
+  }
+  // Later declarators can follow a nested declaration in an earlier initializer.
+  unscoped.sort((left, right) => left.start - right.start);
+  const scopes = [{ end: masked.length }];
+  const functionScopes = [scopes[0]];
+  for (const match of masked.matchAll(/\bstatic\s*(?=\{)/gu)) functionBodies.add(match.index + match[0].length);
+  let next = 0;
+  for (const brace of masked.matchAll(/[{}]/gu)) {
+    while (next < unscoped.length && unscoped[next].start < brace.index) {
+      unscoped[next].scope = unscoped[next].kind === "var" ? functionScopes.at(-1) : scopes.at(-1);
+      next += 1;
+    }
+    if (brace[0] === "{") {
+      scopes.push({ end: masked.length });
+      if (functionBodies.has(brace.index)) functionScopes.push(scopes.at(-1));
+    } else if (scopes.length > 1) {
+      const scope = scopes.pop();
+      scope.end = brace.index;
+      if (functionScopes.at(-1) === scope) functionScopes.pop();
+    }
+  }
+  while (next < unscoped.length) {
+    unscoped[next].scope = unscoped[next].kind === "var" ? functionScopes.at(-1) : scopes.at(-1);
+    next += 1;
+  }
+  const writePattern = new RegExp(`${IDENT_BEFORE}([\\w$]+)\\s*(?:${ASSIGN_OPERATORS}|\\+\\+|--)|(?:\\+\\+|--)\\s*([\\w$]+)${IDENT_AFTER}`, "gu");
+  for (const match of masked.matchAll(writePattern)) {
+    recordWrite(match[1] ?? match[2], match.index);
+  }
+  for (const match of masked.matchAll(/\bfor\s*(?:await\s*)?\(\s*/gu)) {
+    const start = match.index + match[0].length;
+    const name = /^[A-Za-z_$][\w$]*/u.exec(masked.slice(start, start + SCAN_LIMIT));
+    const end = name ? start + name[0].length : balancedEnd(masked, start);
+    if (end === -1 || !/^\s*(?:in|of)\b/u.test(masked.slice(end, end + SCAN_LIMIT))) continue;
+    for (const target of arrayBindingTargets(masked.slice(start, end), start)) {
+      if (!recordPropertyTarget(target)) recordWrite(target.target, target.offset);
+    }
+  }
+  const propertyWrite = new RegExp(`^\\s*(?:${ASSIGN_OPERATORS}|\\+\\+|--)`, "u");
+  for (const match of masked.matchAll(/(?<![\w$.#])(Array|Object)\s*(?:\.\s*([A-Za-z_$][\w$]*)|\[)/gu)) {
+    const before = masked.slice(Math.max(0, match.index - SCAN_LIMIT), match.index).trimEnd();
+    if (/[.#]$/u.test(before)) continue;
+    let end = match.index + match[0].length;
+    let method = match[2];
+    if (!method) {
+      const open = end - 1;
+      end = balancedEnd(masked, open);
+      if (end === -1) continue;
+      // A computed write can replace any trusted method; literal keys affect
+      // only that method. Read the key from source after locating it in code.
+      method = propertyKey(open, end);
+    }
+    const after = masked.slice(end, end + SCAN_LIMIT);
+    const loopTarget = /\bfor\s*(?:await\s*)?\(\s*$/u.test(before) && /^\s+(?:in|of)\b/u.test(after);
+    if (propertyWrite.test(after) || /(?:\+\+|--)$/u.test(before) || loopTarget) recordWrite(`${match[1]}.${method}`, match.index);
+  }
+  return { bindings, writes };
+}
+
+function maskReducerMethods(body) {
+  const masked = body.split("");
+  for (let open = 0; open < body.length; open += 1) {
+    if (body[open] !== "(") continue;
+    const prefix = body.slice(0, open).trimEnd();
+    if (/\b(?:if|for(?:\s+await)?|while|switch|catch|with)$/u.test(prefix)) continue;
+    const close = balancedEnd(body, open);
+    if (close === -1) continue;
+    const start = arrayFunctionTail(body, close);
+    if (body[start] !== "{") continue;
+    const end = balancedEnd(body, start);
+    if (end === -1) continue;
+    // Defining a method does not execute its parameters or body. Keep offsets
+    // intact so direct copies elsewhere in the reducer retain their spans.
+    for (let at = open; at < end; at += 1) {
+      if (masked[at] !== "\n" && masked[at] !== "\r") masked[at] = " ";
+    }
+    open = end - 1;
+  }
+  return masked.join("");
+}
+
+function maskArrayTypeArguments(text) {
+  let masked;
+  for (const match of text.matchAll(/(?:\.\s*(?:reduceRight|reduce|map|filter|flatMap|slice|concat|toSorted|toReversed|toSpliced|with|assign|from|of)|\bnew\s+Array)\s*</gu)) {
+    const start = match.index + match[0].length - 1;
+    const end = arrayTypeArgumentsEnd(text, start);
+    if (end === -1 || !/^\s*\(/u.test(text.slice(end, end + SCAN_LIMIT))) continue;
+    masked ??= text.split("");
+    for (let at = start; at < end; at += 1) {
+      if (text[at] !== "\n" && text[at] !== "\r") masked[at] = " ";
+    }
+  }
+  return masked ? masked.join("") : text;
+}
+
+function* iterateArrayFindings(ctx) {
+  const { lineStarts } = ctx;
+  const masked = ctx.isTypeScript ? maskArrayTypeArguments(ctx.masked) : ctx.masked;
+  if (!/\.\s*(?:reduce(?:Right)?|map|filter)\s*\(/u.test(masked)) return;
+  const { bindings, writes } = arrayBindingEvidence(masked, ctx.isTypeScript, ctx.source);
+  const writtenBefore = (name, at) => writes.get(name)?.some((write) => write <= at);
+  const nativeGlobal = (name, method, at) => !bindings.has(name) && !writtenBefore(name, at) && !ctx.declaredNames.has(name)
+    && (!method || !writtenBefore(`${name}.${method}`, at) && !writtenBefore(`${name}.*`, at));
+  const knownArray = (expression, at, visited = new Set()) => {
+    const text = unwrapArraySyntax(expression, ctx.isTypeScript);
+    if (text[0] === "[" && balancedEnd(text, 0) === text.length) return true;
+    const factory = /^(?:Array\s*(?:\?\.|\.)\s*(from|of)|new\s+Array)\s*\(/u.exec(text);
+    if (factory && nativeGlobal("Array", factory[1], at) && balancedEnd(text, factory[0].length - 1) === text.length) return true;
+    if (visited.size > 20) return false;
+    if (/^[A-Za-z_$][\w$]*$/u.test(text)) {
+      const binding = bindings.get(text);
+      if (!binding || binding.start >= at || visited.has(text)) return false;
+      if (binding.scopeEnd !== undefined && at >= binding.scopeEnd) return false;
+      if (binding.scope && at >= binding.scope.end) return false;
+      visited.add(text);
+      if (/^(?:readonly\s+)?(?:[\w$.]+(?:\[\])+|(?:Array|ReadonlyArray)<[^<>|]+>|\[[^\]]*\])$/u.test(binding.annotation)) {
+        const generic = /^(?:readonly\s+)?(Array|ReadonlyArray)</u.exec(binding.annotation);
+        if (!generic || !bindings.has(generic[1]) && !ctx.declaredNames.has(generic[1])) return true;
+      }
+      if (writes.get(text)?.some((write) => write !== binding.write)) return false;
+      if (binding.rest) return true;
+      return knownArray(binding.value, binding.valueStart ?? binding.start, visited);
+    }
+    const call = /(?:\?\.|\.)\s*(map|filter|flatMap|slice|concat|toSorted|toReversed|toSpliced)\s*\(/gu;
+    for (const match of text.matchAll(call)) {
+      const open = match.index + match[0].length - 1;
+      if (balancedEnd(text, open) === text.length) return knownArray(text.slice(0, match.index), at, visited);
+    }
+    return false;
+  };
+  for (const match of masked.matchAll(/(?:\?\.|\.)\s*(map|filter)\s*\(/gu)) {
+    const innerEnd = balancedEnd(masked, match.index + match[0].length - 1);
+    if (innerEnd === -1) continue;
+    const start = arrayReceiverStart(masked, match.index, ctx.isTypeScript);
+    if (start === -1) continue;
+    let groupStart = start;
+    let outerStart = innerEnd;
+    // Only cross parentheses around this whole pass, never a wrapping call,
+    // an argument list, or a larger expression that happens to end with it.
+    for (let count = 0; count < 20; count += 1) {
+      let close = outerStart;
+      while (/\s/u.test(masked[close] ?? "") || ctx.isTypeScript && masked[close] === "!") close += 1;
+      if (masked[close] !== ")") { outerStart = close; break; }
+      let open = groupStart - 1;
+      while (open >= 0 && /\s/u.test(masked[open])) open -= 1;
+      if (masked[open] !== "(" || balancedEnd(masked, open) !== close + 1
+        || arrayReceiverStart(masked, close + 1, ctx.isTypeScript) !== open) break;
+      groupStart = open;
+      outerStart = close + 1;
+    }
+    const outer = /^\s*(?:\?\.|\.)\s*(map|filter)\s*\(/u.exec(masked.slice(outerStart, outerStart + SCAN_LIMIT));
+    if (!outer || outer[1] === match[1]) continue;
+    if (!knownArray(masked.slice(start, match.index), start)) continue;
+    const end = balancedEnd(masked, outerStart + outer[0].length - 1);
+    if (end === -1) continue;
+    yield {
+      ...offsetToPosition(lineStarts, match.index), endLine: offsetToPosition(lineStarts, end - 1).line,
+      startLine: offsetToPosition(lineStarts, groupStart).line,
+      rule: "no-array-filter-map",
+      message: "Consecutive array filter/map passes allocate an intermediate array. Consider one pass only after checking callback ordering, indexes, sparse-array behavior, and side effects. Iterator helpers also require runtime support; this is not an automatic rewrite.",
+    };
+  }
+  for (const match of masked.matchAll(/\.\s*reduce(?:Right)?\s*\(/gu)) {
+    const open = match.index + match[0].length - 1;
+    const end = balancedEnd(masked, open);
+    if (end === -1) continue;
+    const receiverStart = arrayReceiverStart(masked, match.index, ctx.isTypeScript);
+    const startLine = offsetToPosition(lineStarts, receiverStart === -1 ? match.index : receiverStart).line;
+    const args = arrayArguments(masked.slice(open + 1, end - 1), ctx.isTypeScript);
+    if (args.length < 1 || args.length > 2) continue;
+    const callback = unwrapArraySyntax(args[0], ctx.isTypeScript);
+    const head = /^(?:function(?:\s+[A-Za-z_$][\w$]*)?\s*)?\(/u.exec(callback);
+    let parameters;
+    let bodyStart;
+    if (head) {
+      const close = balancedEnd(callback, head[0].length - 1);
+      if (close === -1) continue;
+      parameters = callback.slice(head[0].length, close - 1);
+      let afterParameters = close;
+      while (/\s/u.test(callback[afterParameters] ?? "")) afterParameters += 1;
+      if (callback[afterParameters] === ":") {
+        afterParameters = arrayAnnotationEnd(callback, afterParameters + 1);
+        if (afterParameters === -1) continue;
+      }
+      const tail = (head[0].startsWith("function") ? /^\s*(?=\{)/u : /^\s*=>\s*/u).exec(callback.slice(afterParameters));
+      if (!tail) continue;
+      bodyStart = afterParameters + tail[0].length;
+    } else {
+      const arrow = /^([A-Za-z_$][\w$]*)\s*=>\s*/u.exec(callback);
+      if (!arrow) continue;
+      parameters = arrow[1];
+      bodyStart = arrow[0].length;
+    }
+    const parameter = /^([A-Za-z_$][\w$]*)\s*(?::|=|$)/u.exec(arrayArguments(parameters, ctx.isTypeScript)[0] ?? "");
+    if (!parameter) continue;
+    const accumulator = parameter[1];
+    const body = maskReducerMethods(callback.slice(bodyStart));
+    // Without scopes, an inner function or shadowed accumulator is ambiguous.
+    if (/=>|\bfunction\b/u.test(body)) continue;
+    const local = arrayBindingEvidence(body, ctx.isTypeScript);
+    if (local.bindings.has(accumulator) || local.writes.has(accumulator)) continue;
+    const isAccumulator = (expression, at, visited = new Set()) => {
+      const name = unwrapArraySyntax(expression, ctx.isTypeScript);
+      if (name === accumulator) return true;
+      const binding = local.bindings.get(name);
+      if (!binding || binding.start >= at || visited.has(name) || visited.size > 20) return false;
+      if (local.writes.get(name)?.some((write) => write !== binding.write)) return false;
+      if (blockClosesBefore(body, binding.start, at)) return false;
+      visited.add(name);
+      return isAccumulator(binding.value, binding.start, visited);
+    };
+    const bodyOffset = masked.indexOf(callback, open + 1) + bodyStart;
+    const containers = [];
+    const inside = [];
+    for (let at = 0; at < body.length; at += 1) {
+      inside[at] = containers.at(-1);
+      if ("([{".includes(body[at])) containers.push(body[at]);
+      else if (")]}".includes(body[at])) containers.pop();
+    }
+    for (const copy of body.matchAll(/\.\.\.\s*([A-Za-z_$][\w$]*)\s*(?=[,}\]])|(?<![\w$.#])(Object|Array|[A-Za-z_$][\w$]*)\s*\.\s*(assign|from|concat|slice|toSpliced|toSorted|toReversed|with)\s*\(/gu)) {
+      let copies = false;
+      let copyEnd = copy.index + copy[0].length;
+      if (copy[1]) {
+        const prefix = body.slice(0, copy.index).trimEnd();
+        copies = /[{[,]$/u.test(prefix) && (inside[copy.index] === "[" || inside[copy.index] === "{")
+          && isAccumulator(copy[1], copy.index);
+      } else {
+        if (/[.#]$/u.test(body.slice(0, copy.index).trimEnd())) continue;
+        copyEnd = balancedEnd(body, copyEnd - 1);
+        if (copyEnd === -1) continue;
+        const copyArgs = arrayArguments(body.slice(copy.index + copy[0].length, copyEnd - 1), ctx.isTypeScript);
+        const owner = copy[2];
+        const method = copy[3];
+        if (owner === "Object" && method === "assign" && nativeGlobal(owner, method, bodyOffset + copy.index)) {
+          const target = unwrapArraySyntax(copyArgs[0] ?? "", ctx.isTypeScript);
+          copies = target[0] === "{" && balancedEnd(target, 0) === target.length
+            && copyArgs.slice(1).some((argument) => isAccumulator(argument, copy.index));
+        } else if (owner === "Array" && method === "from" && nativeGlobal(owner, method, bodyOffset + copy.index)) {
+          copies = isAccumulator(copyArgs[0] ?? "", copy.index);
+        } else if (!["assign", "from"].includes(method)) {
+          const seedStart = args[1] ? masked.lastIndexOf(args[1], end - 1) : match.index;
+          copies = knownArray(args[1] ?? "", seedStart) && isAccumulator(owner, copy.index);
+        }
+      }
+      if (!copies) continue;
+      yield {
+        ...offsetToPosition(lineStarts, bodyOffset + copy.index),
+        startLine,
+        endLine: offsetToPosition(lineStarts, end - 1).line,
+        rule: "no-reduce-accumulator-copy",
+        message: "Copying the reducer accumulator each iteration can make growing results quadratic. Consider mutating a fresh, locally owned accumulator only when no caller or retained snapshot observes it; preserve ordering and sparse-array semantics.",
+      };
+    }
+  }
+}
+
 function* iterateAssertionFindings(ctx) {
   if (!ctx.isTypeScript) return;
   const { masked, maskedLines, comments, lineStarts } = ctx;
@@ -1833,12 +2448,12 @@ const MECHANICAL_RULES = new Set([
 // asserts this list against every `rule:` literal in this file, so a new rule
 // cannot ship unsuppressable.
 const STANDALONE_RULE_IDS = [
-  "no-arbitrary-sleep", "no-backcompat-comments", "no-boolean-return-branches",
+  "no-arbitrary-sleep", "no-array-filter-map", "no-backcompat-comments", "no-boolean-return-branches",
   "no-catch-fake-success", "no-change-note-comments", "no-emoji",
   "no-empty-catch", "no-empty-type-declaration", "no-filler-comments",
   "no-foreach-push", "no-let-if-else-assign", "no-log-and-rethrow",
   "no-message-only-rethrow", "no-narration-comments", "no-obvious-doc-comments",
-  "no-promise-constructor-wrapper", "no-restating-comments",
+  "no-promise-constructor-wrapper", "no-reduce-accumulator-copy", "no-restating-comments",
   "no-shape-in-symbol-names", "no-slop-symbol-names", "no-typed-jsdoc",
   "no-unjustified-ignore", "no-unjustified-suppression", "no-unknown-alias",
   "no-useless-rethrow", "require-safety-comment-for-type-assertion",
@@ -1924,6 +2539,7 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
   const bindsAny = declaredNames.has("any") || PARAMETER_ANY.test(masked) || DESTRUCTURED_ANY.test(masked);
   const ctx = {
     path: filePath,
+    source,
     declaredNames,
     bindsAny,
     isTypeScript: TYPESCRIPT_EXTENSIONS.has(extension),
@@ -1940,6 +2556,7 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
     ...iterateLineFindings(ctx),
     ...iterateBlockFindings(ctx),
     ...iterateCandidateFindings(ctx),
+    ...iterateArrayFindings(ctx),
     ...iterateAssertionFindings(ctx),
     ...iterateCommentFindings(ctx),
     ...suppressions.findings,
@@ -1959,7 +2576,8 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
     seen.add(key);
     const silenced = disabled?.has(finding.rule)
       || suppressions.forFile.has(finding.rule)
-      || suppressions.forLine.get(finding.line)?.has(finding.rule) === true;
+      || suppressions.forLine.get(finding.line)?.has(finding.rule) === true
+      || suppressions.forLine.get(finding.startLine)?.has(finding.rule) === true;
     if (silenced) {
       suppressed.push(finding);
       continue;
@@ -2256,11 +2874,10 @@ function main() {
     }
     linted += 1;
     const fileFindings = lintSource(source, displayPath(file), { disabled });
-    // Same overlap test the PostToolUse hook uses: a block rule reports at the
-    // keyword that opens the block, so testing the anchor line alone dropped
-    // findings whose body is exactly what `git diff` reports as changed.
+    // Evidence can precede the diagnostic anchor (a receiver) or follow it
+    // (a reducer seed). Match the same evidence span as the PostToolUse hook.
     const touched = (finding) => {
-      for (let line = finding.line; line <= (finding.endLine ?? finding.line); line += 1) {
+      for (let line = finding.startLine ?? finding.line; line <= (finding.endLine ?? finding.line); line += 1) {
         if (changed.has(line)) return true;
       }
       return false;

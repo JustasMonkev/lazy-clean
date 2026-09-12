@@ -709,6 +709,202 @@ check("--json stays a bare array when findings are suppressed", () => {
   assert.deepEqual(JSON.parse(result.stdout), []);
 });
 
+check("array performance findings are advisory, serialized, and individually configurable", () => {
+  write("array-performance.js", [
+    "const result = [1, 2].reduce((acc, value) => acc.concat(value), []);",
+    "const doubled = [1, 2].filter(value => value > 0).map(value => value * 2);",
+    "",
+  ].join("\n"));
+  const result = run(["--json", "array-performance.js"]);
+  assert.equal(result.status, 1, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout).map(({ rule, severity, line }) => ({ rule, severity, line })), [
+    { rule: "no-reduce-accumulator-copy", severity: "review", line: 1 },
+    { rule: "no-array-filter-map", severity: "review", line: 2 },
+  ]);
+  const filtered = run(["--json", "--disable=no-array-filter-map", "array-performance.js"]);
+  assert.equal(filtered.status, 1, filtered.stderr);
+  assert.deepEqual(JSON.parse(filtered.stdout).map(finding => finding.rule), ["no-reduce-accumulator-copy"]);
+  const disabled = run(["--disable=no-array-filter-map,no-reduce-accumulator-copy", "array-performance.js"]);
+  assert.equal(disabled.status, 0, disabled.stderr);
+  assert.match(disabled.stdout, /2 suppressed/u);
+});
+
+check("--since sees changed multiline array operations without reporting untouched copies", () => {
+  const repo = join(root, "array-diff");
+  mkdirSync(repo);
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const reducer = [
+    "const legacy = [1].reduce((acc, value) => [...acc, value], []);",
+    "const result = [1, 2].reduce((acc, value) => {",
+    "  return acc;",
+    "}, []);",
+    "",
+  ].join("\n");
+  const pipeline = "const doubled = [1, 2]\n  .filter(value => value > 0);\n";
+  git("init", "-q");
+  git("config", "user.email", "test@example.com");
+  git("config", "user.name", "test");
+  writeFileSync(join(repo, "reduce.js"), reducer);
+  writeFileSync(join(repo, "pipeline.js"), pipeline);
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  writeFileSync(join(repo, "reduce.js"), reducer.replace("return acc;", "return [...acc, value];"));
+  writeFileSync(join(repo, "pipeline.js"), pipeline.replace(";", "\n  .map(value => value * 2);"));
+  const result = run(["--since=HEAD", "--json"], repo);
+  assert.equal(result.status, 1, result.stderr);
+  const findings = JSON.parse(result.stdout);
+  assert.deepEqual(findings.map(finding => finding.rule).sort(), ["no-array-filter-map", "no-reduce-accumulator-copy"]);
+  const copy = findings.find(finding => finding.rule === "no-reduce-accumulator-copy");
+  assert.ok(copy.line > 1 && copy.line <= 3 && (copy.endLine || copy.line) >= 3,
+    "the changed reducer body is reported instead of the unchanged legacy copy");
+});
+
+check("--since includes receiver-only and reducer-initial-only multiline changes", () => {
+  const repo = join(root, "array-span-diff");
+  mkdirSync(repo);
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const pipeline = (receiver) => [
+    "const customCollection = getCollection();",
+    `const result = ${receiver}`,
+    "",
+    "",
+    "",
+    "",
+    "",
+    "  .filter(value => value > 0)",
+    "  .map(value => value * 2);",
+    "const preexisting = Reflect.get(source, key);",
+    "",
+  ].join("\n");
+  const reducer = (initial) => [
+    "const customCollection = getCollection();",
+    "const items = [1, 2];",
+    "const result = items.reduce(",
+    "  (acc, item) => {",
+    "    return acc.concat(item);",
+    "  },",
+    "",
+    "",
+    "",
+    "",
+    "",
+    `  ${initial},`,
+    ");",
+    "const preexisting = Reflect.get(source, key);",
+    "",
+  ].join("\n");
+  git("init", "-q");
+  git("config", "user.email", "test@example.com");
+  git("config", "user.name", "test");
+  writeFileSync(join(repo, "pipeline.js"), pipeline("customCollection"));
+  writeFileSync(join(repo, "reducer.js"), reducer("customCollection"));
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  const baselineRules = JSON.parse(run(["--json"], repo).stdout).filter(({ rule }) =>
+    ["no-array-filter-map", "no-reduce-accumulator-copy"].includes(rule));
+  assert.deepEqual(baselineRules, [], "customCollection does not establish an array finding before the edit");
+  writeFileSync(join(repo, "pipeline.js"), pipeline("[]"));
+  writeFileSync(join(repo, "reducer.js"), reducer("[]"));
+
+  const result = run(["--since=HEAD", "--json"], repo);
+  assert.equal(result.status, 1, result.stderr);
+  const findings = JSON.parse(result.stdout);
+  assert.deepEqual(findings.map(({ rule }) => rule).sort(), [
+    "no-array-filter-map",
+    "no-reduce-accumulator-copy",
+  ]);
+  const pipelineFinding = findings.find(({ rule }) => rule === "no-array-filter-map");
+  const reducerFinding = findings.find(({ rule }) => rule === "no-reduce-accumulator-copy");
+  assert.ok(pipelineFinding.startLine <= 2 && pipelineFinding.endLine >= 9,
+    "filter/map span includes its changed receiver");
+  assert.ok(reducerFinding.startLine <= 12 && reducerFinding.endLine >= 12,
+    "reducer span includes its changed initial value");
+});
+
+check("multiline array suppressions honor evidence starts and keep later operations visible", () => {
+  const file = write("array-suppressions.js", [
+    "const users = [];",
+    "// slop-check-ignore no-array-filter-map -- preserve callback order",
+    "const receiverSuppressed = users",
+    "  .filter(active)",
+    "  .map(normalize);",
+    "const anchorSuppressed = users",
+    "  // slop-check-ignore no-array-filter-map -- preserve callback order",
+    "  .filter(active)",
+    "  .map(email);",
+    "const reducerItems = [1, 2];",
+    "// slop-check-ignore no-reduce-accumulator-copy -- preserve callback behavior",
+    "const reducerSuppressed = reducerItems.reduce(",
+    "  (acc, item) => {",
+    "    return [...acc, item];",
+    "  },",
+    "  [],",
+    ");",
+    "const bodySuppressed = [1, 2].reduce(",
+    "  (acc, item) => {",
+    "    // slop-check-ignore no-reduce-accumulator-copy -- preserve callback behavior",
+    "    return [...acc, item];",
+    "  },",
+    "  [],",
+    ");",
+    "const nextPipeline = users",
+    "  .filter(active)",
+    "  .map(email);",
+    "const nextReducer = [1, 2].reduce(",
+    "  (acc, item) => {",
+    "    return [...acc, item];",
+    "  },",
+    "  [],",
+    ");",
+    "",
+  ].join("\n"));
+  const json = run(["--json", file]);
+  assert.equal(json.status, 1, json.stderr);
+  const findings = JSON.parse(json.stdout);
+  assert.deepEqual(findings.map(({ rule, line }) => [rule, line]), [
+    ["no-array-filter-map", 26],
+    ["no-reduce-accumulator-copy", 30],
+  ], "only unrelated later operations remain reported");
+
+  const summary = run([file]);
+  assert.equal(summary.status, 1, summary.stdout);
+  assert.match(summary.stdout, /2 findings? in 1 file, 4 suppressed/u);
+});
+
+check("--since counts only a changed multiline expression's suppression", () => {
+  const repo = join(root, "array-suppression-diff");
+  mkdirSync(repo);
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const source = (mapName) => [
+    "const users = [];",
+    "const existing = users",
+    "  // slop-check-ignore no-array-filter-map -- preserve callback order",
+    "  .filter(active)",
+    "  .map(email);",
+    "// slop-check-ignore no-array-filter-map -- preserve callback order",
+    "const changed = users",
+    "  .filter(active)",
+    `  .map(${mapName});`,
+    "",
+  ].join("\n");
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "pipeline.js"), source("email"));
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since multiline suppression scope (git unavailable)");
+    return;
+  }
+  writeFileSync(join(repo, "pipeline.js"), source("normalize"));
+  const result = run(["--since=HEAD"], repo);
+  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
+  assert.match(result.stdout, /clean \(1 file checked, 1 suppressed\)/u);
+  assert.doesNotMatch(result.stdout, /2 suppressed/u, "the untouched operation is outside the changed expression");
+});
+
 if (failures > 0) {
   console.error(`\n${failures} test(s) failed`);
   process.exit(1);
