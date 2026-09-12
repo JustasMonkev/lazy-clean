@@ -821,6 +821,90 @@ check("--since includes receiver-only and reducer-initial-only multiline changes
     "reducer span includes its changed initial value");
 });
 
+check("multiline array suppressions honor evidence starts and keep later operations visible", () => {
+  const file = write("array-suppressions.js", [
+    "const users = [];",
+    "// slop-check-ignore no-array-filter-map -- preserve callback order",
+    "const receiverSuppressed = users",
+    "  .filter(active)",
+    "  .map(normalize);",
+    "const anchorSuppressed = users",
+    "  // slop-check-ignore no-array-filter-map -- preserve callback order",
+    "  .filter(active)",
+    "  .map(email);",
+    "const reducerItems = [1, 2];",
+    "// slop-check-ignore no-reduce-accumulator-copy -- preserve callback behavior",
+    "const reducerSuppressed = reducerItems.reduce(",
+    "  (acc, item) => {",
+    "    return [...acc, item];",
+    "  },",
+    "  [],",
+    ");",
+    "const bodySuppressed = [1, 2].reduce(",
+    "  (acc, item) => {",
+    "    // slop-check-ignore no-reduce-accumulator-copy -- preserve callback behavior",
+    "    return [...acc, item];",
+    "  },",
+    "  [],",
+    ");",
+    "const nextPipeline = users",
+    "  .filter(active)",
+    "  .map(email);",
+    "const nextReducer = [1, 2].reduce(",
+    "  (acc, item) => {",
+    "    return [...acc, item];",
+    "  },",
+    "  [],",
+    ");",
+    "",
+  ].join("\n"));
+  const json = run(["--json", file]);
+  assert.equal(json.status, 1, json.stderr);
+  const findings = JSON.parse(json.stdout);
+  assert.deepEqual(findings.map(({ rule, line }) => [rule, line]), [
+    ["no-array-filter-map", 26],
+    ["no-reduce-accumulator-copy", 30],
+  ], "only unrelated later operations remain reported");
+
+  const summary = run([file]);
+  assert.equal(summary.status, 1, summary.stdout);
+  assert.match(summary.stdout, /2 findings? in 1 file, 4 suppressed/u);
+});
+
+check("--since counts only a changed multiline expression's suppression", () => {
+  const repo = join(root, "array-suppression-diff");
+  mkdirSync(repo);
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const source = (mapName) => [
+    "const users = [];",
+    "const existing = users",
+    "  // slop-check-ignore no-array-filter-map -- preserve callback order",
+    "  .filter(active)",
+    "  .map(email);",
+    "// slop-check-ignore no-array-filter-map -- preserve callback order",
+    "const changed = users",
+    "  .filter(active)",
+    `  .map(${mapName});`,
+    "",
+  ].join("\n");
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "pipeline.js"), source("email"));
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since multiline suppression scope (git unavailable)");
+    return;
+  }
+  writeFileSync(join(repo, "pipeline.js"), source("normalize"));
+  const result = run(["--since=HEAD"], repo);
+  assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
+  assert.match(result.stdout, /clean \(1 file checked, 1 suppressed\)/u);
+  assert.doesNotMatch(result.stdout, /2 suppressed/u, "the untouched operation is outside the changed expression");
+});
+
 if (failures > 0) {
   console.error(`\n${failures} test(s) failed`);
   process.exit(1);

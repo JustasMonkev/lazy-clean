@@ -1901,6 +1901,64 @@ expectNoRule(
   ACCUMULATOR_COPY,
   "sample.js",
 );
+for (const [label, source] of [
+  [
+    "a three-argument reducer with TypeScript comparisons",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), lower < middle + 1, upper > (limit));",
+  ],
+  [
+    "a three-argument reducer with related comparison operators",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), lower <= middle - 1, upper >= (limit));",
+  ],
+  [
+    "nested parentheses around an arithmetic operand",
+    "items.reduce((acc, item) => [...acc, item], lower < ((middle + 1)), upper > (limit));",
+  ],
+  [
+    "arithmetic in a later union-like operand",
+    "items.reduce((acc, item) => [...acc, item], lower < middle | (more + 1), upper > (limit));",
+  ],
+  [
+    "arithmetic in a later intersection-like operand",
+    "items.reduce((acc, item) => [...acc, item], lower < middle & (more + 1), upper > (limit));",
+  ],
+  [
+    "a comparison after an array method name",
+    "items.reduce((acc, item) => [...acc, item], lower.map < middle + 1, upper > (limit));",
+  ],
+]) {
+  expectNoRule(`does not read ${label} as generic syntax`, source, ACCUMULATOR_COPY);
+}
+expectRule(
+  "keeps a true generic call in a reducer initial value",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), make<Map<string, Item>>());",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "keeps a true generic annotation in a reducer initial value",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), {} as Record<string, Item>);",
+  ACCUMULATOR_COPY,
+);
+for (const [label, source] of [
+  [
+    "a conditional type generic call",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), make<T extends U ? X : Y, Item>());",
+  ],
+  [
+    "an indexed type generic call",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), make<T[keyof T], Item>());",
+  ],
+  [
+    "a function type generic call",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), make<(value: Item) => Item, Item>());",
+  ],
+  [
+    "a tuple type generic call",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), make<[Item, Item], Item>());",
+  ],
+]) {
+  expectRule(`keeps ${label} in a reducer initial value`, source, ACCUMULATOR_COPY);
+}
 // Each declarator has its own initializer. Commas in a declaration, nested
 // expressions, and assignments must not make the scanner attach the wrong
 // value to a later name.
@@ -2219,6 +2277,135 @@ expectRule(
   ACCUMULATOR_COPY,
 );
 
+// A built-in write only changes calls that happen after that write. The
+// evidence also survives aliases initialized before the write, and a literal
+// or wildcard property write only invalidates the matching method evidence.
+for (const [label, source] of [
+  [
+    "an earlier dotted Array.from call",
+    "Array.from(values).filter(active).map(email); Array.from = customFrom;",
+  ],
+  [
+    "an earlier bracketed Array.from call",
+    'Array.from(values).filter(active).map(email); Array["from"] = customFrom;',
+  ],
+  [
+    "an earlier wildcard Array.from call",
+    "Array.from(values).filter(active).map(email); Array[method] = customMethod;",
+  ],
+  [
+    "an earlier Array.of call",
+    "Array.of(...values).filter(active).map(email); Array.of = customOf;",
+  ],
+  [
+    "an earlier bracketed Array.of call",
+    'Array.of(...values).filter(active).map(email); Array["of"] = customOf;',
+  ],
+  [
+    "an earlier wildcard Array.of call",
+    "Array.of(...values).filter(active).map(email); Array[method] = customMethod;",
+  ],
+  [
+    "an earlier dotted Object.assign copy",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), {}); Object.assign = customAssign;",
+  ],
+  [
+    "an earlier bracketed Object.assign copy",
+    'items.reduce((acc, item) => Object.assign({}, acc, item), {}); Object["assign"] = customAssign;',
+  ],
+  [
+    "an earlier wildcard Object.assign copy",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), {}); Object[method] = customMethod;",
+  ],
+  [
+    "an earlier Array.from reducer copy",
+    "items.reduce((acc, item) => Array.from(acc), []); Array.from = customFrom;",
+  ],
+]) {
+  expectRule(`retains ${label} before a later built-in write`, source, label.includes("Object.assign") || label.includes("Array.from reducer") ? ACCUMULATOR_COPY : ARRAY_PIPELINE);
+}
+expectRule(
+  "retains an array pipeline through an alias initialized before a later write",
+  "const users = Array.from(values); Array.from = customFrom; users.filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+for (const [label, source] of [
+  [
+    "a dotted Array.from call after its write",
+    "Array.from = customFrom; Array.from(values).filter(active).map(email);",
+  ],
+  [
+    "a bracketed Array.from call after its write",
+    'Array["from"] = customFrom; Array.from(values).filter(active).map(email);',
+  ],
+  [
+    "a wildcard Array.from call after its write",
+    "Array[method] = customMethod; Array.from(values).filter(active).map(email);",
+  ],
+  [
+    "a dotted Object.assign copy after its write",
+    "Object.assign = customAssign; items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  ],
+  [
+    "a bracketed Object.assign copy after its write",
+    'Object["assign"] = customAssign; items.reduce((acc, item) => Object.assign({}, acc, item), {});',
+  ],
+  [
+    "a wildcard Object.assign copy after its write",
+    "Object[method] = customMethod; items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  ],
+]) {
+  expectNoRule(`suppresses ${label}`, source, label.includes("Object.assign") ? ACCUMULATOR_COPY : ARRAY_PIPELINE);
+}
+for (const [label, source] of [
+  [
+    "an Array.from call after a destructured static write",
+    "for ({method:Array.from} of replacements) {} Array.from(values).filter(active).map(email);",
+  ],
+  [
+    "an Object.assign copy after a destructured static write",
+    "for ([Object.assign] of replacements) {} items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  ],
+]) {
+  expectNoRule(`suppresses ${label}`, source, label.includes("Object.assign") ? ACCUMULATOR_COPY : ARRAY_PIPELINE);
+}
+for (const [label, source] of [
+  [
+    "an earlier Array.from call before a destructured static write",
+    "Array.from(values).filter(active).map(email); for ({method:Array.from} of replacements) {}",
+  ],
+  [
+    "an earlier Object.assign copy before a destructured static write",
+    "items.reduce((acc, item) => Object.assign({}, acc, item), {}); for ([Object.assign] of replacements) {}",
+  ],
+  [
+    "an Array.from call after a destructured property key",
+    "for ({Array: method} of replacements) {} Array.from(values).filter(active).map(email);",
+  ],
+]) {
+  expectRule(`retains ${label}`, source, label.includes("Object.assign") ? ACCUMULATOR_COPY : ARRAY_PIPELINE);
+}
+expectNoRule(
+  "suppresses an Array.from call after a destructured static assignment",
+  "({method: Array.from} = replacements); Array.from(values).filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "suppresses an Object.assign copy after a destructured static assignment",
+  "[Object.assign] = replacements; items.reduce((acc, item) => Object.assign({}, acc, item), {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "retains an earlier Array.from call before a later destructured assignment",
+  "Array.from(values).filter(active).map(email); ({method: Array.from} = replacements);",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "retains an earlier Object.assign copy before a later destructured assignment",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), {}); [Object.assign] = replacements;",
+  ACCUMULATOR_COPY,
+);
+
 // A reducer accumulator's identity is lost when a loop writes the binding or
 // an alias. `for await` has the same bare-target shape as ordinary for-of.
 for (const source of [
@@ -2226,6 +2413,65 @@ for (const source of [
   "items.reduce((acc, item) => { for (acc in item) {} return Object.assign({}, acc); }, {});",
 ]) {
   expectNoRule(`preserves reducer identity after loop writes: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const source of [
+  "items.reduce((acc, item) => { for ({acc} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ({state: {acc}} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ([[acc]] of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ({value:acc} in item) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for({value:[,acc]}of stream){} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ({acc = fallback} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ({...acc} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ([, acc] of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ([...acc] of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ([acc = fallback] of stream) {} return Object.assign({}, acc); }, {});",
+]) {
+  expectNoRule(`preserves reducer identity after a destructured loop write: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const source of [
+  "items.reduce((acc, item) => { for (const {acc: other} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for (let [[other]] of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ({value: other = acc} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ({...other} of stream) {} return Object.assign({}, acc); }, {});",
+  "items.reduce((acc, item) => { for ([, other] of stream) {} return Object.assign({}, acc); }, {});",
+]) {
+  expectRule(`retains reducer identity through a non-binding or declared loop target: ${source}`, source, ACCUMULATOR_COPY);
+}
+for (const [label, source] of [
+  [
+    "a bare object for-await target",
+    "async function collect(...users) { for await ({users} of stream) {} return users.filter(active).map(email); }",
+  ],
+  [
+    "a nested object for-await target",
+    "async function collect(...users) { for await ({state: {users}} of stream) {} return users.filter(active).map(email); }",
+  ],
+  [
+    "a nested array for-await target",
+    "async function collect(...users) { for await ([[users]] of stream) {} return users.filter(active).map(email); }",
+  ],
+  [
+    "a nested array for-in target",
+    "function collect(...users) { for ([[users]] in source) {} return users.filter(active).map(email); }",
+  ],
+]) {
+  expectNoRule(`invalidates array evidence after ${label}`, source, ARRAY_PIPELINE);
+}
+for (const [label, source] of [
+  [
+    "a property key in a for-await target",
+    "async function collect(...users) { for await ({users: next} of stream) {} return users.filter(active).map(email); }",
+  ],
+  [
+    "a declared object for-await target",
+    "async function collect(...users) { for await (const {users: next} of stream) {} return users.filter(active).map(email); }",
+  ],
+  [
+    "a declared nested array for-await target",
+    "async function collect(...users) { for await (let [[next]] of stream) {} return users.filter(active).map(email); }",
+  ],
+]) {
+  expectRule(`retains array evidence through ${label}`, source, ARRAY_PIPELINE);
 }
 expectNoRule(
   "tracks a valid for-await rest-parameter write",
@@ -2241,6 +2487,64 @@ expectNoRule(
   "does not truncate a reducer alias initializer",
   "items.reduce((acc, item) => { const alias = acc\n && item; return [...alias]; }, []);",
   ACCUMULATOR_COPY,
+);
+
+// Array findings are anchored on the receiver for scope and on the first
+// pass for their diagnostic position. Either directly adjacent directive must
+// suppress that same finding, without reaching a later independent pipeline.
+expectSuppression(
+  "an array ignore directly above a multiline receiver suppresses its finding",
+  `const users = [];
+// slop-check-ignore ${ARRAY_PIPELINE} -- callbacks intentionally stay separate
+users
+  .filter(active)
+  .map(email);
+const other = [];
+other.filter(active).map(email);`,
+  { rules: [ARRAY_PIPELINE], suppressed: 1 },
+);
+expectSuppression(
+  "an array ignore directly above filter keeps the existing placement",
+  `const users = [];
+users
+// slop-check-ignore ${ARRAY_PIPELINE} -- callbacks intentionally stay separate
+  .filter(active)
+  .map(email);`,
+  { rules: [], suppressed: 1 },
+);
+expectSuppression(
+  "a reducer ignore directly above a multiline receiver suppresses its finding",
+  `const items = [];
+// slop-check-ignore ${ACCUMULATOR_COPY} -- the reducer intentionally snapshots each step
+items.reduce(
+  (acc, item) => Object.assign({}, acc, item),
+  {}
+);
+items.reduce((acc, item) => Object.assign({}, acc, item), {});`,
+  { rules: [ACCUMULATOR_COPY], suppressed: 1 },
+);
+expectSuppression(
+  "a reducer ignore directly above its body keeps the existing placement",
+  `const items = [];
+items.reduce(
+// slop-check-ignore ${ACCUMULATOR_COPY} -- the reducer intentionally snapshots each step
+  (acc, item) => Object.assign({}, acc, item),
+  {}
+);`,
+  { rules: [], suppressed: 1 },
+);
+expectSuppression(
+  "an interior reducer ignore does not silence the reducer span",
+  `const items = [];
+items.reduce(
+  (acc, item) => {
+    // slop-check-ignore ${ACCUMULATOR_COPY} -- the reducer intentionally snapshots each step
+    const marker = item;
+    return Object.assign({}, acc, item);
+  },
+  {}
+);`,
+  { rules: [ACCUMULATOR_COPY], suppressed: 0 },
 );
 
 // Constructor parameter properties expose their bare binding to the body;

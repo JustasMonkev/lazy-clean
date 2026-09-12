@@ -1536,7 +1536,7 @@ function arrayExpressionEnd(text, start, isTypeScript = false) {
   return limit;
 }
 
-function arrayArguments(text, isTypeScript = false) {
+function arrayArguments(text, isTypeScript = false, allowHoles = false) {
   const parts = [];
   let start = 0;
   for (let at = 0; at < text.length; at += 1) {
@@ -1548,8 +1548,8 @@ function arrayArguments(text, isTypeScript = false) {
       at = end - 1;
     } else if (text[at] === ",") {
       const part = text.slice(start, at).trim();
-      if (!part) return [];
-      parts.push(part);
+      if (!part && !allowHoles) return [];
+      if (part) parts.push(part);
       start = at + 1;
     }
   }
@@ -1628,6 +1628,60 @@ function arrayTypeEnd(text, start) {
   return end - start < SCAN_LIMIT ? end : -1;
 }
 
+function arrayTypeArgumentEnd(text, start, depth = 0) {
+  if (depth > 20) return -1;
+  while (/\s/u.test(text[start] ?? "")) start += 1;
+  let end;
+  if (text[start] === "(") {
+    const close = balancedEnd(text, start);
+    if (close === -1) return -1;
+    const arrow = /^\s*=>\s*/u.exec(text.slice(close, close + SCAN_LIMIT));
+    if (arrow) return arrayTypeArgumentEnd(text, close + arrow[0].length, depth + 1);
+    const inner = text.slice(start + 1, close - 1).trim();
+    if (!inner || arrayTypeArgumentEnd(inner, 0, depth + 1) !== inner.length) return -1;
+    end = close;
+  } else {
+    const top = /^(?:any|unknown)\b/u.exec(text.slice(start, start + SCAN_LIMIT));
+    end = top ? start + top[0].length : arrayAnnotationEnd(text, start);
+  }
+  if (end === -1) return -1;
+  while (end - start < SCAN_LIMIT) {
+    while (/\s/u.test(text[end] ?? "")) end += 1;
+    if (text[end] !== "[") break;
+    const close = balancedEnd(text, end);
+    if (close === -1) return -1;
+    const index = text.slice(end + 1, close - 1).trim();
+    if (index && arrayTypeArgumentEnd(index, 0, depth + 1) !== index.length) return -1;
+    end = close;
+  }
+  if (text[end] === "|" || text[end] === "&") return arrayTypeArgumentEnd(text, end + 1, depth + 1);
+  const constraint = /^extends\s+/u.exec(text.slice(end, end + SCAN_LIMIT));
+  if (constraint) {
+    end = arrayTypeArgumentEnd(text, end + constraint[0].length, depth + 1);
+    if (end === -1 || text[end] !== "?") return -1;
+    end = arrayTypeArgumentEnd(text, end + 1, depth + 1);
+    if (end === -1 || text[end] !== ":") return -1;
+    return arrayTypeArgumentEnd(text, end + 1, depth + 1);
+  }
+  return end;
+}
+
+function arrayTypeArgumentsEnd(text, start) {
+  const end = balancedEnd(text, start);
+  if (end === -1) return -1;
+  let cursor = start + 1;
+  while (cursor < end - 1) {
+    cursor = arrayTypeArgumentEnd(text, cursor);
+    if (cursor === -1) return -1;
+    if (cursor === end - 1) return end;
+    if (text[cursor] !== ",") return -1;
+    cursor += 1;
+    while (/\s/u.test(text[cursor] ?? "")) cursor += 1;
+    if (cursor === end - 1) return end;
+  }
+  return -1;
+}
+
 // Only type syntax protects a comma. In particular, JavaScript comparisons
 // must not become a generic clause just because their angles happen to pair.
 function arrayTypeSpanEnd(text, at, start) {
@@ -1644,7 +1698,7 @@ function arrayTypeSpanEnd(text, at, start) {
     return arrayTypeEnd(text, at + 1);
   }
   if (text[at] === "<" && /[\w$]$/u.test(text.slice(start, at).trimEnd())) {
-    const end = balancedEnd(text, at);
+    const end = arrayTypeArgumentsEnd(text, at);
     if (end !== -1 && /^\s*\(/u.test(text.slice(end, end + SCAN_LIMIT))) return end;
   }
   return -1;
@@ -1660,6 +1714,39 @@ function arrayFunctionTail(text, start) {
   return end - start < SCAN_LIMIT ? end : -1;
 }
 
+function* arrayBindingTargets(pattern, offset = 0, depth = 0) {
+  if (depth > 20) return;
+  const prefix = /^\s*(?:\.\.\.\s*)?/u.exec(pattern)[0].length;
+  let target = pattern.slice(prefix).trimEnd();
+  offset += prefix;
+  for (let at = 0; at < target.length; at += 1) {
+    if ("([{\"'`".includes(target[at])) {
+      if (target[at] === '"' || target[at] === "'" || target[at] === "`") {
+        at = target.indexOf(target[at], at + 1);
+        if (at === -1) return;
+      } else {
+        const end = balancedEnd(target, at);
+        if (end === -1) return;
+        at = end - 1;
+      }
+    } else if (target[at] === ":") {
+      yield* arrayBindingTargets(target.slice(at + 1), offset + at + 1, depth + 1);
+      return;
+    } else if (target[at] === "=") {
+      target = target.slice(0, at).trimEnd();
+      break;
+    }
+  }
+  if ((target[0] === "{" || target[0] === "[") && balancedEnd(target, 0) === target.length) {
+    let cursor = 1;
+    for (const part of arrayArguments(target.slice(1, -1), false, true)) {
+      cursor = target.indexOf(part, cursor);
+      yield* arrayBindingTargets(part, offset + cursor, depth + 1);
+      cursor += part.length;
+    }
+  } else if (/^(?:[A-Za-z_$][\w$]*|(?:Array|Object)\s*(?:\.\s*[A-Za-z_$][\w$]*|\[[\s\S]*\]))$/u.test(target)) yield { target, offset };
+}
+
 function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
   const bindings = new Map();
   const writes = new Map();
@@ -1667,6 +1754,22 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
   const add = (name, binding) => {
     if (bindings.has(name)) bindings.set(name, null);
     else bindings.set(name, binding);
+  };
+  const recordWrite = (name, offset) => {
+    const positions = writes.get(name);
+    if (positions) positions.push(offset);
+    else writes.set(name, [offset]);
+  };
+  const propertyKey = (open, end) => {
+    const literal = /^(['"])([^'"\\]*)\1$/u.exec(source.slice(open + 1, end - 1).trim());
+    return literal ? literal[2] : "*";
+  };
+  const recordPropertyTarget = ({ target, offset }) => {
+    const member = /^(Array|Object)\s*(?:\.\s*([A-Za-z_$][\w$]*)|\[)/u.exec(target);
+    if (!member) return false;
+    const method = member[2] ?? propertyKey(offset + target.indexOf("["), offset + target.length);
+    recordWrite(`${member[1]}.${method}`, offset);
+    return true;
   };
   for (const match of masked.matchAll(/\b(const|let|var)(?:\s+|(?=[{[]))/gu)) {
     let at = match.index + match[0].length;
@@ -1678,7 +1781,7 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
       else if (masked[at] === "{" || masked[at] === "[") {
         at = balancedEnd(masked, at);
         if (at === -1) break;
-        for (const part of masked.slice(start, at).matchAll(/[A-Za-z_$][\w$]*/gu)) add(part[0], null);
+        for (const { target } of arrayBindingTargets(masked.slice(start, at))) add(target, null);
       } else break;
       while (/\s/u.test(masked[at] ?? "")) at += 1;
       let annotation = "";
@@ -1692,13 +1795,14 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
         annotation = masked.slice(typeStart, at).trim();
       }
       let value = "";
+      let valueStart;
       if (masked[at] === "=" && masked[at + 1] !== "=" && masked[at + 1] !== ">") {
-        let valueStart = at + 1;
+        valueStart = at + 1;
         while (/\s/u.test(masked[valueStart] ?? "")) valueStart += 1;
         at = arrayExpressionEnd(masked, valueStart, isTypeScript);
         if (match[1] === "const") value = masked.slice(valueStart, at).trim();
       }
-      if (name) add(name[0], { start, write: start, kind: match[1], annotation, value });
+      if (name) add(name[0], { start, valueStart, write: start, kind: match[1], annotation, value });
       while (/\s/u.test(masked[at] ?? "")) at += 1;
       if (masked[at] !== ",") break;
       at += 1;
@@ -1731,7 +1835,7 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
       const binding = rest ? parameter.slice(3).trimStart() : parameter;
       if (binding[0] === "{" || binding[0] === "[") {
         const end = balancedEnd(binding, 0);
-        for (const name of binding.slice(0, end).matchAll(/[A-Za-z_$][\w$]*/gu)) add(name[0], null);
+        for (const { target } of arrayBindingTargets(binding.slice(0, end))) add(target, null);
         continue;
       }
       const name = /^([A-Za-z_$][\w$]*)\s*\??\s*(?::\s*([^=]+))?(?:=|$)/u.exec(binding);
@@ -1759,7 +1863,9 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
     if (match[0] === "[" && /[\w$\])]/u.test(masked[match.index - 1] ?? "")) continue;
     const end = balancedEnd(masked, match.index);
     if (end === -1 || !/^\s*=(?![=>])/u.test(masked.slice(end, end + SCAN_LIMIT))) continue;
-    for (const name of masked.slice(match.index + 1, end - 1).matchAll(/[A-Za-z_$][\w$]*/gu)) add(name[0], null);
+    for (const target of arrayBindingTargets(masked.slice(match.index, end), match.index)) {
+      if (!recordPropertyTarget(target)) add(target.target, null);
+    }
   }
   const unscoped = [];
   for (const binding of bindings.values()) {
@@ -1790,16 +1896,17 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
     next += 1;
   }
   const writePattern = new RegExp(`${IDENT_BEFORE}([\\w$]+)\\s*(?:${ASSIGN_OPERATORS}|\\+\\+|--)|(?:\\+\\+|--)\\s*([\\w$]+)${IDENT_AFTER}`, "gu");
-  const recordWrite = (name, offset) => {
-    const positions = writes.get(name);
-    if (positions) positions.push(offset);
-    else writes.set(name, [offset]);
-  };
   for (const match of masked.matchAll(writePattern)) {
     recordWrite(match[1] ?? match[2], match.index);
   }
-  for (const match of masked.matchAll(/\bfor\s*(?:await\s*)?\(\s*([A-Za-z_$][\w$]*)\s+(?:in|of)\b/gu)) {
-    recordWrite(match[1], match.index);
+  for (const match of masked.matchAll(/\bfor\s*(?:await\s*)?\(\s*/gu)) {
+    const start = match.index + match[0].length;
+    const name = /^[A-Za-z_$][\w$]*/u.exec(masked.slice(start, start + SCAN_LIMIT));
+    const end = name ? start + name[0].length : balancedEnd(masked, start);
+    if (end === -1 || !/^\s*(?:in|of)\b/u.test(masked.slice(end, end + SCAN_LIMIT))) continue;
+    for (const target of arrayBindingTargets(masked.slice(start, end), start)) {
+      if (!recordPropertyTarget(target)) recordWrite(target.target, target.offset);
+    }
   }
   const propertyWrite = new RegExp(`^\\s*(?:${ASSIGN_OPERATORS}|\\+\\+|--)`, "u");
   for (const match of masked.matchAll(/(?<![\w$.#])(Array|Object)\s*(?:\.\s*([A-Za-z_$][\w$]*)|\[)/gu)) {
@@ -1811,11 +1918,9 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
       const open = end - 1;
       end = balancedEnd(masked, open);
       if (end === -1) continue;
-      const key = source.slice(open + 1, end - 1).trim();
-      const literal = /^(['"])([^'"\\]*)\1$/u.exec(key);
       // A computed write can replace any trusted method; literal keys affect
       // only that method. Read the key from source after locating it in code.
-      method = literal ? literal[2] : "*";
+      method = propertyKey(open, end);
     }
     const after = masked.slice(end, end + SCAN_LIMIT);
     const loopTarget = /\bfor\s*(?:await\s*)?\(\s*$/u.test(before) && /^\s+(?:in|of)\b/u.test(after);
@@ -1850,7 +1955,7 @@ function maskArrayTypeArguments(text) {
   let masked;
   for (const match of text.matchAll(/(?:\.\s*(?:reduceRight|reduce|map|filter|flatMap|slice|concat|toSorted|toReversed|toSpliced|with|assign|from|of)|\bnew\s+Array)\s*</gu)) {
     const start = match.index + match[0].length - 1;
-    const end = balancedEnd(text, start);
+    const end = arrayTypeArgumentsEnd(text, start);
     if (end === -1 || !/^\s*\(/u.test(text.slice(end, end + SCAN_LIMIT))) continue;
     masked ??= text.split("");
     for (let at = start; at < end; at += 1) {
@@ -1865,13 +1970,14 @@ function* iterateArrayFindings(ctx) {
   const masked = ctx.isTypeScript ? maskArrayTypeArguments(ctx.masked) : ctx.masked;
   if (!/\.\s*(?:reduce(?:Right)?|map|filter)\s*\(/u.test(masked)) return;
   const { bindings, writes } = arrayBindingEvidence(masked, ctx.isTypeScript, ctx.source);
-  const nativeGlobal = (name, method) => !bindings.has(name) && !writes.has(name) && !ctx.declaredNames.has(name)
-    && (!method || !writes.has(`${name}.${method}`) && !writes.has(`${name}.*`));
+  const writtenBefore = (name, at) => writes.get(name)?.some((write) => write <= at);
+  const nativeGlobal = (name, method, at) => !bindings.has(name) && !writtenBefore(name, at) && !ctx.declaredNames.has(name)
+    && (!method || !writtenBefore(`${name}.${method}`, at) && !writtenBefore(`${name}.*`, at));
   const knownArray = (expression, at, visited = new Set()) => {
     const text = unwrapArraySyntax(expression, ctx.isTypeScript);
     if (text[0] === "[" && balancedEnd(text, 0) === text.length) return true;
     const factory = /^(?:Array\s*(?:\?\.|\.)\s*(from|of)|new\s+Array)\s*\(/u.exec(text);
-    if (factory && nativeGlobal("Array", factory[1]) && balancedEnd(text, factory[0].length - 1) === text.length) return true;
+    if (factory && nativeGlobal("Array", factory[1], at) && balancedEnd(text, factory[0].length - 1) === text.length) return true;
     if (visited.size > 20) return false;
     if (/^[A-Za-z_$][\w$]*$/u.test(text)) {
       const binding = bindings.get(text);
@@ -1885,7 +1991,7 @@ function* iterateArrayFindings(ctx) {
       }
       if (writes.get(text)?.some((write) => write !== binding.write)) return false;
       if (binding.rest) return true;
-      return knownArray(binding.value, binding.start, visited);
+      return knownArray(binding.value, binding.valueStart ?? binding.start, visited);
     }
     const call = /(?:\?\.|\.)\s*(map|filter|flatMap|slice|concat|toSorted|toReversed|toSpliced)\s*\(/gu;
     for (const match of text.matchAll(call)) {
@@ -1916,7 +2022,7 @@ function* iterateArrayFindings(ctx) {
     }
     const outer = /^\s*(?:\?\.|\.)\s*(map|filter)\s*\(/u.exec(masked.slice(outerStart, outerStart + SCAN_LIMIT));
     if (!outer || outer[1] === match[1]) continue;
-    if (!knownArray(masked.slice(start, match.index), match.index)) continue;
+    if (!knownArray(masked.slice(start, match.index), start)) continue;
     const end = balancedEnd(masked, outerStart + outer[0].length - 1);
     if (end === -1) continue;
     yield {
@@ -1997,14 +2103,15 @@ function* iterateArrayFindings(ctx) {
         const copyArgs = arrayArguments(body.slice(copy.index + copy[0].length, copyEnd - 1), ctx.isTypeScript);
         const owner = copy[2];
         const method = copy[3];
-        if (owner === "Object" && method === "assign" && nativeGlobal(owner, method)) {
+        if (owner === "Object" && method === "assign" && nativeGlobal(owner, method, bodyOffset + copy.index)) {
           const target = unwrapArraySyntax(copyArgs[0] ?? "", ctx.isTypeScript);
           copies = target[0] === "{" && balancedEnd(target, 0) === target.length
             && copyArgs.slice(1).some((argument) => isAccumulator(argument, copy.index));
-        } else if (owner === "Array" && method === "from" && nativeGlobal(owner, method)) {
+        } else if (owner === "Array" && method === "from" && nativeGlobal(owner, method, bodyOffset + copy.index)) {
           copies = isAccumulator(copyArgs[0] ?? "", copy.index);
         } else if (!["assign", "from"].includes(method)) {
-          copies = knownArray(args[1] ?? "", match.index) && isAccumulator(owner, copy.index);
+          const seedStart = args[1] ? masked.lastIndexOf(args[1], end - 1) : match.index;
+          copies = knownArray(args[1] ?? "", seedStart) && isAccumulator(owner, copy.index);
         }
       }
       if (!copies) continue;
@@ -2469,7 +2576,8 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
     seen.add(key);
     const silenced = disabled?.has(finding.rule)
       || suppressions.forFile.has(finding.rule)
-      || suppressions.forLine.get(finding.line)?.has(finding.rule) === true;
+      || suppressions.forLine.get(finding.line)?.has(finding.rule) === true
+      || suppressions.forLine.get(finding.startLine)?.has(finding.rule) === true;
     if (silenced) {
       suppressed.push(finding);
       continue;

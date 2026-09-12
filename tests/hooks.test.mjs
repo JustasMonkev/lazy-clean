@@ -1092,6 +1092,38 @@ for (const [name, source, oldString, newString, rule] of [
   }
 }
 
+// A receiver can be the evidence start for a finding whose diagnostic anchor
+// is the later `.filter`. The hook must honor that suppression for every edit
+// path, while a whole-file Write still reports a separate operation below it.
+const hookSuppressedPipeline = write("suppressed-pipeline.js", [
+  "const users = [];",
+  "// slop-check-ignore no-array-filter-map -- preserve callback order",
+  "const changed = users",
+  "  .filter(active)",
+  "  .map(normalize);",
+  "",
+  "",
+  "",
+  "const next = users",
+  "  .filter(active)",
+  "  .map(email);",
+  "",
+].join("\n"));
+for (const [tool, payload] of [
+  ["Write", { tool_name: "Write", tool_input: { file_path: hookSuppressedPipeline } }],
+  ["Edit", { tool_name: "Edit", tool_input: { file_path: hookSuppressedPipeline, old_string: ".map(email)", new_string: ".map(normalize)" } }],
+  ["MultiEdit", { tool_name: "MultiEdit", tool_input: { file_path: hookSuppressedPipeline, edits: [{ old_string: ".map(email)", new_string: ".map(normalize)" }] } }],
+]) {
+  const result = editCheck(payload);
+  if (tool === "Write") {
+    const context = contextOf(result);
+    ok("a Write keeps an unrelated later pipeline finding", context.includes("suppressed-pipeline.js:10:3 no-array-filter-map"), context);
+    ok("a Write does not report the receiver-suppressed pipeline", !context.includes("suppressed-pipeline.js:4:3 no-array-filter-map"), context);
+  } else {
+    eq(`a ${tool} suppresses the changed receiver-spanning pipeline`, [result.status, result.stdout], [0, ""]);
+  }
+}
+
 // Only the lines this tool call wrote are reported.
 const ranges = write("ranges.ts", "const ok = 1;\nconst bad: any = 2;\nconst also: any = 3;\nconst more: any = 4;\n");
 e = editCheck({ tool_name: "Edit", tool_input: { file_path: ranges, old_string: "x", new_string: "const bad: any = 2;" } });
