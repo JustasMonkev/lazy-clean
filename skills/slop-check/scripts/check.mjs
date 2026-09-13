@@ -1744,7 +1744,7 @@ function* arrayBindingTargets(pattern, offset = 0, depth = 0) {
       yield* arrayBindingTargets(part, offset + cursor, depth + 1);
       cursor += part.length;
     }
-  } else if (/^(?:[A-Za-z_$][\w$]*|(?:Array|Object)\s*(?:\.\s*[A-Za-z_$][\w$]*|\[[\s\S]*\]))$/u.test(target)) yield { target, offset };
+  } else if (/^(?:[A-Za-z_$][\w$]*|[A-Za-z_$][\w$]*(?:\s*\.\s*prototype)?\s*(?:\.\s*[A-Za-z_$][\w$]*|\[[\s\S]*\]))$/u.test(target)) yield { target, offset };
 }
 
 function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
@@ -1765,10 +1765,10 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
     return literal ? literal[2] : "*";
   };
   const recordPropertyTarget = ({ target, offset }) => {
-    const member = /^(Array|Object)\s*(?:\.\s*([A-Za-z_$][\w$]*)|\[)/u.exec(target);
+    const member = /^([A-Za-z_$][\w$]*(?:\s*\.\s*prototype)?)\s*(?:\.\s*([A-Za-z_$][\w$]*)|\[)/u.exec(target);
     if (!member) return false;
     const method = member[2] ?? propertyKey(offset + target.indexOf("["), offset + target.length);
-    recordWrite(`${member[1]}.${method}`, offset);
+    recordWrite(`${member[1].replace(/\s/gu, "")}.${method}`, offset);
     return true;
   };
   for (const match of masked.matchAll(/\b(const|let|var)(?:\s+|(?=[{[]))/gu)) {
@@ -1909,7 +1909,7 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
     }
   }
   const propertyWrite = new RegExp(`^\\s*(?:${ASSIGN_OPERATORS}|\\+\\+|--)`, "u");
-  for (const match of masked.matchAll(/(?<![\w$.#])(Array|Object)\s*(?:\.\s*([A-Za-z_$][\w$]*)|\[)/gu)) {
+  for (const match of masked.matchAll(/(?<![\w$.#])([A-Za-z_$][\w$]*(?:\s*\.\s*prototype)?)\s*(?:\.\s*([A-Za-z_$][\w$]*)|\[)/gu)) {
     const before = masked.slice(Math.max(0, match.index - SCAN_LIMIT), match.index).trimEnd();
     if (/[.#]$/u.test(before)) continue;
     let end = match.index + match[0].length;
@@ -1924,7 +1924,7 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
     }
     const after = masked.slice(end, end + SCAN_LIMIT);
     const loopTarget = /\bfor\s*(?:await\s*)?\(\s*$/u.test(before) && /^\s+(?:in|of)\b/u.test(after);
-    if (propertyWrite.test(after) || /(?:\+\+|--)$/u.test(before) || loopTarget) recordWrite(`${match[1]}.${method}`, match.index);
+    if (propertyWrite.test(after) || /(?:\+\+|--)$/u.test(before) || loopTarget) recordWrite(`${match[1].replace(/\s/gu, "")}.${method}`, match.index);
   }
   return { bindings, writes };
 }
@@ -1971,6 +1971,31 @@ function* iterateArrayFindings(ctx) {
   if (!/\.\s*(?:reduce(?:Right)?|map|filter)\s*\(/u.test(masked)) return;
   const { bindings, writes } = arrayBindingEvidence(masked, ctx.isTypeScript, ctx.source);
   const writtenBefore = (name, at) => writes.get(name)?.some((write) => write <= at);
+  const receiverRoot = (expression) => {
+    let name = unwrapArraySyntax(expression, ctx.isTypeScript);
+    for (let depth = 0; depth < 20; depth += 1) {
+      const binding = bindings.get(name);
+      if (binding?.kind !== "const") break;
+      const value = unwrapArraySyntax(binding.value, ctx.isTypeScript);
+      if (!/^(?:[A-Za-z_$][\w$]*|Array\s*\.\s*prototype)$/u.test(value)) break;
+      name = value.replace(/\s/gu, "");
+    }
+    return name;
+  };
+  // Aliases share an object, so property writes must reach either spelling.
+  const methodWrites = new Map();
+  for (const [target, positions] of writes) {
+    const dot = target.lastIndexOf(".");
+    if (dot === -1) continue;
+    const key = receiverRoot(target.slice(0, dot)) + target.slice(dot);
+    const existing = methodWrites.get(key);
+    if (existing) existing.push(...positions);
+    else methodWrites.set(key, [...positions]);
+  }
+  const nativeArrayMethod = (expression, method, at) => {
+    const changed = (owner) => [method, "*"].some((key) => methodWrites.get(`${owner}.${key}`)?.some((write) => write <= at));
+    return !changed("Array.prototype") && !changed(receiverRoot(expression));
+  };
   const nativeGlobal = (name, method, at) => !bindings.has(name) && !writtenBefore(name, at) && !ctx.declaredNames.has(name)
     && (!method || !writtenBefore(`${name}.${method}`, at) && !writtenBefore(`${name}.*`, at));
   const knownArray = (expression, at, visited = new Set()) => {
@@ -1996,7 +2021,8 @@ function* iterateArrayFindings(ctx) {
     const call = /(?:\?\.|\.)\s*(map|filter|flatMap|slice|concat|toSorted|toReversed|toSpliced)\s*\(/gu;
     for (const match of text.matchAll(call)) {
       const open = match.index + match[0].length - 1;
-      if (balancedEnd(text, open) === text.length) return knownArray(text.slice(0, match.index), at, visited);
+      if (balancedEnd(text, open) === text.length) return nativeArrayMethod(text.slice(0, match.index), match[1], at + match.index)
+        && knownArray(text.slice(0, match.index), at, visited);
     }
     return false;
   };
@@ -2023,6 +2049,8 @@ function* iterateArrayFindings(ctx) {
     const outer = /^\s*(?:\?\.|\.)\s*(map|filter)\s*\(/u.exec(masked.slice(outerStart, outerStart + SCAN_LIMIT));
     if (!outer || outer[1] === match[1]) continue;
     if (!knownArray(masked.slice(start, match.index), start)) continue;
+    if (!nativeArrayMethod(masked.slice(start, match.index), match[1], match.index)
+      || !nativeArrayMethod("", outer[1], outerStart)) continue;
     const end = balancedEnd(masked, outerStart + outer[0].length - 1);
     if (end === -1) continue;
     yield {

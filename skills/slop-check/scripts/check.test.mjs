@@ -2277,6 +2277,30 @@ expectRule(
   ACCUMULATOR_COPY,
 );
 
+// An array's filter/map method can be replaced on the prototype or receiver;
+// only calls after that write lose the native-method evidence.
+for (const [label, source, expected] of [
+  ["a prototype filter override", "Array.prototype.filter = customFilter;\nconst users = []; users.filter(active).map(email);", 0],
+  ["a prototype map override", "Array.prototype.map = customMap;\nconst users = []; users.filter(active).map(email);", 0],
+  ["a receiver filter override", "const users = []; users.filter = customFilter; users.filter(active).map(email);", 0],
+  ["a receiver map override on the first pass", "const users = []; users.map = customMap; users.map(email).filter(active);", 0],
+  ["a bracketed receiver filter override", "const users = []; users[\"filter\"] = customFilter; users.filter(active).map(email);", 0],
+  ["a loop receiver map override on the first pass", "const users = []; for ({ map: users.map } of replacements) {} users.map(email).filter(active);", 0],
+  ["a bracketed prototype filter override", "Array.prototype[\"filter\"] = customFilter; const users = []; users.filter(active).map(email);", 0],
+  ["an unrelated prototype method override", "Array.prototype.slice = customSlice; const users = []; users.filter(active).map(email);", 1],
+  ["an unrelated receiver override", "const users = []; const other = []; users.filter = customFilter; other.filter(active).map(email);", 1],
+  ["an unrelated receiver method override", "const users = []; users.map = customMap; users.filter(active).map(email);", 1],
+  ["an aliased receiver override", "const users = []; const alias = users; alias.filter = customFilter; users.filter(active).map(email);", 0],
+  ["a reverse aliased receiver override", "const users = []; const alias = users; users.filter = customFilter; alias.filter(active).map(email);", 0],
+  ["an overridden method used for a later receiver", "const users = []; users.filter = customFilter; users.filter(active).slice().filter(active).map(email);", 0],
+  ["a receiver write after an earlier pipeline", "const users = []; users.filter(active).map(email); users.filter = customFilter; users.filter(active).map(email);", 1],
+  ["a prototype write after an earlier pipeline", "const users = []; users.filter(active).map(email); Array.prototype.filter = customFilter; users.filter(active).map(email);", 1],
+]) {
+  const findings = lintSource(source, "sample.ts").filter((finding) => finding.rule === ARRAY_PIPELINE);
+  assert.equal(findings.length, expected, `${label} should review only native calls before an override`);
+  console.log(`ok   ${label} preserves override timing and ownership`);
+}
+
 // A built-in write only changes calls that happen after that write. The
 // evidence also survives aliases initialized before the write, and a literal
 // or wildcard property write only invalidates the matching method evidence.
