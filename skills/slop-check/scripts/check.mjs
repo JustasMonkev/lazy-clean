@@ -2139,7 +2139,10 @@ function* iterateArrayFindings(ctx) {
           copies = isAccumulator(copyArgs[0] ?? "", copy.index);
         } else if (!["assign", "from"].includes(method)) {
           const seedStart = args[1] ? masked.lastIndexOf(args[1], end - 1) : match.index;
-          copies = knownArray(args[1] ?? "", seedStart) && isAccumulator(owner, copy.index);
+          // Partial slices can keep the accumulator bounded instead of copying a growing result.
+          const fullSlice = method !== "slice" || copyArgs.length === 0 || copyArgs.length === 1 && copyArgs[0] === "0";
+          copies = fullSlice && nativeArrayMethod(owner, method, bodyOffset + copy.index)
+            && knownArray(args[1] ?? "", seedStart) && isAccumulator(owner, copy.index);
         }
       }
       if (!copies) continue;

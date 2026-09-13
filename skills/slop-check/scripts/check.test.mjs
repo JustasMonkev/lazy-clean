@@ -2430,6 +2430,29 @@ expectRule(
   ACCUMULATOR_COPY,
 );
 
+// Instance copies honor method identity and timing; bounded slices are not
+// growing copies, including the existing argument parser's comma trivia.
+for (const [method, args, related] of [
+  ["concat", "item", "slice"], ["slice", "", "concat"], ["toSpliced", "acc.length, 0, item", "toSorted"],
+  ["toSorted", "", "toReversed"], ["toReversed", "", "with"], ["with", "0, item", "toSpliced"],
+]) {
+  const call = `items.reduce((acc, item) => acc.${method}(${args}), []);`;
+  expectRule(`reviews native ${method} reducer copy`, call, ACCUMULATOR_COPY);
+  expectNoRule(`suppresses ${method} after its prototype override`, `Array.prototype.${method} = customMethod; ${call}`, ACCUMULATOR_COPY);
+  expectRule(`retains ${method} before its prototype override`, `${call} Array.prototype.${method} = customMethod;`, ACCUMULATOR_COPY);
+  expectRule(`retains ${method} after an unrelated override`, `Array.prototype.${related} = customMethod; ${call}`, ACCUMULATOR_COPY);
+}
+for (const source of [
+  "items.reduce((acc, item) => { acc.concat = customMethod; return acc.concat(item); }, []);",
+  "items.reduce((acc, item) => { const alias = acc; alias.concat = customMethod; return alias.concat(item); }, []);",
+]) expectNoRule(`suppresses a receiver or const-alias override: ${source}`, source, ACCUMULATOR_COPY);
+for (const args of ["0, 1", "-1", "dynamic"]) {
+  expectNoRule(`does not treat slice(${args}) as a growing copy`, `items.reduce((acc, item) => acc.slice(${args}), []);`, ACCUMULATOR_COPY);
+}
+for (const args of ["", "0", " 0 , "]) {
+  expectRule(`keeps unbounded slice(${args}) evidence`, `items.reduce((acc, item) => acc.slice(${args}), []);`, ACCUMULATOR_COPY);
+}
+
 // A reducer accumulator's identity is lost when a loop writes the binding or
 // an alias. `for await` has the same bare-target shape as ordinary for-of.
 for (const source of [
