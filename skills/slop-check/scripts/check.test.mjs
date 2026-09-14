@@ -2601,6 +2601,31 @@ expectRule(
   ACCUMULATOR_COPY,
 );
 expectNoRule(
+  "ignores a nested method invoked after resetting the accumulator",
+  "items.reduce((acc) => ({ copy() { const box = { later() { return Object.assign({}, acc); } }; acc = {}; return box.later(); } }).copy(), {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "reviews a nested method invoked before resetting the accumulator",
+  "items.reduce((acc) => ({ copy() { const box = { later() { return Object.assign({}, acc); } }; const next = box.later(); acc = {}; return next; } }).copy(), {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "ignores a nested method whose argument resets the accumulator",
+  "items.reduce((acc) => ({ copy() { const box = { later(value) { return Object.assign({}, value); } }; return box.later(acc = {}); } }).copy(), {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "reviews a nested copy before an Object.assign override",
+  "items.reduce((acc) => ({ copy() { const box = { later() { return Object.assign({}, acc); } }; const next = box.later(); Object.assign = customAssign; return next; } }).copy(), {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "ignores a nested copy after an Object.assign override",
+  "items.reduce((acc) => ({ copy() { const box = { later() { return Object.assign({}, acc); } }; Object.assign = customAssign; return box.later(); } }).copy(), {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
   "does not infer a function typed array producer as an array",
   "function collect(users: () => User[]) { return users.filter(active).map(email); }",
   ARRAY_PIPELINE,

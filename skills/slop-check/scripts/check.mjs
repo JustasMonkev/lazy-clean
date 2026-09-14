@@ -2266,9 +2266,13 @@ function* iterateArrayFindings(ctx) {
     const accumulator = parameter[1];
     const { body, executions } = maskReducerMethods(callback.slice(bodyStart), accumulator);
     const executedAt = (position) => {
-      const method = executions.find((execution) => execution.start <= position && position < execution.end);
-      // Keep ordering within a method while placing its body at the call site.
-      return method ? method.invocation + (position - method.start) / (method.end - method.start) : position;
+      // Project innermost calls first, then their enclosing invocations.
+      for (let depth = 0; depth < executions.length; depth += 1) {
+        const method = executions.findLast((execution) => execution.start <= position && position < execution.end);
+        if (!method) break;
+        position = method.invocation + (position - method.start) / (method.end - method.start);
+      }
+      return position;
     };
     // Without scopes, an inner function or shadowed accumulator is ambiguous.
     if (/=>|\bfunction\b/u.test(body)) continue;
