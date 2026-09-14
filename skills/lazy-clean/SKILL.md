@@ -14,7 +14,7 @@ Follow `<skills-dir>/lazy/SKILL.md` as written: think first, climb the ladder
 (YAGNI → reuse → stdlib → platform → installed dep → clear minimum code), and
 verify the goal before shipping. Do not restate the rules here; read that file.
 
-If your context already carries a `LAZY MODE ACTIVE` header, the ruleset is injected and you are following it; otherwise read that file now. Intensity is `/lazy lite|full|ultra`.
+If your context contains the full injected ruleset, apply it without rereading. A `LAZY MODE ACTIVE` header alone, a skill description, or a compacted summary is not the ruleset: read that file when the body is missing. Carry unfinished checks through handoffs and compaction. Intensity is `/lazy lite|full|ultra`.
 
 ## 2. After writing or editing TS/JS — the checker
 
@@ -53,7 +53,8 @@ Before finishing a TypeScript or JavaScript change, read and apply [TS/JS simpli
 ## Tests that earn their place
 
 List the changed behavior, its edge cases, and its failure modes, and cover each
-one. Use the repo's existing test tools. Keep tests that can catch a real
+one. Use the repo's existing test tools. Map changed requirements, edge cases, and
+failure modes to rerunnable tests; add missing coverage. Inline probes alone are not coverage. Trivial edits need no new tests. Keep tests that can catch a real
 regression; drop tautologies and mock-call checks that only repeat setup. When
 existing red-green checks already prove the risky regression, mutation work is
 optional; otherwise a small meaningful mutation check can confirm the test

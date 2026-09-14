@@ -1,0 +1,2912 @@
+{
+  "review": "Strict blind calibration/adjudication audit, not an independently duplicated first-pass score",
+  "status": "FINAL: all 36 primary judgments calibrated; coordinator adjudication pending",
+  "finalizedBeforeIdentityDisclosure": true,
+  "blindness": "Only authorized blind packets and primary judgments read. No identity map, models, treatment labels or other experiment directories accessed. No labels guessed.",
+  "artifacts": [
+    {
+      "artifact": "artifact-001",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 98.5,
+      "proposedTotal": 98.5,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-001/saved-tests/cli-transformers.test.cjs",
+          "line": 100,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-001/saved-tests/cli-transformers.test.cjs",
+          "line": 31,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-001/saved-tests/cli-transformers.test.cjs",
+          "line": 45,
+          "evidence": "JSON error checks assert a prefix and SyntaxError cause type, but not that the full wrapper message retains the original cause message (also file branch at 140-143).",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm the three half-point coverage deductions: no top-level falsy JSON result, no empty regular CSV file, and JSON wrapper checks lack full original-cause message preservation. Other requested classifications, newline distinctions, precedence and simulated read failures are saved."
+    },
+    {
+      "artifact": "artifact-002",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 97.5,
+      "proposedTotal": 97.5,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 5.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-002/saved-tests/cli-transformers.test.cjs",
+          "line": 48,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-002/saved-tests/cli-transformers.test.cjs",
+          "line": 22,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-002/saved-tests/cli-transformers.test.cjs",
+          "line": 50,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-002/saved-tests/cli-transformers.test.cjs",
+          "line": 71,
+          "evidence": "JSON fallback tests match only message text. There is no saved invalid-JSON regular-file case, TypeError identity assertion, or original SyntaxError cause assertion.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 1
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm partial JSON preservation coverage deductions: top-level falsy results, empty CSV file, JSON literal/file collision, and malformed-file/error-identity/cause coverage are absent. Both real directory regressions and deterministic read/probe failure assertions are saved."
+    },
+    {
+      "artifact": "artifact-003",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 96.5,
+      "proposedTotal": 96.5,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 14,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 5.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-003/saved-tests/cli-transformers.test.cjs",
+          "line": 96,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-003/saved-tests/cli-transformers.test.cjs",
+          "line": 78,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-003/saved-tests/cli-transformers.test.cjs",
+          "line": 67,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-003/saved-tests/cli-transformers.test.cjs",
+          "line": 88,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-003/saved-tests/cli-transformers.test.cjs",
+          "line": 25,
+          "evidence": "JSON wrapper messages and cause.message are compared, but a plain object with the same message can satisfy the cause checks at 32 and 120; the original SyntaxError identity/type is not protected.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-003/candidate-source.ts",
+          "line": 23,
+          "evidence": "isRegularFile carries a mutable possibly-undefined Stats value, assigns undefined again in catch, then converts it via optional chaining/nullish fallback. The redundant state and repeated failure encoding are unnecessary for this boolean predicate; the shared helper itself is useful.",
+          "deduction": {
+            "dimension": "readability",
+            "subdimension": "readability",
+            "points": 1
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm coverage deductions for JSON falsy/collision/cause type and CSV literal newline/empty file; ENOTDIR via a child of an existing file is a legitimate non-ENOENT probe check. The helper is useful, but mutable optional Stats and repeated undefined encoding justify the small readability deduction."
+    },
+    {
+      "artifact": "artifact-004",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 100,
+      "proposedTotal": 100,
+      "proposedGateChanges": {},
+      "findings": [],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-005",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 98.0,
+      "proposedTotal": 98.0,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.0,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-005/saved-tests/cli-transformers.test.cjs",
+          "line": 58,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-005/saved-tests/cli-transformers.test.cjs",
+          "line": 51,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-005/saved-tests/cli-transformers.test.cjs",
+          "line": 37,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-005/saved-tests/cli-transformers.test.cjs",
+          "line": 29,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm the four half-point preservation gaps. Both existing-directory regressions and controlled filesystem failures use the actual module and real argparse; fixture cleanup and stub restoration are reliable in the supplied runner."
+    },
+    {
+      "artifact": "artifact-006",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 97,
+      "proposedTotal": 97,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-006/saved-tests/validators-set-url.test.cjs",
+          "line": 23,
+          "evidence": "The primitive table contains only 0 and false for numbers/booleans. Both already take the normal-error branch in the baseline; no saved assertion exercises a truthy number or true, the requested failing branches for those two primitive kinds.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-006/saved-tests/validators-set-url.test.cjs",
+          "line": 23,
+          "evidence": "No boxed String is supplied anywhere in this saved suite. A boxed valid URL is a distinctive non-string that owns/inherits a working match method and was accepted by the baseline.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 5,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-007",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 97,
+      "proposedTotal": 97,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-007/saved-tests/validators.setUrl.test.cjs",
+          "line": 8,
+          "evidence": "The complete saved suite ends at line 87 and tests only setUrl. There is no saved assertion for the explicitly preserved setNetworkConnection export. Trusted hidden network coverage passes, so this is a saved-coverage deduction, not a production regression.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-007/handoff.txt",
+          "line": 11,
+          "evidence": "The handoff calls scheme:// unanchored together with about:/data:. The frozen regex anchors only the scheme:// alternative; ordinary embedded https:// without about:/data: is rejected. The code is correct; the description is inaccurate.",
+          "deduction": {
+            "dimension": "scope",
+            "points": 1
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18,
+        "readability": 15,
+        "design": 10,
+        "scope": 4
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 6,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-008",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 95,
+      "proposedTotal": 95,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-008/saved-tests/validators.set-url.test.cjs",
+          "line": 18,
+          "evidence": "The only number inputs are 0 and NaN, both falsy and already normally rejected by the baseline. There is no saved truthy-number regression case such as 42.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-008/saved-tests/validators.set-url.test.cjs",
+          "line": 52,
+          "evidence": "The string test contains accepted inputs only and the file ends at line 62. No invalid string, including the empty string formerly handled by !url, is asserted to remain rejected.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-008/saved-tests/validators.set-url.test.cjs",
+          "line": 52,
+          "evidence": "No saved test invokes setNetworkConnection. The independent preserved export is covered only by the trusted hidden suite.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 7,
+        "preservationAndAlternatePaths": 4,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-009",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 100,
+      "proposedTotal": 100,
+      "proposedGateChanges": {},
+      "findings": [],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-010",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 95,
+      "proposedTotal": 95,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-010/saved-tests/validators-set-url.test.cjs",
+          "line": 12,
+          "evidence": "The input table contains false but not true. False was already normally rejected by the baseline; the truthy-boolean failure branch is not saved.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-010/saved-tests/validators-set-url.test.cjs",
+          "line": 12,
+          "evidence": "No function input is supplied in this saved suite. Functions are a separate typeof category within the requested reject-every-non-string contract.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-010/saved-tests/validators-set-url.test.cjs",
+          "line": 25,
+          "evidence": "The hostile getter and coercion hooks only throw. The assertion checks the final error but no call/read counter. Accessing a hook, catching its exception, then emitting the required Error would remain undetected by these saved assertions.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-010/saved-tests/validators-set-url.test.cjs",
+          "line": 52,
+          "evidence": "The complete saved suite ends at line 66 without invoking setNetworkConnection; the requested unrelated-validator preservation has no saved check.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 5,
+        "preservationAndAlternatePaths": 6,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-011",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 99,
+      "proposedTotal": 99,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-011/saved-tests/validators.test.cjs",
+          "line": 21,
+          "evidence": "The primitive table includes false but not true. False was already normally rejected by the baseline; no saved test exercises the truthy-boolean failure branch.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 19,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 7,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-012",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 100,
+      "proposedTotal": 100,
+      "proposedGateChanges": {},
+      "findings": [],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-013",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 95,
+      "proposedTotal": 95,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-013/saved-tests/validators.setUrl.test.cjs",
+          "line": 35,
+          "evidence": "Neither Symbol nor bigint appears in the saved inputs. These are two distinct non-string primitive categories, including coercion-sensitive Symbol, not merely additional numeric examples.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-013/saved-tests/validators.setUrl.test.cjs",
+          "line": 21,
+          "evidence": "The hostile hooks only throw and there is no call counter. The saved checks establish the final error but cannot detect hook invocation whose exception is caught and replaced with the expected Error.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-013/saved-tests/validators.setUrl.test.cjs",
+          "line": 67,
+          "evidence": "Every accepted URL is checked with doesNotThrow, never against undefined. A changed successful return value would pass the saved suite despite the explicit return-preservation requirement.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-013/handoff.txt",
+          "line": 14,
+          "evidence": "The handoff says the inspected compile output is clean ES5. The recorded worker compile output contains arrow functions, and logs/compile.log records target ES2022. Transpilation did pass and the report correctly disclaims typechecking; this is a minor target-description error, not fabricated passing verification.",
+          "deduction": {
+            "dimension": "scope",
+            "points": 1
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16,
+        "readability": 15,
+        "design": 10,
+        "scope": 4
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 5,
+        "preservationAndAlternatePaths": 7,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-014",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 94,
+      "proposedTotal": 94,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-014/saved-tests/validators.seturl.test.cjs",
+          "line": 8,
+          "evidence": "There is no boxed String case in the saved rejected table or later tests. A boxed valid URL has a functioning inherited match and was accepted by the original implementation.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-014/saved-tests/validators.seturl.test.cjs",
+          "line": 60,
+          "evidence": "The no-invocation test uses throwing hooks with no call counter; it only checks the eventual validation error. Hook access followed by catch-and-rethrow of the expected Error is not excluded.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-014/saved-tests/validators.seturl.test.cjs",
+          "line": 56,
+          "evidence": "Accepted URLs are checked only with doesNotThrow, so the required successful undefined return is not saved as an assertion.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-014/saved-tests/validators.seturl.test.cjs",
+          "line": 7,
+          "evidence": "All saved tests concern setUrl; none invokes setNetworkConnection. Hidden verification proves current preservation, but the saved suite does not protect that explicitly preserved export.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-014/saved-tests/validators.seturl.test.cjs",
+          "line": 29,
+          "evidence": "The test name is built by a long nested conditional with repeated String conversion and optional constructor access; several different hostile objects all get the same Object label. This makes a failing parameter harder to identify than a simple explicit case label.",
+          "deduction": {
+            "dimension": "readability",
+            "points": 1
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15,
+        "readability": 14,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 6,
+        "preservationAndAlternatePaths": 5,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-015",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 98.5,
+      "proposedTotal": 98.5,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-015/saved-tests/cli-transformers.test.cjs",
+          "line": 38,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-015/saved-tests/cli-transformers.test.cjs",
+          "line": 104,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-015/saved-tests/cli-transformers.test.cjs",
+          "line": 41,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm the three preservation gaps. Explicit CSV/JSON filename collisions and restored targeted filesystem stubs provide meaningful precedence/error evidence; process-isolated runner use makes its module-resolution setup non-gating."
+    },
+    {
+      "artifact": "artifact-016",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 95.5,
+      "proposedTotal": 95.5,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 4.5,
+        "isolationRerunnabilityCleanup": 3
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-016/saved-tests/cli-transformers.test.cjs",
+          "line": 85,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-016/saved-tests/cli-transformers.test.cjs",
+          "line": 33,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-016/saved-tests/cli-transformers.test.cjs",
+          "line": 21,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-016/saved-tests/cli-transformers.test.cjs",
+          "line": 77,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-016/saved-tests/cli-transformers.test.cjs",
+          "line": 90,
+          "evidence": "Literal and file JSON error checks assert only the wrapper prefix and cause instanceof Error (99 and 112), not SyntaxError or exact original-message preservation.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-016/saved-tests/cli-transformers.test.cjs",
+          "line": 52,
+          "evidence": "Saved fallback fixtures cover ENOENT/missing targets but no non-ENOENT probe failure (for example EACCES, ENOTDIR, invalid-NUL path, or an injected stat error) for either transformer. The probe-errors-escape reference mutant is killed by ENOENT cases; that kill does not establish general probe-error coverage.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-016/saved-tests/cli-transformers.test.cjs",
+          "line": 72,
+          "evidence": "Read-failure assertions match the path and an EACCES/EPERM fragment, but do not compare the original read message in full (also JSON at 157-158).",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-016/saved-tests/cli-transformers.test.cjs",
+          "line": 60,
+          "evidence": "Both read-failure tests rely on chmod(000). The CSV test has no root/platform guard and the JSON test only returns on Windows. These pass in the archived non-root run but do not reproducibly force a read failure under privileged runners.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 1
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm saved-coverage and permission-repeatability deductions. chmod failures really executed in the archived non-root run, so this is not a failed saved-regression gate. Missing non-ENOENT probes and weak original-error text assertions remain genuine saved-suite limits."
+    },
+    {
+      "artifact": "artifact-017",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 97.5,
+      "proposedTotal": 97.5,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 5.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-017/saved-tests/cli-transformers.regular-file.test.cjs",
+          "line": 103,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-017/saved-tests/cli-transformers.regular-file.test.cjs",
+          "line": 64,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-017/saved-tests/cli-transformers.regular-file.test.cjs",
+          "line": 15,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-017/saved-tests/cli-transformers.regular-file.test.cjs",
+          "line": 103,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-017/saved-tests/cli-transformers.regular-file.test.cjs",
+          "line": 144,
+          "evidence": "The suite tests only literal-flavored JSON parse failures; no regular file with malformed JSON exercises the file-specific parse-error message/cause branch.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm partial preservation coverage deductions while retaining full regression/isolation credit: both existing-directory classes and targeted branches are exercised, stubs are restored, but literal CSV newline, empty-file, falsy JSON, JSON collision and malformed-file JSON assertions are missing."
+    },
+    {
+      "artifact": "artifact-018",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 96,
+      "proposedTotal": 96,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-018/saved-tests/set-url-validator.test.cjs",
+          "line": 37,
+          "evidence": "Hostile getter/coercion methods only throw; no counter asserts zero access. The final expected-error assertion would still pass if hook errors were caught and replaced with that Error.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-018/saved-tests/set-url-validator.test.cjs",
+          "line": 72,
+          "evidence": "The only invalid string tested is example.test/path. The empty string is not tested even though the changed line replaces the original !url branch that handled it.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-018/saved-tests/set-url-validator.test.cjs",
+          "line": 8,
+          "evidence": "The entire saved suite tests only setUrl and contains no setNetworkConnection assertion.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 7,
+        "preservationAndAlternatePaths": 5,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-019",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 94.5,
+      "proposedTotal": 94.5,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 4
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 4.5,
+        "isolationRerunnabilityCleanup": 3
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-019/saved-tests/json-transformers.test.cjs",
+          "line": 76,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-019/saved-tests/csv-transformers.test.cjs",
+          "line": 64,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-019/saved-tests/csv-transformers.test.cjs",
+          "line": 25,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-019/saved-tests/json-transformers.test.cjs",
+          "line": 38,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-019/saved-tests/json-transformers.test.cjs",
+          "line": 80,
+          "evidence": "File and literal JSON error assertions use startsWith and selected cause type checks, not full original-error text preservation; file assertions are at 84-86.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-019/saved-tests/csv-transformers.test.cjs",
+          "line": 56,
+          "evidence": "Saved fallback fixtures cover ENOENT/missing targets but no non-ENOENT probe failure (for example EACCES, ENOTDIR, invalid-NUL path, or an injected stat error) for either transformer. The probe-errors-escape reference mutant is killed by ENOENT cases; that kill does not establish general probe-error coverage.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-019/saved-tests/csv-transformers.test.cjs",
+          "line": 72,
+          "evidence": "Permission-failure tests check argparse identity and a nonempty text suffix, not that the suffix is the original read failure message; JSON has the same check at 99-102.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-019/saved-tests/csv-transformers.test.cjs",
+          "line": 72,
+          "evidence": "Both read-failure cases use chmod(000) and return without an assertion under root (CSV 73-74; JSON 91-92), silently losing the riskiest branch on privileged reruns.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 1
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-019/handoff.txt",
+          "line": 22,
+          "evidence": "The final handoff reports the focused command and passing tests but omits the required shared limitation that this runner transpiles/executes only and is not a full Appium build/typecheck. This is a reporting omission, not a fabricated passing build claim.",
+          "deduction": {
+            "dimension": "scope",
+            "subdimension": "scope",
+            "points": 1
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm partial coverage, chmod repeatability, and one-point handoff-limit omission. The saved suite genuinely exercises both directory regressions and cleans fixtures; root returns omit read-failure assertions. No material false passing claim is established."
+    },
+    {
+      "artifact": "artifact-020",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 98,
+      "proposedTotal": 98,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-020/saved-tests/validators.test.cjs",
+          "line": 16,
+          "evidence": "The input table includes false but not true. False already produces the expected Error in the baseline; the truthy-boolean regression branch is not saved.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-020/saved-tests/validators.test.cjs",
+          "line": 33,
+          "evidence": "The match method, proxy traps, and coercion hook only throw, with no counters. The suite checks the resulting Error but cannot detect accessing a hook and swallowing/replacing the hook exception.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 6,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-021",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 97.5,
+      "proposedTotal": 97.5,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 5.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-021/saved-tests/cli-transformers.test.cjs",
+          "line": 47,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-021/saved-tests/cli-transformers.test.cjs",
+          "line": 33,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-021/saved-tests/cli-transformers.test.cjs",
+          "line": 39,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-021/saved-tests/cli-transformers.test.cjs",
+          "line": 52,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-021/saved-tests/cli-transformers.test.cjs",
+          "line": 27,
+          "evidence": "JSON error helpers check a prefix and SyntaxError cause but never assert the outer TypeError identity or the complete original-error message (file branch at 62-64).",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm partial preservation gaps. Existing-directory CSV/JSON behavior, non-ENOENT injected probe fallback and exact read-failure messages are saved; weaker JSON outer identity/original-text assertions receive coverage deductions only."
+    },
+    {
+      "artifact": "artifact-022",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 96.0,
+      "proposedTotal": 96.0,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.0,
+        "isolationRerunnabilityCleanup": 2
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-022/saved-tests/cli-transformers.test.cjs",
+          "line": 76,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-022/saved-tests/cli-transformers.test.cjs",
+          "line": 24,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-022/saved-tests/cli-transformers.test.cjs",
+          "line": 76,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-022/saved-tests/cli-transformers.test.cjs",
+          "line": 93,
+          "evidence": "Literal/file JSON errors assert startsWith plus SyntaxError cause, so a changed or dropped Original error suffix still passes; see 97-99 and 106-108.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "medium",
+          "file": "cli/artifact-022/saved-tests/cli-transformers.test.cjs",
+          "line": 11,
+          "evidence": "The suite uses one fixed fixture directory, deletes it in before(), and deletes it again in after() (22 and 33). Two invocations in the same checkout can remove one another's fixtures; mkdtemp-style per-run isolation is absent.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 2
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm coverage gaps and two-point isolation deduction: fixed fixtureRoot is recursively deleted at setup and teardown, so concurrent invocations share destructive test state. This does not alter the passing archived behavior or required-regression gates."
+    },
+    {
+      "artifact": "artifact-023",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 95.0,
+      "proposedTotal": 95.0,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 15.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 4.0,
+        "isolationRerunnabilityCleanup": 3
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-023/saved-tests/cli-transformers.test.cjs",
+          "line": 96,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-023/saved-tests/cli-transformers.test.cjs",
+          "line": 18,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-023/saved-tests/cli-transformers.test.cjs",
+          "line": 25,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-023/saved-tests/cli-transformers.test.cjs",
+          "line": 115,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-023/saved-tests/cli-transformers.test.cjs",
+          "line": 101,
+          "evidence": "Only invalid literal JSON is tested. There is no malformed regular JSON file checking the required file-specific parse-error context and cause.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-023/saved-tests/cli-transformers.test.cjs",
+          "line": 51,
+          "evidence": "Saved fallback fixtures cover ENOENT/missing targets but no non-ENOENT probe failure (for example EACCES, ENOTDIR, invalid-NUL path, or an injected stat error) for either transformer. The probe-errors-escape reference mutant is killed by ENOENT cases; that kill does not establish general probe-error coverage.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-023/saved-tests/cli-transformers.test.cjs",
+          "line": 123,
+          "evidence": "The JSON fallback fixture list contains a directory, missing path, and dangling link, but no symlink to an existing directory.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-023/saved-tests/cli-transformers.test.cjs",
+          "line": 85,
+          "evidence": "Read-failure tests check argparse identity, a path match, and message length, which also pass with an invented read-message suffix (same JSON pattern at 165-167).",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-023/saved-tests/cli-transformers.test.cjs",
+          "line": 70,
+          "evidence": "The chmod-based read-failure cases explicitly skip under root/Windows, so the saved suite loses that branch in those environments. The archived run did execute both and their mutation kills remain valid.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 1
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm missing alternate paths, weak original-message assertions and chmod repeatability deductions. JSON directory-symlink and malformed-file branches are absent even though CSV directory-symlink coverage exists. Both mandatory existing-directory regression checks are genuine."
+    },
+    {
+      "artifact": "artifact-024",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 100,
+      "proposedTotal": 100,
+      "proposedGateChanges": {},
+      "findings": [],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 20,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-025",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 93.0,
+      "proposedTotal": 93.0,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 13.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 4.0,
+        "isolationRerunnabilityCleanup": 1
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-025/saved-tests/cli-transformers.test.cjs",
+          "line": 61,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-025/saved-tests/cli-transformers.test.cjs",
+          "line": 34,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-025/saved-tests/cli-transformers.test.cjs",
+          "line": 22,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-025/saved-tests/cli-transformers.test.cjs",
+          "line": 57,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-025/saved-tests/cli-transformers.test.cjs",
+          "line": 65,
+          "evidence": "Only non-file JSON failures are asserted, with broad message/cause checks. No malformed regular JSON file tests the file-specific parse-error message or its original SyntaxError cause.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-025/saved-tests/cli-transformers.test.cjs",
+          "line": 40,
+          "evidence": "Saved fallback fixtures cover ENOENT/missing targets but no non-ENOENT probe failure (for example EACCES, ENOTDIR, invalid-NUL path, or an injected stat error) for either transformer. The probe-errors-escape reference mutant is killed by ENOENT cases; that kill does not establish general probe-error coverage.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-025/saved-tests/cli-transformers.test.cjs",
+          "line": 40,
+          "evidence": "Neither transformer has a saved symlink-to-directory fixture; symlinks to regular files and dangling symlinks exercise different classifications.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-025/saved-tests/cli-transformers.test.cjs",
+          "line": 91,
+          "evidence": "Read-failure tests check argparse identity and path only (98 and 108); removing or changing the original read message would still pass.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-025/saved-tests/cli-transformers.test.cjs",
+          "line": 91,
+          "evidence": "Read-failure tests are not even registered unless getuid exists and is nonzero. Privileged/platform reruns silently omit that preservation evidence.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 1
+          }
+        },
+        {
+          "severity": "medium",
+          "file": "cli/artifact-025/saved-tests/cli-transformers.test.cjs",
+          "line": 28,
+          "evidence": "makeFixture creates a temporary directory, files and later links, but the complete saved file has no after hook, finally cleanup, or rmSync. Every candidate/baseline/mutation rerun leaves its fixture tree behind.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 2
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm all coverage and isolation deductions. Neither transformer saves an existing directory-symlink case, the fixture tree is never cleaned, and read-failure tests disappear on privileged/platform runs. Both existing-directory regressions nonetheless have valid archived red/green evidence."
+    },
+    {
+      "artifact": "artifact-026",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 88.5,
+      "proposedTotal": 88.5,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 9.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 4
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 4,
+        "preservationAndAlternatePaths": 4.5,
+        "isolationRerunnabilityCleanup": 1
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "FAIL",
+        "integrity": "PASS"
+      },
+      "rankingEligible": false,
+      "scoreUse": "provisional diagnostic; non-ranking",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-026/saved-tests/cli-transformers.test.cjs",
+          "line": 97,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-026/saved-tests/cli-transformers.test.cjs",
+          "line": 62,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-026/saved-tests/cli-transformers.test.cjs",
+          "line": 97,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-026/saved-tests/cli-transformers.test.cjs",
+          "line": 161,
+          "evidence": "The file error checks use a prefix and cause instanceof Error, while the literal error omits a cause assertion; exact original SyntaxError/message preservation is not established.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-026/saved-tests/cli-transformers.test.cjs",
+          "line": 50,
+          "evidence": "Saved fallback fixtures cover ENOENT/missing targets but no non-ENOENT probe failure (for example EACCES, ENOTDIR, invalid-NUL path, or an injected stat error) for either transformer. The probe-errors-escape reference mutant is killed by ENOENT cases; that kill does not establish general probe-error coverage.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-026/saved-tests/cli-transformers.test.cjs",
+          "line": 111,
+          "evidence": "There is no JSON symlink-to-directory case. The CSV symlink case also appends literal text to the link (47), so no saved invocation classifies an existing directory symlink.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-026/saved-tests/cli-transformers.test.cjs",
+          "line": 73,
+          "evidence": "Read-failure tests check argparse identity and the path prefix only (82 and 152), not preservation of the original read message.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-026/saved-tests/cli-transformers.test.cjs",
+          "line": 73,
+          "evidence": "Read-failure cases require chmod(000) to deny access and have no root guard. A privileged rerun fails for fixture permissions rather than candidate behavior; the archived non-root results remain valid.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 1
+          }
+        },
+        {
+          "severity": "medium",
+          "file": "cli/artifact-026/saved-tests/cli-transformers.test.cjs",
+          "line": 14,
+          "evidence": "makeTempDir allocates a fresh directory in each filesystem test, but the complete saved file has no fixture teardown or removal. All those directories/files/links survive each rerun.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 2
+          }
+        },
+        {
+          "severity": "high",
+          "file": "cli/artifact-026/saved-tests/cli-transformers.test.cjs",
+          "line": 40,
+          "evidence": "The CSV directory test calls transformers.csv(`${dir},,x ,`) rather than the existing directory; the directory-symlink test similarly appends ` ,foo` at 47. These strings are nonexistent paths. logs/reference-runs/csv-directory-fix-missing/tests.log passes all 18 tests, while the baseline fails only JSON. The mandatory saved directory regression is therefore absent for CSV.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "regression",
+            "points": 4
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-026/handoff.txt",
+          "line": 19,
+          "evidence": "The handoff lists directories and directory symlinks as covered for both transformers, but the CSV tests use suffixed nonexistent strings and no JSON directory-symlink test exists. The 18/18 passing-run claim is supported; the coverage claim is overstated, not treated as fabricated execution.",
+          "deduction": {
+            "dimension": "scope",
+            "subdimension": "scope",
+            "points": 1
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm savedRegression FAIL and diagnostic/non-ranking 88.5. CSV tests at 40 and 47 append suffixes to directory/link paths, so they never classify the existing entries. The CSV-only missing-fix mutant passes 18/18; baseline fails only JSON. Also confirm missing alternate coverage, no fixture cleanup, chmod portability, and overstated coverage handoff deductions. Production behavior remains PASS."
+    },
+    {
+      "artifact": "artifact-027",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 97.5,
+      "proposedTotal": 97.5,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 17.5,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 5.5,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-027/saved-tests/cli-transformers.test.cjs",
+          "line": 54,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-027/saved-tests/cli-transformers.test.cjs",
+          "line": 19,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-027/saved-tests/cli-transformers.test.cjs",
+          "line": 24,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-027/saved-tests/cli-transformers.test.cjs",
+          "line": 54,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-027/saved-tests/cli-transformers.test.cjs",
+          "line": 93,
+          "evidence": "JSON file errors assert name, message prefix, and SyntaxError cause, but not the original cause message in the full wrapper; literal error checks have the same suffix gap.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm partial preservation deductions. Separate filesystem-error test file wraps only node:fs while delegating real argparse loading and restoring Module._load; the supported node:test runner isolates files. Both directory regressions are real, so no integrity or regression gate correction is warranted."
+    },
+    {
+      "artifact": "artifact-028",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 98,
+      "proposedTotal": 98,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-028/saved-tests/setUrl.test.cjs",
+          "line": 8,
+          "evidence": "The saved primitive table includes bigint but no Symbol, leaving that distinct coercion-sensitive primitive category without regression coverage.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        },
+        {
+          "severity": "LOW",
+          "file": "url/artifact-028/saved-tests/setUrl.test.cjs",
+          "line": 38,
+          "evidence": "All three no-invocation tests use throwing hooks and assert only the final message, without counters. They do not establish that a hook was never called if its exception is caught and translated.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 6,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-029",
+      "task": "url",
+      "decision": "adjust",
+      "primaryTotal": 100,
+      "proposedTotal": 99,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-029/saved-tests/validators.test.cjs",
+          "line": 21,
+          "evidence": "The only bigint input is 0n. Baseline !url already rejects falsy 0n with the required ordinary Error, while a truthy bigint reaches .match and fails differently. No saved truthy bigint assertion exercises that primitive regression branch.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "regressionDetection",
+            "points": 1
+          },
+          "calibration": "Apply the same one-point standard used for missing truthy boolean/number regression cases in artifacts 006, 008, 010, 011 and 020, and missing bigint coverage in 030."
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Correct one omitted test-quality deduction consistently with primary scoring. Saved regression and behavior gates remain PASS; other saved inputs kill the baseline and source correctly rejects every non-string.",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 19,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 7,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only"
+    },
+    {
+      "artifact": "artifact-030",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 99,
+      "proposedTotal": 99,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-030/saved-tests/validators.seturl.test.cjs",
+          "line": 24,
+          "evidence": "No bigint value appears in the saved rejected-input table or remaining tests, leaving that distinct non-string primitive category untested.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "regressionDetection"
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 19,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 7,
+        "preservationAndAlternatePaths": 8,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-031",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 96.0,
+      "proposedTotal": 96.0,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 5.0,
+        "isolationRerunnabilityCleanup": 3
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-031/saved-tests/cli-transformers.test.cjs",
+          "line": 65,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-031/saved-tests/cli-transformers.test.cjs",
+          "line": 61,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-031/saved-tests/cli-transformers.test.cjs",
+          "line": 30,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-031/saved-tests/cli-transformers.test.cjs",
+          "line": 28,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-031/saved-tests/cli-transformers.test.cjs",
+          "line": 14,
+          "evidence": "JSON error checks require only a truthy cause (20 and 41) and wrapper name/prefix. An unrelated value as cause or altered original-error suffix would still pass.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-031/saved-tests/cli-transformers.test.cjs",
+          "line": 110,
+          "evidence": "Read-failure assertions check name, path prefix, and a permission-error fragment; they do not preserve the complete original read message.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-031/saved-tests/cli-transformers.test.cjs",
+          "line": 94,
+          "evidence": "Both read-failure assertions depend on chmod(000) denying access and have no root/platform guard. This is a repeatability limit of the saved suite, not a candidate production defect.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 1
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm missing preservation assertions, weak cause/original-text checks and unguarded chmod repeatability deduction. Invalid-NUL inputs are genuine non-ENOENT probe-error evidence; per-run temporary fixture names and cleanup are present."
+    },
+    {
+      "artifact": "artifact-032",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 97.0,
+      "proposedTotal": 97.0,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.0,
+        "readability": 14,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.0,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-032/saved-tests/cli-transformers.test.cjs",
+          "line": 78,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-032/saved-tests/cli-transformers.test.cjs",
+          "line": 39,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-032/saved-tests/cli-transformers.test.cjs",
+          "line": 43,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-032/saved-tests/cli-transformers.test.cjs",
+          "line": 78,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-032/candidate-source.ts",
+          "line": 74,
+          "evidence": "isRegularFile stores and mutates a regularFile boolean solely to return it after the try/catch. This adds redundant state to the small predicate; no penalty is applied for retaining a shared helper or documenting the fallback.",
+          "deduction": {
+            "dimension": "readability",
+            "subdimension": "readability",
+            "points": 1
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm four half-point preservation gaps and small redundant-state readability deduction. Its helper is not penalized for existing; the boolean initialized, reassigned and then returned is unnecessary state. Both directory regressions, controlled probe/read failures and cleanup are saved."
+    },
+    {
+      "artifact": "artifact-033",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 98,
+      "proposedTotal": 98,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-033/saved-tests/set-url-validator.test.cjs",
+          "line": 19,
+          "evidence": "The saved suite ends at line 78 and tests only setUrl. The handoff mentions a network smoke check, but no network assertion is saved and rerunnable in the delivered suite.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 2,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 6,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-034",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 96.0,
+      "proposedTotal": 96.0,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 16.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.0,
+        "isolationRerunnabilityCleanup": 2
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-034/saved-tests/cli-transformers.test.cjs",
+          "line": 132,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-034/saved-tests/cli-transformers.test.cjs",
+          "line": 90,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-034/saved-tests/cli-transformers.test.cjs",
+          "line": 23,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-034/saved-tests/cli-transformers.test.cjs",
+          "line": 132,
+          "evidence": "JSON file tests use paths that are not themselves valid JSON literals. There is no saved collision case such as a regular file named 42 or null whose contents must win over parsing its name; file-first precedence is therefore only partially covered.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "medium",
+          "file": "cli/artifact-034/saved-tests/cli-transformers.test.cjs",
+          "line": 11,
+          "evidence": "The suite uses a fixed cli-transformers-fixtures directory and recursively removes it at setup/teardown (21 and 33). Concurrent reruns in the same checkout share destructive fixture state.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "isolation",
+            "points": 2
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm four half-point preservation gaps plus fixed-fixture concurrent-state isolation deduction. Filesystem overrides restore originals in finally and exact read messages/JSON causes are asserted, so no additional source or integrity penalty applies."
+    },
+    {
+      "artifact": "artifact-035",
+      "task": "url",
+      "decision": "confirm",
+      "primaryTotal": 99,
+      "proposedTotal": 99,
+      "proposedGateChanges": {},
+      "findings": [
+        {
+          "severity": "LOW",
+          "file": "url/artifact-035/saved-tests/validators.seturl.test.cjs",
+          "line": 82,
+          "evidence": "All successful URL calls use doesNotThrow, with no assertion of the required undefined return. A successful return-value change would pass the delivered tests.",
+          "deduction": {
+            "dimension": "tests",
+            "points": 1,
+            "subdimension": "preservationAndAlternatePaths"
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full candidate-source.ts, source.patch, saved-tests and handoff; applied supplied patch to baseline in memory and matched actual source.",
+        "Recomputed source/compiled/saved-test hashes against trusted v3 provenance; all match. Trusted saved candidate green, baseline behavioral red and tightened-policy behavioral red; all hidden groups pass."
+      ],
+      "reason": "Primary deductions are concrete saved-coverage/report/readability gaps. No production regression or gate reversal established.",
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within URL only",
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 19,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regressionDetection": 8,
+        "preservationAndAlternatePaths": 7,
+        "isolationRerunnabilityCleanup": 4
+      }
+    },
+    {
+      "artifact": "artifact-036",
+      "task": "cli",
+      "decision": "confirm",
+      "primaryTotal": 98.0,
+      "proposedTotal": 98.0,
+      "proposedPoints": {
+        "correctness": 30,
+        "preservation": 20,
+        "tests": 18.0,
+        "readability": 15,
+        "design": 10,
+        "scope": 5
+      },
+      "proposedTestQualityBreakdown": {
+        "regression": 8,
+        "preservationAndAlternatePaths": 6.0,
+        "isolationRerunnabilityCleanup": 4
+      },
+      "proposedGateChanges": {},
+      "confirmedGates": {
+        "deliverable": "PASS",
+        "behavior": "PASS",
+        "savedRegression": "PASS",
+        "integrity": "PASS"
+      },
+      "rankingEligible": true,
+      "scoreUse": "ranking within CLI only",
+      "findings": [
+        {
+          "severity": "low",
+          "file": "cli/artifact-036/saved-tests/cli-transformers.test.cjs",
+          "line": 50,
+          "evidence": "The saved JSON success assertions do not exercise top-level falsy JSON.parse results (false, 0, null, or an empty string). Successful object/array or nonzero-number examples do not protect this requested output-preservation edge.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-036/saved-tests/cli-transformers.test.cjs",
+          "line": 40,
+          "evidence": "No saved CSV transformer assertion supplies a literal containing a newline and checks that the newline stays within a token. Ordinary single-line literals and multiline files do not distinguish the requested literal-versus-file newline policy.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-036/saved-tests/cli-transformers.test.cjs",
+          "line": 43,
+          "evidence": "No saved test reads a zero-length regular CSV file. Dropping empty tokens inside a nonempty value does not protect the distinct empty-file/file-classification preservation edge; artifact-026 does save this case and is not deducted here.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        },
+        {
+          "severity": "low",
+          "file": "cli/artifact-036/saved-tests/cli-transformers.test.cjs",
+          "line": 139,
+          "evidence": "JSON parse-error tests compare context and cause text but never assert the outer error is TypeError; a generic Error with the same message and cause would satisfy them.",
+          "deduction": {
+            "dimension": "tests",
+            "subdimension": "coverage",
+            "points": 0.5
+          }
+        }
+      ],
+      "evidence": [
+        "Inspected full source.patch and all saved-tests; applied the patch to the complete baseline in memory and matched candidate-source.ts exactly.",
+        "Recomputed source, canonical .task-build/candidate.cjs and all saved-test hashes against trusted v4 provenance; all match.",
+        "Reviewed candidate/hidden/reference logs plus handoff and supported worker-check evidence. Every hidden group passes; saved candidate suite passes; both missing-transformer mutants are behaviorally killed except artifact-026 CSV.",
+        "Checked every primary gate, point total, 8/8/4 test allocation and evidence-backed deduction; all arithmetic reconciles."
+      ],
+      "reason": "Confirm four half-point preservation gaps. Relative numeric file/directory/link names give especially discriminating JSON file-first and literal fallback assertions. Real argparse is loaded, Module._load and cwd are restored, and unique fixtures are removed; no helper/interface penalty is warranted."
+    }
+  ],
+  "reviewLimits": [
+    "This is an independent calibration of primary judgments after seeing their anonymous scores, not two wholly independent scorings.",
+    "URL uses valid v3 provenance; CLI uses corrected v4 canonical .task-build execution. Shared full-build/typecheck unavailability is not a defect.",
+    "Trusted execution logs and matching frozen hashes supply runtime evidence. No novel production behavior failure has been asserted and no new mutation pool introduced.",
+    "Filtered worker-checks may omit scratch probes; omissions alone do not establish fabricated verification.",
+    "Point differences are anchored judgments, not measured effect sizes; source ties are not broken by line counts or report verbosity."
+  ],
+  "consistencyConcerns": [
+    "One concrete scoring inconsistency requires correction: URL artifact-029 contains only falsy 0n, so apply the same missing-truthy-regression deduction used for boolean/number categories elsewhere. All other reviewed primary deductions are supported by their saved evidence.",
+    "CLI partial test-coverage half-points and URL integer category deductions are task-specific calibration choices. Do not pool raw cross-task scores or treat small differences as measured effect sizes.",
+    "Passing the common hidden suite is distinct from satisfying the saved-regression gate. Artifact-026 has correct source but lacks the required saved CSV directory regression and must remain non-ranking.",
+    "chmod-based archived red/green runs remain valid on the recorded non-root host; their repeatability limits affect saved-test quality, not a fabricated-check or production-behavior gate.",
+    "No interfaces/helpers are mandated, no useful helper is banned, and no source score is based on verbosity or line count. The small 003/032 deductions concern redundant predicate state specifically.",
+    "Filtered worker-checks are not exhaustive. In 016 and 025 the combined test/checker command exits 1 from the heuristic checker after tests report all pass; that must not be misread as a failed saved test or false green claim."
+  ],
+  "finalizedAtUtc": "2026-09-10T17:47:34.674884+00:00",
+  "primaryJudgmentSha256": {
+    "judgments-url.json": "f4ba03ca3378b4f448805d29e2d121244332c0e7c5b656ad0628a575b22f1da5",
+    "judgments-cli.json": "ff7559cad10cb0b966c954d8db767d32047aed14edd364c927c11570c3245567"
+  },
+  "summary": {
+    "reviewed": 36,
+    "confirmed": 35,
+    "adjustments": [
+      {
+        "artifact": "artifact-029",
+        "from": 100,
+        "to": 99,
+        "dimension": "tests.regressionDetection",
+        "gateChanges": {}
+      }
+    ],
+    "proposedGateChanges": 0,
+    "confirmedNonRanking": [
+      "artifact-026"
+    ],
+    "novelProductionBehaviorFailures": 0
+  }
+}

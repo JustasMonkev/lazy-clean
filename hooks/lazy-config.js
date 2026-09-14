@@ -124,7 +124,8 @@ function getHideStatus() {
   }
   try {
     const configPath = getConfigPath();
-    if (fs.statSync(configPath).size > CONFIG_SIZE_LIMIT) return false;
+    const stat = fs.statSync(configPath);
+    if (!stat.isFile() || stat.size > CONFIG_SIZE_LIMIT) return false;
     const config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
     return config.hideStatus === true;
   } catch (_) {
