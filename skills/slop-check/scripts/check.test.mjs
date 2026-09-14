@@ -2581,6 +2581,26 @@ expectRule(
   ACCUMULATOR_COPY,
 );
 expectNoRule(
+  "preserves an Array override from module initialization for an exported reader",
+  "override(); export function run() { return [].filter(active).map(email); } function override() { Array.prototype.filter = customFilter; }",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "preserves an Object.assign override from module initialization",
+  "override(); export function run() { return items.reduce((acc, item) => Object.assign({}, acc, item), {}); } function override() { Object.assign = customAssign; }",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "ignores an unrelated nested comma when finding a later copy method",
+  "items.reduce((acc) => ({ copy() { return Object.assign({}, acc); }, other: fn(a, copy) }).copy(), {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "reviews a synchronously invoked nested method",
+  "items.reduce((acc) => ({ copy() { return { later() { return Object.assign({}, acc); } }.later(); } }).copy(), {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
   "does not infer a function typed array producer as an array",
   "function collect(users: () => User[]) { return users.filter(active).map(email); }",
   ARRAY_PIPELINE,

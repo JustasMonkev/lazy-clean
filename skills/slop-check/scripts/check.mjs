@@ -1991,7 +1991,7 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
     if (writer === reader) return write <= use;
     let paths = invocationPaths(null);
     if (reader && !paths.has(reader)) {
-      if (!writer) return write <= use;
+      if (!writer || paths.has(writer)) return true;
       paths = invocationPaths(reader);
     }
     const writePath = writer ? paths.get(writer) : [];
@@ -2037,10 +2037,10 @@ function maskReducerMethods(body, accumulator) {
       const ownerEnd = ownerStart === undefined ? -1 : balancedEnd(body, ownerStart);
       if (ownerEnd !== -1) {
         // A later member or spread can replace the method during construction.
-        const laterMembers = body.slice(end, ownerEnd - 1);
+        const laterMembers = arrayArguments(body.slice(end, ownerEnd - 1).replace(/^\s*,/u, ""), true);
         const modifiers = method[1] === "get" ? "get|async" : "get|set|async";
-        const replacement = new RegExp(`(?:^|,)\\s*(?:\\.\\.\\.|\\[|(?:(?:${modifiers})\\s+)?${escapeForRegExp(method[3])}(?![\\w$])|["'])`, "u");
-        if (replacement.test(laterMembers)) {
+        const replacement = new RegExp(`^\\s*(?:\\.\\.\\.|\\[|(?:(?:${modifiers})\\s+)?${escapeForRegExp(method[3])}(?![\\w$])|["'])`, "u");
+        if (laterMembers.some((member) => replacement.test(member))) {
           for (let at = open; at < end; at += 1) if (masked[at] !== "\n" && masked[at] !== "\r") masked[at] = " ";
           continue;
         }
@@ -2048,7 +2048,8 @@ function maskReducerMethods(body, accumulator) {
         const invokedAt = (at) => {
           const call = access.exec(body.slice(at));
           if (!call) return Infinity;
-          if (methods.some((candidate) => candidate.start <= at && at < candidate.end)) return Infinity;
+          if (methods.some((candidate) => candidate.start <= at && at < candidate.end
+            && !executions.some((execution) => execution.start === candidate.start))) return Infinity;
           if (method[1] === "get") {
             if (/^\s*=(?![=>])/u.test(body.slice(at + call[0].length))) return Infinity;
             return at + call[0].length;
