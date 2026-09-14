@@ -1952,26 +1952,53 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
     else calls.set(match[1], [match.index]);
   }
   const enclosingFunction = (position) => namedFunctions.findLast((fn) => fn.start < position && position < fn.end);
-  for (const fn of namedFunctions) fn.invocation = Infinity;
-  const executionOffset = (position, writing = false) => {
-    const fn = enclosingFunction(position);
-    if (!fn) return position;
-    if (fn.invocation === Infinity) return writing ? Infinity : position;
-    return fn.invocation + (position - fn.start) / (fn.end - fn.start);
-  };
-  // Propagate reachable calls, preserving statement order inside each call.
-  // Uncalled recursive cycles never acquire an invocation position.
-  for (let pass = 0; pass < 20; pass += 1) {
-    let changed = false;
-    for (const fn of namedFunctions) {
-      for (const call of calls.get(fn.name) ?? []) {
-        const position = executionOffset(call, true);
-        if (position < fn.invocation) { fn.invocation = position; changed = true; }
-      }
+  const comparePaths = (left, right) => {
+    for (let at = 0; at < Math.min(left.length, right.length); at += 1) {
+      if (left[at] !== right[at]) return left[at] - right[at];
     }
-    if (!changed) break;
-  }
-  return { bindings, writes, typeNames, executionOffset };
+    return left.length - right.length;
+  };
+  const pathsByRoot = new Map();
+  const invocationPaths = (root) => {
+    if (pathsByRoot.has(root)) return pathsByRoot.get(root);
+    const paths = new Map();
+    if (root) paths.set(root, []);
+    // An externally called function supplies its own entry point. Unreachable
+    // recursive cycles cannot create a path from that entry point.
+    for (let pass = 0; pass < 20; pass += 1) {
+      let changed = false;
+      for (const fn of namedFunctions) {
+        if (fn === root) continue;
+        for (const call of calls.get(fn.name) ?? []) {
+          const caller = enclosingFunction(call);
+          const prefix = caller ? paths.get(caller) : root ? undefined : [];
+          if (!prefix || prefix.length >= 20) continue;
+          const path = [...prefix, call];
+          if (!paths.has(fn) || comparePaths(path, paths.get(fn)) < 0) {
+            paths.set(fn, path);
+            changed = true;
+          }
+        }
+      }
+      if (!changed) break;
+    }
+    pathsByRoot.set(root, paths);
+    return paths;
+  };
+  const writePrecedes = (write, use) => {
+    const writer = enclosingFunction(write);
+    const reader = enclosingFunction(use);
+    if (writer === reader) return write <= use;
+    let paths = invocationPaths(null);
+    if (reader && !paths.has(reader)) {
+      if (!writer) return write <= use;
+      paths = invocationPaths(reader);
+    }
+    const writePath = writer ? paths.get(writer) : [];
+    const usePath = reader ? paths.get(reader) : [];
+    return !!writePath && !!usePath && comparePaths([...writePath, write], [...usePath, use]) <= 0;
+  };
+  return { bindings, writes, typeNames, writePrecedes };
 }
 
 function maskReducerMethods(body, accumulator) {
@@ -1991,7 +2018,6 @@ function maskReducerMethods(body, accumulator) {
     if (end === -1) continue;
     const method = /(?:^|[,{;]\s*)(?:(get|set|async|static)\s+)?(\*\s*)?([A-Za-z_$][\w$]*)$/u.exec(prefix);
     methods.push({ open, close, start, end, method });
-    open = end - 1;
   }
   for (const { open, close, start, end, method } of methods) {
     let invocation = Infinity;
@@ -1999,7 +2025,7 @@ function maskReducerMethods(body, accumulator) {
       .some((parameter) => [...arrayBindingTargets(parameter)].some(({ target }) => target === accumulator)
         || new RegExp(`^${escapeForRegExp(accumulator)}\\s*(?::|=|$)`, "u").test(parameter));
     const defaults = body.slice(open + 1, close - 1).includes("=");
-    if (method && !method[2] && method[1] !== "set" && !shadowsAccumulator && !defaults) {
+    if (method && !method[2] && method[1] !== "set" && method[1] !== "async" && !shadowsAccumulator && !defaults) {
       // Find the containing object/class, then its immediate member access or
       // a local binding read. Other stored methods remain deferred.
       const containers = [];
@@ -2010,6 +2036,14 @@ function maskReducerMethods(body, accumulator) {
       const ownerStart = containers.at(-1);
       const ownerEnd = ownerStart === undefined ? -1 : balancedEnd(body, ownerStart);
       if (ownerEnd !== -1) {
+        // A later member or spread can replace the method during construction.
+        const laterMembers = body.slice(end, ownerEnd - 1);
+        const modifiers = method[1] === "get" ? "get|async" : "get|set|async";
+        const replacement = new RegExp(`(?:^|,)\\s*(?:\\.\\.\\.|\\[|(?:(?:${modifiers})\\s+)?${escapeForRegExp(method[3])}(?![\\w$])|["'])`, "u");
+        if (replacement.test(laterMembers)) {
+          for (let at = open; at < end; at += 1) if (masked[at] !== "\n" && masked[at] !== "\r") masked[at] = " ";
+          continue;
+        }
         const access = new RegExp(`^\\s*(?:\\?\\.|\\.)\\s*${escapeForRegExp(method[3])}(?![\\w$])${method[1] === "get" ? "" : "\\s*\\("}`, "u");
         const invokedAt = (at) => {
           const call = access.exec(body.slice(at));
@@ -2044,7 +2078,7 @@ function maskReducerMethods(body, accumulator) {
           for (const use of body.slice(ownerEnd).matchAll(reference)) {
             const at = ownerEnd + use.index + use[0].length;
             const replaced = [ownerName, `${ownerName}.${method[3]}`, `${ownerName}.*`]
-              .some((target) => writes.get(target)?.some((write) => ownerStart <= write && write < at));
+              .some((target) => writes.get(target)?.some((write) => ownerStart <= write && write < ownerEnd + use.index));
             if (!replaced) invocation = Math.min(invocation, invokedAt(at));
           }
         }
@@ -2078,8 +2112,8 @@ function* iterateArrayFindings(ctx) {
   const { lineStarts } = ctx;
   const masked = ctx.isTypeScript ? maskArrayTypeArguments(ctx.masked) : ctx.masked;
   if (!/\.\s*(?:reduce(?:Right)?|map|filter)\s*\(/u.test(masked)) return;
-  const { bindings, writes, typeNames, executionOffset } = arrayBindingEvidence(masked, ctx.isTypeScript, ctx.source);
-  const writtenBefore = (name, at, executedAt = (position) => position) => writes.get(name)?.some((write) => executionOffset(executedAt(write), true) <= executionOffset(at));
+  const { bindings, writes, typeNames, writePrecedes } = arrayBindingEvidence(masked, ctx.isTypeScript, ctx.source);
+  const writtenBefore = (name, at, executedAt = (position) => position) => writes.get(name)?.some((write) => writePrecedes(executedAt(write), at));
   const receiverRoot = (expression) => {
     let name = unwrapArraySyntax(expression, ctx.isTypeScript);
     for (let depth = 0; depth < 20; depth += 1) {
@@ -2102,7 +2136,7 @@ function* iterateArrayFindings(ctx) {
     else methodWrites.set(key, [...positions]);
   }
   const nativeArrayMethod = (expression, method, at, executedAt = (position) => position) => {
-    const changed = (owner) => [method, "*"].some((key) => methodWrites.get(`${owner}.${key}`)?.some((write) => executionOffset(executedAt(write), true) <= executionOffset(at)));
+    const changed = (owner) => [method, "*"].some((key) => methodWrites.get(`${owner}.${key}`)?.some((write) => writePrecedes(executedAt(write), at)));
     return !changed("Array.prototype") && !changed(receiverRoot(expression));
   };
   const nativeGlobal = (name, method, at, executedAt) => !bindings.has(name) && !writtenBefore(name, at, executedAt)

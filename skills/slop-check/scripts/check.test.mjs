@@ -2531,6 +2531,56 @@ expectRule(
   ACCUMULATOR_COPY,
 );
 expectNoRule(
+  "does not trust a method overridden inside an exported function",
+  "export function collect() { const rows = []; rows.filter = customFilter; return rows.filter(active).map(email); }",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "preserves nested override order through large source gaps",
+  `run(); const rows = []; rows.filter(active).map(email); function run() { override(); } function override() {${" ".repeat(500)}Array.prototype.filter = customFilter; }`,
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "keeps a pipeline that precedes a nested override call",
+  "const rows = []; rows.filter(active).map(email); run(); function run() { override(); } function override() { Array.prototype.filter = customFilter; }",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "tracks an override reached from an exported entry function",
+  "export function run() { override(); const rows = []; rows.filter(active).map(email); } function override() { Array.prototype.filter = customFilter; }",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "keeps an exported entry pipeline before its override call",
+  "export function run() { const rows = []; rows.filter(active).map(email); override(); } function override() { Array.prototype.filter = customFilter; }",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "ignores a method replaced by a later same-named object member",
+  "items.reduce((acc, item) => { const box = { copy() { return Object.assign({}, acc); }, copy: item.copy }; return box.copy(); }, {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "ignores a method replaced by a later object spread",
+  "items.reduce((acc, item) => { const box = { copy() { return Object.assign({}, acc); }, ...item }; return box.copy(); }, {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "ignores a copy nested in a deferred method",
+  "items.reduce((acc) => ({ copy() { return { later() { return Object.assign({}, acc); } }; } }).copy(), {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "ignores an async copy after await",
+  "items.reduce((acc, item) => { const box = { async copy() { await item.ready; return Object.assign({}, acc); } }; const next = box.copy(); acc = {}; return next; }, {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "reviews a getter compound assignment read",
+  "items.reduce((acc, item) => { const box = { get copy() { return Object.assign({}, acc, item); }, set copy(value) {} }; box.copy += item.value; return acc; }, {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
   "does not infer a function typed array producer as an array",
   "function collect(users: () => User[]) { return users.filter(active).map(email); }",
   ARRAY_PIPELINE,
