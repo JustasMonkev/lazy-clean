@@ -7,6 +7,10 @@ One skill package for coding agents: write the least code that works, then delet
 
 (A renamed hard fork of two upstream projects; this package is standalone and self-contained.)
 
+For upstream comparisons and selective ports, follow the
+[update procedure](skills/lazy-clean/references/upstream-updates.md) and record
+the reviewed revisions and local differences in [UPSTREAM.md](UPSTREAM.md).
+
 ## Works with
 
 Same ruleset, five levels of wiring — pick whatever your agent supports.
@@ -96,6 +100,12 @@ node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
 ```
 
 Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. `--summary` replaces the finding list with the per-rule tally, which is the number that tells you whether a codebase is worth a full pass. The run summary line still prints; `--json` is the machine-readable form.
+
+Array performance findings are review prompts too: `no-reduce-accumulator-copy`
+detects repeated copies of reducer accumulators, including spread, and
+`no-array-filter-map` checks adjacent eager passes on locally evidenced arrays.
+These checks are conservative and have no autofix. Before rewriting, preserve
+accumulator ownership, callback order and indexes, and sparse-array behavior.
 
 Before finishing any TS/JS task, run `node skills/slop-check/scripts/check.mjs --since=HEAD`
 from the repo root even if edit hooks ran. It includes new untracked files and

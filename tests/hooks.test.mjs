@@ -1031,6 +1031,99 @@ ok("an uppercase .TS file is scanned at all", e.status === 0 && e.stdout.include
 // every TypeScript-only rule.
 ok("an uppercase .TS file gets the TypeScript rules", e.stdout.includes("no-any"));
 
+for (const [name, source, changed, rule] of [
+  ["accumulator.js", "const result = [1, 2].reduce((acc, value) => {\n\n\n\n\n  return acc.concat(value);\n}, []);\n", "  return acc.concat(value);", "no-reduce-accumulator-copy"],
+  ["pipeline.js", "const result = [1, 2]\n  .filter(value => value > 0)\n\n\n\n\n  .map(value => value * 2);\n", "  .map(value => value * 2);", "no-array-filter-map"],
+]) {
+  const file = write(name, source);
+  const result = editCheck({ tool_name: "Edit", tool_input: { file_path: file, old_string: "", new_string: changed } });
+  eq(`array check stays advisory for ${name}`, result.status, 0);
+  ok(`an Edit reports the changed multiline operation in ${name}`, result.stdout.includes(rule), result.stdout);
+  const output = result.stdout ? JSON.parse(result.stdout) : null;
+  ok(`array findings never block ${name}`, output && output.decision === undefined && output.hookSpecificOutput.permissionDecision === undefined);
+}
+
+// The changed line can be the receiver/initial value several lines away from
+// the diagnostic anchor. This defeats the hook's three-line upward padding and
+// proves the checker span, rather than a nearby callback edit, is doing the work.
+const receiverSpan = [
+  "const customCollection = getCollection();",
+  "const result = customCollection",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "  .filter(value => value > 0)",
+  "  .map(value => value * 2);",
+  "const preexisting = Reflect.get(source, key);",
+  "",
+].join("\n");
+const reducerInitialSpan = [
+  "const customCollection = getCollection();",
+  "const items = [1, 2];",
+  "const result = items.reduce(",
+  "  (acc, item) => {",
+  "    return acc.concat(item);",
+  "  },",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "  customCollection,",
+  ");",
+  "const preexisting = Reflect.get(source, key);",
+  "",
+].join("\n");
+for (const [name, source, oldString, newString, rule] of [
+  ["receiver-only filter/map", receiverSpan, "const result = customCollection", "const result = []", "no-array-filter-map"],
+  ["initial-only reducer", reducerInitialSpan, "  customCollection,", "  [],", "no-reduce-accumulator-copy"],
+]) {
+  const file = write(`span-${name.split(" ")[0]}.js`, source.replace(oldString, newString));
+  const payloads = [
+    ["Write", { tool_name: "Write", tool_input: { file_path: file } }],
+    ["Edit", { tool_name: "Edit", tool_input: { file_path: file, old_string: oldString, new_string: newString } }],
+    ["MultiEdit", { tool_name: "MultiEdit", tool_input: { file_path: file, edits: [{ old_string: oldString, new_string: newString }] } }],
+  ];
+  for (const [tool, payload] of payloads) {
+    const result = editCheck(payload);
+    ok(`${tool} reports a ${name} beyond hook padding`, result.status === 0 && result.stdout.includes(rule), result.stdout);
+  }
+}
+
+// A receiver can be the evidence start for a finding whose diagnostic anchor
+// is the later `.filter`. The hook must honor that suppression for every edit
+// path, while a whole-file Write still reports a separate operation below it.
+const hookSuppressedPipeline = write("suppressed-pipeline.js", [
+  "const users = [];",
+  "// slop-check-ignore no-array-filter-map -- preserve callback order",
+  "const changed = users",
+  "  .filter(active)",
+  "  .map(normalize);",
+  "",
+  "",
+  "",
+  "const next = users",
+  "  .filter(active)",
+  "  .map(email);",
+  "",
+].join("\n"));
+for (const [tool, payload] of [
+  ["Write", { tool_name: "Write", tool_input: { file_path: hookSuppressedPipeline } }],
+  ["Edit", { tool_name: "Edit", tool_input: { file_path: hookSuppressedPipeline, old_string: ".map(email)", new_string: ".map(normalize)" } }],
+  ["MultiEdit", { tool_name: "MultiEdit", tool_input: { file_path: hookSuppressedPipeline, edits: [{ old_string: ".map(email)", new_string: ".map(normalize)" }] } }],
+]) {
+  const result = editCheck(payload);
+  if (tool === "Write") {
+    const context = contextOf(result);
+    ok("a Write keeps an unrelated later pipeline finding", context.includes("suppressed-pipeline.js:10:3 no-array-filter-map"), context);
+    ok("a Write does not report the receiver-suppressed pipeline", !context.includes("suppressed-pipeline.js:4:3 no-array-filter-map"), context);
+  } else {
+    eq(`a ${tool} suppresses the changed receiver-spanning pipeline`, [result.status, result.stdout], [0, ""]);
+  }
+}
+
 // Only the lines this tool call wrote are reported.
 const ranges = write("ranges.ts", "const ok = 1;\nconst bad: any = 2;\nconst also: any = 3;\nconst more: any = 4;\n");
 e = editCheck({ tool_name: "Edit", tool_input: { file_path: ranges, old_string: "x", new_string: "const bad: any = 2;" } });

@@ -73,6 +73,18 @@ Pointless code: `no-useless-rethrow`, `no-empty-catch`, `no-catch-fake-success`,
 
 Faked behavior and test slop: `no-arbitrary-sleep`, `no-env-secret-fallback`, `no-module-mocking`, `no-tautological-assertion`.
 
+Array performance (review only): `no-reduce-accumulator-copy`, `no-array-filter-map`.
+Repeated copies of a growing reducer accumulator can cause quadratic work;
+mutate only a fresh, locally owned accumulator. Combining array passes can
+change callback ordering, indexes, sparse-array behavior, and side effects.
+Neither rule provides an automatic rewrite or proves runtime array identity.
+The scanner recognizes dotted calls, inline reducers, and simple immutable
+aliases and array annotations. Computed method names, named reducer callbacks,
+nested reducer functions, indirect copy helpers, complex nested generic array
+annotations, and ambiguous bindings are outside its coverage. Repeated binding
+names in separate scopes can suppress findings; expressions beyond the scanner's
+bounded window are skipped.
+
 Comment slop: `no-filler-comments`, `no-narration-comments`, `no-change-note-comments`, `no-backcompat-comments`, `no-restating-comments`, `no-obvious-doc-comments`, `no-typed-jsdoc`, `no-unjustified-suppression`, `no-unjustified-ignore`, `no-emoji`.
 
 One production implementation is not evidence of waste. Before removing a
