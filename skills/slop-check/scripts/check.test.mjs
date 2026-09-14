@@ -2525,6 +2525,127 @@ expectRule(
   "items.reduce((acc, item) => { const box = { copy() { return Object.assign({}, acc); } }; const next = box.copy(); acc = {}; return next; }, {});",
   ACCUMULATOR_COPY,
 );
+expectNoRule(
+  "ignores an uninstantiated class field initializer",
+  "items.reduce((acc, item) => { class Snapshot { value = { ...acc }; } return acc; }, {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "reviews a constructed named class field initializer",
+  "items.reduce((acc, item) => { class Snapshot { value = { ...acc }; } return new Snapshot(); }, {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "preserves class field order when reset precedes a copy",
+  "items.reduce((acc, item) => { class Snapshot { first = (acc = {}); second = Object.assign({}, acc); } return new Snapshot(); }, {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "preserves class field order when copy precedes a reset",
+  "items.reduce((acc, item) => { class Snapshot { first = Object.assign({}, acc); second = (acc = {}); } return new Snapshot(); }, {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "reviews a constructed class expression field initializer",
+  "items.reduce((acc, item) => new class { value = { ...acc }; }, {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "reviews a parenthesized named class constructor",
+  "items.reduce((acc, item) => { class Snapshot { value = { ...acc }; } return new (Snapshot)(); }, {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "reviews a doubly parenthesized named class constructor",
+  "items.reduce((acc, item) => { class Snapshot { value = { ...acc }; } return new ((Snapshot))(); }, {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "reviews a parenthesized class expression constructor",
+  "items.reduce((acc, item) => new (class { value = { ...acc }; })(), {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "ignores a class field constructed after resetting the accumulator",
+  "items.reduce((acc, item) => { class Snapshot { value = { ...acc }; } acc = {}; return new Snapshot(); }, {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "ignores a replaced class constructor after a field capture",
+  "items.reduce((acc, item) => { let Snapshot = class { value = Object.assign({}, acc); }; Snapshot = item.Class; return new Snapshot(); }, {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "ignores a class field whose constructor argument resets the accumulator",
+  "items.reduce((acc, item) => new class Snapshot { value = Object.assign({}, acc); }(acc = {}), {});",
+  ACCUMULATOR_COPY,
+);
+expectNoRule(
+  "ignores a newline class field without instantiation",
+  "items.reduce((acc, item) => { class Snapshot {\n  value = Object.assign({}, acc);\n} return acc; }, {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "reviews a class field constructed before resetting the accumulator",
+  "items.reduce((acc, item) => { class Snapshot { value = { ...acc }; } const next = new Snapshot(); acc = {}; return next; }, {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "reviews a constructed class private and computed field",
+  "items.reduce((acc, item) => new class { #value = { ...acc }; [item.key] = { ...acc }; }, {});",
+  ACCUMULATOR_COPY,
+);
+for (const [label, source, rule] of [
+  ["an Array prototype defineProperty", "Object.defineProperty(Array.prototype, 'filter', { value: customFilter }); const users = []; users.filter(active).map(email);", ARRAY_PIPELINE],
+  ["a Reflect Array prototype defineProperty", "Reflect.defineProperty(Array.prototype, 'filter', { value: customFilter }); const users = []; users.filter(active).map(email);", ARRAY_PIPELINE],
+  ["an aliased Array prototype defineProperty", "const proto = Array.prototype; Object.defineProperty(proto, 'filter', { value: customFilter }); const users = []; users.filter(active).map(email);", ARRAY_PIPELINE],
+  ["a receiver defineProperty", "const users = []; Object.defineProperty(users, 'filter', { value: customFilter }); users.filter(active).map(email);", ARRAY_PIPELINE],
+  ["a dynamic Array prototype defineProperty", "Object.defineProperty(Array.prototype, key, { value: customFilter }); const users = []; users.filter(active).map(email);", ARRAY_PIPELINE],
+  ["an Array.from defineProperty", "Object.defineProperty(Array, 'from', { value: customFrom }); Array.from(values).filter(active).map(email);", ARRAY_PIPELINE],
+  ["an Object.assign defineProperty", "Object.defineProperty(Object, 'assign', { value: customAssign }); items.reduce((acc, item) => Object.assign({}, acc, item), {});", ACCUMULATOR_COPY],
+]) {
+  expectNoRule(`suppresses ${label}`, source, rule);
+}
+expectNoRule(
+  "ignores a reducer copy method replaced by defineProperty",
+  "items.reduce((acc, item) => { const box = { copy() { return Object.assign({}, acc); } }; Object.defineProperty(box, 'copy', { value: item.copy }); return box.copy(); }, {});",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "retains an array pipeline before a prototype defineProperty",
+  "const users = []; users.filter(active).map(email); Object.defineProperty(Array.prototype, 'filter', { value: customFilter });",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "retains an array pipeline through an unrelated prototype defineProperty",
+  "Object.defineProperty(Array.prototype, 'slice', { value: customSlice }); const users = []; users.filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "retains an array pipeline through a multiline unrelated defineProperty",
+  "Object.defineProperty(\n  Array.prototype,\n  'slice',\n  { value: customSlice },\n); const users = []; users.filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "retains a pipeline through a descriptor flags-only write",
+  "Object.defineProperty(Array.prototype, 'filter', { configurable: true }); const users = []; users.filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
+expectRule(
+  "retains a reducer copy before an Object.assign defineProperty",
+  "items.reduce((acc, item) => Object.assign({}, acc, item), {}); Object.defineProperty(Object, 'assign', { value: customAssign });",
+  ACCUMULATOR_COPY,
+);
+expectRule(
+  "retains a native pipeline inside a defineProperty descriptor",
+  "const users = []; Object.defineProperty(Array.prototype, 'filter', { value: makeFilter(users.filter(active).map(email)) });",
+  ARRAY_PIPELINE,
+);
+expectNoRule(
+  "suppresses a pipeline after a defineProperty descriptor write",
+  "const users = []; Object.defineProperty(Array.prototype, 'filter', { value: customFilter }); users.filter(active).map(email);",
+  ARRAY_PIPELINE,
+);
 expectRule(
   "reviews an immediately invoked getter copy",
   "items.reduce((acc, item) => ({ get copy() { return Object.assign({}, acc, item); } }).copy, {});",

@@ -1941,6 +1941,23 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
     const loopTarget = /\bfor\s*(?:await\s*)?\(\s*$/u.test(before) && /^\s+(?:in|of)\b/u.test(after);
     if (propertyWrite.test(after) || /(?:\+\+|--)$/u.test(before) || loopTarget) recordWrite(`${match[1].replace(/\s/gu, "")}.${method}`, match.index);
   }
+  for (const match of masked.matchAll(/(?<![\w$.#])(Object|Reflect)\s*\.\s*defineProperty\s*\(/gu)) {
+    if (bindings.has(match[1])) continue;
+    const open = match.index + match[0].length - 1;
+    const end = balancedEnd(masked, open);
+    if (end === -1) continue;
+    const args = arrayArguments(masked.slice(open + 1, end - 1), isTypeScript);
+    if (args.length !== 3 || !/^[A-Za-z_$][\w$]*(?:\s*\.\s*prototype)?$/u.test(args[0])) continue;
+    const descriptor = args[2].trim();
+    if (descriptor[0] === "{" && balancedEnd(descriptor, 0) === descriptor.length
+      && arrayArguments(descriptor.slice(1, -1), isTypeScript).every((member) => /^(?:configurable|enumerable|writable)\s*:/u.test(member))) continue;
+    let targetStart = open + 1;
+    while (/\s/u.test(masked[targetStart] ?? "")) targetStart += 1;
+    let keyStart = arrayExpressionEnd(masked, targetStart, isTypeScript) + 1;
+    while (/\s/u.test(masked[keyStart] ?? "")) keyStart += 1;
+    const keyEnd = arrayExpressionEnd(masked, keyStart, isTypeScript);
+    recordWrite(`${args[0].replace(/\s/gu, "")}.${propertyKey(keyStart - 1, keyEnd + 1)}`, end);
+  }
   // A hoisted function may execute before the textual position of its writes.
   // Record those call sites too, including calls through another named function.
   const calls = new Map();
@@ -2001,7 +2018,7 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
   return { bindings, writes, typeNames, writePrecedes };
 }
 
-function maskReducerMethods(body, accumulator) {
+function maskReducerMethods(body, accumulator, source) {
   const masked = body.split("");
   const executions = [];
   const methods = [];
@@ -2073,7 +2090,7 @@ function maskReducerMethods(body, accumulator) {
         const ownerPrefix = body.slice(0, ownerStart);
         const owner = /(?:\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*|\bclass\s+([A-Za-z_$][\w$]*)\s*)$/u.exec(ownerPrefix);
         if (owner && (!owner[2] || method[1] === "static")) {
-          writes ??= arrayBindingEvidence(body, true).writes;
+          writes ??= arrayBindingEvidence(body, true, source).writes;
           const ownerName = owner[1] ?? owner[2];
           const reference = new RegExp(`(?<![\\w$.#])${escapeForRegExp(owner[1] ?? owner[2])}(?=\\s*(?:\\?\\.|\\.))`, "gu");
           for (const use of body.slice(ownerEnd).matchAll(reference)) {
@@ -2092,6 +2109,76 @@ function maskReducerMethods(body, accumulator) {
       if (masked[at] !== "\n" && masked[at] !== "\r") masked[at] = " ";
     }
   }
+  for (const match of body.matchAll(/\bclass(?:\s+([A-Za-z_$][\w$]*))?(?:\s+extends\s+[\w$.]+)?\s*\{/gu)) {
+    const open = match.index + match[0].length - 1;
+    const close = balancedEnd(body, open);
+    if (close === -1) continue;
+    const before = body.slice(0, match.index);
+    const binding = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*$/u.exec(before);
+    const name = binding?.[1] ?? match[1];
+    let groupStart = match.index;
+    let groupEnd = close;
+    while (true) {
+      let start = groupStart - 1;
+      while (/\s/u.test(body[start] ?? "")) start -= 1;
+      let end = groupEnd;
+      while (/\s/u.test(body[end] ?? "")) end += 1;
+      if (body[start] !== "(" || body[end] !== ")" || balancedEnd(body, start) !== end + 1) break;
+      groupStart = start;
+      groupEnd = end + 1;
+    }
+    let invocation = /\bnew\s*$/u.test(body.slice(0, groupStart)) ? groupEnd : Infinity;
+    if (name) {
+      writes ??= arrayBindingEvidence(body, true, source).writes;
+      for (const use of body.slice(close).matchAll(/\bnew\b\s*/gu)) {
+        const at = close + use.index;
+        if (writes.get(name)?.some((write) => match.index <= write && write < at)) continue;
+        if (methods.some((method) => method.start <= at && at < method.end
+          && !executions.some((execution) => execution.start === method.start))) continue;
+        const start = at + use[0].length;
+        const identifier = /^[A-Za-z_$][\w$]*/u.exec(body.slice(start));
+        let end = body[start] === "(" ? balancedEnd(body, start) : identifier ? start + identifier[0].length : -1;
+        if (end === -1 || unwrapArraySyntax(body.slice(start, end), true) !== name) continue;
+        while (/\s/u.test(body[end] ?? "")) end += 1;
+        if (body[end] === "." || body[end] === "[") continue;
+        const called = body[end] === "(" ? balancedEnd(body, end) : end;
+        if (called !== -1) invocation = Math.min(invocation, called);
+      }
+    }
+    if (invocation === groupEnd) {
+      const args = /^\s*\(/u.exec(body.slice(groupEnd));
+      if (args) invocation = balancedEnd(body, groupEnd + args[0].length - 1);
+    }
+    for (let at = open + 1; at < close - 1; at += 1) {
+      if (/\s|;/u.test(body[at])) continue;
+      const modifiers = /^(?:(?:public|private|protected|readonly|declare|abstract|override|static)\s+)*/u.exec(body.slice(at))[0];
+      const key = at + modifiers.length;
+      const name = /^(?:#?[A-Za-z_$][\w$]*|'[^']*'|"[^"]*")/u.exec(body.slice(key));
+      let end = name ? key + name[0].length : body[key] === "[" ? balancedEnd(body, key) : -1;
+      if (end !== -1) {
+        while (/\s|[?!]/u.test(body[end] ?? "")) end += 1;
+        if (body[end] === ":") end = arrayTypeEnd(body, end + 1);
+        if (end !== -1 && body[end] === "=" && body[end + 1] !== ">") {
+          let start = end + 1;
+          while (/\s/u.test(body[start] ?? "")) start += 1;
+          end = Math.min(close - 1, arrayExpressionEnd(body, start, true));
+          if (!/\bstatic\b/u.test(modifiers)) {
+            if (invocation !== Infinity && invocation !== -1) executions.push({ start, end, invocation, orderStart: open, orderEnd: close });
+            else for (let cursor = start; cursor < end; cursor += 1) {
+              if (masked[cursor] !== "\n" && masked[cursor] !== "\r") masked[cursor] = " ";
+            }
+          }
+          at = end - 1;
+          continue;
+        }
+      }
+      if ("([{".includes(body[at])) {
+        const end = balancedEnd(body, at);
+        if (end !== -1) at = end - 1;
+      }
+    }
+  }
+  executions.sort((left, right) => left.start - right.start);
   return { body: masked.join(""), executions };
 }
 
@@ -2264,13 +2351,17 @@ function* iterateArrayFindings(ctx) {
     const parameter = /^([A-Za-z_$][\w$]*)\s*(?::|=|$)/u.exec(runtimeParameters[0] ?? "");
     if (!parameter) continue;
     const accumulator = parameter[1];
-    const { body, executions } = maskReducerMethods(callback.slice(bodyStart), accumulator);
+    const bodyOffset = masked.indexOf(callback, open + 1) + bodyStart;
+    const rawBody = ctx.source.slice(bodyOffset, bodyOffset + callback.length - bodyStart);
+    const { body, executions } = maskReducerMethods(callback.slice(bodyStart), accumulator, rawBody);
     const executedAt = (position) => {
       // Project innermost calls first, then their enclosing invocations.
       for (let depth = 0; depth < executions.length; depth += 1) {
         const method = executions.findLast((execution) => execution.start <= position && position < execution.end);
         if (!method) break;
-        position = method.invocation + (position - method.start) / (method.end - method.start);
+        const start = method.orderStart ?? method.start;
+        const end = method.orderEnd ?? method.end;
+        position = method.invocation + (position - start) / (end - start);
       }
       return position;
     };
@@ -2288,7 +2379,6 @@ function* iterateArrayFindings(ctx) {
       visited.add(name);
       return isAccumulator(binding.value, binding.start, visited);
     };
-    const bodyOffset = masked.indexOf(callback, open + 1) + bodyStart;
     const globalExecutedAt = (position) => bodyOffset + executedAt(position - bodyOffset);
     const containers = [];
     const inside = [];
