@@ -65,6 +65,15 @@ Validated on Node.js v24.19.0 on 2026-09-12:
 - Skill metadata validation and whitespace checks passed. No dependency or
   runtime-version requirement changed; Node 18 execution is left to CI.
 
+## Local optional verification integration
+
+The experimental `lazy-verify` bridge, skill, command, protocol fixtures and
+documentation are local work based on `docs/specs/lazy-verify-integration.md`.
+They are not an upstream port or synchronization and do not change the reviewed
+upstream revisions above. Real-engine qualification, preservation and reviewed
+historical-fix pilots, and independent replay remain outstanding; protocol
+fixtures do not qualify a release.
+
 ## Attribution
 
 Ponytail: Copyright (c) 2026 DietrichGebert.

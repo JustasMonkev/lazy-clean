@@ -33,9 +33,10 @@ Level sticks until changed or session end.
 | **lazy-help** | `/lazy-help` | This card. |
 | **lazy-clean** | `/lazy-clean` | Both passes on one change: the ladder while writing, the checker after. |
 | **slop-check** | `/slop-check` | Delete AI slop in TS/JS: bundled checker plus a manual checklist. |
+| **lazy-verify** | `/lazy-verify` | Experimental opt-in fix/preserve evidence; needs a reviewed local engine and policy. Independent of lazy mode. |
 
 Codex uses `@lazy`, `@lazy-review`, and `@lazy-help`; Claude Code uses the
-slash-command forms above. OpenCode ships the six `/lazy*` commands as slash
+slash-command forms above. OpenCode ships the seven `/lazy*` commands as slash
 commands; `lazy-clean` and `slop-check` are skills, invoked by name or
 description.
 
