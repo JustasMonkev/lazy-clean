@@ -1,0 +1,37 @@
+{
+  "evidence": "Observed command/tool inputs; core guidance was supplied in all on prompts. Reference counts are not proof of understanding or full adherence.",
+  "models": [
+    {
+      "model": "luna",
+      "skillOnRuns": 6,
+      "checkerInvoked": 6,
+      "referenceFilesOpened": {
+        "simplification-checks.md": 6,
+        "risk-checks.md": 6,
+        "design-checks.md": 5
+      }
+    },
+    {
+      "model": "sol",
+      "skillOnRuns": 6,
+      "checkerInvoked": 6,
+      "referenceFilesOpened": {
+        "simplification-checks.md": 6,
+        "risk-checks.md": 6,
+        "design-checks.md": 6
+      }
+    },
+    {
+      "model": "glm",
+      "skillOnRuns": 6,
+      "checkerInvoked": 6,
+      "referenceFilesOpened": {
+        "simplification-checks.md": 0,
+        "risk-checks.md": 0,
+        "design-checks.md": 0
+      }
+    }
+  ],
+  "controlRunsWithObservedGuidanceAccess": [],
+  "liveCompactionRetentionTested": false
+}

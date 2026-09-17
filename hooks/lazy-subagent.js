@@ -11,71 +11,19 @@
 // "^general$" is exact. Unset means inject into every subagent, as before.
 
 const { getSubagentInstructions } = require('./lazy-instructions');
-const { readMode, writeHookOutput } = require('./lazy-runtime');
+const { getSessionState, writeHookOutput } = require('./lazy-runtime');
+const { readHookInput } = require('./lazy-input');
 
-const mode = readMode();
-
-// Absent flag or off → lazy isn't active; inject nothing.
-if (!mode || mode === 'off') {
-  process.exit(0);
-}
-
-function inject() {
+readHookInput((data) => {
+  const mode = getSessionState(data && data.session_id).readMode();
+  if (!mode || mode === 'off') return;
+  let matcher = null;
+  try {
+    if (process.env.LAZY_SUBAGENT_MATCHER) matcher = new RegExp(process.env.LAZY_SUBAGENT_MATCHER, 'i');
+  } catch (e) { /* an invalid matcher fails open */ }
+  const agentType = data ? String(data.agent_type || '').trim() : '';
+  if (matcher && agentType && !matcher.test(agentType)) return;
   try {
     writeHookOutput('SubagentStart', mode, getSubagentInstructions(mode));
-  } catch (e) {
-    // Silent fail — a stdout error at hook exit must not surface as a hook failure.
-  }
-}
-
-// A bad regex must never crash the hook; treat it as "no matcher" and inject.
-let matcherRe = null;
-try {
-  if (process.env.LAZY_SUBAGENT_MATCHER) {
-    matcherRe = new RegExp(process.env.LAZY_SUBAGENT_MATCHER, 'i');
-  }
-} catch (e) {
-  matcherRe = null;
-}
-
-// No matcher → keep the original synchronous, stdin-independent path. On Windows
-// the PowerShell `if {}` wrapper can swallow the piped JSON so stdin 'end' never
-// fires (#443); the default path must not wait on stdin or it would stall every
-// subagent spawn.
-if (!matcherRe) {
-  inject();
-} else {
-
-// Matcher set → read agent_type from stdin and skip only on a definite
-// mismatch. Missing/unparseable agent_type, a stdin error, or the timeout all
-// fail open (inject), so scoping never silently drops the persona.
-let input = '';
-let done = false;
-
-function finish() {
-  if (done) return;
-  done = true;
-
-  let agentType = '';
-  try {
-    // Strip UTF-8 BOM some shells prepend when piping (breaks JSON.parse)
-    agentType = String(JSON.parse(input.replace(/^\uFEFF/, '')).agent_type || '').trim();
-  } catch (e) {
-    // Unparseable payload — fall through and inject to be safe.
-  }
-  if (agentType && !matcherRe.test(agentType)) {
-    process.exit(0);
-  }
-  inject();
-}
-
-  process.stdin.on('data', chunk => {
-    input += chunk;
-    // Bound stdin: no real hook payload approaches 32MB; a runaway pipe would OOM the string.
-    if (input.length > 32e6) { finish(); process.stdin.destroy(); }
-  });
-  process.stdin.on('end', finish);
-  // Never block the session (#443): recover on stdin error or a short fallback.
-  process.stdin.on('error', () => { finish(); process.stdin.destroy(); });
-  setTimeout(() => { finish(); process.stdin.destroy(); }, 1000).unref();
-}
+  } catch (e) { /* a closed output pipe must not break the host */ }
+});

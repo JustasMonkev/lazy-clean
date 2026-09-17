@@ -1,0 +1,56 @@
+{
+  "status": "complete",
+  "protocolSha256": "7407b484485f812193c6e47355f454c656097f9ff661b8fb339187f49ee04dfa",
+  "node": "v26.5.0",
+  "codex": "0.154.0",
+  "opencode": "1.18.30",
+  "frozenEvaluation": {
+    "lazy-paired-eval-design.md": "93d6a54386f14d7bf6f80c97f95fd17398b7c9b2ae356c52a1922a22e7009a66",
+    "lazy-paired-hidden-url.cjs": "0e6990718144a53d25f625adf097dd9cddc61c43a79b4fd30e1655f08870d124",
+    "lazy-paired-hidden-cli.cjs": "88c78839b613340e82a873b617891d9f6bb009ff763cd1e4af98557c5fa6dcf7"
+  },
+  "runsPlanned": 36,
+  "rawRoot": "/private/tmp/lazy-paired-20260910",
+  "noCommitsOrPushes": true,
+  "completedAt": "2026-09-10T17:48:44.888958+00:00",
+  "typescript": "6.0.3",
+  "argparse": "2.0.1",
+  "runsCompleted": 36,
+  "freshCompilePass": 36,
+  "hiddenBehaviorPass": 36,
+  "savedSuitesGreen": 36,
+  "allStrictGatesPass": 35,
+  "skillOnAllGatesPass": 18,
+  "skillOffAllGatesPass": 17,
+  "gradingVersion": 4,
+  "graderSha256": "570f56d53ab394858129d41bbd727d5604dc05e024e8008ea7ed94618754d20f",
+  "judges": {
+    "primary": "Two fresh gpt-6-astra xhigh contexts, full18 URL and full18 CLI",
+    "calibration": "Third fresh gpt-6-astra xhigh context, all36 source/test/primary judgments audited",
+    "calibrationChanges": {
+      "artifact-029": "100 to99, tests minus1, no gate change"
+    },
+    "identitiesDisclosedToJudges": false
+  },
+  "finalBlindScoresSha256": "c82fa3d0368d9c0263fea2bcf489025a2dd601b19bc2a3d196c7c08816d2a913",
+  "checks": {
+    "installedSlopSinceHEAD": {
+      "exit": 0,
+      "files": 14
+    },
+    "gitDiffCheck": {
+      "exit": 0
+    },
+    "originalAppiumStatus": "?? .zvec-grep/\n",
+    "previouslyReviewedImplementationHashesChanged": false,
+    "suppliedSkillResourceHashesChanged": false
+  },
+  "limits": [
+    "Two guided bugs with three repetitions percell; no broad causal effectiveness or modelranking claim.",
+    "No full archivedAppium build/typecheck.",
+    "No livehost compaction/skillretention test.",
+    "Time descriptive only; hostconcurrency/cache/APIcontention uncontrolled.",
+    "Commandinput audit does not prove absence of unobservable filesystem reads.",
+    "Metadata labels removed, but code style and check traces can suggest treatment."
+  ]
+}

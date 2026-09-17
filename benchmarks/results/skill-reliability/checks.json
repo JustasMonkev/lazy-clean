@@ -1,0 +1,75 @@
+{
+  "baseline": "ec008bca92241cacb29dee3e04d7d2e95340de03",
+  "npmTest": {
+    "exit": 0,
+    "hookChecks": 666,
+    "guidanceChecks": 423,
+    "log": "/tmp/lazy-full-final-7.log"
+  },
+  "packageSlop": {
+    "exit": 0,
+    "filesChecked": 23
+  },
+  "changedSlop": {
+    "exit": 0,
+    "filesChecked": 12
+  },
+  "diffCheckExit": 0,
+  "lifecycleMutation": {
+    "mutatedExit": 1,
+    "restoredExit": 0,
+    "restoredPasses": 8
+  },
+  "astraRuntimeVerdict": {
+    "verdict": "CLEAN",
+    "score": 9,
+    "scope": "final compatibility-preserving Unicode correction"
+  },
+  "notExecuted": [
+    "PowerShell runtime",
+    "actual host compaction",
+    "skill-creator Python validation (missing PyYAML; offline cache permission failure)"
+  ],
+  "codexReview": {
+    "exit": 0,
+    "verdict": "No actionable regressions",
+    "scope": "final compatibility-preserving source",
+    "log": "/tmp/lazy-codex-compat-final-review.log",
+    "optionalDelegatedReview": "failed network access; not counted as passed"
+  },
+  "glmReview": {
+    "model": "zai-coding-plan/glm-5.3-flash",
+    "variant": "max",
+    "verdict": "NO FIX NEEDED",
+    "finalContinuationExit": 0,
+    "sourceChanges": false,
+    "retryExit": 124,
+    "astraVerdict": "NOT CLEAN (missed Unicode collision and factual errors)"
+  },
+  "unicodeRegression": {
+    "redExit": 1,
+    "redPasses": 663,
+    "redFailures": 1,
+    "greenExit": 0,
+    "greenPasses": 664
+  },
+  "unicodeCompatibilityRegression": {
+    "redExit": 1,
+    "redPasses": 642,
+    "redFailures": 24,
+    "greenExit": 0,
+    "greenPasses": 666
+  },
+  "solFinalVerdict": {
+    "verdict": "CLEAN",
+    "score": 9,
+    "scope": "final compatibility-preserving source",
+    "independentProbes": [
+      "Process-boundary compaction retains A ultra and B off",
+      "Statusline matches session",
+      "Legacy Qoder hash compatibility and malformed surrogate namespace",
+      "Bounded hook input cleanup",
+      "Installed OpenCode sessionID hook types"
+    ]
+  }
+}

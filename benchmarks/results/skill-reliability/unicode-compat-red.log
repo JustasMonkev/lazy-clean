@@ -1,0 +1,5 @@
+FAIL Qoder reads a legacy UTF-8 state file for off — 0: LAZY MODE ACTIVE — level: full
+FAIL Qoder reads a legacy UTF-8 state file for ultra — 0: LAZY MODE ACTIVE — level: full
+ok   lone-surrogate session IDs retain independent modes
+
+642 passed, 24 failed

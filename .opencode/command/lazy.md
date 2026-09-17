@@ -9,5 +9,15 @@ For TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go, detect only the la
 
 Before finishing TS/JS changes, run `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD` from the repo root, even if edit hooks ran; it includes new files and shell edits. Use the task base ref for committed changes. Triage only your scope. Report failed scans as failed, not clean.
 
+At changed boundaries: group behavior by reason to change; keep policy independent
+of external details through ordinary parameters; give callers only capabilities
+they need. Extend existing contracts for requested variations. Interchangeable
+implementations must preserve inputs, results, errors, and lifecycle; exercise
+the same contract against each. Do not add interfaces just to satisfy SOLID.
+
 For boundary changes, read [design checks](<skills-dir>/lazy/references/design-checks.md).
 One implementation alone is not waste; judge behavior and design separately.
+
+Carry unfinished checks through handoffs and compaction. Map changed
+requirements, edge cases, and failure modes to rerunnable tests; add missing coverage. Inline probes
+alone are not coverage. Trivial edits need no new tests.

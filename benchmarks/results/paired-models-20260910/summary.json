@@ -1,0 +1,296 @@
+[
+  {
+    "model": "luna",
+    "task": "url",
+    "off": {
+      "passCount": 3,
+      "scores": [
+        9.6,
+        9.5,
+        9.5
+      ],
+      "medianEligible": 9.5,
+      "medianSeconds": 123.77,
+      "medianProductionLines": 17
+    },
+    "on": {
+      "passCount": 3,
+      "scores": [
+        9.7,
+        9.9,
+        9.8
+      ],
+      "medianEligible": 9.8,
+      "medianSeconds": 174.011,
+      "medianProductionLines": 17
+    },
+    "pairs": [
+      {
+        "repetition": 1,
+        "off": "artifact-018",
+        "on": "artifact-006",
+        "bothEligible": true,
+        "deltaOnMinusOff": 0.1
+      },
+      {
+        "repetition": 2,
+        "off": "artifact-008",
+        "on": "artifact-011",
+        "bothEligible": true,
+        "deltaOnMinusOff": 0.4
+      },
+      {
+        "repetition": 3,
+        "off": "artifact-010",
+        "on": "artifact-020",
+        "bothEligible": true,
+        "deltaOnMinusOff": 0.3
+      }
+    ]
+  },
+  {
+    "model": "luna",
+    "task": "cli",
+    "off": {
+      "passCount": 3,
+      "scores": [
+        9.6,
+        9.75,
+        9.75
+      ],
+      "medianEligible": 9.75,
+      "medianSeconds": 163.601,
+      "medianProductionLines": 90
+    },
+    "on": {
+      "passCount": 3,
+      "scores": [
+        9.65,
+        9.6,
+        9.7
+      ],
+      "medianEligible": 9.65,
+      "medianSeconds": 330.781,
+      "medianProductionLines": 92
+    },
+    "pairs": [
+      {
+        "repetition": 1,
+        "off": "artifact-022",
+        "on": "artifact-003",
+        "bothEligible": true,
+        "deltaOnMinusOff": 0.05
+      },
+      {
+        "repetition": 2,
+        "off": "artifact-021",
+        "on": "artifact-031",
+        "bothEligible": true,
+        "deltaOnMinusOff": -0.15
+      },
+      {
+        "repetition": 3,
+        "off": "artifact-002",
+        "on": "artifact-032",
+        "bothEligible": true,
+        "deltaOnMinusOff": -0.05
+      }
+    ]
+  },
+  {
+    "model": "sol",
+    "task": "url",
+    "off": {
+      "passCount": 3,
+      "scores": [
+        10.0,
+        10.0,
+        9.8
+      ],
+      "medianEligible": 10.0,
+      "medianSeconds": 122.706,
+      "medianProductionLines": 17
+    },
+    "on": {
+      "passCount": 3,
+      "scores": [
+        10.0,
+        9.9,
+        10.0
+      ],
+      "medianEligible": 10.0,
+      "medianSeconds": 199.993,
+      "medianProductionLines": 17
+    },
+    "pairs": [
+      {
+        "repetition": 1,
+        "off": "artifact-024",
+        "on": "artifact-009",
+        "bothEligible": true,
+        "deltaOnMinusOff": 0.0
+      },
+      {
+        "repetition": 2,
+        "off": "artifact-004",
+        "on": "artifact-029",
+        "bothEligible": true,
+        "deltaOnMinusOff": -0.1
+      },
+      {
+        "repetition": 3,
+        "off": "artifact-033",
+        "on": "artifact-012",
+        "bothEligible": true,
+        "deltaOnMinusOff": 0.2
+      }
+    ]
+  },
+  {
+    "model": "sol",
+    "task": "cli",
+    "off": {
+      "passCount": 3,
+      "scores": [
+        9.8,
+        9.85,
+        9.75
+      ],
+      "medianEligible": 9.8,
+      "medianSeconds": 230.845,
+      "medianProductionLines": 94
+    },
+    "on": {
+      "passCount": 3,
+      "scores": [
+        9.85,
+        9.6,
+        9.8
+      ],
+      "medianEligible": 9.8,
+      "medianSeconds": 482.839,
+      "medianProductionLines": 90
+    },
+    "pairs": [
+      {
+        "repetition": 1,
+        "off": "artifact-005",
+        "on": "artifact-001",
+        "bothEligible": true,
+        "deltaOnMinusOff": 0.05
+      },
+      {
+        "repetition": 2,
+        "off": "artifact-015",
+        "on": "artifact-034",
+        "bothEligible": true,
+        "deltaOnMinusOff": -0.25
+      },
+      {
+        "repetition": 3,
+        "off": "artifact-027",
+        "on": "artifact-036",
+        "bothEligible": true,
+        "deltaOnMinusOff": 0.05
+      }
+    ]
+  },
+  {
+    "model": "glm",
+    "task": "url",
+    "off": {
+      "passCount": 3,
+      "scores": [
+        9.5,
+        9.9,
+        9.9
+      ],
+      "medianEligible": 9.9,
+      "medianSeconds": 79.682,
+      "medianProductionLines": 20
+    },
+    "on": {
+      "passCount": 3,
+      "scores": [
+        9.8,
+        9.4,
+        9.7
+      ],
+      "medianEligible": 9.7,
+      "medianSeconds": 86.533,
+      "medianProductionLines": 17
+    },
+    "pairs": [
+      {
+        "repetition": 1,
+        "off": "artifact-013",
+        "on": "artifact-028",
+        "bothEligible": true,
+        "deltaOnMinusOff": 0.3
+      },
+      {
+        "repetition": 2,
+        "off": "artifact-030",
+        "on": "artifact-014",
+        "bothEligible": true,
+        "deltaOnMinusOff": -0.5
+      },
+      {
+        "repetition": 3,
+        "off": "artifact-035",
+        "on": "artifact-007",
+        "bothEligible": true,
+        "deltaOnMinusOff": -0.2
+      }
+    ]
+  },
+  {
+    "model": "glm",
+    "task": "cli",
+    "off": {
+      "passCount": 2,
+      "scores": [
+        9.75,
+        9.45,
+        8.85
+      ],
+      "medianEligible": 9.6,
+      "medianSeconds": 222.619,
+      "medianProductionLines": 96
+    },
+    "on": {
+      "passCount": 3,
+      "scores": [
+        9.55,
+        9.5,
+        9.3
+      ],
+      "medianEligible": 9.5,
+      "medianSeconds": 113.518,
+      "medianProductionLines": 95
+    },
+    "pairs": [
+      {
+        "repetition": 1,
+        "off": "artifact-017",
+        "on": "artifact-016",
+        "bothEligible": true,
+        "deltaOnMinusOff": -0.2
+      },
+      {
+        "repetition": 2,
+        "off": "artifact-019",
+        "on": "artifact-023",
+        "bothEligible": true,
+        "deltaOnMinusOff": 0.05
+      },
+      {
+        "repetition": 3,
+        "off": "artifact-026",
+        "on": "artifact-025",
+        "bothEligible": false,
+        "deltaOnMinusOff": null
+      }
+    ]
+  }
+]

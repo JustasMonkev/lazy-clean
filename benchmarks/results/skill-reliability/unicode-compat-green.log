@@ -1,0 +1,5 @@
+ok   Qoder reads a legacy UTF-8 state file for off
+ok   Qoder reads a legacy UTF-8 state file for ultra
+ok   lone-surrogate session IDs retain independent modes
+
+666 passed, 0 failed

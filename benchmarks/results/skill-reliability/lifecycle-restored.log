@@ -1,0 +1,8 @@
+PASS ultra survives resume
+PASS ultra survives compact
+PASS lite survives resume
+PASS lite survives compact
+PASS off survives resume
+PASS off survives compact
+PASS B startup cannot reset A
+PASS A subagent inherits A not B
