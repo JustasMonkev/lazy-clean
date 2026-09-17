@@ -709,6 +709,80 @@ check("--json stays a bare array when findings are suppressed", () => {
   assert.deepEqual(JSON.parse(result.stdout), []);
 });
 
+check("--explain prints one rule's explanation and exits 0", () => {
+  const result = run(["--explain=no-json-clone"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /no-json-clone/u);
+  assert.match(result.stdout, /structuredClone/u, "names the replacement");
+  assert.match(result.stdout, /THROWS on functions/u, "names where the replacement diverges");
+  assert.doesNotMatch(result.stdout, /clean|finding/u, "no scan runs");
+});
+
+check("--explain reports a mechanical tier for a mechanical rule", () => {
+  const result = run(["--explain=no-double-negation-condition"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /fix \(mechanical/u);
+});
+
+check("--explain names a misspelled rule and exits 2", () => {
+  const result = run(["--explain=no-json-clon"]);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /not a rule id/u);
+  assert.match(result.stderr, /no-json-clone/u, "the id list suggests the intended rule");
+});
+
+check("--explain ignores paths and runs no scan", () => {
+  const result = run(["--explain=no-any", "slop.ts"]);
+  assert.equal(result.status, 0);
+  assert.doesNotMatch(result.stdout, /slop\.ts/u);
+  assert.doesNotMatch(result.stdout, /1 finding/u);
+});
+
+check("--explain with no value is an unknown option", () => {
+  const result = run(["--explain"]);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /unknown option/u);
+});
+
+check("--explain indents every example line", () => {
+  const result = run(["--explain=no-json-clone"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /\n    const state = .*\n    const copy =/u);
+});
+
+check("--explain rejects empty and inherited object keys", () => {
+  for (const id of ["", "constructor", "__proto__", "toString"]) {
+    const result = run([`--explain=${id}`]);
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /not a rule id/u);
+  }
+});
+
+check("--explain does not hide an unknown option", () => {
+  const result = run(["--explain=no-any", "--jsoon"]);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /unknown option/u);
+});
+
+check("-- keeps explain-shaped arguments as paths", () => {
+  const result = run(["--", "--explain=no-any"]);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /cannot read --explain=no-any/u);
+});
+
+check("--explain bypasses scan options and missing paths", () => {
+  const result = run(["--explain=no-any", "--since=missing-ref", "--summary", "--json", "missing.ts"]);
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, "");
+  assert.match(result.stdout, /Why it fires:/u);
+});
+
+check("usage lists --explain", () => {
+  const result = run(["--help"]);
+  assert.match(result.stdout, /--explain=<rule>/u);
+});
+
 if (failures > 0) {
   console.error(`\n${failures} test(s) failed`);
   process.exit(1);

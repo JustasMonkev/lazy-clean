@@ -1822,6 +1822,255 @@ const MECHANICAL_RULES = new Set([
   "no-obvious-doc-comments",
 ]);
 
+const RULE_EXPLANATIONS = {
+  "no-any": {
+    why: "`any` silently disables type checking on everything it touches: assignments to it, reads from it, and every value downstream of both. AI code reaches for it where `unknown` plus a parse would be honest.",
+    slop: "function parse(input: any): string { return input; }",
+    correct: "function parse(input: unknown): string {\n  if (typeof input !== \"string\") throw new TypeError(\"Expected a string\");\n  return input;\n}",
+    exceptions: "Vendor typings or deliberate generic constraints can require any. Keep a justified use local and validate external values rather than blindly changing the type.",
+  },
+  "no-chained-type-assertions": {
+    why: "`value as unknown as User` fabricates the evidence a type check would have provided: the middle `unknown` is there only to make the compiler stop objecting. What it really asserts is \"trust me\".",
+    slop: "const name = response as unknown as string;",
+    correct: "if (typeof response !== \"string\") throw new TypeError(\"Expected a string\");\nconst name = response;",
+    exceptions: "None mechanical. Sometimes a narrow `as` after a real runtime check is the honest form — that is `require-safety-comment-for-type-assertion`'s job, and it applies here too.",
+  },
+  "no-object-type": {
+    why: "`object` accepts anything non-primitive, so a parameter typed `object` is barely typed at all: callers can pass a Date, a Map, or a regex and the compiler stays quiet.",
+    slop: "function keys(target: object) { return Object.keys(target); }",
+    correct: "function keys(target: Record<string, unknown>) { return Object.keys(target); }",
+    exceptions: "Rarely one: a deliberately opaque API boundary (e.g. a brand-typed token) uses `object` to forbid primitives. That is a design choice worth a comment, not a default.",
+  },
+  "no-unsafe-dictionary-type": {
+    why: "`Record<string, any>` erases evidence for keys AND values: typos in keys compile, and every read is `any`.",
+    slop: "const headers: Record<string, any> = {};",
+    correct: "const headers: Record<string, string> = {};  // or a real shape",
+    exceptions: "Structured-log context or a bag of truly arbitrary key-value pairs has no fixed key set; `Record<string, unknown>` keeps the value evidence and is the accepted form.",
+  },
+  "no-known-value-widening": {
+    why: "`const port: number = 3000` throws away the literal. Inference keeps `3000`, which unions and `as const` objects can still narrow on; the annotation makes it just \"some number\".",
+    slop: "const timeout: number = 30_000;",
+    correct: "const timeout = 30_000;",
+    exceptions: "A SCREAMING_SNAKE constant annotated on purpose: the widened type is the published contract and the literal type would be the wrong one. The rule already skips those lines.",
+  },
+  "no-reflect": {
+    why: "`Reflect.get`/`Reflect.apply` are untyped escape hatches; direct access keeps property names checked and receiver semantics visible.",
+    slop: "const value = Reflect.get(target, \"name\");",
+    correct: "const value = target.name;",
+    exceptions: "Inside a Proxy trap, forwarding with `Reflect.get(target, key, receiver)` is the documented correct implementation — the rule already exempts those lines.",
+  },
+  "no-module-mocking": {
+    why: "Module mocks can hide hard-coded dependencies. Prefer exercising the real implementation or passing a dependency through an existing seam.",
+    slop: "vi.mock(\"./db\");",
+    correct: "const loadUser = (db, id) => db.findUser(id);\nconst user = loadUser({ findUser: id => ({ id }) }, 7);",
+    exceptions: "Legacy seams you cannot refactor yet. Silence the rule per line with a reason, and prefer an injected fake the moment a seam can be added.",
+  },
+  "no-conditional-empty-object-spread": {
+    why: "`...(cond ? {} : { a })` hides whether a field is present. The plain conditional spread says the same thing in the shape readers already know.",
+    slop: "const patch = { ...(verbose ? {} : { quiet: true }) };",
+    correct: "const patch = { ...(!verbose && { quiet: true }) };",
+    exceptions: "Keep the ternary if it makes field omission clearer in context. Preserve the condition's polarity and explicit false, zero, or empty field values.",
+  },
+  "no-json-clone": {
+    why: "A JSON round trip is lossy: it omits undefined object properties, transforms dates, invokes toJSON, and rejects cycles. Choose a copy operation that matches the data contract.",
+    slop: "const state = { count: 1 };\nconst copy = JSON.parse(JSON.stringify(state));",
+    correct: "const state = { count: 1 };\nconst copy = structuredClone(state);",
+    exceptions: "Keep intentional JSON normalization. structuredClone keeps Dates, does not invoke toJSON, and THROWS on functions; it is not a drop-in replacement. Check runtime support and the actual values first.",
+  },
+  "no-redundant-fallback": {
+    why: "`value ?? undefined` changes only null to undefined. Remove it when null is impossible, not when that normalization is part of the contract.",
+    slop: "const name = user.name ?? undefined;",
+    correct: "const name = user.name;",
+    exceptions: "The replacement assumes user.name cannot be null. JSON.stringify preserves null object properties but omits undefined ones, so intentional normalization must stay.",
+  },
+  "no-boolean-literal-compare": {
+    why: "`if (flag === true)` restates a boolean someone already declared. The comparison reads like the flag might be truthy-but-not-true, which is a type bug the comparison then hides.",
+    slop: "if (isEnabled === true) { render(); }",
+    correct: "if (isEnabled) { render(); }",
+    exceptions: "`payload.isAxiosError === true` on a property typed `boolean | undefined` (parsed JSON, axios) IS narrowing, not restating — which is why the rule skips property and call operands.",
+  },
+  "no-double-negation-condition": {
+    why: "`if (!!value)` coerces to boolean where the condition already coerces. The double negation suggests the author thought coercion needed help.",
+    slop: "if (!!items.length) { render(); }",
+    correct: "if (items.length) { render(); }",
+    exceptions: "None. (Outside a condition, `!!x` for an explicit boolean COERCION is fine and this rule does not fire.)",
+  },
+  "no-boolean-literal-ternary": {
+    why: "`cond ? true : false` restates the condition; the ternary adds nothing the condition does not already say.",
+    slop: "const ready = items.length > 0 ? true : false;",
+    correct: "const ready = items.length > 0;  // Boolean(items.length) if a real boolean is needed",
+    exceptions: "A conditional TYPE (`T extends string ? true : false`) is the only way to write that predicate; the rule skips lines containing `extends`.",
+  },
+  "no-env-secret-fallback": {
+    why: "`process.env.API_TOKEN ?? \"dev-token\"` turns a missing secret into a silent misconfiguration: the app boots, calls production with a dev credential, and nothing tells you. Fail fast instead.",
+    slop: "const token = process.env.STRIPE_KEY ?? \"sk_test_x\";",
+    correct: "const token = process.env.STRIPE_KEY;\nif (!token) throw new Error(\"STRIPE_KEY is required\");",
+    exceptions: "None for credentials. A non-secret default like `PORT ?? \"3000\"` is a real default and does not fire (the rule matches credential-shaped names only).",
+  },
+  "no-tautological-assertion": {
+    why: "`expect(4).toBe(4)` passes no matter what the code under test does. It inflates coverage while catching nothing — worse than no test, because it reads like one.",
+    slop: "expect(3).toBe(3);",
+    correct: "expect(config.retries).toBe(3);  // the value the code is supposed to produce",
+    exceptions: "None. A test that always fails (`expect(false).toBeTruthy()`) is a different defect and stays out of this rule.",
+  },
+  "no-await-promise-resolve": {
+    why: "`await Promise.resolve(x)` is `x` with extra steps — the wrapper adds a microtask tick and a suggestion of asynchrony that is not there.",
+    slop: "const user = await Promise.resolve(fetchUserSync(id));",
+    correct: "const user = fetchUserSync(id);  // or await the real async call",
+    exceptions: "Dropping the wrapper drops that microtask tick — for code that depends on relative ordering, keep it and say why (that is why this is review, not fix).",
+  },
+  "no-arbitrary-sleep": {
+    why: "`setTimeout(resolve, 1000)` guesses at timing. It is slow when the event is early and flaky when it is late, and the failure is nondeterministic by construction.",
+    slop: "await new Promise(r => setTimeout(r, 1000));",
+    correct: "await saveCompleted;",
+    exceptions: "A real rate-limit or backoff policy is a named constant with a comment saying which policy, not an inline magic number.",
+  },
+  "no-slop-symbol-names": {
+    why: "`enhancedFetch`, `processRequestV2`, `userObjFinal` are named after an edit, not a role. The old version lingers, callers cannot tell which is authoritative, and the next edit adds V3.",
+    slop: "function fetchDataImproved(id) { return users.get(id); }",
+    correct: "function fetchUser(id) { return users.get(id); }",
+    exceptions: "Versioned public APIs may legitimately coexist. The scanner flags a version suffix when its base name also exists in the file; justify that case instead of deleting a live API.",
+  },
+  "no-shape-in-symbol-names": {
+    why: "\"shape\" describes structure, not ownership or role: `userShape`, `PayloadShape`, `shapeSchema` push the type's job into its name, where every rename must repeat it.",
+    slop: "type UserShape = { id: string };",
+    correct: "type User = { id: string };",
+    exceptions: "Geometry, canvas, and tensor code where \"shape\" IS the domain — the rule detects that context and stays quiet.",
+  },
+  "require-safety-comment-for-type-assertion": {
+    why: "An `as` assertion is a claim the compiler cannot check. Hand-written narrowing asserts invariants the author knows; AI-generated assertions assert whatever makes the error go away. The comment is the difference.",
+    slop: "const user = payload as User;",
+    correct: "// SAFETY: payload was parsed by the schema above\nconst user = payload as User;",
+    exceptions: "The scanner exempts some catch-binding assertions and as const, but exemption is not runtime evidence. JavaScript can throw any value; use instanceof Error before relying on Error properties.",
+  },
+  "no-unknown-alias": {
+    why: "`type Payload = unknown` names nothing. `unknown` says \"could be anything\" — true of every value, so as an alias it documents nothing a bare `unknown` does not already say.",
+    slop: "type Payload = unknown;",
+    correct: "type Payload = { id: string; items: CartItem[] };  // the shape the producer guarantees",
+    exceptions: "None. A parse-boundary parameter typed `unknown` inline is the honest signature and does not fire (only the alias does).",
+  },
+  "no-empty-type-declaration": {
+    why: "`interface Marker {}` accepts almost anything and constrains nothing — it is a type that looks like a contract but isn't one.",
+    slop: "interface ConfigOptions {}",
+    correct: "interface ConfigOptions { retries: number; baseUrl: string };  // or delete it",
+    exceptions: "Declaration-merging extension points can intentionally start empty. An empty interface is structural, not a nominal tag; do not invent fields for a framework contract.",
+  },
+  "no-useless-rethrow": {
+    why: "`catch (e) { throw e; }` is a no-op with a stack: the error propagates exactly as it would without the try/catch, and readers hunt for the handling that is not there.",
+    slop: "try { save(); } catch (e) { throw e; }",
+    correct: "save();  // or handle it — keep `finally` if there is one",
+    exceptions: "None mechanical: delete the try/catch (keeping `finally`) or add real handling.",
+  },
+  "no-empty-catch": {
+    why: "An empty catch swallows every failure — including the typo and the network outage. Six months later nothing was saved and nothing said so.",
+    slop: "try { save(); } catch {}",
+    correct: "save();",
+    exceptions: "A deliberate swallow needs a comment in the block saying why (\"best-effort cache warm\") — the rule already accepts a justification comment.",
+  },
+  "no-catch-fake-success": {
+    why: "`catch { return null; }` converts failure into a value the caller cannot distinguish from real success. The bug surfaces far from its cause.",
+    slop: "try { return await loadUser(id); } catch { return null; }",
+    correct: "return await loadUser(id);",
+    exceptions: "Optional best-effort features are legitimate — with a comment in the catch saying why swallowing is correct here.",
+  },
+  "no-log-and-rethrow": {
+    why: "Logging then rethrowing reports the same failure at every layer. A boundary handler that logs once is the design; a chain of log-and-rethrow is a stack trace printed five times.",
+    slop: "catch (e) { logger.error(e); throw e; }",
+    correct: "throw e;  // log once at the top boundary — or attach context: throw new Error(\"saving cart\", { cause: e })",
+    exceptions: "Logging separate context before rethrowing (metrics, request ids) is deliberate; the rule only fires when the log call mentions the caught error itself.",
+  },
+  "no-message-only-rethrow": {
+    why: "`throw new Error(e.message)` throws away the stack and the original type. The caller catches an error that starts its stack HERE, and `instanceof NetworkError` is false.",
+    slop: "catch (e) { throw new Error(e.message); }",
+    correct: "throw e;  // or wrap with the original attached: throw new Error(\"loading cart\", { cause: e })",
+    exceptions: "None for the built-ins — rethrow, or wrap with `{ cause }`.",
+  },
+  "no-boolean-return-branches": {
+    why: "`if (cond) { return true; } else { return false; }` restates the condition through a branch. The expression form says the same in one line and cannot drift from it.",
+    slop: "if (items.length > 0) { return true; } else { return false; }",
+    correct: "return items.length > 0;  // return !(items.length > 0) for the negated branch",
+    exceptions: "None mechanical — that is why the finding names which branch it was.",
+  },
+  "no-let-if-else-assign": {
+    why: "A `let` declared only to be assigned in both branches is a conditional expression written long, plus a mutable binding nothing else may reassign.",
+    slop: "let label; if (isDev) { label = \"dev\"; } else { label = \"prod\"; }",
+    correct: "const label = isDev ? \"dev\" : \"prod\";",
+    exceptions: "A branch that does more than assign is a real branch. A write after the if/else also disqualifies the rewrite (the rule already checks both).",
+  },
+  "no-promise-constructor-wrapper": {
+    why: "`new Promise(r => r(value))` is `Promise.resolve(value)` with a constructor. The wrapper allocates, and it invites the classic executor mistake on the way.",
+    slop: "return new Promise(resolve => resolve(parsed));",
+    correct: "return Promise.resolve(parsed);  // or return parsed from an async function",
+    exceptions: "`Promise.resolve(p)` IS `p` when p is already a promise, while the wrapper makes a distinct one — so they are not always equivalent (that is why this is review). And when the expression can THROW, the wrapper rejects where `Promise.resolve(expr)` throws synchronously — pick on purpose.",
+  },
+  "no-foreach-push": {
+    why: "A `forEach` whose whole body pushes is `map` written the long way: the accumulator adds a mutable variable the pipeline would carry for you.",
+    slop: "const names = []; users.forEach(u => { names.push(u.name); });",
+    correct: "const names = users.map(u => u.name);  // flatMap when one item yields several",
+    exceptions: "This is a review rule. map preserves sparse-array holes while push compacts them. Preserve existing accumulator contents, shared array identity, callback side effects, and mutation order.",
+  },
+  "no-filler-comments": {
+    why: "\"In a real app...\", \"for brevity\", \"placeholder\" — the comment admits the code is not real. Ship the real thing or delete both.",
+    slop: "// in a real app, validate this\nfunction save(user) { db.write(user); }",
+    correct: "function save(user) { validate(user); db.write(user); }",
+    exceptions: "Teaching examples, requested prototypes, and test fixtures can legitimately be incomplete. Do not remove required behavior just to remove its reminder; implement it or explicitly track the limitation.",
+  },
+  "no-narration-comments": {
+    why: "\"Now we fetch the data...\" narrates what the next line does. The code already shows it; the comment is a second voice reading the source aloud.",
+    slop: "// first, we validate the input\nvalidate(input);",
+    correct: "validate(input);  // or a comment stating a constraint the code cannot show",
+    exceptions: "None. A comment explaining WHY (\"validate before audit log so denials are not recorded\") is not narration.",
+  },
+  "no-change-note-comments": {
+    why: "\"As requested\", \"NEW:\", \"to make the linter happy\" — the comment describes the EDIT, not the code. Once the change lands it explains nothing the diff does not.",
+    slop: "// UPDATED: retry count\nconst retries = 3;",
+    correct: "const retries = 3;",
+    exceptions: "None — version control is the changelog.",
+  },
+  "no-backcompat-comments": {
+    why: "A shim \"kept for backwards compatibility\" nobody asked for is dead code with a caption. Every call site could just be updated instead.",
+    slop: "// kept for backwards compat\nexport const fetchData = fetchUser;",
+    correct: "/** @deprecated Use fetchUser; retained until the next major release. */\nexport const fetchData = fetchUser;",
+    exceptions: "A published API you cannot break is the real case — `@deprecated` JSDoc is the accepted marker and the rule already accepts it.",
+  },
+  "no-emoji": {
+    why: "Decorative emoji can distract from the information in source comments. Prefer words when the symbol adds no meaning.",
+    slop: "// \u{1F525} IMPORTANT: check this",
+    correct: "// IMPORTANT: check this",
+    exceptions: "Preserve symbols required by a specification or an explicit user request. The scanner targets comments, not string data, and exempts several text-presentation symbols.",
+  },
+  "no-typed-jsdoc": {
+    why: "`@param {string} name` restates the TypeScript signature and drifts from it silently — the signature is checked, the JSDoc is not.",
+    slop: "/** @param {string} id */\nfunction findUser(id: string) { return users.get(id); }",
+    correct: "function findUser(id: string) { return users.get(id); }",
+    exceptions: "None in TS. (A `.js` codebase has no signature to restate — the rule is TS-only.)",
+  },
+  "no-obvious-doc-comments": {
+    why: "\"This function takes a user and returns a token\" restates the declaration below it. A doc comment earns its place by saying WHY the code exists, not WHAT it is.",
+    slop: "// Getter for the cached value.\nconst cached = { get value() { return cache; } };",
+    correct: "const cached = { get value() { return cache; } };",
+    exceptions: "Keep comments that explain invalidation, ownership, or other contracts. A heuristic match is not a reason to discard useful documentation.",
+  },
+  "no-restating-comments": {
+    why: "A comment made of the next line's own identifiers (\"// get user by id\" over `getUserById(id)`) adds zero information.",
+    slop: "// update user record\nupdateUserRecord(user);",
+    correct: "updateUserRecord(user);",
+    exceptions: "None. Any word in the comment not present in the code is a start.",
+  },
+  "no-unjustified-ignore": {
+    why: "An ignore directive that suppresses nothing (no reason, unknown rule id, file-level too far down) reads exactly like a working one. The author stopped looking; the slop stayed.",
+    slop: "// slop-check-ignore no-any\nconst raw: any = input;  // suppresses nothing: no reason given",
+    correct: "// slop-check-ignore no-any -- the vendor typing is any; narrowed below",
+    exceptions: "None — this rule exists to keep the other ignores honest.",
+  },
+  "no-unjustified-suppression": {
+    why: "`@ts-expect-error` with no reason hides a real diagnostic behind a bare directive. The type checker was wrong sometimes; the comment must say why it was wrong HERE.",
+    slop: "// @ts-expect-error\nconnect(options as Config);",
+    correct: "// @ts-expect-error -- config comes from the JSON schema, missing the runtime guard",
+    exceptions: "None — a reason in the line above also counts, as long as it is prose and not another directive.",
+  },
+};
+
 // ---------------------------------------------------------------------------
 // Suppression
 // ---------------------------------------------------------------------------
@@ -1845,6 +2094,27 @@ const STANDALONE_RULE_IDS = [
 ];
 
 export const RULE_IDS = new Set([...LINE_RULES.map((rule) => rule.name), ...STANDALONE_RULE_IDS]);
+export { RULE_EXPLANATIONS };
+
+function explainRule(id) {
+  const explanation = RULE_EXPLANATIONS[id];
+  const severity = MECHANICAL_RULES.has(id) ? "fix (mechanical — one correct answer)" : "review (heuristic — \"deliberate, leaving it\" is a valid answer)";
+  return [
+    `slop-check: ${id}`,
+    "",
+    `  ${severity}`,
+    "",
+    `  Why it fires: ${explanation.why}`,
+    "",
+    "  Slop:",
+    `    ${explanation.slop.replaceAll("\n", "\n    ")}`,
+    "",
+    "  Instead:",
+    `    ${explanation.correct.replaceAll("\n", "\n    ")}`,
+    "",
+    `  When it is wrong: ${explanation.exceptions}`,
+  ].join("\n");
+}
 
 const FILE_DIRECTIVE_LINES = 10;
 
@@ -2151,6 +2421,7 @@ Options:
   --summary          Replace findings with a rule tally; keep the run summary.
   --since=<ref>      Scan only lines added since <ref>.
   --disable=<ids>    Disable comma-separated rule IDs.
+  --explain=<rule>   Print one rule's explanation and exit.
   -h, --help         Show this help text.
 
 Paths may be absolute or relative. Use '--' if a path starts with '-'.`);
@@ -2167,6 +2438,7 @@ function main() {
   const json = optionArgs.includes("--json");
   const summaryOnly = optionArgs.includes("--summary");
   const since = optionArgs.find((arg) => arg.startsWith("--since="))?.slice("--since=".length);
+  const explain = optionArgs.find((arg) => arg.startsWith("--explain="))?.slice("--explain=".length);
   const disabled = new Set(
     optionArgs.filter((arg) => arg.startsWith("--disable="))
       .flatMap((arg) => arg.slice("--disable=".length).split(","))
@@ -2182,7 +2454,7 @@ function main() {
   // clean. 0 = clean, 1 = findings, 2 = scan failed.
   const unknown = optionArgs.filter(
     (arg) => arg.startsWith("-") && !["--json", "--summary", "-h", "--help"].includes(arg)
-      && !arg.startsWith("--since=") && !arg.startsWith("--disable="),
+      && !arg.startsWith("--since=") && !arg.startsWith("--disable=") && !arg.startsWith("--explain="),
   );
   if (unknown.length > 0) {
     console.error(`slop-check: unknown option ${unknown[0]} (use \`-- ${unknown[0]}\` to scan a file with that name)`);
@@ -2191,6 +2463,15 @@ function main() {
   }
   if (optionArgs.includes("--help") || optionArgs.includes("-h")) {
     printUsage();
+    return;
+  }
+  if (explain !== undefined) {
+    if (!RULE_IDS.has(explain)) {
+      console.error(`slop-check: --explain names ${explain}, which is not a rule id (rule ids: ${[...RULE_IDS].sort().join(", ")})`);
+      process.exitCode = 2;
+      return;
+    }
+    console.log(explainRule(explain));
     return;
   }
   // A warning rather than exit 2: a misspelled id disables nothing, so the run

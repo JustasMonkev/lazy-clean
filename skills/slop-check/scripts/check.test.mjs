@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { lintSource, RULE_IDS } from "./check.mjs";
+import { lintSource, RULE_IDS, RULE_EXPLANATIONS } from "./check.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -1575,6 +1575,35 @@ expectSuppression(
   const positions = lintSource(source, "check.mjs").map((f) => `${f.line}:${f.column}:${f.rule}`);
   assert.equal(new Set(positions).size, positions.length, "one position reported twice for one rule");
   console.log("ok   no position is reported twice for one rule");
+}
+
+{
+  const unexplained = [...RULE_IDS].filter((id) => !RULE_EXPLANATIONS[id]).sort();
+  assert.deepEqual(unexplained, [], "rules without --explain text");
+  console.log(`ok   every rule has --explain text (${Object.keys(RULE_EXPLANATIONS).length} rules)`);
+
+  const unknown = Object.keys(RULE_EXPLANATIONS).filter((id) => !RULE_IDS.has(id)).sort();
+  assert.deepEqual(unknown, [], "explanations for rules the checker does not emit");
+
+  for (const [id, explanation] of Object.entries(RULE_EXPLANATIONS)) {
+    for (const field of ["why", "slop", "correct", "exceptions"]) {
+      if (typeof explanation[field] !== "string" || explanation[field].trim().length === 0) {
+        failures += 1;
+        console.error(`FAIL --explain ${id}: ${field} is missing or too short`);
+      }
+    }
+    if (!lintSource(explanation.slop, "sample.ts").some((finding) => finding.rule === id)) {
+      failures += 1;
+      console.error(`FAIL --explain ${id}: slop example no longer triggers the rule`);
+    }
+    const kept = lintSource(explanation.correct, "sample.ts");
+    if (kept.length > 0) {
+      failures += 1;
+      console.error(`FAIL --explain ${id}: correct example still has findings [${kept.map((f) => f.rule).join(", ")}]`);
+    }
+  }
+  console.log("ok   every explanation carries why/slop/correct/exceptions");
+  console.log("ok   every slop example triggers its rule and every correct example is clean");
 }
 
 if (failures > 0) {

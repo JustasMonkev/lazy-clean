@@ -22,6 +22,7 @@ Everything runs from this skill directory with plain `node`. Do not install any 
    - `--json` prints machine-readable findings; `--summary` replaces the finding list with the per-rule tally (the run summary line still prints). Exit code 1 means findings exist, 2 means a path could not be read, 0 means clean.
    - `--since=<git-ref>` keeps only findings on lines the diff against that ref added — `--since=HEAD` before a commit, `--since=origin/main` in CI — which is how an existing codebase adopts the checker without a baseline file.
    - `--disable=<rule-id>[,<rule-id>]` turns rules off for the run. An id that is not a rule warns on stderr and the run continues with that rule still on, because the alternative is a scan that reads as narrower than it is.
+   - `--explain=<rule-id>` prints one rule's why, a slop/instead pair, and when the rule is wrong, then exits — no scan. Use it to judge a finding before rewriting correct code; an id that is not a rule exits 2.
    - The checker reads TypeScript and JavaScript only. For any other language skip step 1 and treat the manual checklist below as the whole procedure — never report "clean" on the strength of a scan that read nothing.
    - HTML is not scanned. If the changed behavior is in an inline `<script>`, extract that script to a temporary `.js` for the checker or perform and report a manual review; zero files checked is no coverage, never a clean verdict.
 
