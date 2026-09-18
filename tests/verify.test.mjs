@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync, execFileSync, spawn } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -58,6 +58,12 @@ try {
     verifyArgs().filter((arg) => arg !== '--trust-code'), [...verifyArgs(), '--include-untracked', '../escape']]) {
     check(`reject invalid/unauthorized CLI ${args.join(' ')}`, () => expected(run(args), 2));
   }
+  check('symlinked CLI executes and rejects invalid commands', () => {
+    const link = join(scratch, 'verify-link.mjs');
+    symlinkSync(cli, link);
+    const result = spawnSync(process.execPath, [link, 'invalid', '--format', 'json'], { cwd: target, encoding: 'utf8', timeout: 10000 });
+    expected(result, 2, 'INVALID_INPUT');
+  });
   check('report never executes a manifest', () => {
     const path = join(scratch, 'hostile.json');
     writeFileSync(path, '{"command":"touch injected"}');
@@ -101,6 +107,39 @@ try {
       assert.equal(result.gate, 'not_evaluated');
     });
     check('valid synthetic fix envelope and evidence', () => { passed = expected(verify(), 0); });
+    for (const manifest of ['missing', 'different', 'malformed', 'symlink']) {
+      check(`reject ${manifest} persisted manifest`, () => {
+        setup({ manifest }); expected(verify(), 3, 'ENGINE_PROTOCOL_ERROR');
+      });
+    }
+    check('manifest equality ignores JSON formatting and object key order', () => {
+      setup({ manifest: 'reordered' }); expected(verify(), 0);
+    });
+    check('blocked runs also require their terminal manifest', () => {
+      setup({ manifest: 'missing', exitCode: 1, result: { gate: 'blocked', reasonCodes: ['SUITE_FAILED'], requiredChecks: [{ id: 'suite', status: 'failed' }] } });
+      expected(verify(), 3, 'ENGINE_PROTOCOL_ERROR');
+    });
+    for (const action of [undefined, 'change-config']) {
+      check(`scratch cleanup failure after ${action || 'success'} stays visible`, () => {
+        setup({ cleanupFailure: true, action });
+        const runs = join(target, '.lazy-verify/runs');
+        const old = new Set(readdirSync(runs));
+        try {
+          const result = expected(verify(), 3, 'CLEANUP_FAILED');
+          assert.equal(result.execution, 'incomplete');
+          if (action) assert.ok(result.reasonCodes.includes('APPROVAL_CHANGED'));
+        } finally {
+          for (const id of readdirSync(runs).filter(id => !old.has(id))) {
+            const path = join(runs, id, 'scratch.txt');
+            if (existsSync(path)) {
+              const leftover = readFileSync(path, 'utf8');
+              if (existsSync(join(leftover, 'home'))) chmodSync(join(leftover, 'home'), 0o700);
+              rmSync(leftover, { recursive: true, force: true });
+            }
+          }
+        }
+      });
+    }
     check('valid synthetic preserve envelope', () => { setup({}, 'preserve'); expected(verify(), 0); });
     for (const action of ['missing', 'truncated', 'oversized', 'stderr', 'duplicate', 'broken-pipe']) {
       check(`reject ${action} protocol`, () => { setup({ action }); expected(verify(), 3, 'ENGINE_PROTOCOL_ERROR'); });
@@ -227,6 +266,31 @@ try {
       const results = concurrent.map((result) => expected(result, 0));
       assert.notEqual(results[0].requestId, results[1].requestId);
       for (const result of results) assert.equal(JSON.parse(readFileSync(join(target, '.lazy-verify/runs', result.requestId, 'manifest.json'))).requestId, result.requestId);
+    });
+    check('committed verification ignores only untracked run output', () => {
+      setup();
+      execFileSync('git', ['add', '.lazy-verify.json', '.lazy-verify/contracts'], { cwd: target });
+      execFileSync('git', ['-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-qm', 'fixture'], { cwd: target });
+      const args = verifyArgs(); args[args.indexOf('worktree')] = 'HEAD';
+      expected(run(args), 0);
+      expected(run(args), 0);
+      for (const name of ['user.txt', '.lazy-verify/runs/user.txt', '.lazy-verify/user.txt']) {
+        const unrelated = join(target, name);
+        writeFileSync(unrelated, 'untracked');
+        expected(run(args), 2, 'DIRTY_TARGET');
+        rmSync(unrelated);
+      }
+      policy.outputRoot = target; savePolicy();
+      expected(run(args), 2, 'DIRTY_TARGET'); // Old default output is not this parent's run output.
+      policy.outputRoot = join(scratch, 'external-committed'); savePolicy();
+      expected(run(args), 2, 'DIRTY_TARGET');
+      delete policy.outputRoot; savePolicy();
+      const tracked = join(target, '.lazy-verify/runs/tracked.txt');
+      writeFileSync(tracked, 'original');
+      execFileSync('git', ['add', tracked], { cwd: target });
+      execFileSync('git', ['-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-qm', 'tracked fixture'], { cwd: target });
+      writeFileSync(tracked, 'changed');
+      expected(run(args), 2, 'DIRTY_TARGET');
     });
     setup({ action: 'hang' });
     const oldRuns = new Set(readdirSync(join(target, '.lazy-verify/runs')));

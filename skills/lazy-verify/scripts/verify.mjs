@@ -3,6 +3,7 @@ import { cpSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, realpathSync, r
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { launch, negotiate } from './engine.mjs';
@@ -179,9 +180,18 @@ async function execute(options) {
   if (prior) requireValue(prior.profile === policy.profile && prior.mode === profile.mode
     && prior.repositoryRoot === root && prior.digests.contract === policy.contractDigest
     && prior.digests.profile === policy.profileDigest, 'Replay contract/profile does not match current approval', 'APPROVAL_MISMATCH');
+  const outputParent = policy.outputRoot || join(root, '.lazy-verify', 'runs');
   if (options.operation === 'verify' && options.head !== 'worktree') {
-    const status = execFileSync('git', ['status', '--porcelain=v1', '-z', '--untracked-files=all'], { cwd: root, timeout: 5000, maxBuffer: 1024 * 1024 });
-    requireValue(status.length === 0, 'Committed verification requires a clean checkout; select --head worktree for edits', 'DIRTY_TARGET');
+    const gitOptions = { cwd: root, encoding: 'utf8', timeout: 5000, maxBuffer: 1024 * 1024 };
+    const status = execFileSync('git', ['status', '--porcelain=v1', '-z', '--untracked-files=no'], gitOptions);
+    const untracked = execFileSync('git', ['ls-files', '--others', '--exclude-standard', '-z'], gitOptions);
+    // Only UUID run directories are tool output; tracked changes and other
+    // untracked files under a custom output parent still belong to the user.
+    const userFiles = untracked.split('\0').filter(Boolean).filter(path => {
+      const outputPath = relative(outputParent, join(root, path)).split(sep).join('/');
+      return !/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\//u.test(outputPath);
+    });
+    requireValue(status.length === 0 && userFiles.length === 0, 'Committed verification requires a clean checkout; select --head worktree for edits', 'DIRTY_TARGET');
   }
   requireValue(process.platform !== 'win32', 'Windows target execution is not qualified', 'ENGINE_PLATFORM_UNSUPPORTED');
   let entry;
@@ -195,6 +205,7 @@ async function execute(options) {
   requireValue(!inside(root, entry) && !inside(root, node), 'Install the reviewed controller and Node outside the target repository', 'ENGINE_LOCATION_UNSUPPORTED');
   requireValue(bundleDigest(dirname(entry)) === policy.engine.digest, 'Engine distribution changed', 'APPROVAL_MISMATCH');
   const scratch = mkdtempSync(join(tmpdir(), 'lazy-verify-'));
+  let failure;
   try {
     const frozen = join(scratch, 'engine');
     cpSync(dirname(entry), frozen, { recursive: true, dereference: false });
@@ -208,7 +219,6 @@ async function execute(options) {
     capabilities(offered.bytes, policy);
     if (options.operation === 'doctor') return { value: { protocol: PROTOCOL, status: 'ready', execution: 'not_run', gate: 'not_evaluated', limitations: ['Experimental; real-engine qualification remains required'] }, exitCode: 0 };
     const requestId = randomUUID();
-    const outputParent = policy.outputRoot || join(root, '.lazy-verify', 'runs');
     createOutputParent(outputParent);
     const outputRoot = join(outputParent, requestId);
     mkdirSync(outputRoot, { mode: 0o700 });
@@ -229,6 +239,10 @@ async function execute(options) {
     try {
       result = validateResult(parseJSON(response.bytes), request);
       requireValue(response.status === resultExit(result), 'Engine exit contradicts result');
+      const manifestPath = join(outputRoot, 'manifest.json');
+      requireValue(realpathSync(manifestPath) === manifestPath, 'Manifest must be owned by the run directory');
+      const manifest = validateResult(parseJSON(readBytes(manifestPath)), request);
+      requireValue(isDeepStrictEqual(manifest, result), 'Manifest differs from engine response');
       const evidence = realpathSync(join(outputRoot, result.evidence.path));
       requireValue(inside(outputRoot, evidence) && digest(readBytes(evidence)) === result.evidence.digest, 'Evidence attachment missing or changed');
     } catch (error) {
@@ -243,8 +257,19 @@ async function execute(options) {
       fail('APPROVAL_CHANGED', error.message, 3);
     }
     return { value: result, exitCode: resultExit(result) };
+  } catch (error) {
+    failure = error;
+    throw error;
   } finally {
-    rmSync(scratch, { recursive: true, force: true });
+    try {
+      rmSync(scratch, { recursive: true, force: true });
+    } catch (error) {
+      const message = `Could not remove scratch directory ${scratch}: ${error.message}`;
+      throw Object.assign(new Error(failure ? `${failure.message}; ${message}` : message, { cause: failure || error }), {
+        code: 'CLEANUP_FAILED', exitCode: failure?.exitCode === 130 ? 130 : 3,
+        reasonCodes: [...new Set([...(failure ? [failure.code || 'INVALID_INPUT'] : []), 'CLEANUP_FAILED'])],
+      });
+    }
   }
 }
 
@@ -259,9 +284,9 @@ async function main(argv) {
   } catch (error) {
     const exitCode = error.exitCode || 2;
     console.log(render({ protocol: PROTOCOL, execution: exitCode === 2 ? 'not_run' : 'incomplete', gate: 'not_evaluated',
-      reasonCodes: [error.code || 'INVALID_INPUT'], message: error.message }, format));
+      reasonCodes: error.reasonCodes || [error.code || 'INVALID_INPUT'], message: error.message }, format));
     process.exitCode = exitCode;
   }
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main(process.argv.slice(2));
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) await main(process.argv.slice(2));

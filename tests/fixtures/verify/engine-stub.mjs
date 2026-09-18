@@ -2,7 +2,7 @@
 import { createHash } from 'node:crypto';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, readFileSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -60,7 +60,22 @@ if (process.argv[3] === 'capabilities') {
       limitations: ['Protocol fixture only; no target execution'], requiredChecks: request.requiredChecks.map((id) => ({ id, status: 'passed' })),
       evidenceComplete: true, cleanup: 'complete', observationAuthenticity: 'not-established', ...scenario.result,
     };
-    writeFileSync(join(request.outputRoot, 'manifest.json'), JSON.stringify(result));
+    const manifest = join(request.outputRoot, 'manifest.json');
+    if (scenario.manifest !== 'missing') {
+      const recorded = scenario.manifest === 'different' ? { ...result, limitations: ['Different recorded observation'] }
+        : scenario.manifest === 'reordered' ? Object.fromEntries(Object.entries(result).reverse()) : result;
+      const bytes = scenario.manifest === 'malformed' ? '{' : JSON.stringify(recorded, null, 2);
+      if (scenario.manifest === 'symlink') {
+        const outside = join(process.cwd(), 'outside-manifest.json');
+        writeFileSync(outside, bytes);
+        symlinkSync(outside, manifest);
+      } else writeFileSync(manifest, bytes);
+    }
+    if (scenario.cleanupFailure) {
+      writeFileSync(join(request.outputRoot, 'scratch.txt'), process.cwd());
+      writeFileSync(join(process.env.HOME, 'locked.txt'), 'cleanup fixture');
+      chmodSync(process.env.HOME, 0);
+    }
     if (scenario.action === 'change-policy') writeFileSync(request.policyPath, readFileSync(request.policyPath, 'utf8') + '\n');
     if (scenario.action === 'change-config') writeFileSync(request.configPath, readFileSync(request.configPath, 'utf8') + '\n');
     console.log(JSON.stringify(result));

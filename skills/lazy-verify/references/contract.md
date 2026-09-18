@@ -41,7 +41,10 @@ document with exactly these fields (replace all example digests and paths):
 
 An optional absolute `outputRoot` selects an approved output parent outside the
 repository; it must have no symlink components. Each run still creates its own
-UUID directory. The default is `<target>/.lazy-verify/runs/`.
+UUID directory. The default is `<target>/.lazy-verify/runs/`. Committed-mode
+clean-tree checks exclude untracked files inside UUID run directories under the
+selected output parent, but still reject tracked changes and other untracked
+files. No target `.gitignore` edit is needed for repeated runs.
 
 These digests bind reviewed inputs, not truth or authorization. JSON uses native
 last-member-wins parsing; config/policy exact-byte hashes also bind whitespace
@@ -114,6 +117,8 @@ evidence/execution/cleanup, current applicability and all required checks passin
 The bridge validates these invariants; it does not classify assertions or parse
 test log strings. Non-success requires explicit reason codes.
 
+The bridge requires an owned, regular `manifest.json` whose parsed terminal
+envelope matches stdout, including non-success results.
 The engine writes `manifest.json` (the terminal envelope), `summary.md`, and its
 evidence index/attempts/source and contract bundles in the owned run. Evidence
 index paths must stay within the run; replay validates every attachment and
