@@ -2,7 +2,7 @@
 import { createHash } from 'node:crypto';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chmodSync, readFileSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -71,10 +71,8 @@ if (process.argv[3] === 'capabilities') {
         symlinkSync(outside, manifest);
       } else writeFileSync(manifest, bytes);
     }
-    if (scenario.cleanupFailure) {
+    if (scenario.recordScratch) {
       writeFileSync(join(request.outputRoot, 'scratch.txt'), process.cwd());
-      writeFileSync(join(process.env.HOME, 'locked.txt'), 'cleanup fixture');
-      chmodSync(process.env.HOME, 0);
     }
     if (scenario.action === 'change-policy') writeFileSync(request.policyPath, readFileSync(request.policyPath, 'utf8') + '\n');
     if (scenario.action === 'change-config') writeFileSync(request.configPath, readFileSync(request.configPath, 'utf8') + '\n');

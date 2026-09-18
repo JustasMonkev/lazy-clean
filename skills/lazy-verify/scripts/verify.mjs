@@ -23,11 +23,11 @@ export function bundleDigest(root) {
       if (stat.isDirectory()) visit(path);
       else {
         requireValue(stat.isFile(), 'Non-file bundle entry');
-        size += stat.size;
-        requireValue(size <= 32 * 1024 * 1024, 'Bundle exceeds supported size');
+        const bytes = readBytes(path, 32 * 1024 * 1024 - size);
+        size += bytes.length;
         const name = relative(root, path).split(sep).join('/');
         requireValue(safePath(name), 'Unsafe bundle path');
-        entries.push([name, digest(readBytes(path, 32 * 1024 * 1024))]);
+        entries.push([name, digest(bytes)]);
       }
     }
   }
@@ -40,17 +40,22 @@ function inside(root, path) {
   return rel === '' || (!isAbsolute(rel) && rel !== '..' && !rel.startsWith(`..${sep}`));
 }
 
-function createOutputParent(path) {
+function validateOutputParent(path) {
   let existing = path;
   for (;;) {
     try {
       requireValue(realpathSync(existing) === existing, 'Output directory must not traverse symlinks');
+      requireValue(lstatSync(existing).isDirectory(), 'Output parent must be a directory');
       break;
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
       existing = dirname(existing);
     }
   }
+}
+
+function createOutputParent(path) {
+  validateOutputParent(path);
   mkdirSync(path, { recursive: true, mode: 0o700 });
   requireValue(realpathSync(path) === path, 'Output directory changed during creation');
 }
@@ -181,6 +186,7 @@ async function execute(options) {
     && prior.repositoryRoot === root && prior.digests.contract === policy.contractDigest
     && prior.digests.profile === policy.profileDigest, 'Replay contract/profile does not match current approval', 'APPROVAL_MISMATCH');
   const outputParent = policy.outputRoot || join(root, '.lazy-verify', 'runs');
+  validateOutputParent(outputParent);
   if (options.operation === 'verify' && options.head !== 'worktree') {
     const gitOptions = { cwd: root, encoding: 'utf8', timeout: 5000, maxBuffer: 1024 * 1024 };
     const status = execFileSync('git', ['status', '--porcelain=v1', '-z', '--untracked-files=no'], gitOptions);
@@ -274,7 +280,8 @@ async function execute(options) {
 }
 
 async function main(argv) {
-  let format = argv.includes('json') ? 'json' : 'markdown';
+  const formatIndex = argv.indexOf('--format');
+  let format = formatIndex !== -1 && argv[formatIndex + 1] === 'json' ? 'json' : 'markdown';
   try {
     const options = argumentsFor(argv);
     format = options.format;

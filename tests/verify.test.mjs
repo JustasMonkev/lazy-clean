@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync, execFileSync, spawn } from 'node:child_process';
-import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -38,9 +38,9 @@ function setup(scenario = {}, mode = 'fix') {
   savePolicy();
 }
 function savePolicy() { writeFileSync(policyPath, JSON.stringify(policy)); }
-function run(args) { return spawnSync(process.execPath, [cli, ...args, '--format', 'json'], { cwd: target, encoding: 'utf8', timeout: 10000 }); }
+function run(args, nodeArgs = []) { return spawnSync(process.execPath, [...nodeArgs, cli, ...args, '--format', 'json'], { cwd: target, encoding: 'utf8', timeout: 10000 }); }
 const verifyArgs = () => ['verify', '--profile', 'example', '--base', 'base', '--head', 'worktree', '--policy', policyPath, '--trust-code'];
-function verify() { return run(verifyArgs()); }
+function verify(nodeArgs) { return run(verifyArgs(), nodeArgs); }
 function check(name, fn) {
   try { fn(); console.log(`ok   ${name}`); }
   catch (error) { failures++; console.error(`FAIL ${name}: ${error.stack}`); }
@@ -63,6 +63,28 @@ try {
     symlinkSync(cli, link);
     const result = spawnSync(process.execPath, [link, 'invalid', '--format', 'json'], { cwd: target, encoding: 'utf8', timeout: 10000 });
     expected(result, 2, 'INVALID_INPUT');
+  });
+  check('early CLI errors use only the explicit format flag', () => {
+    const args = ['verify', '--profile', 'json', '--base', 'b', '--head', 'h'];
+    const result = spawnSync(process.execPath, [cli, ...args], { cwd: target, encoding: 'utf8', timeout: 10000 });
+    assert.equal(result.status, 2);
+    assert.match(result.stdout, /^lazy-verify/u);
+    expected(run(args), 2, 'INVALID_INPUT');
+  });
+  check('bundle aggregate limit counts bytes read despite stale stats', () => {
+    const bundle = join(scratch, 'growing-bundle'); mkdirSync(bundle);
+    for (const name of ['first', 'second']) writeFileSync(join(bundle, name), Buffer.alloc(17 * 1024 * 1024));
+    const preload = join(scratch, 'stale-stats.cjs');
+    writeFileSync(preload, `
+      const fs = require('node:fs');
+      const original = fs.lstatSync;
+      fs.lstatSync = (...args) => { const stat = original(...args); stat.size = 0; return stat; };
+      require('node:module').syncBuiltinESMExports();
+    `);
+    const code = `import { bundleDigest } from ${JSON.stringify(pathToFileURL(cli).href)}; bundleDigest(${JSON.stringify(bundle)});`;
+    const result = spawnSync(process.execPath, ['--require', preload, '--input-type=module', '-e', code], { encoding: 'utf8', timeout: 10000 });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /exceeds byte limit/u);
   });
   check('report never executes a manifest', () => {
     const path = join(scratch, 'hostile.json');
@@ -121,11 +143,17 @@ try {
     });
     for (const action of [undefined, 'change-config']) {
       check(`scratch cleanup failure after ${action || 'success'} stays visible`, () => {
-        setup({ cleanupFailure: true, action });
+        setup({ recordScratch: true, action });
+        const preload = join(scratch, 'fail-removal.cjs');
+        writeFileSync(preload, `
+          const fs = require('node:fs');
+          fs.rmSync = () => { throw Object.assign(new Error('injected removal failure'), { code: 'EACCES' }); };
+          require('node:module').syncBuiltinESMExports();
+        `);
         const runs = join(target, '.lazy-verify/runs');
         const old = new Set(readdirSync(runs));
         try {
-          const result = expected(verify(), 3, 'CLEANUP_FAILED');
+          const result = expected(verify(['--require', preload]), 3, 'CLEANUP_FAILED');
           assert.equal(result.execution, 'incomplete');
           if (action) assert.ok(result.reasonCodes.includes('APPROVAL_CHANGED'));
         } finally {
@@ -133,7 +161,6 @@ try {
             const path = join(runs, id, 'scratch.txt');
             if (existsSync(path)) {
               const leftover = readFileSync(path, 'utf8');
-              if (existsSync(join(leftover, 'home'))) chmodSync(join(leftover, 'home'), 0o700);
               rmSync(leftover, { recursive: true, force: true });
             }
           }
@@ -186,6 +213,19 @@ try {
       setup(); policy.outputRoot = join(scratch, 'external runs'); savePolicy();
       const result = expected(verify(), 0);
       assert.equal(JSON.parse(readFileSync(join(policy.outputRoot, result.requestId, 'manifest.json'))).requestId, result.requestId);
+    });
+    check('doctor validates output paths without creating directories', () => {
+      setup();
+      const absent = join(scratch, 'doctor-absent', 'runs');
+      policy.outputRoot = absent; savePolicy();
+      expected(run(['doctor', '--policy', policyPath]), 0);
+      assert.equal(existsSync(dirname(absent)), false);
+      const file = join(scratch, 'output-file'); writeFileSync(file, 'not a directory');
+      const link = join(scratch, 'doctor-output-link'); symlinkSync(controller, link, 'dir');
+      for (const output of [file, join(file, 'runs'), join(link, 'runs')]) {
+        policy.outputRoot = output; savePolicy();
+        expected(run(['doctor', '--policy', policyPath]), 2);
+      }
     });
     check('output symlinks cannot create files outside the approved parent', () => {
       setup(); const link = join(scratch, 'output-link'); symlinkSync(controller, link, 'dir');
