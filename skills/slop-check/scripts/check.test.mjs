@@ -1614,6 +1614,22 @@ expectSuppression(
     assert.throws(() => new Function("save", RULE_EXPLANATIONS[id].correct)(save), error => error === failure);
     assert.equal(calls, 1, `${id} must retain the operation and propagate its error`);
   }
+  for (const id of ["no-empty-catch", "no-catch-fake-success"]) {
+    for (const failing of [false, true]) {
+      const calls = [];
+      const failure = new Error("operation failed");
+      const operation = () => { calls.push("operation"); if (failing) throw failure; return 7; };
+      const release = () => calls.push("release");
+      const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+      const run = new AsyncFunction("save", "loadUser", "id", "release", RULE_EXPLANATIONS[id].correct);
+      if (failing) await assert.rejects(run(operation, operation, 1, release), error => error === failure);
+      else assert.equal(await run(operation, operation, 1, release), id === "no-catch-fake-success" ? 7 : undefined);
+      assert.deepEqual(calls, ["operation", "release"]);
+    }
+  }
+  const ternary = new Function("items", `${RULE_EXPLANATIONS["no-boolean-literal-ternary"].correct}; return [ready, empty];`);
+  assert.deepEqual(ternary([]), [false, true]);
+  assert.deepEqual(ternary([1]), [true, false]);
   const connected = [];
   const connect = value => connected.push(value);
   const validate = new Function("options", "connect", RULE_EXPLANATIONS["no-unjustified-suppression"].correct);

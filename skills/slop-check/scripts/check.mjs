@@ -1857,7 +1857,7 @@ const RULE_EXPLANATIONS = {
     why: "`Reflect.get`/`Reflect.apply` are untyped escape hatches; direct access keeps property names checked and receiver semantics visible.",
     slop: "const value = Reflect.get(target, \"name\");",
     correct: "const value = target.name;",
-    exceptions: "Inside a Proxy trap, forwarding with `Reflect.get(target, key, receiver)` is the documented correct implementation — the rule already exempts those lines.",
+    exceptions: "Proxy traps and receiver-preserving three-argument Reflect.get calls can require Reflect, regardless of the third parameter name. Direct access can change accessor this. The scanner only recognizes some receiver spellings; a finding is not proof that forwarding is redundant.",
   },
   "no-module-mocking": {
     why: "Module mocks can hide hard-coded dependencies. Prefer exercising the real implementation or passing a dependency through an existing seam.",
@@ -1896,9 +1896,9 @@ const RULE_EXPLANATIONS = {
     exceptions: "None. (Outside a condition, `!!x` for an explicit boolean COERCION is fine and this rule does not fire.)",
   },
   "no-boolean-literal-ternary": {
-    why: "`cond ? true : false` restates the condition; the ternary adds nothing the condition does not already say.",
-    slop: "const ready = items.length > 0 ? true : false;",
-    correct: "const ready = items.length > 0;  // Boolean(items.length) if a real boolean is needed",
+    why: "Boolean-literal branches can be expressed directly, but preserve polarity and the boolean result: cond ? true : false becomes Boolean(cond), while cond ? false : true becomes !cond. A condition already known to be boolean needs no extra coercion.",
+    slop: "const ready = items.length > 0 ? true : false;\nconst empty = items.length > 0 ? false : true;",
+    correct: "const ready = items.length > 0;\nconst empty = !(items.length > 0);",
     exceptions: "A conditional TYPE (`T extends string ? true : false`) is the only way to write that predicate; the rule skips lines containing `extends`.",
   },
   "no-env-secret-fallback": {
@@ -1963,15 +1963,15 @@ const RULE_EXPLANATIONS = {
   },
   "no-empty-catch": {
     why: "An empty catch swallows every failure — including the typo and the network outage. Six months later nothing was saved and nothing said so.",
-    slop: "try { save(); } catch {}",
-    correct: "save();",
-    exceptions: "A deliberate swallow needs a comment in the block saying why (\"best-effort cache warm\") — the rule already accepts a justification comment.",
+    slop: "try { save(); } catch {} finally { release(); }",
+    correct: "try { save(); } finally { release(); }",
+    exceptions: "A deliberate swallow needs a comment in the block saying why (best-effort cache warm); the rule accepts that justification. Otherwise remove only the catch and preserve any finally cleanup. Without finally, call the operation directly.",
   },
   "no-catch-fake-success": {
     why: "`catch { return null; }` converts failure into a value the caller cannot distinguish from real success. The bug surfaces far from its cause.",
-    slop: "try { return await loadUser(id); } catch { return null; }",
-    correct: "return await loadUser(id);",
-    exceptions: "Optional best-effort features are legitimate — with a comment in the catch saying why swallowing is correct here.",
+    slop: "try { return await loadUser(id); } catch { return null; } finally { release(); }",
+    correct: "try { return await loadUser(id); } finally { release(); }",
+    exceptions: "Optional best-effort features are legitimate with a comment explaining why swallowing is correct. When removing the catch, preserve any finally cleanup and the awaited operation. Without finally, return the awaited operation directly.",
   },
   "no-log-and-rethrow": {
     why: "Logging then rethrowing reports the same failure at every layer. A boundary handler that logs once is the design; a chain of log-and-rethrow is a stack trace printed five times.",
@@ -2007,7 +2007,7 @@ const RULE_EXPLANATIONS = {
     why: "A `forEach` whose whole body pushes is `map` written the long way: the accumulator adds a mutable variable the pipeline would carry for you.",
     slop: "const names = []; users.forEach(u => { names.push(u.name); });",
     correct: "const names = users.map(u => u.name);  // flatMap when one item yields several",
-    exceptions: "This is a review rule. map preserves sparse-array holes while push compacts them. Preserve existing accumulator contents, shared array identity, callback side effects, and mutation order.",
+    exceptions: "The map rewrite requires an array receiver. Set, Map, NodeList, and custom forEach collections may lack map; retain their loop or choose a conversion that preserves their callback contract. For arrays, map preserves sparse holes while push compacts them. Preserve existing accumulator contents, shared array identity, callback side effects, and mutation order.",
   },
   "no-filler-comments": {
     why: "\"In a real app...\", \"for brevity\", \"placeholder\" — the comment admits the code is not real. Ship the real thing or delete both.",
@@ -2041,9 +2041,9 @@ const RULE_EXPLANATIONS = {
   },
   "no-typed-jsdoc": {
     why: "`@param {string} name` restates the TypeScript signature and drifts from it silently — the signature is checked, the JSDoc is not.",
-    slop: "/** @param {string} id */\nfunction findUser(id: string) { return users.get(id); }",
-    correct: "function findUser(id: string) { return users.get(id); }",
-    exceptions: "None in TS. (A `.js` codebase has no signature to restate — the rule is TS-only.)",
+    slop: "/** @param {string} id Stable account identifier, never a display name. */\nfunction findUser(id: string) { return users.get(id); }",
+    correct: "/** @param id Stable account identifier, never a display name. */\nfunction findUser(id: string) { return users.get(id); }",
+    exceptions: "Remove only redundant type syntax in TS. Retain useful prose, parameter descriptions, tags, and metadata. JavaScript JSDoc may supply the actual types; this rule is TS-only.",
   },
   "no-obvious-doc-comments": {
     why: "\"This function takes a user and returns a token\" restates the declaration below it. A doc comment earns its place by saying WHY the code exists, not WHAT it is.",
