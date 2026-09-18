@@ -1809,7 +1809,7 @@ function* iterateCommentFindings(ctx) {
 // is review, however certain the rule is that the code is wrong. Four rules were
 // demoted against this bar — `no-json-clone` (structuredClone keeps a Date a
 // Date and ignores toJSON, so it is not the same value), `no-await-promise-
-// resolve` (dropping the wrapper drops a microtask tick),
+// resolve` (removing await changes scheduling),
 // `no-chained-type-assertions` ("parse or validate instead" is a design, not a
 // rewrite), and `no-promise-constructor-wrapper` (`Promise.resolve(p)` IS `p`
 // when `p` is already a promise, where the wrapper is a distinct one) — so
@@ -1836,10 +1836,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "None mechanical. Sometimes a narrow `as` after a real runtime check is the honest form — that is `require-safety-comment-for-type-assertion`'s job, and it applies here too.",
   },
   "no-object-type": {
-    why: "`object` accepts anything non-primitive, so a parameter typed `object` is barely typed at all: callers can pass a Date, a Map, or a regex and the compiler stays quiet.",
-    slop: "function keys(target: object) { return Object.keys(target); }",
-    correct: "function keys(target: Record<string, unknown>) { return Object.keys(target); }",
-    exceptions: "Rarely one: a deliberately opaque API boundary (e.g. a brand-typed token) uses `object` to forbid primitives. That is a design choice worth a comment, not a default.",
+    why: "`object` admits all non-primitive values. Use a specific shape only when the operation actually requires those fields; do not narrow an API merely to silence this heuristic.",
+    slop: "function userName(user: object) { return user.name; }",
+    correct: "function userName(user: { name: string }) { return user.name; }",
+    exceptions: "Broad non-primitive APIs such as Object.keys wrappers and opaque boundaries legitimately accept object, including interfaces, arrays, and Date. Record<string, unknown> is not a compatible replacement for those callers.",
   },
   "no-unsafe-dictionary-type": {
     why: "`Record<string, any>` erases evidence for keys AND values: typos in keys compile, and every read is `any`.",
@@ -1848,7 +1848,7 @@ const RULE_EXPLANATIONS = {
     exceptions: "Structured-log context or a bag of truly arbitrary key-value pairs has no fixed key set; `Record<string, unknown>` keeps the value evidence and is the accepted form.",
   },
   "no-known-value-widening": {
-    why: "`const port: number = 3000` throws away the literal. Inference keeps `3000`, which unions and `as const` objects can still narrow on; the annotation makes it just \"some number\".",
+    why: "For const bindings, a primitive annotation widens an inferred literal type. For mutable let bindings, inference already widens the literal: removing the annotation is merely redundant-annotation cleanup and preserves no additional value evidence.",
     slop: "const timeout: number = 30_000;",
     correct: "const timeout = 30_000;",
     exceptions: "A SCREAMING_SNAKE constant annotated on purpose: the widened type is the published contract and the literal type would be the wrong one. The rule already skips those lines.",
@@ -1884,10 +1884,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "The replacement assumes user.name cannot be null. JSON.stringify preserves null object properties but omits undefined ones, so intentional normalization must stay.",
   },
   "no-boolean-literal-compare": {
-    why: "`if (flag === true)` restates a boolean someone already declared. The comparison reads like the flag might be truthy-but-not-true, which is a type bug the comparison then hides.",
+    why: "For a known boolean, a strict comparison with true or false is redundant. Establish the operand type and equality semantics before replacing a comparison with truthiness.",
     slop: "if (isEnabled === true) { render(); }",
     correct: "if (isEnabled) { render(); }",
-    exceptions: "`payload.isAxiosError === true` on a property typed `boolean | undefined` (parsed JSON, axios) IS narrowing, not restating — which is why the rule skips property and call operands.",
+    exceptions: "Keep comparisons when they intentionally distinguish true from other truthy values. Loose equality coerces: [] == true is false, but [] is truthy. Do not rewrite loose or untyped comparisons without checking the contract. Property and call operands are skipped by the scanner.",
   },
   "no-double-negation-condition": {
     why: "`if (!!value)` coerces to boolean where the condition already coerces. The double negation suggests the author thought coercion needed help.",
@@ -1905,7 +1905,7 @@ const RULE_EXPLANATIONS = {
     why: "`process.env.API_TOKEN ?? \"dev-token\"` turns a missing secret into a silent misconfiguration: the app boots, calls production with a dev credential, and nothing tells you. Fail fast instead.",
     slop: "const token = process.env.STRIPE_KEY ?? \"sk_test_x\";",
     correct: "const token = process.env.STRIPE_KEY;\nif (!token) throw new Error(\"STRIPE_KEY is required\");",
-    exceptions: "None for credentials. A non-secret default like `PORT ?? \"3000\"` is a real default and does not fire (the rule matches credential-shaped names only).",
+    exceptions: "Credential-shaped names can hold public configuration: a bundled PUBLIC_KEY verification key may be a supported non-secret default. Preserve intentional public defaults; the name pattern alone does not prove a value is secret.",
   },
   "no-tautological-assertion": {
     why: "`expect(4).toBe(4)` passes no matter what the code under test does. It inflates coverage while catching nothing — worse than no test, because it reads like one.",
@@ -1914,10 +1914,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "None. A test that always fails (`expect(false).toBeTruthy()`) is a different defect and stays out of this rule.",
   },
   "no-await-promise-resolve": {
-    why: "`await Promise.resolve(x)` is `x` with extra steps — the wrapper adds a microtask tick and a suggestion of asynchrony that is not there.",
+    why: "For ordinary values, await Promise.resolve(x) can be written await x. Both suspend the continuation; removing await itself is a separate scheduling change.",
     slop: "const user = await Promise.resolve(fetchUserSync(id));",
-    correct: "const user = fetchUserSync(id);  // or await the real async call",
-    exceptions: "Dropping the wrapper drops that microtask tick — for code that depends on relative ordering, keep it and say why (that is why this is review, not fix).",
+    correct: "const user = await fetchUserSync(id);",
+    exceptions: "Keep await when continuation ordering matters. Check custom Promise implementations, subclasses, and thenables before removing the wrapper; the plain-value example does not establish equivalence for every operand.",
   },
   "no-arbitrary-sleep": {
     why: "`setTimeout(resolve, 1000)` guesses at timing. It is slow when the event is early and flaky when it is late, and the failure is nondeterministic by construction.",
@@ -1975,15 +1975,15 @@ const RULE_EXPLANATIONS = {
   },
   "no-log-and-rethrow": {
     why: "Logging then rethrowing reports the same failure at every layer. A boundary handler that logs once is the design; a chain of log-and-rethrow is a stack trace printed five times.",
-    slop: "catch (e) { logger.error(e); throw e; }",
-    correct: "throw e;  // log once at the top boundary — or attach context: throw new Error(\"saving cart\", { cause: e })",
+    slop: "try { save(); } catch (e) { logger.error(e); throw e; }",
+    correct: "save();  // let the top boundary log once; preserve any existing finally",
     exceptions: "Logging separate context before rethrowing (metrics, request ids) is deliberate; the rule only fires when the log call mentions the caught error itself.",
   },
   "no-message-only-rethrow": {
     why: "`throw new Error(e.message)` throws away the stack and the original type. The caller catches an error that starts its stack HERE, and `instanceof NetworkError` is false.",
-    slop: "catch (e) { throw new Error(e.message); }",
-    correct: "throw e;  // or wrap with the original attached: throw new Error(\"loading cart\", { cause: e })",
-    exceptions: "None for the built-ins — rethrow, or wrap with `{ cause }`.",
+    slop: "try { save(); } catch (e) { throw new Error(e.message); }",
+    correct: "save();  // preserve the original error; keep any existing finally",
+    exceptions: "Remove the catch when it adds nothing, or wrap with genuine context and { cause: e }. Do not replace it with a no-op catch that only rethrows.",
   },
   "no-boolean-return-branches": {
     why: "`if (cond) { return true; } else { return false; }` restates the condition through a branch. The expression form says the same in one line and cannot drift from it.",
@@ -2029,8 +2029,8 @@ const RULE_EXPLANATIONS = {
   },
   "no-backcompat-comments": {
     why: "A shim \"kept for backwards compatibility\" nobody asked for is dead code with a caption. Every call site could just be updated instead.",
-    slop: "// kept for backwards compat\nexport const fetchData = fetchUser;",
-    correct: "/** @deprecated Use fetchUser; retained until the next major release. */\nexport const fetchData = fetchUser;",
+    slop: "// kept for backwards compat\nexport const fetchData = fetchUser;\nfetchData(id);",
+    correct: "fetchUser(id);  // update callers and remove the unneeded alias",
     exceptions: "A published API you cannot break is the real case — `@deprecated` JSDoc is the accepted marker and the rule already accepts it.",
   },
   "no-emoji": {
@@ -2065,9 +2065,9 @@ const RULE_EXPLANATIONS = {
   },
   "no-unjustified-suppression": {
     why: "`@ts-expect-error` with no reason hides a real diagnostic behind a bare directive. The type checker was wrong sometimes; the comment must say why it was wrong HERE.",
-    slop: "// @ts-expect-error\nconnect(options as Config);",
-    correct: "// @ts-expect-error -- config comes from the JSON schema, missing the runtime guard",
-    exceptions: "None — a reason in the line above also counts, as long as it is prose and not another directive.",
+    slop: "// @ts-expect-error\nconnect(options);",
+    correct: "if (typeof options !== \"object\" || options === null || !(\"host\" in options) || typeof options.host !== \"string\") {\n  throw new TypeError(\"Expected a configuration with a string host\");\n}\nconnect({ host: options.host });",
+    exceptions: "A proven compiler or vendor-typing defect may need a suppression with a concrete reason. A missing runtime guard is not such a reason: validate external JSON before calling connect. This example assumes connect needs only host.",
   },
 };
 
@@ -2438,7 +2438,8 @@ function main() {
   const json = optionArgs.includes("--json");
   const summaryOnly = optionArgs.includes("--summary");
   const since = optionArgs.find((arg) => arg.startsWith("--since="))?.slice("--since=".length);
-  const explain = optionArgs.find((arg) => arg.startsWith("--explain="))?.slice("--explain=".length);
+  const explainArgs = optionArgs.filter((arg) => arg.startsWith("--explain="));
+  const explain = explainArgs[0]?.slice("--explain=".length);
   const disabled = new Set(
     optionArgs.filter((arg) => arg.startsWith("--disable="))
       .flatMap((arg) => arg.slice("--disable=".length).split(","))
@@ -2458,6 +2459,11 @@ function main() {
   );
   if (unknown.length > 0) {
     console.error(`slop-check: unknown option ${unknown[0]} (use \`-- ${unknown[0]}\` to scan a file with that name)`);
+    process.exitCode = 2;
+    return;
+  }
+  if (explainArgs.length > 1) {
+    console.error("slop-check: --explain may be supplied only once");
     process.exitCode = 2;
     return;
   }

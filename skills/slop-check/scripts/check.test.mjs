@@ -1606,6 +1606,22 @@ expectSuppression(
   console.log("ok   every slop example triggers its rule and every correct example is clean");
 }
 
+{
+  for (const id of ["no-log-and-rethrow", "no-message-only-rethrow"]) {
+    let calls = 0;
+    const failure = new Error("save failed");
+    const save = () => { calls += 1; throw failure; };
+    assert.throws(() => new Function("save", RULE_EXPLANATIONS[id].correct)(save), error => error === failure);
+    assert.equal(calls, 1, `${id} must retain the operation and propagate its error`);
+  }
+  const connected = [];
+  const connect = value => connected.push(value);
+  const validate = new Function("options", "connect", RULE_EXPLANATIONS["no-unjustified-suppression"].correct);
+  validate({ host: "localhost" }, connect);
+  for (const value of [null, {}, { host: 42 }]) assert.throws(() => validate(value, connect), TypeError);
+  assert.deepEqual(connected, [{ host: "localhost" }]);
+}
+
 if (failures > 0) {
   console.error(`\n${failures} test(s) failed`);
   process.exit(1);

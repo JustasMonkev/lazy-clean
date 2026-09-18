@@ -731,6 +731,15 @@ check("--explain names a misspelled rule and exits 2", () => {
   assert.match(result.stderr, /no-json-clone/u, "the id list suggests the intended rule");
 });
 
+check("--explain rejects repeated values before printing an explanation", () => {
+  for (const id of ["no-any", "no-such-rule", ""]) {
+    const result = run(["--explain=no-any", `--explain=${id}`]);
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /only once/u);
+  }
+});
+
 check("--explain ignores paths and runs no scan", () => {
   const result = run(["--explain=no-any", "slop.ts"]);
   assert.equal(result.status, 0);
