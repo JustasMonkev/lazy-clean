@@ -1854,10 +1854,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "A SCREAMING_SNAKE constant annotated on purpose: the widened type is the published contract and the literal type would be the wrong one. The rule already skips those lines.",
   },
   "no-reflect": {
-    why: "`Reflect.get`/`Reflect.apply` are untyped escape hatches; direct access keeps property names checked and receiver semantics visible.",
+    why: "Reflect calls need review before replacement: direct property access can be clearer for ordinary objects, but receiver semantics must stay unchanged.",
     slop: "const value = Reflect.get(target, \"name\");",
     correct: "const value = target.name;",
-    exceptions: "Proxy traps and receiver-preserving three-argument Reflect.get calls can require Reflect, regardless of the third parameter name. Direct access can change accessor this. The scanner only recognizes some receiver spellings; a finding is not proof that forwarding is redundant.",
+    exceptions: "Keep receiver-dependent Reflect.apply(fn, receiver, args); fn(...args) drops this. fn.apply(receiver, args) can preserve the receiver only when its apply method has the expected semantics. Proxy traps and three-argument Reflect.get calls may also require Reflect regardless of receiver parameter spelling; direct access can change accessor this. The scanner recognizes only some receiver spellings.",
   },
   "no-module-mocking": {
     why: "Module mocks can hide hard-coded dependencies. Prefer exercising the real implementation or passing a dependency through an existing seam.",
@@ -1884,7 +1884,7 @@ const RULE_EXPLANATIONS = {
     exceptions: "The replacement assumes user.name cannot be null. JSON.stringify preserves null object properties but omits undefined ones, so intentional normalization must stay.",
   },
   "no-boolean-literal-compare": {
-    why: "For a known boolean, a strict comparison with true or false is redundant. Establish the operand type and equality semantics before replacing a comparison with truthiness.",
+    why: "The scanner matches comparisons with true (== true and === true), not comparisons with false. For a known boolean, === true is redundant. Establish the operand type and equality semantics before replacing a comparison with truthiness.",
     slop: "if (isEnabled === true) { render(); }",
     correct: "if (isEnabled) { render(); }",
     exceptions: "Keep comparisons when they intentionally distinguish true from other truthy values. Loose equality coerces: [] == true is false, but [] is truthy. Do not rewrite loose or untyped comparisons without checking the contract. Property and call operands are skipped by the scanner.",
@@ -1944,10 +1944,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "The scanner exempts some catch-binding assertions and as const, but exemption is not runtime evidence. JavaScript can throw any value; use instanceof Error before relying on Error properties.",
   },
   "no-unknown-alias": {
-    why: "`type Payload = unknown` names nothing. `unknown` says \"could be anything\" — true of every value, so as an alias it documents nothing a bare `unknown` does not already say.",
-    slop: "type Payload = unknown;",
-    correct: "type Payload = { id: string; items: CartItem[] };  // the shape the producer guarantees",
-    exceptions: "None. A parse-boundary parameter typed `unknown` inline is the honest signature and does not fire (only the alias does).",
+    why: "A bare unknown alias may add no useful meaning in a private implementation. Review its domain role and consumers before replacing it; a name alone is not evidence for a more specific type.",
+    slop: "type Payload = unknown;\nfunction parse(input: Payload) { return schema.parse(input); }",
+    correct: "function parse(input: unknown) { return schema.parse(input); }",
+    exceptions: "Keep exported or semantic boundary aliases such as WebhookPayload = unknown. They preserve public imports and name unvalidated data; do not invent fields before parsing proves a shape. Inline unknown only when removing the alias loses no contract or useful domain meaning.",
   },
   "no-empty-type-declaration": {
     why: "`interface Marker {}` accepts almost anything and constrains nothing — it is a type that looks like a contract but isn't one.",
@@ -1986,9 +1986,9 @@ const RULE_EXPLANATIONS = {
     exceptions: "Remove the catch when it adds nothing, or wrap with genuine context and { cause: e }. Do not replace it with a no-op catch that only rethrows.",
   },
   "no-boolean-return-branches": {
-    why: "`if (cond) { return true; } else { return false; }` restates the condition through a branch. The expression form says the same in one line and cannot drift from it.",
-    slop: "if (items.length > 0) { return true; } else { return false; }",
-    correct: "return items.length > 0;  // return !(items.length > 0) for the negated branch",
+    why: "Boolean-return branches can be expressed without the branch while preserving a boolean result: if (cond) return true; else return false becomes return Boolean(cond). The reversed form becomes return !cond. Return cond directly only when it is already boolean.",
+    slop: "if (items.length) { return true; } else { return false; }",
+    correct: "return Boolean(items.length);  // return !items.length for the inverted branches",
     exceptions: "None mechanical — that is why the finding names which branch it was.",
   },
   "no-let-if-else-assign": {
@@ -2060,7 +2060,7 @@ const RULE_EXPLANATIONS = {
   "no-unjustified-ignore": {
     why: "An ignore directive that suppresses nothing (no reason, unknown rule id, file-level too far down) reads exactly like a working one. The author stopped looking; the slop stayed.",
     slop: "// slop-check-ignore no-any\nconst raw: any = input;  // suppresses nothing: no reason given",
-    correct: "// slop-check-ignore no-any -- the vendor typing is any; narrowed below",
+    correct: "// slop-check-ignore no-any -- vendor values are narrowed before use\nconst raw: any = input;\nif (typeof raw !== \"string\") throw new TypeError(\"Expected a string\");",
     exceptions: "None — this rule exists to keep the other ignores honest.",
   },
   "no-unjustified-suppression": {

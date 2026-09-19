@@ -1630,6 +1630,12 @@ expectSuppression(
   const ternary = new Function("items", `${RULE_EXPLANATIONS["no-boolean-literal-ternary"].correct}; return [ready, empty];`);
   assert.deepEqual(ternary([]), [false, true]);
   assert.deepEqual(ternary([1]), [true, false]);
+  const ignored = lintSource(RULE_EXPLANATIONS["no-unjustified-ignore"].correct, "sample.ts");
+  assert.equal(ignored.length, 0);
+  assert.equal(ignored.suppressed.length, 1);
+  const booleanReturn = new Function("items", RULE_EXPLANATIONS["no-boolean-return-branches"].correct);
+  assert.equal(booleanReturn([]), false);
+  assert.equal(booleanReturn([1, 2]), true);
   const connected = [];
   const connect = value => connected.push(value);
   const validate = new Function("options", "connect", RULE_EXPLANATIONS["no-unjustified-suppression"].correct);
