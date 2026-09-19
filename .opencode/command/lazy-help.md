@@ -2,4 +2,8 @@
 description: Quick reference for lazy levels, skills, and commands
 ---
 
+Also show `/lazy-verify`: experimental, explicitly opt-in fix/preserve evidence
+through a separately reviewed local engine and policy. It is not a lazy level,
+does not change persisted mode, and never runs automatically.
+
 Show the lazy quick reference. One shot, change nothing: do not switch mode, write flag files, or persist anything. Levels: /lazy lite (build what's asked, name the lazier alternative in one line), /lazy full (the default ladder: YAGNI then reuse then stdlib then native then clear minimum), /lazy ultra (deletion before addition, cuts unasked extras, never requested behavior or checks). Commands: /lazy-review (over-engineering review of the current changes), /lazy-audit (whole-repo over-engineering audit), /lazy-debt (harvest lazy: comments into a tracked ledger), /lazy-gain (measured-impact scoreboard from the benchmark), /lazy-help (this card). Deactivate with 'stop lazy', 'normal mode', or /lazy off; resume anytime with /lazy full; a bare /lazy only reports the live level and switches nothing. Default mode is full; change it with the LAZY_DEFAULT_MODE environment variable (off|lite|full|ultra) or a config file at ~/.config/lazy/config.json (Windows: %APPDATA%\lazy\config.json) with {"defaultMode": "lite"}. Resolution order: env var, then config file, then full.

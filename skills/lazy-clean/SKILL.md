@@ -83,6 +83,15 @@ them. An omitted detail in a new task is not permission to reject inputs that
 already worked. Preserve explicit false/zero/empty values. Revalidate after a
 trust boundary without changing that contract.
 
+## Optional behavioral verification
+
+When explicitly requested or authorized for the selected task/profile, follow
+the independent [lazy-verify skill](../lazy-verify/SKILL.md) after ordinary final
+review. It is experimental and needs a separately reviewed engine and policy;
+never install or execute it automatically. Fix/preserve evidence is separate
+from static findings. Missing prerequisites cannot satisfy a required gate.
+It does not change lazy intensity or replace the final checker scan.
+
 ## Order matters
 
 Ladder first. The checker finds slop in code that exists; the ladder stops the code from being written at all, and code never written has no findings.
