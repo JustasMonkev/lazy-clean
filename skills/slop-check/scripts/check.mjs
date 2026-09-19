@@ -1841,10 +1841,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "Broad non-primitive APIs such as Object.keys wrappers and opaque boundaries legitimately accept object, including interfaces, arrays, and Date. Record<string, unknown> is not a compatible replacement for those callers.",
   },
   "no-unsafe-dictionary-type": {
-    why: "`Record<string, any>` erases evidence for keys AND values: typos in keys compile, and every read is `any`.",
+    why: "Record<string, any> disables checking of dictionary values. For an open-key bag, select the real value type or unknown at an unvalidated boundary. If keys are finite, use a specific shape or finite key union to catch key typos as well.",
     slop: "const headers: Record<string, any> = {};",
-    correct: "const headers: Record<string, string> = {};  // or a real shape",
-    exceptions: "Structured-log context or a bag of truly arbitrary key-value pairs has no fixed key set; `Record<string, unknown>` keeps the value evidence and is the accepted form.",
+    correct: "const headers: Record<string, string> = {};  // open header names, string values",
+    exceptions: "Open dictionaries intentionally admit arbitrary string keys, so Record<string, string> does not catch misspelled keys. For a finite set, use a shape such as { authorization: string } or Record<\"accept\" | \"authorization\", string>. For truly arbitrary values use unknown and validate before use.",
   },
   "no-known-value-widening": {
     why: "For const bindings, a primitive annotation widens an inferred literal type. For mutable let bindings, inference already widens the literal: removing the annotation is merely redundant-annotation cleanup and preserves no additional value evidence.",
@@ -1903,8 +1903,8 @@ const RULE_EXPLANATIONS = {
   "no-env-secret-fallback": {
     why: "`process.env.API_TOKEN ?? \"dev-token\"` turns a missing secret into a silent misconfiguration: the app boots, calls production with a dev credential, and nothing tells you. Fail fast instead.",
     slop: "const token = process.env.STRIPE_KEY ?? \"sk_test_x\";",
-    correct: "const token = process.env.STRIPE_KEY;\nif (!token) throw new Error(\"STRIPE_KEY is required\");",
-    exceptions: "Credential-shaped names can hold public configuration: a bundled PUBLIC_KEY verification key may be a supported non-secret default. Preserve intentional public defaults; the name pattern alone does not prove a value is secret.",
+    correct: "const token = process.env.STRIPE_KEY;\nif (token === undefined) throw new Error(\"STRIPE_KEY is required\");",
+    exceptions: "Preserve the matched operator semantics: ?? retains an explicitly empty string, while || treats it as absent. Reject empty strings only when the credential contract requires that. Credential-shaped names can hold public configuration: a bundled PUBLIC_KEY verification key may be a supported non-secret default. Preserve intentional public defaults; the name pattern alone does not prove a value is secret.",
   },
   "no-tautological-assertion": {
     why: "`expect(4).toBe(4)` passes no matter what the code under test does. It inflates coverage while catching nothing — worse than no test, because it reads like one.",
@@ -1949,10 +1949,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "Keep exported or semantic boundary aliases such as WebhookPayload = unknown. They preserve public imports and name unvalidated data; do not invent fields before parsing proves a shape. Inline unknown only when removing the alias loses no contract or useful domain meaning.",
   },
   "no-empty-type-declaration": {
-    why: "`interface Marker {}` accepts almost anything and constrains nothing — it is a type that looks like a contract but isn't one.",
+    why: "An empty interface or {} type accepts far more than a typical options object. Under strictNullChecks it means any non-nullish value, including primitives, not an unconstrained object shape. Add fields only if the actual API requires them.",
     slop: "interface ConfigOptions {}",
     correct: "interface ConfigOptions { retries: number; baseUrl: string };  // or delete it",
-    exceptions: "Declaration-merging extension points can intentionally start empty. An empty interface is structural, not a nominal tag; do not invent fields for a framework contract.",
+    exceptions: "Preserve deliberate non-nullish types such as type NonNullish = {} under strictNullChecks, including semantic/public aliases and primitive callers. Declaration-merging extension points may also intentionally start empty. Do not invent fields or remove a public name just to silence the heuristic.",
   },
   "no-useless-rethrow": {
     why: "`catch (e) { throw e; }` is a no-op with a stack: the error propagates exactly as it would without the try/catch, and readers hunt for the handling that is not there.",

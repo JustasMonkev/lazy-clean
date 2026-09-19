@@ -1647,6 +1647,10 @@ expectSuppression(
   const productionUrl = `data:text/javascript,${encodeURIComponent(production)}`;
   const testCode = test.replace('"./user.mjs"', JSON.stringify(productionUrl));
   await import(`data:text/javascript,${encodeURIComponent(testCode)}`);
+  const readToken = new Function("process", `${RULE_EXPLANATIONS["no-env-secret-fallback"].correct}; return token;`);
+  assert.equal(readToken({ env: { STRIPE_KEY: "" } }), "");
+  assert.equal(readToken({ env: { STRIPE_KEY: "configured" } }), "configured");
+  assert.throws(() => readToken({ env: {} }), /STRIPE_KEY is required/u);
   const connected = [];
   const connect = value => connected.push(value);
   const validate = new Function("options", "connect", RULE_EXPLANATIONS["no-unjustified-suppression"].correct);
