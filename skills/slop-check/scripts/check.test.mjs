@@ -1035,7 +1035,7 @@ expectRule("flags a Constructor doc comment", "/** Constructor */\nexport class 
 expectRule("flags a this-function doc comment", "/**\n * This function returns the current token.\n */\ngetToken() { return this.token; }", "no-obvious-doc-comments");
 expectNoRule("allows a doc comment that adds information", "/** Aggregates rows into per-name totals, dropping zero-count rows. */\nexport function summarize(rows) {}", "no-obvious-doc-comments");
 expectNoRule("allows an informative this-function note", "// This function is used recursively from IndexedSourceMapConsumer.\nfunction sourceContentFor(source) {}", "no-obvious-doc-comments");
-// This rule prints as a mechanical "delete the comment", so an accessor doc
+// An accessor doc
 // that carries a contract the declaration does not state cannot be swept up
 // with the ones that only restate the name.
 expectRule("flags a bare getter doc comment", "/** Getter for the value. */\nget value() { return this.v; }", "no-obvious-doc-comments");
@@ -1636,6 +1636,17 @@ expectSuppression(
   const booleanReturn = new Function("items", RULE_EXPLANATIONS["no-boolean-return-branches"].correct);
   assert.equal(booleanReturn([]), false);
   assert.equal(booleanReturn([1, 2]), true);
+  for (const id of ["no-emoji", "no-obvious-doc-comments"]) {
+    const findings = lintSource(RULE_EXPLANATIONS[id].slop, "sample.ts");
+    assert.equal(findings.find(finding => finding.rule === id).severity, "review");
+  }
+  const validateUser = new Function("payload", `${RULE_EXPLANATIONS["require-safety-comment-for-type-assertion"].correct}; return user;`);
+  assert.deepEqual(validateUser({ id: "u1" }), { id: "u1" });
+  for (const payload of [null, {}, { id: 7 }]) assert.throws(() => validateUser(payload), TypeError);
+  const [production, test] = RULE_EXPLANATIONS["no-module-mocking"].correct.split("// user.test.mjs (separate file)");
+  const productionUrl = `data:text/javascript,${encodeURIComponent(production)}`;
+  const testCode = test.replace('"./user.mjs"', JSON.stringify(productionUrl));
+  await import(`data:text/javascript,${encodeURIComponent(testCode)}`);
   const connected = [];
   const connect = value => connected.push(value);
   const validate = new Function("options", "connect", RULE_EXPLANATIONS["no-unjustified-suppression"].correct);

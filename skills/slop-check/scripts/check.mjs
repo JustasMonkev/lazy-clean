@@ -1816,10 +1816,9 @@ function* iterateCommentFindings(ctx) {
 // measure a new entry against them, not against how sure you are.
 const MECHANICAL_RULES = new Set([
   "no-boolean-literal-ternary", "no-double-negation-condition",
-  "no-useless-rethrow", "no-emoji",
+  "no-useless-rethrow",
   "no-typed-jsdoc", "no-narration-comments", "no-change-note-comments",
   "no-boolean-return-branches", "no-let-if-else-assign",
-  "no-obvious-doc-comments",
 ]);
 
 const RULE_EXPLANATIONS = {
@@ -1860,9 +1859,9 @@ const RULE_EXPLANATIONS = {
     exceptions: "Keep receiver-dependent Reflect.apply(fn, receiver, args); fn(...args) drops this. fn.apply(receiver, args) can preserve the receiver only when its apply method has the expected semantics. Proxy traps and three-argument Reflect.get calls may also require Reflect regardless of receiver parameter spelling; direct access can change accessor this. The scanner recognizes only some receiver spellings.",
   },
   "no-module-mocking": {
-    why: "Module mocks can hide hard-coded dependencies. Prefer exercising the real implementation or passing a dependency through an existing seam.",
+    why: "Module mocks can hide hard-coded dependencies. Exercise the production implementation, not a test-local copy. If a suitable seam exists or is warranted, pass the dependency into that production function and import it in the test.",
     slop: "vi.mock(\"./db\");",
-    correct: "const loadUser = (db, id) => db.findUser(id);\nconst user = loadUser({ findUser: id => ({ id }) }, 7);",
+    correct: "// user.mjs\nexport function loadUser(db, id) { return db.findUser(id); }\n\n// user.test.mjs (separate file)\nimport assert from \"node:assert/strict\";\nimport { loadUser } from \"./user.mjs\";\nassert.deepEqual(loadUser({ findUser: id => ({ id }) }, 7), { id: 7 });",
     exceptions: "Legacy seams you cannot refactor yet. Silence the rule per line with a reason, and prefer an injected fake the moment a seam can be added.",
   },
   "no-conditional-empty-object-spread": {
@@ -1929,7 +1928,7 @@ const RULE_EXPLANATIONS = {
     why: "`enhancedFetch`, `processRequestV2`, `userObjFinal` are named after an edit, not a role. The old version lingers, callers cannot tell which is authoritative, and the next edit adds V3.",
     slop: "function fetchDataImproved(id) { return users.get(id); }",
     correct: "function fetchUser(id) { return users.get(id); }",
-    exceptions: "Versioned public APIs may legitimately coexist. The scanner flags a version suffix when its base name also exists in the file; justify that case instead of deleting a live API.",
+    exceptions: "Preserve established public names, including enhancedFetch and other non-versioned exports. Rename and update all consumers only for locally controlled APIs; otherwise retain the name or use an authorized deprecation process. Versioned public APIs may legitimately coexist. A heuristic naming match is not permission to break an import contract.",
   },
   "no-shape-in-symbol-names": {
     why: "\"shape\" describes structure, not ownership or role: `userShape`, `PayloadShape`, `shapeSchema` push the type's job into its name, where every rename must repeat it.",
@@ -1940,8 +1939,8 @@ const RULE_EXPLANATIONS = {
   "require-safety-comment-for-type-assertion": {
     why: "An `as` assertion is a claim the compiler cannot check. Hand-written narrowing asserts invariants the author knows; AI-generated assertions assert whatever makes the error go away. The comment is the difference.",
     slop: "const user = payload as User;",
-    correct: "// SAFETY: payload was parsed by the schema above\nconst user = payload as User;",
-    exceptions: "The scanner exempts some catch-binding assertions and as const, but exemption is not runtime evidence. JavaScript can throw any value; use instanceof Error before relying on Error properties.",
+    correct: "if (typeof payload !== \"object\" || payload === null || !(\"id\" in payload) || typeof payload.id !== \"string\") {\n  throw new TypeError(\"Expected a user with a string id\");\n}\nconst user = { id: payload.id };",
+    exceptions: "This example assumes User needs only a string id; validate every field your actual contract requires. Prefer a parser or narrowing that eliminates the assertion. A SAFETY comment is valid only when code demonstrably establishes its named invariant; never add a claim of validation to silence the checker. Catch bindings can contain any thrown value; narrow before using Error properties.",
   },
   "no-unknown-alias": {
     why: "A bare unknown alias may add no useful meaning in a private implementation. Review its domain role and consumers before replacing it; a name alone is not evidence for a more specific type.",
@@ -1968,10 +1967,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "A deliberate swallow needs a comment in the block saying why (best-effort cache warm); the rule accepts that justification. Otherwise remove only the catch and preserve any finally cleanup. Without finally, call the operation directly.",
   },
   "no-catch-fake-success": {
-    why: "`catch { return null; }` converts failure into a value the caller cannot distinguish from real success. The bug surfaces far from its cause.",
+    why: "Returning null or [] from a catch can hide a failure when callers treat it as success. Establish the API failure contract before removing the catch: a documented sentinel may be an intentional, distinguishable result.",
     slop: "try { return await loadUser(id); } catch { return null; } finally { release(); }",
     correct: "try { return await loadUser(id); } finally { release(); }",
-    exceptions: "Optional best-effort features are legitimate with a comment explaining why swallowing is correct. When removing the catch, preserve any finally cleanup and the awaited operation. Without finally, return the awaited operation directly.",
+    exceptions: "Preserve documented sentinel-result contracts, such as null for a failed optional lookup, when callers distinguish them from success. Optional best-effort features may also deliberately swallow errors. Only propagate when the sentinel is accidental; preserve finally cleanup and the awaited operation.",
   },
   "no-log-and-rethrow": {
     why: "Logging then rethrowing reports the same failure at every layer. A boundary handler that logs once is the design; a chain of log-and-rethrow is a stack trace printed five times.",
@@ -2467,16 +2466,16 @@ function main() {
     process.exitCode = 2;
     return;
   }
+  if (explain !== undefined && !RULE_IDS.has(explain)) {
+    console.error(`slop-check: --explain names ${explain}, which is not a rule id (rule ids: ${[...RULE_IDS].sort().join(", ")})`);
+    process.exitCode = 2;
+    return;
+  }
   if (optionArgs.includes("--help") || optionArgs.includes("-h")) {
     printUsage();
     return;
   }
   if (explain !== undefined) {
-    if (!RULE_IDS.has(explain)) {
-      console.error(`slop-check: --explain names ${explain}, which is not a rule id (rule ids: ${[...RULE_IDS].sort().join(", ")})`);
-      process.exitCode = 2;
-      return;
-    }
     console.log(explainRule(explain));
     return;
   }

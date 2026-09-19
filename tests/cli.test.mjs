@@ -740,6 +740,30 @@ check("--explain rejects repeated values before printing an explanation", () => 
   }
 });
 
+check("help does not hide invalid explanation values", () => {
+  for (const help of ["--help", "-h"]) {
+    for (const id of ["no-such-rule", "", "constructor"]) {
+      for (const args of [[help, `--explain=${id}`], [`--explain=${id}`, help]]) {
+        const result = run(args);
+        assert.equal(result.status, 2);
+        assert.equal(result.stdout, "");
+        assert.match(result.stderr, /not a rule id/u);
+      }
+    }
+    const result = run([help, "--explain=no-any"]);
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /Usage:/u);
+  }
+});
+
+check("heuristic documentation rules stay review-only in explanations", () => {
+  for (const id of ["no-emoji", "no-obvious-doc-comments"]) {
+    const result = run([`--explain=${id}`]);
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /review \(heuristic/u);
+  }
+});
+
 check("--explain ignores paths and runs no scan", () => {
   const result = run(["--explain=no-any", "slop.ts"]);
   assert.equal(result.status, 0);
