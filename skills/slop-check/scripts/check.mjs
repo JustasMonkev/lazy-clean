@@ -1850,19 +1850,19 @@ const RULE_EXPLANATIONS = {
     why: "For const bindings, a primitive annotation widens an inferred literal type. For mutable let bindings, inference already widens the literal: removing the annotation is merely redundant-annotation cleanup and preserves no additional value evidence.",
     slop: "const timeout: number = 30_000;",
     correct: "const timeout = 30_000;",
-    exceptions: "A SCREAMING_SNAKE constant annotated on purpose: the widened type is the published contract and the literal type would be the wrong one. The rule already skips those lines.",
+    exceptions: "Preserve intentional published types on exported constants regardless of casing: changing export const defaultTimeout: number = 30000 to an inferred literal narrows typeof defaultTimeout for consumers. Limit annotation cleanup to bindings whose inferred type is the intended contract. The scanner already skips some SCREAMING_SNAKE annotations, not every public contract.",
   },
   "no-reflect": {
     why: "Reflect calls need review before replacement: direct property access can be clearer for ordinary objects, but receiver semantics must stay unchanged.",
-    slop: "const value = Reflect.get(target, \"name\");",
-    correct: "const value = target.name;",
-    exceptions: "Keep receiver-dependent Reflect.apply(fn, receiver, args); fn(...args) drops this. fn.apply(receiver, args) can preserve the receiver only when its apply method has the expected semantics. Proxy traps and three-argument Reflect.get calls may also require Reflect regardless of receiver parameter spelling; direct access can change accessor this. The scanner recognizes only some receiver spellings.",
+    slop: "const value = Reflect.get(target, key);",
+    correct: "const value = target[key];",
+    exceptions: "For Reflect.get, preserve the exact key expression, including symbols; use target[key] only when the typing and access contract permit it. Keep Reflect.get otherwise. Three-argument calls and Proxy traps may require the supplied receiver regardless of its parameter name. For Reflect.apply(fn, receiver, args), fn(...args) loses this; fn.apply(receiver, args) is equivalent only when its apply method has the expected semantics. The scanner recognizes only some receiver spellings.",
   },
   "no-module-mocking": {
     why: "Module mocks can hide hard-coded dependencies. Exercise the production implementation, not a test-local copy. If a suitable seam exists or is warranted, pass the dependency into that production function and import it in the test.",
     slop: "vi.mock(\"./db\");",
     correct: "// user.mjs\nexport function loadUser(db, id) { return db.findUser(id); }\n\n// user.test.mjs (separate file)\nimport assert from \"node:assert/strict\";\nimport { loadUser } from \"./user.mjs\";\nassert.deepEqual(loadUser({ findUser: id => ({ id }) }, 7), { id: 7 });",
-    exceptions: "Legacy seams you cannot refactor yet. Silence the rule per line with a reason, and prefer an injected fake the moment a seam can be added.",
+    exceptions: "Keep jest.unmock or vi.unmock when it restores the real module, especially under automocking; it is not a test-double substitution. Module mocking may also be necessary for legacy seams you cannot refactor. Preserve production coverage and justify the directive locally.",
   },
   "no-conditional-empty-object-spread": {
     why: "`...(cond ? {} : { a })` hides whether a field is present. The plain conditional spread says the same thing in the shape readers already know.",
@@ -1934,12 +1934,12 @@ const RULE_EXPLANATIONS = {
     why: "\"shape\" describes structure, not ownership or role: `userShape`, `PayloadShape`, `shapeSchema` push the type's job into its name, where every rename must repeat it.",
     slop: "type UserShape = { id: string };",
     correct: "type User = { id: string };",
-    exceptions: "Geometry, canvas, and tensor code where \"shape\" IS the domain — the rule detects that context and stays quiet.",
+    exceptions: "Preserve established exports such as UserShape: renaming can break consumer imports. Rename only locally controlled symbols with all consumers updated, or follow an authorized deprecation process. Geometry, canvas, and tensor code may also use shape as a genuine domain term; scanner context detection is only a heuristic.",
   },
   "require-safety-comment-for-type-assertion": {
     why: "An `as` assertion is a claim the compiler cannot check. Hand-written narrowing asserts invariants the author knows; AI-generated assertions assert whatever makes the error go away. The comment is the difference.",
     slop: "const user = payload as User;",
-    correct: "if (typeof payload !== \"object\" || payload === null || !(\"id\" in payload) || typeof payload.id !== \"string\") {\n  throw new TypeError(\"Expected a user with a string id\");\n}\nconst user = { id: payload.id };",
+    correct: "if (typeof payload !== \"object\" || payload === null || !(\"id\" in payload) || typeof payload.id !== \"string\") {\n  throw new TypeError(\"Expected a user with a string id\");\n}\nconst user = payload;",
     exceptions: "This example assumes User needs only a string id; validate every field your actual contract requires. Prefer a parser or narrowing that eliminates the assertion. A SAFETY comment is valid only when code demonstrably establishes its named invariant; never add a claim of validation to silence the checker. Catch bindings can contain any thrown value; narrow before using Error properties.",
   },
   "no-unknown-alias": {
@@ -2063,10 +2063,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "None — this rule exists to keep the other ignores honest.",
   },
   "no-unjustified-suppression": {
-    why: "`@ts-expect-error` with no reason hides a real diagnostic behind a bare directive. The type checker was wrong sometimes; the comment must say why it was wrong HERE.",
+    why: "Bare TypeScript suppression directives and biome-ignore directives need a concrete justification for the diagnostic being suppressed. Fix the actual reported problem when possible. The example below addresses a TypeScript boundary error, not every possible lint or formatting diagnostic.",
     slop: "// @ts-expect-error\nconnect(options);",
-    correct: "if (typeof options !== \"object\" || options === null || !(\"host\" in options) || typeof options.host !== \"string\") {\n  throw new TypeError(\"Expected a configuration with a string host\");\n}\nconnect({ host: options.host });",
-    exceptions: "A proven compiler or vendor-typing defect may need a suppression with a concrete reason. A missing runtime guard is not such a reason: validate external JSON before calling connect. This example assumes connect needs only host.",
+    correct: "if (typeof options !== \"object\" || options === null || !(\"host\" in options) || typeof options.host !== \"string\") {\n  throw new TypeError(\"Expected a configuration with a string host\");\n}\nconnect(options);",
+    exceptions: "A proven compiler or vendor-typing defect may need a TypeScript suppression with a concrete reason; missing runtime validation is not that reason. For biome-ignore, fix its named Biome lint/formatting diagnostic or state why that specific suppression is necessary, preserving the affected statement. Do not apply the JSON-validation example to an unrelated Biome rule. This connect example assumes the API needs only host.",
   },
 };
 
@@ -2104,6 +2104,8 @@ function explainRule(id) {
     `  ${severity}`,
     "",
     `  Why it fires: ${explanation.why}`,
+    "",
+    "  Examples cover only the shown code. Preserve your actual inputs, names, state, and API contract when adapting them.",
     "",
     "  Slop:",
     `    ${explanation.slop.replaceAll("\n", "\n    ")}`,

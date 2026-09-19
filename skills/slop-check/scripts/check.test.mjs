@@ -1641,7 +1641,8 @@ expectSuppression(
     assert.equal(findings.find(finding => finding.rule === id).severity, "review");
   }
   const validateUser = new Function("payload", `${RULE_EXPLANATIONS["require-safety-comment-for-type-assertion"].correct}; return user;`);
-  assert.deepEqual(validateUser({ id: "u1" }), { id: "u1" });
+  const payloadWithMetadata = { id: "u1", metadata: { source: "webhook" } };
+  assert.equal(validateUser(payloadWithMetadata), payloadWithMetadata);
   for (const payload of [null, {}, { id: 7 }]) assert.throws(() => validateUser(payload), TypeError);
   const [production, test] = RULE_EXPLANATIONS["no-module-mocking"].correct.split("// user.test.mjs (separate file)");
   const productionUrl = `data:text/javascript,${encodeURIComponent(production)}`;
@@ -1654,9 +1655,11 @@ expectSuppression(
   const connected = [];
   const connect = value => connected.push(value);
   const validate = new Function("options", "connect", RULE_EXPLANATIONS["no-unjustified-suppression"].correct);
-  validate({ host: "localhost" }, connect);
+  const options = { host: "localhost", metadata: { source: "config" } };
+  validate(options, connect);
+  assert.equal(connected[0], options);
   for (const value of [null, {}, { host: 42 }]) assert.throws(() => validate(value, connect), TypeError);
-  assert.deepEqual(connected, [{ host: "localhost" }]);
+  assert.deepEqual(connected, [options]);
 }
 
 if (failures > 0) {
