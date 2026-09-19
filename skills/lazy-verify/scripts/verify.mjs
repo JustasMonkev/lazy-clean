@@ -41,12 +41,13 @@ function inside(root, path) {
 }
 
 function validateOutputParent(path) {
+  path = path.replace(/\/+$/u, '') || '/';
   let existing = path;
   for (;;) {
     try {
       requireValue(realpathSync(existing) === existing, 'Output directory must not traverse symlinks');
       requireValue(lstatSync(existing).isDirectory(), 'Output parent must be a directory');
-      break;
+      return path;
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
       existing = dirname(existing);
@@ -55,7 +56,7 @@ function validateOutputParent(path) {
 }
 
 function createOutputParent(path) {
-  validateOutputParent(path);
+  path = validateOutputParent(path);
   mkdirSync(path, { recursive: true, mode: 0o700 });
   requireValue(realpathSync(path) === path, 'Output directory changed during creation');
 }
@@ -185,8 +186,7 @@ async function execute(options) {
   if (prior) requireValue(prior.profile === policy.profile && prior.mode === profile.mode
     && prior.repositoryRoot === root && prior.digests.contract === policy.contractDigest
     && prior.digests.profile === policy.profileDigest, 'Replay contract/profile does not match current approval', 'APPROVAL_MISMATCH');
-  const outputParent = policy.outputRoot || join(root, '.lazy-verify', 'runs');
-  validateOutputParent(outputParent);
+  const outputParent = validateOutputParent(policy.outputRoot || join(root, '.lazy-verify', 'runs'));
   if (options.operation === 'verify' && options.head !== 'worktree') {
     const gitOptions = { cwd: root, encoding: 'utf8', timeout: 5000, maxBuffer: 1024 * 1024 };
     const status = execFileSync('git', ['status', '--porcelain=v1', '-z', '--untracked-files=no'], gitOptions);
@@ -290,7 +290,8 @@ async function main(argv) {
     process.exitCode = result.exitCode;
   } catch (error) {
     const exitCode = error.exitCode || 2;
-    console.log(render({ protocol: PROTOCOL, execution: exitCode === 2 ? 'not_run' : 'incomplete', gate: 'not_evaluated',
+    const execution = exitCode === 130 ? 'cancelled' : exitCode === 2 ? 'not_run' : 'incomplete';
+    console.log(render({ protocol: PROTOCOL, execution, gate: 'not_evaluated',
       reasonCodes: error.reasonCodes || [error.code || 'INVALID_INPUT'], message: error.message }, format));
     process.exitCode = exitCode;
   }

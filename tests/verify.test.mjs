@@ -217,9 +217,12 @@ try {
     check('doctor validates output paths without creating directories', () => {
       setup();
       const absent = join(scratch, 'doctor-absent', 'runs');
-      policy.outputRoot = absent; savePolicy();
+      policy.outputRoot = absent + '/'; savePolicy();
       expected(run(['doctor', '--policy', policyPath]), 0);
       assert.equal(existsSync(dirname(absent)), false);
+      expected(verify(), 0);
+      expected(run(['doctor', '--policy', policyPath]), 0);
+      expected(verify(), 0);
       const file = join(scratch, 'output-file'); writeFileSync(file, 'not a directory');
       const link = join(scratch, 'doctor-output-link'); symlinkSync(controller, link, 'dir');
       for (const output of [file, join(file, 'runs'), join(link, 'runs')]) {
@@ -352,7 +355,12 @@ try {
     const status = await new Promise((resolve) => child.on('close', resolve));
     clearInterval(poll);
     clearTimeout(cancelDeadline);
-    check('SIGINT reports interruption', () => { assert.equal(status, 130, output); });
+    check('SIGINT reports interruption', () => {
+      assert.equal(status, 130, output);
+      const result = JSON.parse(output);
+      assert.equal(result.execution, 'cancelled');
+      assert.ok(result.reasonCodes.includes('INTERRUPTED'));
+    });
   }
 } finally {
   rmSync(scratch, { recursive: true, force: true });
