@@ -48,7 +48,9 @@ One caller alone is not a reason to inline or delete a function or file. Keep it
 
 ## Manual simplification pass
 
-Before finishing a TypeScript or JavaScript change, read and apply [TS/JS simplification checks](../lazy/references/simplification-checks.md). It is a concise pre-finish review with small before/after examples: infer obvious local types without `any` or bypass casts, normalize arguments once, handle returned errors directly, and compare lifetimes, callers, and error/cancellation/cleanup semantics before replacing or deleting code. Keep useful domain helpers and explicit multi-step control flow. Its TS/JS examples are illustrative; other languages keep their own syntax and idioms.
+Before finishing a TypeScript or JavaScript change, read and apply [TS/JS simplification checks](../lazy/references/simplification-checks.md). It is a concise pre-finish review with small before/after examples: infer obvious local types without `any` or bypass casts, normalize arguments once, handle returned errors directly, and compare lifetimes, callers, and error/cancellation/cleanup semantics before replacing or deleting code. Keep useful domain helpers and explicit multi-step control flow. It also covers module shape (one reason to change, minimal exports, no import-time side effects) and type modeling (unions over optional-field bags, `unknown` parsed at the boundary). Its TS/JS examples are illustrative; other languages keep their own syntax and idioms.
+
+Before finishing a Python change, read and apply [Python checks](../lazy/references/python-checks.md): the version gates for newer syntax, the project's configured linter and type checker, module shape, dataclasses and `Protocol` over loose dicts and ABC hierarchies, and the idioms that silently change behavior (mutable defaults, `if not x` on valid zero or empty values, bare `except:`).
 
 ## Tests that earn their place
 

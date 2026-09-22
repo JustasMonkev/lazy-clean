@@ -3,6 +3,7 @@
 Use this short pass before finishing a TypeScript or JavaScript change. The
 examples are illustrative TS/JS syntax, not a requirement for Java, Python,
 Ruby, Rust, or Go; apply the same reasoning in the language being changed.
+Python changes have their own [Python checks](python-checks.md).
 
 ## Check the type and argument boundaries
 
@@ -76,6 +77,77 @@ without matching error, cancellation, listener cleanup, and ownership
 semantics. For example, `events.once(res, 'close')` rejects when `res` emits
 `'error'`; it is not interchangeable with a non-rejecting close promise and
 can leave close-only cleanup skipped.
+
+## Check module shape
+
+- Keep a module to one reason to change. Put a new function beside the code
+  that owns its data or policy; add a file for a separate reason to change, not
+  for every function.
+- Every export is a contract. Keep a new helper module-private until another
+  module uses it. Add a barrel `index.ts` or a re-export alias only when the
+  repo already uses that pattern.
+- No import-time side effects in shared modules: no I/O, timers, env reads, or
+  global registration at import. Do that work in the entry point or in an
+  explicit init function that callers and tests control.
+- Pass a capability (`fetch`, `now`, a store function) as an ordinary
+  parameter when a test or second caller needs a seam. Do not add a class, DI
+  container, or interface for it.
+- Break an import cycle by moving the shared type or pure function to the
+  lower-level module, not with a lazy `require` or dynamic `import()`.
+
+```ts
+// Before: importing this module reads the environment and starts a timer.
+const client = createClient(process.env.API_URL!);
+setInterval(() => client.ping(), 30_000);
+export const getUser = (id: string) => client.get(`/users/${id}`);
+
+// After: callers own configuration and lifetime; the policy takes what it needs.
+export const getUser = (client: Client, id: string) => client.get(`/users/${id}`);
+```
+
+## Check type modeling
+
+- Model mutually exclusive states as a discriminated union, not a bag of
+  optional fields that allows impossible combinations. Changing an existing
+  exported type is a contract change; do it only when the task owns it.
+- Use `as const` for literal tables and `satisfies` (TypeScript 4.9+) to check
+  a literal against a type without widening it. Read the installed TypeScript
+  version before using newer syntax.
+- Type outside data as `unknown` and parse it once at the boundary, with the
+  project's schema library if one is installed or a small type guard. Do not
+  pass `any` inward.
+- Do not loosen `strict`, `noImplicitAny`, or lint settings to make a change
+  compile.
+
+```ts
+// Before: { status: 'error' } without an error type-checks, and so does both.
+type Result = { status: 'ok' | 'error'; user?: User; error?: Error };
+
+// After: each state carries exactly what it needs, and a new state fails to compile.
+type Result = { status: 'ok'; user: User } | { status: 'error'; error: Error };
+
+function describe(result: Result) {
+  switch (result.status) {
+    case 'ok': return result.user.name;
+    case 'error': return result.error.message;
+    default: {
+      const unhandled: never = result;
+      return unhandled;
+    }
+  }
+}
+```
+
+## Check function shape
+
+- Use early returns for guard clauses instead of nesting the main path.
+- When a new caller would pass a boolean that switches behavior, prefer two
+  named functions or an options object; keep existing signatures unchanged.
+- Name values by domain meaning (`retryDelayMs`, `activeUsers`), not by type or
+  shape (`data`, `obj2`, `userArray`).
+- Use `Promise.all` for independent awaits only when failing fast is correct;
+  it leaves the other promises running. Keep sequential awaits when order,
+  rate limits, or partial-failure handling matter.
 
 ## Check deletion claims
 

@@ -35,6 +35,15 @@ The bundled checker script stays TS/JS-only; the other five languages get the ma
 HTML is not scanned either: extract inline `<script>` code to a temporary `.js`
 or report a manual review. Zero files checked is no coverage, not a clean result.
 
+TypeScript/JavaScript and Python also get a pre-finish reference with before/after
+examples: [TS/JS checks](skills/lazy/references/simplification-checks.md) cover
+module shape, exports, import-time side effects, discriminated unions, and
+boundary parsing; [Python checks](skills/lazy/references/python-checks.md) cover
+version gates, the project's configured linter and type checker, module shape,
+dataclasses and `Protocol`, and the idioms that silently change behavior
+(mutable defaults, `if not x`, bare `except:`). The rules files inline the key
+points for agents that never open a reference.
+
 The rulesets think before coding, state material assumptions when they matter,
 match existing style, cut only task-owned orphans, and define a verifiable goal.
 One-caller helpers stay when they carry real value (a domain name, tricky logic,
@@ -157,7 +166,10 @@ Without Git, pass each changed path as a separate quoted argument.
 
 The main and subagent prompts use the same compact rules. They include a brief
 think → plan → check loop for multi-step work and a strong cut pass over the
-task-owned diff without forcing net-negative feature changes. Detailed
+task-owned diff without forcing net-negative feature changes. Every surface
+ends with the same four-item finish checklist, checked against the diff rather
+than memory: requested needs done and nothing unasked added, each changed line
+traceable, tests that ran, and language checks applied. Detailed
 [risk checks](skills/lazy/references/risk-checks.md) are loaded for non-trivial
 code changes, not every task. All levels preserve requested scope, existing
 input formats, and the repo's test tools; none treats one-line code as a goal.

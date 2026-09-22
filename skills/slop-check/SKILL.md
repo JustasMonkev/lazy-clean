@@ -23,7 +23,7 @@ Everything runs from this skill directory with plain `node`. Do not install any 
    - `--since=<git-ref>` keeps only findings on lines the diff against that ref added — `--since=HEAD` before a commit, `--since=origin/main` in CI — which is how an existing codebase adopts the checker without a baseline file.
    - `--disable=<rule-id>[,<rule-id>]` turns rules off for the run. An id that is not a rule warns on stderr and the run continues with that rule still on, because the alternative is a scan that reads as narrower than it is.
    - `--explain=<rule-id>` prints one rule's why, a slop/instead pair, and when the rule is wrong, then exits — no scan. Use it to judge a finding before rewriting correct code; an id that is not a rule exits 2.
-   - The checker reads TypeScript and JavaScript only. For any other language skip step 1 and treat the manual checklist below as the whole procedure — never report "clean" on the strength of a scan that read nothing.
+   - The checker reads TypeScript and JavaScript only. For any other language skip step 1 and treat the manual checklist below as the whole procedure — never report "clean" on the strength of a scan that read nothing. For Python, also apply [Python checks](../lazy/references/python-checks.md) and run the linter and type checker the project already configures.
    - HTML is not scanned. If the changed behavior is in an inline `<script>`, extract that script to a temporary `.js` for the checker or perform and report a manual review; zero files checked is no coverage, never a clean verdict.
 
 2. Triage every finding. The checker is heuristic, so findings are review prompts, not verdicts:
@@ -64,6 +64,7 @@ For each item, the question is the same: does this code earn its place, or does 
 - **Debug leftovers** — `console.log` tracing, timing code, temporary variables named `test`/`tmp`/`debug`.
 - **Edit-artifacts** — old and new versions of a function both kept, re-export aliases "for compatibility" when every call site could just be updated, comments describing the diff instead of the code.
 - **Comment and doc bloat** — JSDoc that restates the signature, section banner comments, README additions narrating the change. A comment should state a constraint the code cannot show.
+- **Python slop** — bare `except:` or `except Exception: pass`, mutable default arguments, `if not x` where `0` or `""` is valid, loose dicts where a dataclass names the shape, `utils.py` grab bags, work done at import time, and `# type: ignore` / `# noqa` without a code and reason.
 - **Test slop** — tests that assert a mock was called with the value it was just given, module-level mocks instead of real dependency seams, duplicated setup that hides what varies. Keep tests that catch real regressions; mutation evidence is optional when existing red-green checks already prove the risky behavior.
 
 ## Checker rules

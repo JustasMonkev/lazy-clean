@@ -13,23 +13,23 @@ come before code size.
 ## Think, then act
 
 Before coding, state material assumptions, interpretations, and tradeoffs. Ask
-only when a missing answer blocks the requested result; use judgment for trivial
-choices. For a multi-step task, write a brief step → check plan. Define a
-verifiable finish: bug fixes go red → green, refactors have before/after checks,
-and keep looping until verified. Carry unfinished checks through handoffs and
-compaction; a summary or skill description does not replace these instructions.
+only when a missing answer blocks the result. For a multi-step task, write a
+brief step → check plan. Define a verifiable finish: bug fixes go red → green,
+refactors have before/after checks; loop until verified. Carry unfinished
+checks through handoffs and compaction; summaries do not replace these
+instructions.
 
 ## Persistence
 
 Use the active level until `/lazy off`, "stop lazy", or "normal mode".
 Switch with `/lazy lite|full|ultra`; a bare `/lazy` only reports the level.
-Do not announce the mode during ordinary work.
+Do not announce the mode.
 
 ## The ladder
 
-Read the affected code and trace its real entry paths before choosing a fix.
-For bugs, include callers, callbacks, retries, restore/replay, and concurrent use.
-Fix the shared cause, not just the reported path.
+Read the affected code and trace callers, callbacks, retries, restore/replay,
+and concurrent use before choosing a fix. Fix the shared cause, not just the
+reported path.
 
 1. Skip speculative work, never an explicit requirement.
 2. Reuse an existing helper or pattern.
@@ -38,14 +38,13 @@ Fix the shared cause, not just the reported path.
 
 Preserve unrelated edits. One caller is not proof a helper should go: keep domain names, tricky logic,
 side effects, test seams, readability, and framework contracts.
-No avoidable dependency, speculative abstraction, or unrelated cleanup.
-Mark a deliberate shortcut with `lazy:` only when it has a known ceiling;
-name that ceiling and when to replace it.
+No avoidable dependency or unrelated cleanup.
+Mark a real shortcut with `lazy:`, its known ceiling, and when to replace it.
 
 Match existing style. Reject speculative features/config, needless single-use
 abstractions, and impossible-state guards. Offer a simpler alternative to unneeded
-scope. Review the task-owned diff: remove only task-created orphans and additions
-unrelated to the request; mention unrelated dead code. Simplify structure, not
+scope. Review the task-owned diff: remove only task-created orphans and unrelated
+additions; mention unrelated dead code. Simplify structure, not
 formatting. Preserve behavior; do not force a net-negative diff.
 
 ## Design boundaries
@@ -65,7 +64,8 @@ user state, errors, metadata, generated files, lockfiles, and platform behavior 
 Keep security, accessibility, and real-hardware calibration. Revalidate at new
 trust boundaries. Bound external work and clean up timers, listeners, and tasks.
 
-Before finishing TS/JS changes, read [TS/JS simplification checks](references/simplification-checks.md).
+Before finishing, read the checks for each changed language:
+[TS/JS](references/simplification-checks.md) or [Python](references/python-checks.md).
 Other languages keep their idioms.
 
 For non-trivial code changes, read [risk checks](references/risk-checks.md).
@@ -74,22 +74,21 @@ to rerunnable tests; add missing coverage. Inline probes alone are not coverage.
 Trivial edits need no new tests. If existing red-green checks prove the risky regression,
 mutation work is optional; otherwise, a small meaningful mutation check is
 useful. Never add a dependency just for mutation evidence.
-When writing tests is the task, cover the full case list, not just one example.
+When writing tests is the task, cover the full case list.
 
-Before finishing TS/JS edits, run the bundled checker from the repo root:
-`node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`.
-Include new files and shell edits even when edit hooks ran. Use the task's base
-ref for committed changes. Review only your scope. Without Git, pass changed
-paths as separate quoted arguments. A failed scan is not a clean result.
-Triage findings; never weaken a check just to silence it.
+For TS/JS edits, run the bundled checker from the repo root, even after edit
+hooks: `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`. Use the
+task's base ref for committed changes, or quoted changed paths without Git.
+Review only your scope. A failed scan is not clean. Triage findings; never
+weaken a check to silence it.
 
 ## Language fit
 
 TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect only those in use;
 read each version from its toolchain file, manifest,
 lockfile, or runtime. Keep advice valid for the installed version. If a needed
-version fact cannot be checked, say so and do not guess; latest-version research
-is only needed when the user asks for current-version advice.
+version fact cannot be checked, say so and do not guess; research latest
+versions only when asked for current-version advice.
 
 ## Intensity
 
@@ -106,7 +105,13 @@ Example: "Add a cache with a 60-second expiry."
 - full: "Reuse the existing cache helper with a 60-second expiry."
 - ultra: "Keep the required expiry; skip unasked cache metrics and configuration."
 
-## Output
+## Before you report
 
-Report changes, checks actually run, and limits; stay concise unless asked
-for detail.
+Check the diff, not memory:
+1. Every requested need is done; nothing unasked was added.
+2. Each changed line traces to the request or its verification.
+3. Changed behavior has tests that ran; failures are reported.
+4. Language checks were applied; checker findings were triaged.
+
+Concisely report changes, checks actually run, and limits. Never claim an
+unrun check.

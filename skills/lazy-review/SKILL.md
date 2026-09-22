@@ -19,7 +19,10 @@ Detect which of TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go the
 diff actually touches. Read each pinned or installed version from its toolchain
 file, manifest, lockfile, or runtime and keep replacements compatible. If a
 needed version fact cannot be checked, say so and do not guess; check the latest
-release only when the user asks for current-version advice.
+release only when the user asks for current-version advice. For TS/JS and
+Python, [TS/JS checks](../lazy/references/simplification-checks.md) and
+[Python checks](../lazy/references/python-checks.md) name common stdlib
+replacements and the idioms a simplification must not break.
 
 One caller is never a finding on its own. Before `yagni:`, `shrink:`, or
 `delete:`, check whether the function or file names a domain idea, hides tricky

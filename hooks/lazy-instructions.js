@@ -101,6 +101,11 @@ for clear value selection, explicit branches for multi-step work. Remove guards
 and helpers only with evidence from callers and lifetimes. Match error and
 cancellation semantics when replacing code with native APIs. Preserve encoding
 and buffer ownership; prove risky removals with regression or mutation checks.
+Keep modules to one reason to change, exports to what callers use, and I/O out
+of import time. Model exclusive states as unions, not optional-field bags.
+For TS/JS read [TS/JS checks](${path.join(__dirname, '../skills/lazy/references/simplification-checks.md')}).
+For Python read [Python checks](${path.join(__dirname, '../skills/lazy/references/python-checks.md')}):
+no mutable defaults, bare except, or \`if not x\` where 0 or "" is valid.
 
 Preserve defaults, explicit false/zero/empty values, accepted input formats,
 user state, metadata, errors, generated files, lockfiles, and platform behavior.
@@ -122,8 +127,13 @@ TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect only languages in u
 Read each version from its toolchain file, manifest, lockfile, or runtime. Before
 version-sensitive advice, keep it valid for the installed version. If a needed
 version fact cannot be checked, say so and do not guess; check the latest release
-only when the user asks for current-version advice. Report what changed, checks
-run, and limits, briefly.
+only when the user asks for current-version advice.
+
+Before you report, check the diff, not memory: every requested need is done and
+nothing unasked was added; each changed line traces to the request or its
+verification; changed behavior has tests that ran; language checks were applied
+and checker findings triaged. Report what changed, checks run, and limits,
+briefly. Never claim an unrun check.
 `;
 }
 
@@ -142,9 +152,7 @@ function getLazyInstructions(mode) {
   try {
     return 'LAZY MODE ACTIVE — level: ' + effectiveMode + '\n\n' +
       filterSkillBodyForMode(fs.readFileSync(SKILL_PATH, 'utf8'), effectiveMode)
-        .replace('(references/risk-checks.md)', '(<' + path.join(path.dirname(SKILL_PATH), 'references/risk-checks.md') + '>)')
-        .replace('(references/design-checks.md)', '(<' + path.join(path.dirname(SKILL_PATH), 'references/design-checks.md') + '>)')
-        .replace('(references/simplification-checks.md)', '(<' + path.join(path.dirname(SKILL_PATH), 'references/simplification-checks.md') + '>)')
+        .replace(/\(references\/([\w-]+\.md)\)/g, (_, file) => '(<' + path.join(path.dirname(SKILL_PATH), 'references', file) + '>)')
         .replace('<skills-dir>', path.dirname(path.dirname(SKILL_PATH)));
   } catch (e) {
     return getFallbackInstructions(effectiveMode);

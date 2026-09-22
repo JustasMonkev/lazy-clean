@@ -176,12 +176,88 @@ for (const mode of ["lite", "full", "ultra"]) {
   }
 }
 const levels = ["lite", "full", "ultra"].map((mode) => instructions.filterSkillBodyForMode(skillBody, mode));
-const guidanceLines = (text) => text.split("\n").filter((line) => /one caller|mutation|installed version|task-owned|red → green/iu.test(line));
+const guidanceLines = (text) => text.split("\n").filter((line) => /one caller|mutation|installed version|task-owned|red → green|python-checks|not memory|unrun check/iu.test(line));
 assert.ok(guidanceLines(skillBody).length > 0, "SKILL.md must carry the guidance for this check to mean anything");
 for (const [index, level] of levels.entries())
   ok(`level ${index} keeps every guidance line`,
     guidanceLines(level).length === guidanceLines(skillBody).length,
     `${guidanceLines(level).length} of ${guidanceLines(skillBody).length}`);
+
+// Clean and modular basics for the two languages with dedicated references.
+// Each reference must ship, carry its substance, and be reachable from every
+// surface that gives build or review advice, or the guidance exists only on disk.
+const LANGUAGE_REFERENCES = [
+  ["simplification-checks.md", [
+    /one reason to change/iu, /import-time side effects/iu, /discriminated union/iu,
+    /`unknown` and parse it once at the boundary/iu, /TypeScript 4\.9\+/u,
+    /Do not loosen `strict`/u, /Promise\.all.*failing fast/iu,
+  ]],
+  ["python-checks.md", [
+    /requires-python/u, /\(3\.10\)/u, /one reason to change/iu, /import-time side effects/iu,
+    /__name__ == "__main__"/u, /mutable default/iu, /`if not value`/u, /is None/u,
+    /bare `except:`/u, /raise NewError\(\.\.\.\) from err/u, /typing\.Protocol/u,
+    /`@dataclass`/u, /configures/u, /Do not add a tool, loosen its config/u,
+    /pytest\.raises/u,
+  ]],
+];
+for (const [file, patterns] of LANGUAGE_REFERENCES) {
+  const reference = path.join(ROOT, "skills/lazy/references", file);
+  assert.ok(fs.existsSync(reference), `${file} must ship with the skill`);
+  const text = flat(fs.readFileSync(reference, "utf8"));
+  for (const pattern of patterns) ok(`${file} covers ${pattern}`, pattern.test(text));
+  for (const mode of ["lite", "full", "ultra"]) {
+    ok(`${file} resolves in getLazyInstructions(${mode})`,
+      instructions.getLazyInstructions(mode).includes(`(<${reference}>)`));
+    ok(`${file} resolves in getFallbackInstructions(${mode})`,
+      instructions.getFallbackInstructions(mode).includes(reference));
+  }
+  for (const surface of [...RULES_FILES, ".opencode/command/lazy.md"])
+    ok(`${surface} routes to ${file}`, read(surface).includes(`<skills-dir>/lazy/references/${file}`));
+  for (const skill of ["skills/lazy-clean/SKILL.md", "skills/lazy-review/SKILL.md", "skills/lazy-audit/SKILL.md"])
+    ok(`${skill} routes to ${file}`, read(skill).includes(`../lazy/references/${file}`));
+}
+ok("slop-check routes Python to its checks", read("skills/slop-check/SKILL.md").includes("../lazy/references/python-checks.md"));
+
+// The inline basics must survive where a rules file is the only thing an agent
+// reads (Cursor, Copilot): a link alone to an uninstalled reference is nothing.
+for (const file of [...RULES_FILES, ".opencode/command/lazy.md"]) {
+  const text = flat(read(file));
+  ok(`${file} inlines the module basics`, /one reason to change/iu.test(text) && /import time/iu.test(text));
+  ok(`${file} inlines the TypeScript union rule`, /exclusive states as unions/iu.test(text));
+  ok(`${file} inlines the Python behavior traps`, /mutable defaults/iu.test(text) && /bare `except:`/u.test(text));
+}
+
+// The finish checklist is what turns the rules into a checked result instead of
+// a remembered one; it belongs at the end of every build surface.
+const FINISH_CHECKLIST = [/check the diff, not memory/iu, /nothing unasked was added/iu,
+  /traces to the request or its verification/iu, /tests that ran/iu, /never claim an unrun check/iu];
+const finishSurfaces = [
+  ["skills/lazy/SKILL.md", read("skills/lazy/SKILL.md")],
+  ...[...RULES_FILES, ".opencode/command/lazy.md"].map((file) => [file, read(file)]),
+  ...["lite", "full", "ultra"].flatMap((mode) => [
+    [`getLazyInstructions(${mode})`, instructions.getLazyInstructions(mode)],
+    [`getFallbackInstructions(${mode})`, instructions.getFallbackInstructions(mode)],
+  ]),
+];
+for (const [surface, raw] of finishSurfaces) {
+  const text = flat(raw);
+  for (const pattern of FINISH_CHECKLIST) ok(`${surface} finish checklist has ${pattern}`, pattern.test(text));
+  const tail = text.slice(Math.floor(text.length * 0.6));
+  ok(`${surface} ends with the finish checklist`, /check the diff, not memory/iu.test(tail));
+}
+
+// A relative link in a shipped skill that points nowhere sends the agent to a
+// file that is not there; skills-only installs copy skills/ as a whole, so
+// ../lazy/references links resolve there too.
+const skillMarkdown = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+  const full = path.join(dir, entry.name);
+  if (entry.isDirectory()) return skillMarkdown(full);
+  return entry.name.endsWith(".md") ? [full] : [];
+});
+for (const file of skillMarkdown(path.join(ROOT, "skills"))) {
+  for (const [, target] of fs.readFileSync(file, "utf8").matchAll(/\]\(((?:\.\.?\/|references\/)[^)#\s]+)[^)]*\)/gu))
+    ok(`${path.relative(ROOT, file)} link ${target} resolves`, fs.existsSync(path.resolve(path.dirname(file), target)));
+}
 
 console.log(`\n${passes} passed, ${failures} failed`);
 process.exit(failures === 0 ? 0 : 1);
