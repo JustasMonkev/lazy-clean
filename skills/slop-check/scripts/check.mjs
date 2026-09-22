@@ -1440,7 +1440,7 @@ function* iterateCandidateFindings(ctx) {
     yield {
       ...matchSpan(lineStarts, match),
       rule: "no-message-only-rethrow",
-      message: "Rebuilding an error from its message throws away the stack and the original type. Rethrow it, or wrap it with `{ cause }`.",
+      message: "Rebuilding an error from its message throws away the stack and the original type. Rethrow it or wrap with `{ cause }` only within the same trust boundary; retain deliberate sanitization at public boundaries.",
     };
   }
 
@@ -1486,7 +1486,7 @@ function* iterateCandidateFindings(ctx) {
     yield {
       ...matchSpan(lineStarts, match),
       rule: "no-let-if-else-assign",
-      message: "A `let` declared only to be assigned in both branches hides a single expression. Use `const` with a conditional expression.",
+      message: "A `let` declared only to be assigned in both branches hides a single expression. Use `const` with a conditional expression, retaining any intentional type annotation.",
     };
   }
 
@@ -2654,11 +2654,11 @@ function* iterateCommentFindings(ctx) {
       continue;
     }
     if (CHANGE_NOTE_COMMENT_PATTERN.test(body)) {
-      yield { ...position, rule: "no-change-note-comments", message: "This comment describes the edit or appeases a tool, not the code. It is noise the moment the change lands; delete it." };
+      yield { ...position, rule: "no-change-note-comments", message: "Possible edit narration. Remove only obsolete change notes; retain enduring design rationale, decision references, and constraints the code cannot show." };
       continue;
     }
     if (BACKCOMPAT_COMMENT_PATTERN.test(body) && !/@deprecated/u.test(comment.text)) {
-      yield { ...position, rule: "no-backcompat-comments", message: "Compatibility shims nobody asked for are dead code with a caption. Update the call sites and delete the alias, or justify why it must stay." };
+      yield { ...position, rule: "no-backcompat-comments", message: "Review whether this compatibility shim is still required. Preserve published APIs, persisted data, and protocol compatibility; remove it only when callers and stored formats no longer need it." };
       continue;
     }
     if (EMOJI_PATTERN.test(comment.text)) {
@@ -2736,7 +2736,7 @@ function* iterateCommentFindings(ctx) {
 const MECHANICAL_RULES = new Set([
   "no-boolean-literal-ternary", "no-double-negation-condition",
   "no-useless-rethrow",
-  "no-typed-jsdoc", "no-change-note-comments",
+  "no-typed-jsdoc",
   "no-boolean-return-branches", "no-let-if-else-assign",
 ]);
 
@@ -2901,7 +2901,7 @@ const RULE_EXPLANATIONS = {
     why: "`throw new Error(e.message)` throws away the stack and the original type. The caller catches an error that starts its stack HERE, and `instanceof NetworkError` is false.",
     slop: "try { save(); } catch (e) { throw new Error(e.message); }",
     correct: "save();  // preserve the original error; keep any existing finally",
-    exceptions: "Remove the catch when it adds nothing, or wrap with genuine context and { cause: e }. Do not replace it with a no-op catch that only rethrows.",
+    exceptions: "Within the same trust boundary, remove a catch that adds nothing or wrap with genuine context and { cause: e }. Retain deliberate sanitization at public boundaries: map to an approved public error without exposing the internal cause, type, stack, payload, or metadata. Verify that the message itself is safe to disclose. Do not replace a redundant catch with a no-op rethrow.",
   },
   "no-boolean-return-branches": {
     why: "Boolean-return branches can be expressed without the branch while preserving a boolean result: if (cond) return true; else return false becomes return Boolean(cond). The reversed form becomes return !cond. Return cond directly only when it is already boolean.",
@@ -2911,9 +2911,9 @@ const RULE_EXPLANATIONS = {
   },
   "no-let-if-else-assign": {
     why: "A `let` declared only to be assigned in both branches is a conditional expression written long, plus a mutable binding nothing else may reassign.",
-    slop: "let label; if (isDev) { label = \"dev\"; } else { label = \"prod\"; }",
-    correct: "const label = isDev ? \"dev\" : \"prod\";",
-    exceptions: "A branch that does more than assign is a real branch. A write after the if/else also disqualifies the rewrite (the rule already checks both).",
+    slop: "export let label: string; if (isDev) { label = \"dev\"; } else { label = \"prod\"; }",
+    correct: "export const label: string = isDev ? \"dev\" : \"prod\";",
+    exceptions: "Retain any intentional type annotation on the new const, especially on exports: removing : string can narrow a consumer's typeof label contract to a literal union. A branch that does more than assign is a real branch. A write after the if/else also disqualifies the rewrite (the rule already checks both).",
   },
   "no-promise-constructor-wrapper": {
     why: "`new Promise(r => r(value))` is `Promise.resolve(value)` with a constructor. The wrapper allocates, and it invites the classic executor mistake on the way.",
@@ -2936,8 +2936,8 @@ const RULE_EXPLANATIONS = {
   "no-array-filter-map": {
     why: "Adjacent eager array filter/map passes allocate an intermediate array. A single pass can avoid it when callback ordering, indexes, and intermediate-array observations are irrelevant.",
     slop: "const values = [1, -2, 3];\nconst result = values.filter(value => value > 0).map(value => value * 2);",
-    correct: "const values = [1, -2, 3];\nconst result = values.flatMap(value => value > 0 ? [value * 2] : []);",
-    exceptions: "This example has pure callbacks over ordinary numeric values. Keep separate passes when callbacks depend on indexes, their array argument, side effects, or evaluation order. Preserve sparse-array behavior, custom methods, and array subclass contracts; filter/map and map/filter are different pipelines. Check runtime support and measured cost before selecting flatMap or iterator helpers.",
+    correct: "const values = [1, -2, 3];\nconst result = [];\nfor (const value of values) {\n  if (value > 0) result.push(value * 2);\n}",
+    exceptions: "This loop uses one result array and pure operations over dense ordinary numeric values; flatMap with per-item array literals adds temporary allocations. Keep separate passes when callbacks depend on indexes, their array argument, side effects, or evaluation order. Preserve sparse-array behavior, custom methods, and array subclass contracts; filter/map and map/filter are different pipelines. Measure before replacing a clear pipeline.",
   },
   "no-filler-comments": {
     why: "\"In a real app...\", \"for brevity\", \"placeholder\" — the comment admits the code is not real. Ship the real thing or delete both.",
@@ -2952,16 +2952,16 @@ const RULE_EXPLANATIONS = {
     exceptions: "The prefix matcher can flag useful constraints too: retain comments such as 'First, write the journal so crash recovery can replay an interrupted update.' Remove only repetition; preserve explanations of why ordering matters, even when they begin with First, Next, or Finally.",
   },
   "no-change-note-comments": {
-    why: "\"As requested\", \"NEW:\", \"to make the linter happy\" — the comment describes the EDIT, not the code. Once the change lands it explains nothing the diff does not.",
+    why: "\"As requested\", \"NEW:\", \"to make the linter happy\" often describe the edit rather than the code. The phrase matcher cannot distinguish obsolete change notes from enduring design rationale.",
     slop: "// UPDATED: retry count\nconst retries = 3;",
     correct: "const retries = 3;",
-    exceptions: "None — version control is the changelog.",
+    exceptions: "Retain lasting rationale and constraints, including ADR references such as 'As discussed in ADR-17, retry only idempotent requests'. Version history does not replace a design decision the code cannot express. Remove only obsolete edit narration.",
   },
   "no-backcompat-comments": {
-    why: "A shim \"kept for backwards compatibility\" nobody asked for is dead code with a caption. Every call site could just be updated instead.",
+    why: "A shim \"kept for backwards compatibility\" can be unnecessary when every caller is controlled and no existing data or protocol needs it. The comment alone does not establish that the shim is removable.",
     slop: "// kept for backwards compat\nexport const fetchData = fetchUser;\nfetchData(id);",
     correct: "fetchUser(id);  // update callers and remove the unneeded alias",
-    exceptions: "A published API you cannot break is the real case — `@deprecated` JSDoc is the accepted marker and the rule already accepts it.",
+    exceptions: "Retain adapters required by published APIs, persisted settings or user data, and older protocol or wire formats. Removing them can make existing state unreadable even without a public symbol. Document supported versions and migration requirements; use @deprecated only for an actually deprecated API, not as a replacement for data compatibility.",
   },
   "no-emoji": {
     why: "Decorative emoji can distract from the information in source comments. Prefer words when the symbol adds no meaning.",

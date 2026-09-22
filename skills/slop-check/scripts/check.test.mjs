@@ -1359,6 +1359,7 @@ console.log("ok   ?? undefined is a review finding, not a mechanical one");
 // rules were sure the code was wrong but could not name such a replacement, and
 // printing them as one-answer fixes is how correct code got rewritten.
 for (const [source, rule, why] of [
+  ["// As discussed in ADR-17, retry only idempotent requests\nretry(request);", "no-change-note-comments", "the comment records a lasting design constraint"],
   ["// First, write the journal so crash recovery can replay an interrupted update.\nwriteJournal();\napplyUpdate();", "no-narration-comments", "the comment explains a crash-recovery ordering constraint"],
   ["const copy = JSON.parse(JSON.stringify(state));", "no-json-clone", "structuredClone keeps a Date a Date"],
   ["const value = await Promise.resolve(input);", "no-await-promise-resolve", "dropping the wrapper drops a tick"],
@@ -1636,7 +1637,7 @@ expectSuppression(
   const booleanReturn = new Function("items", RULE_EXPLANATIONS["no-boolean-return-branches"].correct);
   assert.equal(booleanReturn([]), false);
   assert.equal(booleanReturn([1, 2]), true);
-  for (const id of ["no-emoji", "no-obvious-doc-comments", "no-narration-comments"]) {
+  for (const id of ["no-emoji", "no-obvious-doc-comments", "no-narration-comments", "no-change-note-comments"]) {
     const findings = lintSource(RULE_EXPLANATIONS[id].slop, "sample.ts");
     assert.equal(findings.find(finding => finding.rule === id).severity, "review");
   }
@@ -1660,6 +1661,18 @@ expectSuppression(
   assert.equal(connected[0], options);
   for (const value of [null, {}, { host: 42 }]) assert.throws(() => validate(value, connect), TypeError);
   assert.deepEqual(connected, [options]);
+}
+
+{
+  const explanation = RULE_EXPLANATIONS["no-array-filter-map"];
+  assert.doesNotMatch(explanation.correct, /\.flatMap\(/u, "avoid per-element temporary arrays");
+  for (const values of [[], [1, -2, 3], [-1, 0, -3], [2, 2, 4]]) {
+    const source = explanation.correct.replace("const values = [1, -2, 3];", "");
+    const result = new Function("values", `${source}; return result;`)(values);
+    assert.deepEqual(result, values.filter(value => value > 0).map(value => value * 2));
+  }
+  const conditional = RULE_EXPLANATIONS["no-let-if-else-assign"];
+  assert.match(conditional.correct, /const label: string/u, "retain the declared type in the example");
 }
 
 

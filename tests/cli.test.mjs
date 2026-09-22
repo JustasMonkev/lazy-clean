@@ -757,7 +757,7 @@ check("help does not hide invalid explanation values", () => {
 });
 
 check("heuristic documentation rules stay review-only in explanations", () => {
-  for (const id of ["no-emoji", "no-obvious-doc-comments", "no-narration-comments"]) {
+  for (const id of ["no-emoji", "no-obvious-doc-comments", "no-narration-comments", "no-change-note-comments"]) {
     const result = run([`--explain=${id}`]);
     assert.equal(result.status, 0);
     assert.match(result.stdout, /review \(heuristic/u);
@@ -769,6 +769,19 @@ check("--explain ignores paths and runs no scan", () => {
   assert.equal(result.status, 0);
   assert.doesNotMatch(result.stdout, /slop\.ts/u);
   assert.doesNotMatch(result.stdout, /1 finding/u);
+});
+
+check("--explain preserves durable contracts and sanitizing boundaries", () => {
+  for (const [id, contract] of [
+    ["no-change-note-comments", /retain.*ADR/iu],
+    ["no-backcompat-comments", /persisted.*protocol/iu],
+    ["no-let-if-else-assign", /retain.*annotation/iu],
+    ["no-message-only-rethrow", /approved public error.*without.*cause/iu],
+  ]) {
+    const result = run([`--explain=${id}`]);
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, contract);
+  }
 });
 
 check("--explain with no value is an unknown option", () => {
