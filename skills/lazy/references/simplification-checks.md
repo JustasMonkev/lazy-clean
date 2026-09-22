@@ -1,9 +1,51 @@
 # TS/JS simplification checks
 
-Use this short pass before finishing a TypeScript or JavaScript change. The
-examples are illustrative TS/JS syntax, not a requirement for Java, Python,
+Use this short pass before finishing a TypeScript or JavaScript change,
+including a `tsconfig.json` change. The examples are illustrative TS/JS syntax, not a requirement for Java, Python,
 Ruby, Rust, or Go; apply the same reasoning in the language being changed.
 Python changes have their own [Python checks](python-checks.md).
+
+## Check the TypeScript version and tsconfig
+
+Read the installed `typescript` version from the lockfile or `npx tsc -v`, not
+from memory. TypeScript 7 is the native (Go) compiler shipped as the regular
+`typescript` package with the usual `tsc` command; `tsgo` and
+`@typescript/native-preview` were its preview names. TypeScript 6 is the last
+JavaScript-based release. A repo may pin both: `@typescript/typescript6`
+provides `tsc6`, often aliased as `typescript` for tools that need the old API.
+The language is the same, so these checks and the slop checker apply to every
+version; what changes is configuration, emit, and tooling.
+
+TypeScript 6 deprecates these and TypeScript 7 rejects them. Do not suggest them
+on 6 or 7; on 5.x or older, flag them only when the task is an upgrade:
+
+- `baseUrl`: write `paths` entries relative to the tsconfig, such as
+  `"@/*": ["./src/*"]`.
+- `moduleResolution` `node`, `node10`, or `classic`: use `nodenext` for Node
+  or `bundler` for bundled apps.
+- `target: "es5"` and `downlevelIteration`: the lowest target is `es2015`;
+  leave older output to the bundler or Babel.
+- `module` `amd`, `umd`, `systemjs`, or `none`, and `outFile`: use ES modules
+  and a bundler.
+- `esModuleInterop: false`, `allowSyntheticDefaultImports: false`, and
+  `alwaysStrict: false`.
+- `import data from './data.json' assert { type: 'json' }`: write `with`.
+- `module Foo {}` namespace declarations: write `namespace Foo {}`.
+
+TypeScript 6 and 7 changed defaults: `strict` is on, `module` is `esnext`,
+`target` is a current ECMAScript year, `rootDir` is the tsconfig directory,
+`noUncheckedSideEffectImports` is on, and `types` is `[]`, so global types such
+as Node's need `"types": ["node"]`. When an upgrade changes behavior, set the
+old value explicitly or fix the code; do not rely on the new default silently.
+`"ignoreDeprecations": "6.0"` is a temporary migration step, never a fix;
+mark it with `lazy:` and the version it has to go before.
+
+TypeScript 7.0 has no stable programmatic API yet. Tools that import
+`typescript` (typescript-eslint, ts-morph, ts-jest, language service plugins,
+Vue, Svelte, Astro, and Angular template tooling) may need the TypeScript 6
+alias; keep it unless those tools support 7. TypeScript 7 also recognizes
+fewer JSDoc forms in `checkJs` projects: prefer real types or standard JSDoc
+over Closure-style `function(string): void`, `@enum`, or `@class`.
 
 ## Check the type and argument boundaries
 

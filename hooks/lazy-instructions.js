@@ -103,7 +103,9 @@ cancellation semantics when replacing code with native APIs. Preserve encoding
 and buffer ownership; prove risky removals with regression or mutation checks.
 Keep modules to one reason to change, exports to what callers use, and I/O out
 of import time. Model exclusive states as unions, not optional-field bags.
-For TS/JS read [TS/JS checks](${path.join(__dirname, '../skills/lazy/references/simplification-checks.md')}).
+On TypeScript 7 (native tsc) do not add baseUrl, moduleResolution node/node10,
+target es5, outFile, or import assert; keep a TypeScript 6 alias API tools need.
+For TS/JS and tsconfig read [TS/JS checks](${path.join(__dirname, '../skills/lazy/references/simplification-checks.md')}).
 For Python read [Python checks](${path.join(__dirname, '../skills/lazy/references/python-checks.md')}):
 no mutable defaults, bare except, or \`if not x\` where 0 or "" is valid.
 

@@ -65,7 +65,7 @@ Keep security, accessibility, and real-hardware calibration. Revalidate at new
 trust boundaries. Bound external work and clean up timers, listeners, and tasks.
 
 Before finishing, read the checks for each changed language:
-[TS/JS](references/simplification-checks.md) or [Python](references/python-checks.md).
+[TS/JS and tsconfig](references/simplification-checks.md) or [Python](references/python-checks.md).
 Other languages keep their idioms.
 
 For non-trivial code changes, read [risk checks](references/risk-checks.md).

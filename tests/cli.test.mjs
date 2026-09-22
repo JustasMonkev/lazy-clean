@@ -58,6 +58,52 @@ check("exit 0 for a clean file", () => {
   assert.match(result.stdout, /clean \(1 file checked\)/u);
 });
 
+// The checker is a text scanner, not the compiler, so it is independent of the
+// installed TypeScript version, including the native TypeScript 7 `tsc`. Syntax
+// that current compilers accept must scan cleanly and must not hide slop after it.
+const MODERN_TS = `import config from './config.json' with { type: 'json' };
+import type { User } from './user.ts';
+
+export namespace Limits {
+  export const max = 10;
+}
+
+const routes = {
+  home: '/',
+  user: '/users/:id',
+} as const satisfies Record<string, string>;
+
+export class Session {
+  accessor user: User | undefined;
+  #token: string;
+  constructor(token: string) { this.#token = token; }
+  [Symbol.dispose]() { this.#token = ''; }
+}
+
+export function open(token: string) {
+  using session = new Session(token);
+  return config.page === 'home' ? routes.home : session.user?.name;
+}
+
+export const first = <const T extends readonly unknown[]>(items: T) => items[0];
+`;
+// A separate directory keeps these files out of the directory-scan expectations.
+const modernRoot = mkdtempSync(join(tmpdir(), "slop-modern-"));
+writeFileSync(join(modernRoot, "modern.mts"), MODERN_TS);
+writeFileSync(join(modernRoot, "modern-slop.mts"), `${MODERN_TS}${SLOP}`);
+
+check("current TypeScript syntax scans clean", () => {
+  const result = run(["modern.mts"], modernRoot);
+  assert.equal(result.status, 0, result.stdout);
+  assert.match(result.stdout, /clean \(1 file checked\)/u);
+});
+
+check("slop after current TypeScript syntax is still found", () => {
+  const result = run(["modern-slop.mts"], modernRoot);
+  assert.equal(result.status, 1);
+  assert.match(result.stdout, /modern-slop\.mts:26:22 require-safety-comment-for-type-assertion/u);
+});
+
 check("exit 2 when a path cannot be read", () => {
   const result = run([join(root, "does-not-exist.ts")]);
   assert.equal(result.status, 2);
@@ -604,6 +650,7 @@ check("--since follows a symlinked target to the changed files", () => {
 });
 
 rmSync(root, { recursive: true, force: true });
+rmSync(modernRoot, { recursive: true, force: true });
 
 // `--since` skips most of what it collects, so the summary has to count the
 // files that actually reached the linter. One changed file beside one unchanged

@@ -62,6 +62,10 @@ env reads out of import time. TypeScript: model exclusive states as unions, not
 optional-field bags; parse `unknown` at boundaries. Python: no mutable defaults,
 bare `except:`, or `if not x` where 0 or "" is valid; run the project's
 configured linter and type checker without loosening them.
+TypeScript 6/7: read the installed version first; on 7 (native `tsc`) do not add
+`baseUrl`, `moduleResolution` `node`/`node10`/`classic`, `target: "es5"`,
+`outFile`, AMD/UMD/SystemJS modules, or import `assert`, and keep a TypeScript 6
+alias that API-based tools such as typescript-eslint still need.
 
 At changed boundaries: group behavior by reason to change; keep policy independent
 of external details through ordinary parameters; give callers only capabilities

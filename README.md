@@ -31,13 +31,15 @@ Qoder and VS Code Copilot are detected by the hooks and get the right output sha
 
 The rulesets cover TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go. The agent detects the ones your project actually uses, reads their pinned or installed versions, and keeps advice compatible with them. If a needed version fact cannot be checked, it says so instead of guessing; latest-release research is only used when current-version advice is requested.
 
-The bundled checker script stays TS/JS-only; the other five languages get the manual review, because a zero-dependency scanner is not a parser.
+The bundled checker reads source text rather than calling the compiler, so it
+works the same on every TypeScript version, including TypeScript 7. It stays TS/JS-only; the other five languages get the manual review, because a zero-dependency scanner is not a parser.
 HTML is not scanned either: extract inline `<script>` code to a temporary `.js`
 or report a manual review. Zero files checked is no coverage, not a clean result.
 
 TypeScript/JavaScript and Python also get a pre-finish reference with before/after
 examples: [TS/JS checks](skills/lazy/references/simplification-checks.md) cover
-module shape, exports, import-time side effects, discriminated unions, and
+TypeScript 6/7 (the native `tsc`: removed tsconfig options, new defaults, and the
+TypeScript 6 alias API-based tools still need), module shape, exports, import-time side effects, discriminated unions, and
 boundary parsing; [Python checks](skills/lazy/references/python-checks.md) cover
 version gates, the project's configured linter and type checker, module shape,
 dataclasses and `Protocol`, and the idioms that silently change behavior

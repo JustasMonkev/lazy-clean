@@ -191,6 +191,11 @@ const LANGUAGE_REFERENCES = [
     /one reason to change/iu, /import-time side effects/iu, /discriminated union/iu,
     /`unknown` and parse it once at the boundary/iu, /TypeScript 4\.9\+/u,
     /Do not loosen `strict`/u, /Promise\.all.*failing fast/iu,
+    // TypeScript 6/7: native compiler naming, removed options, new defaults, API gap.
+    /`npx tsc -v`/u, /TypeScript 7 is the native \(Go\) compiler/u, /`tsgo`/u, /`@typescript\/typescript6`/u,
+    /`baseUrl`/u, /`node10`/u, /`target: "es5"`/u, /`outFile`/u, /write `with`/u, /`namespace Foo \{\}`/u,
+    /`types` is `\[\]`/u, /"ignoreDeprecations": "6\.0".*never a fix/u, /no stable programmatic API/u,
+    /typescript-eslint/u, /on 5\.x or older, flag them only when the task is an upgrade/u,
   ]],
   ["python-checks.md", [
     /requires-python/u, /\(3\.10\)/u, /one reason to change/iu, /import-time side effects/iu,
@@ -225,6 +230,15 @@ for (const file of [...RULES_FILES, ".opencode/command/lazy.md"]) {
   ok(`${file} inlines the module basics`, /one reason to change/iu.test(text) && /import time/iu.test(text));
   ok(`${file} inlines the TypeScript union rule`, /exclusive states as unions/iu.test(text));
   ok(`${file} inlines the Python behavior traps`, /mutable defaults/iu.test(text) && /bare `except:`/u.test(text));
+  ok(`${file} inlines the TypeScript 7 removals`,
+    /TypeScript 6\/7/u.test(text) && /`baseUrl`/u.test(text) && /`target: "es5"`/u.test(text) && /typescript-eslint/u.test(text));
+}
+for (const mode of ["lite", "full", "ultra"]) {
+  const text = flat(instructions.getFallbackInstructions(mode));
+  ok(`getFallbackInstructions(${mode}) carries the TypeScript 7 removals`,
+    /TypeScript 7 \(native tsc\)/u.test(text) && /baseUrl/u.test(text) && /TypeScript 6 alias/u.test(text));
+  ok(`getLazyInstructions(${mode}) routes tsconfig changes to the TS/JS checks`,
+    /TS\/JS and tsconfig/u.test(instructions.getLazyInstructions(mode)));
 }
 
 // The finish checklist is what turns the rules into a checked result instead of
