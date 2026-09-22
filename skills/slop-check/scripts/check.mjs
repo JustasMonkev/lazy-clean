@@ -1440,7 +1440,7 @@ function* iterateCandidateFindings(ctx) {
     yield {
       ...matchSpan(lineStarts, match),
       rule: "no-message-only-rethrow",
-      message: "Rebuilding an error from its message throws away the stack and the original type. Rethrow it, or wrap it with `{ cause }`.",
+      message: "Rebuilding an error from its message throws away the stack and the original type. Rethrow it or wrap with `{ cause }` only within the same trust boundary; retain deliberate sanitization at public boundaries.",
     };
   }
 
@@ -1486,7 +1486,7 @@ function* iterateCandidateFindings(ctx) {
     yield {
       ...matchSpan(lineStarts, match),
       rule: "no-let-if-else-assign",
-      message: "A `let` declared only to be assigned in both branches hides a single expression. Use `const` with a conditional expression.",
+      message: "A `let` declared only to be assigned in both branches hides a single expression. Use `const` with a conditional expression, retaining any intentional type annotation.",
     };
   }
 
@@ -2650,15 +2650,15 @@ function* iterateCommentFindings(ctx) {
       continue;
     }
     if (NARRATION_COMMENT_PATTERN.test(body)) {
-      yield { ...position, rule: "no-narration-comments", message: "Narration comment (\"now we...\", \"first, ...\"). The code already shows the sequence; delete it." };
+      yield { ...position, rule: "no-narration-comments", message: "Possible narration comment (\"now we...\", \"first, ...\"). Remove only repeated steps; retain reasons for ordering or other constraints the code cannot show." };
       continue;
     }
     if (CHANGE_NOTE_COMMENT_PATTERN.test(body)) {
-      yield { ...position, rule: "no-change-note-comments", message: "This comment describes the edit or appeases a tool, not the code. It is noise the moment the change lands; delete it." };
+      yield { ...position, rule: "no-change-note-comments", message: "Possible edit narration. Remove only obsolete change notes; retain enduring design rationale, decision references, and constraints the code cannot show." };
       continue;
     }
     if (BACKCOMPAT_COMMENT_PATTERN.test(body) && !/@deprecated/u.test(comment.text)) {
-      yield { ...position, rule: "no-backcompat-comments", message: "Compatibility shims nobody asked for are dead code with a caption. Update the call sites and delete the alias, or justify why it must stay." };
+      yield { ...position, rule: "no-backcompat-comments", message: "Review whether this compatibility shim is still required. Preserve published APIs, persisted data, and protocol compatibility; remove it only when callers and stored formats no longer need it." };
       continue;
     }
     if (EMOJI_PATTERN.test(comment.text)) {
@@ -2728,18 +2728,278 @@ function* iterateCommentFindings(ctx) {
 // is review, however certain the rule is that the code is wrong. Four rules were
 // demoted against this bar — `no-json-clone` (structuredClone keeps a Date a
 // Date and ignores toJSON, so it is not the same value), `no-await-promise-
-// resolve` (dropping the wrapper drops a microtask tick),
+// resolve` (removing await changes scheduling),
 // `no-chained-type-assertions` ("parse or validate instead" is a design, not a
 // rewrite), and `no-promise-constructor-wrapper` (`Promise.resolve(p)` IS `p`
 // when `p` is already a promise, where the wrapper is a distinct one) — so
 // measure a new entry against them, not against how sure you are.
 const MECHANICAL_RULES = new Set([
   "no-boolean-literal-ternary", "no-double-negation-condition",
-  "no-useless-rethrow", "no-emoji",
-  "no-typed-jsdoc", "no-narration-comments", "no-change-note-comments",
+  "no-useless-rethrow",
+  "no-typed-jsdoc",
   "no-boolean-return-branches", "no-let-if-else-assign",
-  "no-obvious-doc-comments",
 ]);
+
+const RULE_EXPLANATIONS = {
+  "no-any": {
+    why: "`any` silently disables type checking on everything it touches: assignments to it, reads from it, and every value downstream of both. AI code reaches for it where `unknown` plus a parse would be honest.",
+    slop: "function parse(input: any): string { return input; }",
+    correct: "function parse(input: unknown): string {\n  if (typeof input !== \"string\") throw new TypeError(\"Expected a string\");\n  return input;\n}",
+    exceptions: "Vendor typings or deliberate generic constraints can require any. Keep a justified use local and validate external values rather than blindly changing the type.",
+  },
+  "no-chained-type-assertions": {
+    why: "`value as unknown as User` fabricates the evidence a type check would have provided: the middle `unknown` is there only to make the compiler stop objecting. What it really asserts is \"trust me\".",
+    slop: "const name = response as unknown as string;",
+    correct: "if (typeof response !== \"string\") throw new TypeError(\"Expected a string\");\nconst name = response;",
+    exceptions: "None mechanical. Sometimes a narrow `as` after a real runtime check is the honest form — that is `require-safety-comment-for-type-assertion`'s job, and it applies here too.",
+  },
+  "no-object-type": {
+    why: "`object` admits all non-primitive values. Use a specific shape only when the operation actually requires those fields; do not narrow an API merely to silence this heuristic.",
+    slop: "function userName(user: object) { return user.name; }",
+    correct: "function userName(user: { name: string }) { return user.name; }",
+    exceptions: "Broad non-primitive APIs such as Object.keys wrappers and opaque boundaries legitimately accept object, including interfaces, arrays, and Date. Record<string, unknown> is not a compatible replacement for those callers.",
+  },
+  "no-unsafe-dictionary-type": {
+    why: "Record<string, any> disables checking of dictionary values. For an open-key bag, select the real value type or unknown at an unvalidated boundary. If keys are finite, use a specific shape or finite key union to catch key typos as well.",
+    slop: "const headers: Record<string, any> = {};",
+    correct: "const headers: Record<string, string> = {};  // open header names, string values",
+    exceptions: "Open dictionaries intentionally admit arbitrary string keys, so Record<string, string> does not catch misspelled keys. For a finite set, use a shape such as { authorization: string } or Record<\"accept\" | \"authorization\", string>. For truly arbitrary values use unknown and validate before use.",
+  },
+  "no-known-value-widening": {
+    why: "For const bindings, a primitive annotation widens an inferred literal type. For mutable let bindings, inference already widens the literal: removing the annotation is merely redundant-annotation cleanup and preserves no additional value evidence.",
+    slop: "const timeout: number = 30_000;",
+    correct: "const timeout = 30_000;",
+    exceptions: "Preserve intentional published types on exported constants regardless of casing: changing export const defaultTimeout: number = 30000 to an inferred literal narrows typeof defaultTimeout for consumers. Limit annotation cleanup to bindings whose inferred type is the intended contract. The scanner already skips some SCREAMING_SNAKE annotations, not every public contract.",
+  },
+  "no-reflect": {
+    why: "Reflect calls need review before replacement: direct property access can be clearer for ordinary objects, but receiver semantics must stay unchanged.",
+    slop: "const value = Reflect.get(target, key);",
+    correct: "const value = target[key];",
+    exceptions: "For Reflect.get, preserve the exact key expression, including symbols; use target[key] only when the typing and access contract permit it. Keep Reflect.get otherwise. Three-argument calls and Proxy traps may require the supplied receiver regardless of its parameter name. For Reflect.apply(fn, receiver, args), fn(...args) loses this; fn.apply(receiver, args) is equivalent only when its apply method has the expected semantics. The scanner recognizes only some receiver spellings.",
+  },
+  "no-module-mocking": {
+    why: "Module mocks can hide hard-coded dependencies. Exercise the production implementation, not a test-local copy. If a suitable seam exists or is warranted, pass the dependency into that production function and import it in the test.",
+    slop: "vi.mock(\"./db\");",
+    correct: "// user.mjs\nexport function loadUser(db, id) { return db.findUser(id); }\n\n// user.test.mjs (separate file)\nimport assert from \"node:assert/strict\";\nimport { loadUser } from \"./user.mjs\";\nassert.deepEqual(loadUser({ findUser: id => ({ id }) }, 7), { id: 7 });",
+    exceptions: "Keep jest.unmock or vi.unmock when it restores the real module, especially under automocking; it is not a test-double substitution. Module mocking may also be necessary for legacy seams you cannot refactor. Preserve production coverage and justify the directive locally.",
+  },
+  "no-conditional-empty-object-spread": {
+    why: "`...(cond ? {} : { a })` hides whether a field is present. The plain conditional spread says the same thing in the shape readers already know.",
+    slop: "const patch = { ...(verbose ? {} : { quiet: true }) };",
+    correct: "const patch = { ...(!verbose && { quiet: true }) };",
+    exceptions: "Keep the ternary if it makes field omission clearer in context. Preserve the condition's polarity and explicit false, zero, or empty field values.",
+  },
+  "no-json-clone": {
+    why: "A JSON round trip is lossy: it omits undefined object properties, transforms dates, invokes toJSON, and rejects cycles. Choose a copy operation that matches the data contract.",
+    slop: "const state = { count: 1 };\nconst copy = JSON.parse(JSON.stringify(state));",
+    correct: "const state = { count: 1 };\nconst copy = structuredClone(state);",
+    exceptions: "Keep intentional JSON normalization. structuredClone keeps Dates, does not invoke toJSON, and THROWS on functions; it is not a drop-in replacement. Check runtime support and the actual values first.",
+  },
+  "no-redundant-fallback": {
+    why: "`value ?? undefined` changes only null to undefined. Remove it when null is impossible, not when that normalization is part of the contract.",
+    slop: "const name = user.name ?? undefined;",
+    correct: "const name = user.name;",
+    exceptions: "The replacement assumes user.name cannot be null. JSON.stringify preserves null object properties but omits undefined ones, so intentional normalization must stay.",
+  },
+  "no-boolean-literal-compare": {
+    why: "The scanner matches comparisons with true (== true and === true), not comparisons with false. For a known boolean, === true is redundant. Establish the operand type and equality semantics before replacing a comparison with truthiness.",
+    slop: "if (isEnabled === true) { render(); }",
+    correct: "if (isEnabled) { render(); }",
+    exceptions: "Keep comparisons when they intentionally distinguish true from other truthy values. Loose equality coerces: [] == true is false, but [] is truthy. Do not rewrite loose or untyped comparisons without checking the contract. Property and call operands are skipped by the scanner.",
+  },
+  "no-double-negation-condition": {
+    why: "`if (!!value)` coerces to boolean where the condition already coerces. The double negation suggests the author thought coercion needed help.",
+    slop: "if (!!items.length) { render(); }",
+    correct: "if (items.length) { render(); }",
+    exceptions: "None. (Outside a condition, `!!x` for an explicit boolean COERCION is fine and this rule does not fire.)",
+  },
+  "no-boolean-literal-ternary": {
+    why: "Boolean-literal branches can be expressed directly, but preserve polarity and the boolean result: cond ? true : false becomes Boolean(cond), while cond ? false : true becomes !cond. A condition already known to be boolean needs no extra coercion.",
+    slop: "const ready = items.length > 0 ? true : false;\nconst empty = items.length > 0 ? false : true;",
+    correct: "const ready = items.length > 0;\nconst empty = !(items.length > 0);",
+    exceptions: "A conditional TYPE (`T extends string ? true : false`) is the only way to write that predicate; the rule skips lines containing `extends`.",
+  },
+  "no-env-secret-fallback": {
+    why: "`process.env.API_TOKEN ?? \"dev-token\"` turns a missing secret into a silent misconfiguration: the app boots, calls production with a dev credential, and nothing tells you. Fail fast instead.",
+    slop: "const token = process.env.STRIPE_KEY ?? \"sk_test_x\";",
+    correct: "const token = process.env.STRIPE_KEY;\nif (token === undefined) throw new Error(\"STRIPE_KEY is required\");",
+    exceptions: "Preserve the matched operator semantics: ?? retains an explicitly empty string, while || treats it as absent. Reject empty strings only when the credential contract requires that. Credential-shaped names can hold public configuration: a bundled PUBLIC_KEY verification key may be a supported non-secret default. Preserve intentional public defaults; the name pattern alone does not prove a value is secret.",
+  },
+  "no-tautological-assertion": {
+    why: "`expect(4).toBe(4)` passes no matter what the code under test does. It inflates coverage while catching nothing — worse than no test, because it reads like one.",
+    slop: "expect(3).toBe(3);",
+    correct: "expect(config.retries).toBe(3);  // the value the code is supposed to produce",
+    exceptions: "None. A test that always fails (`expect(false).toBeTruthy()`) is a different defect and stays out of this rule.",
+  },
+  "no-await-promise-resolve": {
+    why: "For ordinary values, await Promise.resolve(x) can be written await x. Both suspend the continuation; removing await itself is a separate scheduling change.",
+    slop: "const user = await Promise.resolve(fetchUserSync(id));",
+    correct: "const user = await fetchUserSync(id);",
+    exceptions: "Keep await when continuation ordering matters. Check custom Promise implementations, subclasses, and thenables before removing the wrapper; the plain-value example does not establish equivalence for every operand.",
+  },
+  "no-arbitrary-sleep": {
+    why: "A literal sleep used to wait for completion guesses at timing: it is slow when the event is early and flaky when it is late. Await an observable completion signal when one exists; a required minimum delay serves a different contract.",
+    slop: "await new Promise(r => setTimeout(r, 1000));",
+    correct: "await saveCompleted;",
+    exceptions: "Retain required rate-limit, backoff, protocol, and hardware stabilization or calibration delays, even when no completion event exists. Name the duration and document the requirement and units; preserve any device-specific calibration rather than replacing a minimum delay with an unrelated event.",
+  },
+  "no-slop-symbol-names": {
+    why: "`enhancedFetch`, `processRequestV2`, `userObjFinal` are named after an edit, not a role. The old version lingers, callers cannot tell which is authoritative, and the next edit adds V3.",
+    slop: "function fetchDataImproved(id) { return users.get(id); }",
+    correct: "function fetchUser(id) { return users.get(id); }",
+    exceptions: "Preserve established public names, including enhancedFetch and other non-versioned exports. Rename and update all consumers only for locally controlled APIs; otherwise retain the name or use an authorized deprecation process. Versioned public APIs may legitimately coexist. A heuristic naming match is not permission to break an import contract.",
+  },
+  "no-shape-in-symbol-names": {
+    why: "\"shape\" describes structure, not ownership or role: `userShape`, `PayloadShape`, `shapeSchema` push the type's job into its name, where every rename must repeat it.",
+    slop: "type UserShape = { id: string };",
+    correct: "type User = { id: string };",
+    exceptions: "Preserve established exports such as UserShape: renaming can break consumer imports. Rename only locally controlled symbols with all consumers updated, or follow an authorized deprecation process. Geometry, canvas, and tensor code may also use shape as a genuine domain term; scanner context detection is only a heuristic.",
+  },
+  "require-safety-comment-for-type-assertion": {
+    why: "An `as` assertion is a claim the compiler cannot check. Hand-written narrowing asserts invariants the author knows; AI-generated assertions assert whatever makes the error go away. The comment is the difference.",
+    slop: "const user = payload as User;",
+    correct: "if (typeof payload !== \"object\" || payload === null || !(\"id\" in payload) || typeof payload.id !== \"string\") {\n  throw new TypeError(\"Expected a user with a string id\");\n}\nconst user = payload;",
+    exceptions: "This example assumes User needs only a string id; validate every field your actual contract requires. Prefer a parser or narrowing that eliminates the assertion. A SAFETY comment is valid only when code demonstrably establishes its named invariant; never add a claim of validation to silence the checker. Catch bindings can contain any thrown value; narrow before using Error properties.",
+  },
+  "no-unknown-alias": {
+    why: "A bare unknown alias may add no useful meaning in a private implementation. Review its domain role and consumers before replacing it; a name alone is not evidence for a more specific type.",
+    slop: "type Payload = unknown;\nfunction parse(input: Payload) { return schema.parse(input); }",
+    correct: "function parse(input: unknown) { return schema.parse(input); }",
+    exceptions: "Keep exported or semantic boundary aliases such as WebhookPayload = unknown. They preserve public imports and name unvalidated data; do not invent fields before parsing proves a shape. Inline unknown only when removing the alias loses no contract or useful domain meaning.",
+  },
+  "no-empty-type-declaration": {
+    why: "An empty interface or {} type accepts far more than a typical options object. Under strictNullChecks it means any non-nullish value, including primitives, not an unconstrained object shape. Add fields only if the actual API requires them.",
+    slop: "interface ConfigOptions {}",
+    correct: "interface ConfigOptions { retries: number; baseUrl: string };  // or delete it",
+    exceptions: "Preserve deliberate non-nullish types such as type NonNullish = {} under strictNullChecks, including semantic/public aliases and primitive callers. Declaration-merging extension points may also intentionally start empty. Do not invent fields or remove a public name just to silence the heuristic.",
+  },
+  "no-useless-rethrow": {
+    why: "`catch (e) { throw e; }` is a no-op with a stack: the error propagates exactly as it would without the try/catch, and readers hunt for the handling that is not there.",
+    slop: "try { save(); } catch (e) { throw e; }",
+    correct: "save();  // or handle it — keep `finally` if there is one",
+    exceptions: "None mechanical: delete the try/catch (keeping `finally`) or add real handling.",
+  },
+  "no-empty-catch": {
+    why: "An empty catch swallows every failure — including the typo and the network outage. Six months later nothing was saved and nothing said so.",
+    slop: "try { save(); } catch {} finally { release(); }",
+    correct: "try { save(); } finally { release(); }",
+    exceptions: "A deliberate swallow needs a comment in the block saying why (best-effort cache warm); the rule accepts that justification. Otherwise remove only the catch and preserve any finally cleanup. Without finally, call the operation directly.",
+  },
+  "no-catch-fake-success": {
+    why: "Returning null or [] from a catch can hide a failure when callers treat it as success. Establish the API failure contract before removing the catch: a documented sentinel may be an intentional, distinguishable result.",
+    slop: "try { return await loadUser(id); } catch { return null; } finally { release(); }",
+    correct: "try { return await loadUser(id); } finally { release(); }",
+    exceptions: "Preserve documented sentinel-result contracts, such as null for a failed optional lookup, when callers distinguish them from success. Optional best-effort features may also deliberately swallow errors. Only propagate when the sentinel is accidental; preserve finally cleanup and the awaited operation.",
+  },
+  "no-log-and-rethrow": {
+    why: "Logging then rethrowing reports the same failure at every layer. A boundary handler that logs once is the design; a chain of log-and-rethrow is a stack trace printed five times.",
+    slop: "try { save(); } catch (e) { logger.error(e); throw e; }",
+    correct: "save();  // let the top boundary log once; preserve any existing finally",
+    exceptions: "Logging separate context before rethrowing (metrics, request ids) is deliberate; the rule only fires when the log call mentions the caught error itself.",
+  },
+  "no-message-only-rethrow": {
+    why: "`throw new Error(e.message)` throws away the stack and the original type. The caller catches an error that starts its stack HERE, and `instanceof NetworkError` is false.",
+    slop: "try { save(); } catch (e) { throw new Error(e.message); }",
+    correct: "save();  // preserve the original error; keep any existing finally",
+    exceptions: "Within the same trust boundary, remove a catch that adds nothing or wrap with genuine context and { cause: e }. Retain deliberate sanitization at public boundaries: map to an approved public error without exposing the internal cause, type, stack, payload, or metadata. Verify that the message itself is safe to disclose. Do not replace a redundant catch with a no-op rethrow.",
+  },
+  "no-boolean-return-branches": {
+    why: "Boolean-return branches can be expressed without the branch while preserving a boolean result: if (cond) return true; else return false becomes return Boolean(cond). The reversed form becomes return !cond. Return cond directly only when it is already boolean.",
+    slop: "if (items.length) { return true; } else { return false; }",
+    correct: "return Boolean(items.length);  // return !items.length for the inverted branches",
+    exceptions: "None mechanical — that is why the finding names which branch it was.",
+  },
+  "no-let-if-else-assign": {
+    why: "A `let` declared only to be assigned in both branches is a conditional expression written long, plus a mutable binding nothing else may reassign.",
+    slop: "export let label: string; if (isDev) { label = \"dev\"; } else { label = \"prod\"; }",
+    correct: "export const label: string = isDev ? \"dev\" : \"prod\";",
+    exceptions: "Retain any intentional type annotation on the new const, especially on exports: removing : string can narrow a consumer's typeof label contract to a literal union. A branch that does more than assign is a real branch. A write after the if/else also disqualifies the rewrite (the rule already checks both).",
+  },
+  "no-promise-constructor-wrapper": {
+    why: "`new Promise(r => r(value))` is `Promise.resolve(value)` with a constructor. The wrapper allocates, and it invites the classic executor mistake on the way.",
+    slop: "return new Promise(resolve => resolve(parsed));",
+    correct: "return Promise.resolve(parsed);  // or return parsed from an async function",
+    exceptions: "`Promise.resolve(p)` IS `p` when p is already a promise, while the wrapper makes a distinct one — so they are not always equivalent (that is why this is review). And when the expression can THROW, the wrapper rejects where `Promise.resolve(expr)` throws synchronously — pick on purpose.",
+  },
+  "no-foreach-push": {
+    why: "A `forEach` whose whole body pushes is `map` written the long way: the accumulator adds a mutable variable the pipeline would carry for you.",
+    slop: "const names = []; users.forEach(u => { names.push(u.name); });",
+    correct: "const names = users.map(u => u.name);  // flatMap when one item yields several",
+    exceptions: "The map rewrite requires an array receiver. Set, Map, NodeList, and custom forEach collections may lack map; retain their loop or choose a conversion that preserves their callback contract. For arrays, map preserves sparse holes while push compacts them. Preserve existing accumulator contents, shared array identity, callback side effects, and mutation order.",
+  },
+  "no-reduce-accumulator-copy": {
+    why: "Copying a growing reducer accumulator on each iteration can make the total work quadratic. A fresh, locally owned accumulator can be mutated when no caller or retained snapshot observes its intermediate identity.",
+    slop: "const values = [1, 2, 3];\nconst result = values.reduce((acc, value) => [...acc, value], []);",
+    correct: "const values = [1, 2, 3];\nconst result = values.reduce((acc, value) => { acc.push(value); return acc; }, []);",
+    exceptions: "Keep copies when snapshots or callers observe previous accumulators. The example uses a fresh array seed and ordinary numeric values; preserve external seeds, object prototypes, property semantics, sparse arrays, callback order, and custom collection behavior before adapting it. Measure bounded small reductions before complicating them.",
+  },
+  "no-array-filter-map": {
+    why: "Adjacent eager array filter/map passes allocate an intermediate array. A single pass can avoid it when callback ordering, indexes, and intermediate-array observations are irrelevant.",
+    slop: "const values = [1, -2, 3];\nconst result = values.filter(value => value > 0).map(value => value * 2);",
+    correct: "const values = [1, -2, 3];\nconst result = [];\nfor (const value of values) {\n  if (value > 0) result.push(value * 2);\n}",
+    exceptions: "This loop uses one result array and pure operations over dense ordinary numeric values; flatMap with per-item array literals adds temporary allocations. Keep separate passes when callbacks depend on indexes, their array argument, side effects, or evaluation order. Preserve sparse-array behavior, custom methods, and array subclass contracts; filter/map and map/filter are different pipelines. Measure before replacing a clear pipeline.",
+  },
+  "no-filler-comments": {
+    why: "\"In a real app...\", \"for brevity\", \"placeholder\" — the comment admits the code is not real. Ship the real thing or delete both.",
+    slop: "// in a real app, validate this\nfunction save(user) { db.write(user); }",
+    correct: "function save(user) { validate(user); db.write(user); }",
+    exceptions: "Teaching examples, requested prototypes, and test fixtures can legitimately be incomplete. Do not remove required behavior just to remove its reminder; implement it or explicitly track the limitation.",
+  },
+  "no-narration-comments": {
+    why: "\"Now we fetch the data...\" narrates what the next line does. The code already shows it; the comment is a second voice reading the source aloud.",
+    slop: "// first, we validate the input\nvalidate(input);",
+    correct: "validate(input);  // or a comment stating a constraint the code cannot show",
+    exceptions: "The prefix matcher can flag useful constraints too: retain comments such as 'First, write the journal so crash recovery can replay an interrupted update.' Remove only repetition; preserve explanations of why ordering matters, even when they begin with First, Next, or Finally.",
+  },
+  "no-change-note-comments": {
+    why: "\"As requested\", \"NEW:\", \"to make the linter happy\" often describe the edit rather than the code. The phrase matcher cannot distinguish obsolete change notes from enduring design rationale.",
+    slop: "// UPDATED: retry count\nconst retries = 3;",
+    correct: "const retries = 3;",
+    exceptions: "Retain lasting rationale and constraints, including ADR references such as 'As discussed in ADR-17, retry only idempotent requests'. Version history does not replace a design decision the code cannot express. Remove only obsolete edit narration.",
+  },
+  "no-backcompat-comments": {
+    why: "A shim \"kept for backwards compatibility\" can be unnecessary when every caller is controlled and no existing data or protocol needs it. The comment alone does not establish that the shim is removable.",
+    slop: "// kept for backwards compat\nexport const fetchData = fetchUser;\nfetchData(id);",
+    correct: "fetchUser(id);  // update callers and remove the unneeded alias",
+    exceptions: "Retain adapters required by published APIs, persisted settings or user data, and older protocol or wire formats. Removing them can make existing state unreadable even without a public symbol. Document supported versions and migration requirements; use @deprecated only for an actually deprecated API, not as a replacement for data compatibility.",
+  },
+  "no-emoji": {
+    why: "Decorative emoji can distract from the information in source comments. Prefer words when the symbol adds no meaning.",
+    slop: "// \u{1F525} IMPORTANT: check this",
+    correct: "// IMPORTANT: check this",
+    exceptions: "Preserve symbols required by a specification or an explicit user request. The scanner targets comments, not string data, and exempts several text-presentation symbols.",
+  },
+  "no-typed-jsdoc": {
+    why: "`@param {string} name` restates the TypeScript signature and drifts from it silently — the signature is checked, the JSDoc is not.",
+    slop: "/** @param {string} id Stable account identifier, never a display name. */\nfunction findUser(id: string) { return users.get(id); }",
+    correct: "/** @param id Stable account identifier, never a display name. */\nfunction findUser(id: string) { return users.get(id); }",
+    exceptions: "Remove only redundant type syntax in TS. Retain useful prose, parameter descriptions, tags, and metadata. JavaScript JSDoc may supply the actual types; this rule is TS-only.",
+  },
+  "no-obvious-doc-comments": {
+    why: "\"This function takes a user and returns a token\" restates the declaration below it. A doc comment earns its place by saying WHY the code exists, not WHAT it is.",
+    slop: "// Getter for the cached value.\nconst cached = { get value() { return cache; } };",
+    correct: "const cached = { get value() { return cache; } };",
+    exceptions: "Keep comments that explain invalidation, ownership, or other contracts. A heuristic match is not a reason to discard useful documentation.",
+  },
+  "no-restating-comments": {
+    why: "A comment made of the next line's own identifiers (\"// get user by id\" over `getUserById(id)`) adds zero information.",
+    slop: "// update user record\nupdateUserRecord(user);",
+    correct: "updateUserRecord(user);",
+    exceptions: "None. Any word in the comment not present in the code is a start.",
+  },
+  "no-unjustified-ignore": {
+    why: "An ignore directive that suppresses nothing (no reason, unknown rule id, file-level too far down) reads exactly like a working one. The author stopped looking; the slop stayed.",
+    slop: "// slop-check-ignore no-any\nconst raw: any = input;  // suppresses nothing: no reason given",
+    correct: "// slop-check-ignore no-any -- vendor values are narrowed before use\nconst raw: any = input;\nif (typeof raw !== \"string\") throw new TypeError(\"Expected a string\");",
+    exceptions: "None — this rule exists to keep the other ignores honest.",
+  },
+  "no-unjustified-suppression": {
+    why: "Bare TypeScript suppression directives and biome-ignore directives need a concrete justification for the diagnostic being suppressed. Fix the actual reported problem when possible. The example below addresses a TypeScript boundary error, not every possible lint or formatting diagnostic.",
+    slop: "// @ts-expect-error\nconnect(options);",
+    correct: "if (typeof options !== \"object\" || options === null || !(\"host\" in options) || typeof options.host !== \"string\") {\n  throw new TypeError(\"Expected a configuration with a string host\");\n}\nconnect(options);",
+    exceptions: "A proven compiler or vendor-typing defect may need a TypeScript suppression with a concrete reason; missing runtime validation is not that reason. For biome-ignore, fix its named Biome lint/formatting diagnostic or state why that specific suppression is necessary, preserving the affected statement. Do not apply the JSON-validation example to an unrelated Biome rule. This connect example assumes the API needs only host.",
+  },
+};
 
 // ---------------------------------------------------------------------------
 // Suppression
@@ -2764,6 +3024,29 @@ const STANDALONE_RULE_IDS = [
 ];
 
 export const RULE_IDS = new Set([...LINE_RULES.map((rule) => rule.name), ...STANDALONE_RULE_IDS]);
+export { RULE_EXPLANATIONS };
+
+function explainRule(id) {
+  const explanation = RULE_EXPLANATIONS[id];
+  const severity = MECHANICAL_RULES.has(id) ? "fix (mechanical — one correct answer)" : "review (heuristic — \"deliberate, leaving it\" is a valid answer)";
+  return [
+    `slop-check: ${id}`,
+    "",
+    `  ${severity}`,
+    "",
+    `  Why it fires: ${explanation.why}`,
+    "",
+    "  Examples cover only the shown code. Preserve your actual inputs, names, state, and API contract when adapting them.",
+    "",
+    "  Slop:",
+    `    ${explanation.slop.replaceAll("\n", "\n    ")}`,
+    "",
+    "  Instead:",
+    `    ${explanation.correct.replaceAll("\n", "\n    ")}`,
+    "",
+    `  When it is wrong: ${explanation.exceptions}`,
+  ].join("\n");
+}
 
 const FILE_DIRECTIVE_LINES = 10;
 
@@ -3073,6 +3356,7 @@ Options:
   --summary          Replace findings with a rule tally; keep the run summary.
   --since=<ref>      Scan only lines added since <ref>.
   --disable=<ids>    Disable comma-separated rule IDs.
+  --explain=<rule>   Print one rule's explanation and exit.
   -h, --help         Show this help text.
 
 Paths may be absolute or relative. Use '--' if a path starts with '-'.`);
@@ -3089,6 +3373,8 @@ function main() {
   const json = optionArgs.includes("--json");
   const summaryOnly = optionArgs.includes("--summary");
   const since = optionArgs.find((arg) => arg.startsWith("--since="))?.slice("--since=".length);
+  const explainArgs = optionArgs.filter((arg) => arg.startsWith("--explain="));
+  const explain = explainArgs[0]?.slice("--explain=".length);
   const disabled = new Set(
     optionArgs.filter((arg) => arg.startsWith("--disable="))
       .flatMap((arg) => arg.slice("--disable=".length).split(","))
@@ -3104,15 +3390,29 @@ function main() {
   // clean. 0 = clean, 1 = findings, 2 = scan failed.
   const unknown = optionArgs.filter(
     (arg) => arg.startsWith("-") && !["--json", "--summary", "-h", "--help"].includes(arg)
-      && !arg.startsWith("--since=") && !arg.startsWith("--disable="),
+      && !arg.startsWith("--since=") && !arg.startsWith("--disable=") && !arg.startsWith("--explain="),
   );
   if (unknown.length > 0) {
     console.error(`slop-check: unknown option ${unknown[0]} (use \`-- ${unknown[0]}\` to scan a file with that name)`);
     process.exitCode = 2;
     return;
   }
+  if (explainArgs.length > 1) {
+    console.error("slop-check: --explain may be supplied only once");
+    process.exitCode = 2;
+    return;
+  }
+  if (explain !== undefined && !RULE_IDS.has(explain)) {
+    console.error(`slop-check: --explain names ${explain}, which is not a rule id (rule ids: ${[...RULE_IDS].sort().join(", ")})`);
+    process.exitCode = 2;
+    return;
+  }
   if (optionArgs.includes("--help") || optionArgs.includes("-h")) {
     printUsage();
+    return;
+  }
+  if (explain !== undefined) {
+    console.log(explainRule(explain));
     return;
   }
   // A warning rather than exit 2: a misspelled id disables nothing, so the run

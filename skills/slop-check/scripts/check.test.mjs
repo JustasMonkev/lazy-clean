@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { lintSource, RULE_IDS } from "./check.mjs";
+import { lintSource, RULE_IDS, RULE_EXPLANATIONS } from "./check.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -1035,7 +1035,7 @@ expectRule("flags a Constructor doc comment", "/** Constructor */\nexport class 
 expectRule("flags a this-function doc comment", "/**\n * This function returns the current token.\n */\ngetToken() { return this.token; }", "no-obvious-doc-comments");
 expectNoRule("allows a doc comment that adds information", "/** Aggregates rows into per-name totals, dropping zero-count rows. */\nexport function summarize(rows) {}", "no-obvious-doc-comments");
 expectNoRule("allows an informative this-function note", "// This function is used recursively from IndexedSourceMapConsumer.\nfunction sourceContentFor(source) {}", "no-obvious-doc-comments");
-// This rule prints as a mechanical "delete the comment", so an accessor doc
+// An accessor doc
 // that carries a contract the declaration does not state cannot be swept up
 // with the ones that only restate the name.
 expectRule("flags a bare getter doc comment", "/** Getter for the value. */\nget value() { return this.v; }", "no-obvious-doc-comments");
@@ -1359,6 +1359,8 @@ console.log("ok   ?? undefined is a review finding, not a mechanical one");
 // rules were sure the code was wrong but could not name such a replacement, and
 // printing them as one-answer fixes is how correct code got rewritten.
 for (const [source, rule, why] of [
+  ["// As discussed in ADR-17, retry only idempotent requests\nretry(request);", "no-change-note-comments", "the comment records a lasting design constraint"],
+  ["// First, write the journal so crash recovery can replay an interrupted update.\nwriteJournal();\napplyUpdate();", "no-narration-comments", "the comment explains a crash-recovery ordering constraint"],
   ["const copy = JSON.parse(JSON.stringify(state));", "no-json-clone", "structuredClone keeps a Date a Date"],
   ["const value = await Promise.resolve(input);", "no-await-promise-resolve", "dropping the wrapper drops a tick"],
   ["const user = value as unknown as User;", "no-chained-type-assertions", "parse-instead is a design, not a rewrite"],
@@ -1574,6 +1576,103 @@ expectSuppression(
   const positions = lintSource(source, "check.mjs").map((f) => `${f.line}:${f.column}:${f.rule}`);
   assert.equal(new Set(positions).size, positions.length, "one position reported twice for one rule");
   console.log("ok   no position is reported twice for one rule");
+}
+
+{
+  const unexplained = [...RULE_IDS].filter((id) => !RULE_EXPLANATIONS[id]).sort();
+  assert.deepEqual(unexplained, [], "rules without --explain text");
+  console.log(`ok   every rule has --explain text (${Object.keys(RULE_EXPLANATIONS).length} rules)`);
+
+  const unknown = Object.keys(RULE_EXPLANATIONS).filter((id) => !RULE_IDS.has(id)).sort();
+  assert.deepEqual(unknown, [], "explanations for rules the checker does not emit");
+
+  for (const [id, explanation] of Object.entries(RULE_EXPLANATIONS)) {
+    for (const field of ["why", "slop", "correct", "exceptions"]) {
+      if (typeof explanation[field] !== "string" || explanation[field].trim().length === 0) {
+        failures += 1;
+        console.error(`FAIL --explain ${id}: ${field} is missing or too short`);
+      }
+    }
+    if (!lintSource(explanation.slop, "sample.ts").some((finding) => finding.rule === id)) {
+      failures += 1;
+      console.error(`FAIL --explain ${id}: slop example no longer triggers the rule`);
+    }
+    const kept = lintSource(explanation.correct, "sample.ts");
+    if (kept.length > 0) {
+      failures += 1;
+      console.error(`FAIL --explain ${id}: correct example still has findings [${kept.map((f) => f.rule).join(", ")}]`);
+    }
+  }
+  console.log("ok   every explanation carries why/slop/correct/exceptions");
+  console.log("ok   every slop example triggers its rule and every correct example is clean");
+}
+
+{
+  for (const id of ["no-log-and-rethrow", "no-message-only-rethrow"]) {
+    let calls = 0;
+    const failure = new Error("save failed");
+    const save = () => { calls += 1; throw failure; };
+    assert.throws(() => new Function("save", RULE_EXPLANATIONS[id].correct)(save), error => error === failure);
+    assert.equal(calls, 1, `${id} must retain the operation and propagate its error`);
+  }
+  for (const id of ["no-empty-catch", "no-catch-fake-success"]) {
+    for (const failing of [false, true]) {
+      const calls = [];
+      const failure = new Error("operation failed");
+      const operation = () => { calls.push("operation"); if (failing) throw failure; return 7; };
+      const release = () => calls.push("release");
+      const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+      const run = new AsyncFunction("save", "loadUser", "id", "release", RULE_EXPLANATIONS[id].correct);
+      if (failing) await assert.rejects(run(operation, operation, 1, release), error => error === failure);
+      else assert.equal(await run(operation, operation, 1, release), id === "no-catch-fake-success" ? 7 : undefined);
+      assert.deepEqual(calls, ["operation", "release"]);
+    }
+  }
+  const ternary = new Function("items", `${RULE_EXPLANATIONS["no-boolean-literal-ternary"].correct}; return [ready, empty];`);
+  assert.deepEqual(ternary([]), [false, true]);
+  assert.deepEqual(ternary([1]), [true, false]);
+  const ignored = lintSource(RULE_EXPLANATIONS["no-unjustified-ignore"].correct, "sample.ts");
+  assert.equal(ignored.length, 0);
+  assert.equal(ignored.suppressed.length, 1);
+  const booleanReturn = new Function("items", RULE_EXPLANATIONS["no-boolean-return-branches"].correct);
+  assert.equal(booleanReturn([]), false);
+  assert.equal(booleanReturn([1, 2]), true);
+  for (const id of ["no-emoji", "no-obvious-doc-comments", "no-narration-comments", "no-change-note-comments"]) {
+    const findings = lintSource(RULE_EXPLANATIONS[id].slop, "sample.ts");
+    assert.equal(findings.find(finding => finding.rule === id).severity, "review");
+  }
+  const validateUser = new Function("payload", `${RULE_EXPLANATIONS["require-safety-comment-for-type-assertion"].correct}; return user;`);
+  const payloadWithMetadata = { id: "u1", metadata: { source: "webhook" } };
+  assert.equal(validateUser(payloadWithMetadata), payloadWithMetadata);
+  for (const payload of [null, {}, { id: 7 }]) assert.throws(() => validateUser(payload), TypeError);
+  const [production, test] = RULE_EXPLANATIONS["no-module-mocking"].correct.split("// user.test.mjs (separate file)");
+  const productionUrl = `data:text/javascript,${encodeURIComponent(production)}`;
+  const testCode = test.replace('"./user.mjs"', JSON.stringify(productionUrl));
+  await import(`data:text/javascript,${encodeURIComponent(testCode)}`);
+  const readToken = new Function("process", `${RULE_EXPLANATIONS["no-env-secret-fallback"].correct}; return token;`);
+  assert.equal(readToken({ env: { STRIPE_KEY: "" } }), "");
+  assert.equal(readToken({ env: { STRIPE_KEY: "configured" } }), "configured");
+  assert.throws(() => readToken({ env: {} }), /STRIPE_KEY is required/u);
+  const connected = [];
+  const connect = value => connected.push(value);
+  const validate = new Function("options", "connect", RULE_EXPLANATIONS["no-unjustified-suppression"].correct);
+  const options = { host: "localhost", metadata: { source: "config" } };
+  validate(options, connect);
+  assert.equal(connected[0], options);
+  for (const value of [null, {}, { host: 42 }]) assert.throws(() => validate(value, connect), TypeError);
+  assert.deepEqual(connected, [options]);
+}
+
+{
+  const explanation = RULE_EXPLANATIONS["no-array-filter-map"];
+  assert.doesNotMatch(explanation.correct, /\.flatMap\(/u, "avoid per-element temporary arrays");
+  for (const values of [[], [1, -2, 3], [-1, 0, -3], [2, 2, 4]]) {
+    const source = explanation.correct.replace("const values = [1, -2, 3];", "");
+    const result = new Function("values", `${source}; return result;`)(values);
+    assert.deepEqual(result, values.filter(value => value > 0).map(value => value * 2));
+  }
+  const conditional = RULE_EXPLANATIONS["no-let-if-else-assign"];
+  assert.match(conditional.correct, /const label: string/u, "retain the declared type in the example");
 }
 
 

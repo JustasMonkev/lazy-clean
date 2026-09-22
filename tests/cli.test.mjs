@@ -709,6 +709,126 @@ check("--json stays a bare array when findings are suppressed", () => {
   assert.deepEqual(JSON.parse(result.stdout), []);
 });
 
+check("--explain prints one rule's explanation and exits 0", () => {
+  const result = run(["--explain=no-json-clone"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /no-json-clone/u);
+  assert.match(result.stdout, /structuredClone/u, "names the replacement");
+  assert.match(result.stdout, /THROWS on functions/u, "names where the replacement diverges");
+  assert.doesNotMatch(result.stdout, /clean|finding/u, "no scan runs");
+});
+
+check("--explain reports a mechanical tier for a mechanical rule", () => {
+  const result = run(["--explain=no-double-negation-condition"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /fix \(mechanical/u);
+});
+
+check("--explain names a misspelled rule and exits 2", () => {
+  const result = run(["--explain=no-json-clon"]);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /not a rule id/u);
+  assert.match(result.stderr, /no-json-clone/u, "the id list suggests the intended rule");
+});
+
+check("--explain rejects repeated values before printing an explanation", () => {
+  for (const id of ["no-any", "no-such-rule", ""]) {
+    const result = run(["--explain=no-any", `--explain=${id}`]);
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /only once/u);
+  }
+});
+
+check("help does not hide invalid explanation values", () => {
+  for (const help of ["--help", "-h"]) {
+    for (const id of ["no-such-rule", "", "constructor"]) {
+      for (const args of [[help, `--explain=${id}`], [`--explain=${id}`, help]]) {
+        const result = run(args);
+        assert.equal(result.status, 2);
+        assert.equal(result.stdout, "");
+        assert.match(result.stderr, /not a rule id/u);
+      }
+    }
+    const result = run([help, "--explain=no-any"]);
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /Usage:/u);
+  }
+});
+
+check("heuristic documentation rules stay review-only in explanations", () => {
+  for (const id of ["no-emoji", "no-obvious-doc-comments", "no-narration-comments", "no-change-note-comments"]) {
+    const result = run([`--explain=${id}`]);
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /review \(heuristic/u);
+  }
+});
+
+check("--explain ignores paths and runs no scan", () => {
+  const result = run(["--explain=no-any", "slop.ts"]);
+  assert.equal(result.status, 0);
+  assert.doesNotMatch(result.stdout, /slop\.ts/u);
+  assert.doesNotMatch(result.stdout, /1 finding/u);
+});
+
+check("--explain preserves durable contracts and sanitizing boundaries", () => {
+  for (const [id, contract] of [
+    ["no-change-note-comments", /retain.*ADR/iu],
+    ["no-backcompat-comments", /persisted.*protocol/iu],
+    ["no-let-if-else-assign", /retain.*annotation/iu],
+    ["no-message-only-rethrow", /approved public error.*without.*cause/iu],
+  ]) {
+    const result = run([`--explain=${id}`]);
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, contract);
+  }
+});
+
+check("--explain with no value is an unknown option", () => {
+  const result = run(["--explain"]);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /unknown option/u);
+});
+
+check("--explain indents every example line", () => {
+  const result = run(["--explain=no-json-clone"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /\n    const state = .*\n    const copy =/u);
+});
+
+check("--explain rejects empty and inherited object keys", () => {
+  for (const id of ["", "constructor", "__proto__", "toString"]) {
+    const result = run([`--explain=${id}`]);
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, "");
+    assert.match(result.stderr, /not a rule id/u);
+  }
+});
+
+check("--explain does not hide an unknown option", () => {
+  const result = run(["--explain=no-any", "--jsoon"]);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /unknown option/u);
+});
+
+check("-- keeps explain-shaped arguments as paths", () => {
+  const result = run(["--", "--explain=no-any"]);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /cannot read --explain=no-any/u);
+});
+
+check("--explain bypasses scan options and missing paths", () => {
+  const result = run(["--explain=no-any", "--since=missing-ref", "--summary", "--json", "missing.ts"]);
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, "");
+  assert.match(result.stdout, /Why it fires:/u);
+});
+
+check("usage lists --explain", () => {
+  const result = run(["--help"]);
+  assert.match(result.stdout, /--explain=<rule>/u);
+});
+
 check("array performance findings are advisory, serialized, and individually configurable", () => {
   write("array-performance.js", [
     "const result = [1, 2].reduce((acc, value) => acc.concat(value), []);",

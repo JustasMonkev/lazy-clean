@@ -119,7 +119,7 @@ Findings are **advisory** — they arrive as `additionalContext`, never as a blo
 ## Running the checker yourself
 
 ```
-node skills/slop-check/scripts/check.mjs [paths...] [--json] [--summary] [--since=<ref>] [--disable=<rule-id>,...]
+node skills/slop-check/scripts/check.mjs [paths...] [--json] [--summary] [--since=<ref>] [--disable=<rule-id>,...] [--explain=<rule-id>]
 ```
 
 With no paths it scans the current directory. Exit code 1 means findings, 2 means a path could not be read, 0 means clean — so a failed scan is never mistaken for a clean one.
@@ -132,6 +132,14 @@ node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
 ```
 
 Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. `--summary` replaces the finding list with the per-rule tally, which is the number that tells you whether a codebase is worth a full pass. The run summary line still prints; `--json` is the machine-readable form.
+
+Emoji, sequencing comments, change-note comments, and apparently obvious documentation comments are review findings: retain symbols required by a specification and comments that carry useful contracts, enduring design rationale, or reasons for ordering.
+
+`--explain=<rule-id>` prints one rule's reasoning — why it fires, a slop/instead pair, and when the rule is wrong — and runs no scan. Read it before rewriting code a finding landed on that you believe is correct:
+
+```
+node skills/slop-check/scripts/check.mjs --explain=no-json-clone
+```
 
 Array performance findings are review prompts too: `no-reduce-accumulator-copy`
 detects repeated copies of reducer accumulators, including spread, and
