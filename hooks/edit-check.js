@@ -8,8 +8,8 @@ const { spawnSync } = require('child_process');
 
 const CHECKER = path.join(__dirname, '..', 'skills', 'slop-check', 'scripts', 'check.mjs');
 const EXTS = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs']);
-// Block rules carry an endLine, so their body is matched by the overlap test
-// below. Comment rules do not: a multi-line comment still reports at its `/**`,
+// Rules can carry startLine/endLine evidence beyond their diagnostic anchor.
+// Comment rules do not: a multi-line comment still reports at its `/**`,
 // and no-restating-comments reports at the comment above the code it restates,
 // so the headroom above the written line has to stay.
 const PAD_UP = 3;
@@ -96,6 +96,8 @@ function finish() {
     const all = JSON.parse(res.stdout);
     if (!Array.isArray(all) || (res.status === 0) !== (all.length === 0) || all.some(f => !f || typeof f.path !== 'string'
       || !Number.isInteger(f.line) || f.line < 1 || !Number.isInteger(f.column) || f.column < 1
+      || f.startLine !== undefined && (!Number.isInteger(f.startLine) || f.startLine < 1 || f.startLine > f.line)
+      || f.endLine !== undefined && (!Number.isInteger(f.endLine) || f.endLine < f.line)
       || typeof f.rule !== 'string' || typeof f.message !== 'string'
       || !['fix', 'review'].includes(f.severity))) throw new Error('invalid checker output');
     if (res.status === 0) return;
@@ -114,7 +116,7 @@ function finish() {
     // Comparing only the reported line dropped the finding the edit had just
     // created, and the hook then printed nothing at all.
     const mine = ranges
-      ? all.filter(f => ranges.some(([a, b]) => (f.endLine || f.line) >= a && f.line <= b))
+      ? all.filter(f => ranges.some(([a, b]) => (f.endLine || f.line) >= a && (f.startLine ?? f.line) <= b))
       : all;
     if (mine.length === 0) return;
 

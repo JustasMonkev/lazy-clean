@@ -7,6 +7,10 @@ One skill package for coding agents: write the least code that works, then delet
 
 (A renamed hard fork of two upstream projects; this package is standalone and self-contained.)
 
+For upstream comparisons and selective ports, follow the
+[update procedure](skills/lazy-clean/references/upstream-updates.md) and record
+the reviewed revisions and local differences in [UPSTREAM.md](UPSTREAM.md).
+
 ## Works with
 
 Same ruleset, five levels of wiring — pick whatever your agent supports.
@@ -14,7 +18,7 @@ Same ruleset, five levels of wiring — pick whatever your agent supports.
 | Tier | Platforms | What you get | Files |
 | --- | --- | --- | --- |
 | Full hooks | Claude Code, Codex | Compact ruleset injected at session and subagent start, `/lazy` level switching, slop-check auto-run after every Write/Edit | `hooks/lazy-clean.json` via `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` |
-| Plugin | OpenCode | Ruleset injected every turn plus six slash commands | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
+| Plugin | OpenCode | Ruleset injected every turn plus seven slash commands | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
 | Rules file | Cursor, Copilot | Always-on ruleset for all seven supported languages; run the TS/JS-only checker by hand after TS/JS changes | `.cursor/rules/lazy-clean.mdc`, `.github/copilot-instructions.md` |
 | `AGENTS.md` | Everything else that reads it — Codex, Zed, Amp, Jules | The compact ruleset plus the post-edit checker step | `AGENTS.md` |
 | Skills only | Anything that reads `~/.claude/skills` | Every skill on demand, no automation | `skills/` |
@@ -39,6 +43,38 @@ Non-trivial changed logic needs behavior, edge, and failure coverage; mutation
 evidence is optional when existing red-green checks already prove the risky
 regression, and never justifies a new dependency.
 
+## Optional behavioral evidence (experimental)
+
+`lazy-verify` is an explicitly invoked skill and OpenCode command, not a lazy
+intensity or hook. **Fix** checks for the approved assertion failure before and
+a pass after. **Preserve** checks the same approved behavior on both snapshots.
+Neither a successful project command nor a clean static scan is assertion-level
+evidence; execution, behavior, supporting checks, gate and applicability are
+reported separately.
+
+The dependency-free Node >=18 bridge is self-contained under
+[`skills/lazy-verify/`](skills/lazy-verify/SKILL.md), including skills-only copies.
+Rules-only users can invoke `node /installed/skills/lazy-verify/scripts/verify.mjs`
+directly; a native slash command depends on the client. It needs an explicitly
+selected, reviewed local engine and policy. No engine is installed/downloaded
+automatically. A separate approved Node executable can run a Node 24 engine
+without changing lazy-clean's runtime or private package status.
+
+**No real engine is qualified yet.** Bridge fixtures do not establish behavioral
+correctness or release readiness. Planned engine qualification is Linux/macOS
+on Node 24; Windows target execution returns an explicit unsupported result.
+Core Node 18/22 and Windows checks remain unchanged. Existing usage works without
+verification installed; missing prerequisites cannot pass a required gate.
+
+Use explicit base/head selectors (`worktree` for actual uncommitted edits), a
+reviewed contract and `--trust-code`. Local execution is not a security sandbox.
+`report` renders recorded evidence without executing it; `replay` uses fresh
+policy selection and saved exact inputs. Generated `.lazy-verify/runs/` output
+is private/ignored in this repository; contracts remain reviewable. See the
+[installed protocol reference](skills/lazy-verify/references/contract.md) for
+commands, policy schema, limits and exits, and the
+[RFC](docs/specs/lazy-verify-integration.md) for engine/release acceptance gates.
+
 ## Install — zero-install, skills only
 
 No packages, no npm, no plugin needed. Copy the skills into your global skills folder:
@@ -47,7 +83,7 @@ No packages, no npm, no plugin needed. Copy the skills into your global skills f
 cp -R /path/to/lazy-clean/skills/* ~/.claude/skills/
 ```
 
-That gives you all 8 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`). Claude picks them up by description or by `/lazy-clean` etc. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
+That gives you all 9 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-verify`). Claude picks them up by description or by `/lazy-clean` etc. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
 
 What you DON'T get in skills-only mode: the automatic parts (ruleset injected every session, checker auto-run after every edit). Those need the hooks — install as a plugin for that:
 
@@ -97,13 +133,19 @@ node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
 
 Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. `--summary` replaces the finding list with the per-rule tally, which is the number that tells you whether a codebase is worth a full pass. The run summary line still prints; `--json` is the machine-readable form.
 
-Emoji and apparently obvious documentation comments are review findings: retain symbols required by a specification and comments that carry useful contracts.
+Emoji, sequencing comments, and apparently obvious documentation comments are review findings: retain symbols required by a specification and comments that carry useful contracts or explain why ordering matters.
 
 `--explain=<rule-id>` prints one rule's reasoning — why it fires, a slop/instead pair, and when the rule is wrong — and runs no scan. Read it before rewriting code a finding landed on that you believe is correct:
 
 ```
 node skills/slop-check/scripts/check.mjs --explain=no-json-clone
 ```
+
+Array performance findings are review prompts too: `no-reduce-accumulator-copy`
+detects repeated copies of reducer accumulators, including spread, and
+`no-array-filter-map` checks adjacent eager passes on locally evidenced arrays.
+These checks are conservative and have no autofix. Before rewriting, preserve
+accumulator ownership, callback order and indexes, and sparse-array behavior.
 
 Before finishing any TS/JS task, run `node skills/slop-check/scripts/check.mjs --since=HEAD`
 from the repo root even if edit hooks ran. It includes new untracked files and

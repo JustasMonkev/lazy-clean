@@ -1,9 +1,9 @@
 ---
 name: lazy-gain
 description: >
-  Show lazy's measured impact as a compact scoreboard: less code, less
-  cost, more speed, from the benchmark medians. One-shot display, not a
-  persistent mode, and not a per-repo number. Trigger: /lazy-gain,
+  Show Ponytail's upstream benchmark results and lazy-clean's own evaluation
+  sources as a compact scoreboard. One-shot display, not a persistent mode
+  or a per-repo savings estimate. Trigger: /lazy-gain,
   "lazy gain", "what does lazy save", "show lazy impact",
   "lazy scoreboard".
 ---
@@ -13,38 +13,40 @@ description: >
 Display this scoreboard when invoked. One-shot: do NOT change mode, write flag
 files, or persist anything.
 
-The figures are the upstream project's published benchmark medians (5 everyday
-tasks: email validator, debounce, CSV sum, countdown timer, rate limiter; three
-models: Haiku, Sonnet, Opus). They were measured upstream and have NOT been
-reproduced in this fork, which ships no benchmark data — say so when you present
-them, and never present them as this package's own measurements.
-
 ## Scoreboard
 
-Render the text bars below. The bar length shows the measured range; the label
-carries the exact figure:
+Render this table with the study setup, source, and limitations below:
 
-```
-  lazy gain              upstream benchmark median · 5 tasks · 3 models
+| Metric | Ponytail vs no-skill agent |
+| --- | ---: |
+| Added lines in `git diff` | ~54% fewer |
+| Tokens | ~22% fewer |
+| Cost | ~20% lower |
+| Elapsed time | ~27% less |
 
-  Lines of code   no-skill  ████████████████████  100%
-                  lazy  ██▌·················    6–20%   ▼ 80–94%
-  Cost            no-skill  ████████████████████  100%
-                  lazy  █████▌··············   23–53%  ▼ 47–77%
-  Speed           lazy  ▸ 3–6× faster
+Source: [Ponytail's agentic study, June 18, 2026](https://github.com/DietrichGebert/ponytail/blob/356918eba965ee1eac64bd3a7f0dd02108350de5/benchmarks/results/2026-06-18-agentic.md).
+These are the upstream study's aggregate results across 12 feature tasks on
+the FastAPI + React template, using Claude Code with Haiku 4.5 and four runs
+per task and arm. They have not been reproduced for lazy-clean.
 
-  This repo:  /lazy-debt  (shortcuts you deferred)
-              /lazy-audit (what's still cuttable)
-```
+The feature apps were not run; added lines do not establish correctness or
+readability. This is one model and a small task set, with four timed-out cells
+missing cost/time data. It is not a savings or safety guarantee.
+
+## lazy-clean evidence
+
+Point to this repository's [evaluation runner and measurement rules](https://github.com/JustasMonkev/lazy-clean/blob/main/benchmarks/README.md)
+and [recorded Luna guidance pilot with raw artifacts](https://github.com/JustasMonkev/lazy-clean/blob/main/benchmarks/solid-guidance.md).
+The pilot measures behavior and design on small tasks; it provides no token,
+cost, or comparable timing measurements and claims no efficiency gain.
 
 ## Honesty boundary
 
-These are upstream benchmark medians, not this repo, and not reproduced here.
-NEVER print a per-repo savings
-number ("you saved X lines/tokens here"): the unbuilt version was never
-written, so there is no real baseline to subtract from in a live repo. The
-only real per-repo figures come from `/lazy-debt` (a counted ledger), and
-this card points there instead of inventing one.
+Never apply Ponytail's percentages to lazy-clean, the current task, or another
+model. Do not invent savings from an unwritten alternative. Report local gains
+only from actual matched measurements following the runner's measurement rules;
+missing metrics stay unknown. `/lazy-debt` counts deferred shortcuts and
+`/lazy-audit` reviews remaining work; neither measures savings.
 
 ## Boundaries
 
