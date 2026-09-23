@@ -218,7 +218,7 @@ for (const [file, patterns] of LANGUAGE_REFERENCES) {
     ok(`${file} resolves in getFallbackInstructions(${mode})`,
       instructions.getFallbackInstructions(mode).includes(reference));
   }
-  for (const surface of [...RULES_FILES, ".opencode/command/lazy.md"])
+  for (const surface of [...RULES_FILES, ".opencode/command/lazy.md", ".opencode/command/lazy-review.md", ".opencode/command/lazy-audit.md"])
     ok(`${surface} routes to ${file}`, read(surface).includes(`<skills-dir>/lazy/references/${file}`));
   for (const skill of ["skills/lazy-clean/SKILL.md", "skills/lazy-review/SKILL.md", "skills/lazy-audit/SKILL.md", "skills/slop-check/SKILL.md"])
     ok(`${skill} routes to ${file}`, read(skill).includes(`../lazy/references/${file}`));
@@ -256,9 +256,15 @@ const finishSurfaces = [
 for (const [surface, raw] of finishSurfaces) {
   const text = flat(raw);
   for (const pattern of FINISH_CHECKLIST) ok(`${surface} finish checklist has ${pattern}`, pattern.test(text));
-  const tail = text.slice(Math.floor(text.length * 0.6));
-  ok(`${surface} ends with the finish checklist`, /check the diff, not memory/iu.test(tail));
+  // Terminal means nothing substantive follows it: no later section heading.
+  const after = raw.slice(raw.search(/check the diff, not memory/iu));
+  ok(`${surface} ends with the finish checklist`, /check the diff, not memory/iu.test(raw) && !/^#{1,6} /mu.test(after));
 }
+
+// Skills-only `/lazy` is answered from SKILL.md, which also says a bare `/lazy`
+// reports the level: the no-announcement rule must not forbid that report.
+ok("skills/lazy/SKILL.md limits the no-announcement rule to ordinary work",
+  /Do not announce the mode during ordinary work/u.test(flat(read("skills/lazy/SKILL.md"))));
 
 // A relative link in a shipped skill that points nowhere sends the agent to a
 // file that is not there; skills-only installs copy skills/ as a whole, so

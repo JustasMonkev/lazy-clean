@@ -23,7 +23,7 @@ instructions.
 
 Use the active level until `/lazy off`, "stop lazy", or "normal mode".
 Switch with `/lazy lite|full|ultra`; a bare `/lazy` only reports the level.
-Do not announce the mode.
+Do not announce the mode during ordinary work.
 
 ## The ladder
 

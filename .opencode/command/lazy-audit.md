@@ -6,6 +6,8 @@ Audit the entire repository for over-engineering only, not correctness. Scan the
 
 Detect which of TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go the repo uses. Read each pinned or installed version from its toolchain file, manifest, lockfile, or runtime and keep replacements compatible. If a needed version fact cannot be checked, say so and do not guess; check the latest release only when the user asks for current-version advice.
 
+For TS/JS and Python, [TS/JS checks](<skills-dir>/lazy/references/simplification-checks.md) and [Python checks](<skills-dir>/lazy/references/python-checks.md) name common stdlib replacements and the idioms a simplification must not break.
+
 One caller or export is never a finding by itself. Keep a separate function or file when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. Do not flag behavior, edge, or failure tests that can catch a real regression; keep meaningful mutation evidence when existing red-green checks do not already prove the risky behavior, and treat it as optional when they do.
 
 One production implementation is not evidence of waste. Before removing a

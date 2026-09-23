@@ -98,6 +98,13 @@ It does not change lazy intensity or replace the final checker scan.
 
 Ladder first. The checker finds slop in code that exists; the ladder stops the code from being written at all, and code never written has no findings.
 
+## Upstream comparisons and ports
+
+When asked to compare or reuse upstream changes, read
+[upstream updates](references/upstream-updates.md) and the repository's
+`UPSTREAM.md` if present. Preserve local behavior and record partial adaptations;
+a reviewed upstream revision is not proof of a pristine merge base.
+
 ## Before you report
 
 Check the diff, not memory:
@@ -107,10 +114,3 @@ Check the diff, not memory:
 4. Language checks were applied; checker findings were triaged.
 
 Report changes, checks actually run, and limits. Never claim an unrun check.
-
-## Upstream comparisons and ports
-
-When asked to compare or reuse upstream changes, read
-[upstream updates](references/upstream-updates.md) and the repository's
-`UPSTREAM.md` if present. Preserve local behavior and record partial adaptations;
-a reviewed upstream revision is not proof of a pristine merge base.
