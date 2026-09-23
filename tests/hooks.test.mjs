@@ -1511,6 +1511,24 @@ ok("a failed default write keeps the level the user already had",
     template.slice(template.indexOf("TS/JS checks"), template.indexOf("TS/JS checks") + 200));
 }
 
+// Link targets must survive every character a valid path can hold. Expected
+// values follow CommonMark pointy destinations: `<`/`>` as entities, `&` only
+// where it would otherwise decode as one, and a backslash only before
+// punctuation (so Windows separators stay readable).
+{
+  const target = instructions.markdownLinkTarget;
+  eq("link target keeps an ordinary path readable", target("/opt/lazy clean (copy)/x.md"), "</opt/lazy clean (copy)/x.md>");
+  eq("link target encodes angle brackets", target("/tmp/lazy>copy<x/y.md"), "</tmp/lazy&gt;copy&lt;x/y.md>");
+  eq("link target keeps a literal entity-shaped name", target("/tmp/r&amp;d/x.md"), "</tmp/r&amp;amp;d/x.md>");
+  eq("link target keeps a bare ampersand", target("/tmp/a$&b/x.md"), "</tmp/a$&b/x.md>");
+  eq("link target keeps Windows separators", target("C:\\Users\\me\\x.md"), "<C:\\Users\\me\\x.md>");
+  eq("link target escapes a backslash before punctuation", target("C:\\R~1\\(copy)\\x.md"), "<C:\\R~1\\\\(copy)\\x.md>");
+  const { parseCommandFile } = require(path.join(ROOT, ".opencode", "plugins", "lazy-frontmatter.cjs"));
+  const angled = parseCommandFile(path.join(ROOT, ".opencode", "command", "lazy-review.md"), "/tmp/lazy>copy/skills").template;
+  ok("OpenCode encodes angle brackets in resolved link targets",
+    angled.includes("](</tmp/lazy&gt;copy/skills/lazy/references/python-checks.md>)"), angled.slice(0, 120));
+}
+
 // One drift guard over every command template, not just /lazy: the help card
 // carried the same stale claim that an omitted level means full, which sent the
 // agent to work at full while the transform injected the persisted level. Both

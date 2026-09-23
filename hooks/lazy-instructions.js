@@ -45,6 +45,18 @@ function filterSkillBodyForMode(body, mode) {
     .join('\n');
 }
 
+// A Markdown link destination written as `<...>` may hold spaces and
+// parentheses, which are valid in an install path. `<` and `>` would end it,
+// `&name;` would decode as an entity, and a backslash before punctuation would
+// read as an escape, so encode exactly those; every valid path then survives
+// as one openable link. Entities, unlike `\<`, are also decoded by older
+// CommonMark parsers.
+const LINK_ENTITIES = { '<': '&lt;', '>': '&gt;', '&': '&amp;' };
+function markdownLinkTarget(filePath) {
+  return '<' + filePath.replace(/[<>]|&(?=#?\w+;)|\\(?=[!-/:-@[-`{-~])/gu,
+    (match) => LINK_ENTITIES[match] || '\\' + match) + '>';
+}
+
 const INTENSITY = {
   lite: 'Complete the task; mention a simpler option when useful.',
   full: 'Complete the task using the ladder and verify the goal.',
@@ -86,7 +98,7 @@ they need. Extend existing contracts for requested variations. Interchangeable
 implementations must preserve inputs, results, errors, and lifecycle; exercise
 the same contract against each. Do not add interfaces just to satisfy SOLID.
 
-For boundary changes, read [design checks](<${path.join(__dirname, "../skills/lazy/references/design-checks.md")}>).
+For boundary changes, read [design checks](${markdownLinkTarget(path.join(__dirname, "../skills/lazy/references/design-checks.md"))}).
 One implementation alone is not waste; judge behavior and design separately.
 
 Before finishing, simplify the changed code: infer obvious local types without
@@ -99,8 +111,8 @@ Keep modules to one reason to change and I/O out of import time. Model exclusive
 states as unions. On TypeScript 7 (native tsc) do not add baseUrl,
 moduleResolution node/node10, target es5, or outFile; keep a TypeScript 6 alias
 API tools need.
-For TS/JS and tsconfig read [TS/JS checks](<${path.join(__dirname, '../skills/lazy/references/simplification-checks.md')}>).
-For Python read [Python checks](<${path.join(__dirname, '../skills/lazy/references/python-checks.md')}>):
+For TS/JS and tsconfig read [TS/JS checks](${markdownLinkTarget(path.join(__dirname, '../skills/lazy/references/simplification-checks.md'))}).
+For Python read [Python checks](${markdownLinkTarget(path.join(__dirname, '../skills/lazy/references/python-checks.md'))}):
 no mutable defaults, bare except, or \`if not x\` where 0 or "" is valid.
 
 Preserve defaults, explicit false/zero/empty values, accepted input formats,
@@ -147,7 +159,7 @@ function getLazyInstructions(mode) {
   try {
     return 'LAZY MODE ACTIVE — level: ' + effectiveMode + '\n\n' +
       filterSkillBodyForMode(fs.readFileSync(SKILL_PATH, 'utf8'), effectiveMode)
-        .replace(/\(references\/([\w-]+\.md)\)/g, (_, file) => '(<' + path.join(path.dirname(SKILL_PATH), 'references', file) + '>)')
+        .replace(/\(references\/([\w-]+\.md)\)/g, (_, file) => '(' + markdownLinkTarget(path.join(path.dirname(SKILL_PATH), 'references', file)) + ')')
         .replace('<skills-dir>', path.dirname(path.dirname(SKILL_PATH)));
   } catch (e) {
     return getFallbackInstructions(effectiveMode);
@@ -158,6 +170,7 @@ function getLazyInstructions(mode) {
 const getSubagentInstructions = getLazyInstructions;
 
 module.exports = {
+  markdownLinkTarget,
   filterSkillBodyForMode,
   getFallbackInstructions,
   getLazyInstructions,
