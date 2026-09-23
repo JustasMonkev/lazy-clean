@@ -428,6 +428,11 @@ const orphanInstructions = require(path.join(orphan, "hooks", "lazy-instructions
 const fallback = orphanInstructions.getLazyInstructions("ultra");
 ok("missing SKILL.md falls back cleanly", fallback.startsWith("LAZY MODE ACTIVE — level: ultra") && fallback.includes("## The ladder"));
 ok("fallback carries no SKILL.md-only text", !fallback.includes("## Intensity"));
+// A damaged install injects the fallback instead, so it shares the core budget.
+for (const mode of ["lite", "full", "ultra"]) {
+  const words = instructions.getFallbackInstructions(mode).split(/\s+/u).length;
+  ok(`fallback prompt stays below 700 words in ${mode}`, words < 700, String(words));
+}
 ok("missing SKILL.md preserves concrete simplification checks",
   /infer obvious local types/.test(fallback) &&
   /normalize overloaded arguments once/.test(fallback) &&

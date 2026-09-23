@@ -70,8 +70,10 @@ if __name__ == "__main__":
   mutated), `NamedTuple`, or `TypedDict` for dict-shaped JSON. Do not thread
   loose dicts with implied keys through internal code.
 - Use `Enum` or `Literal` for a closed set of values instead of bare strings.
-- Use `typing.Protocol` for a narrow capability a consumer needs. One
-  implementation does not need an abstract base class.
+- Use `typing.Protocol` for a new, typing-only capability a consumer needs. One
+  implementation does not need an abstract base class. Keep an existing ABC
+  when it enforces `@abstractmethod`, backs `isinstance`, `issubclass`, or
+  `register()`, or shares implementation; a `Protocol` preserves none of that.
 - Parse external data (JSON, env, CLI, request bodies, files) once at the
   boundary, with an installed validator if the project has one. Type hints do
   not validate anything at runtime.
@@ -120,9 +122,11 @@ the shared list; check callers before fixing it inside an unrelated task.
 
 ## Check errors
 
-- No bare `except:` and no `except Exception: pass`. Bare `except:` also
-  catches `KeyboardInterrupt` and `SystemExit`. Catch the narrowest error the
-  code can actually handle.
+- No bare `except:` and no `except Exception: pass` that swallow or handle an
+  error: bare `except:` also catches `KeyboardInterrupt` and `SystemExit`, so a
+  handler catches the narrowest error it can actually handle. Cleanup that must
+  run on every exit is different: keep it in `finally`, or in an explicit
+  `except BaseException:` that re-raises, and do not narrow it.
 - Rethrow with a bare `raise`; translate with `raise NewError(...) from err` so
   the cause survives. Do not log and re-raise the same error at every layer.
 - Do not turn a failure into `None`, `{}`, or `False` when callers need to know
