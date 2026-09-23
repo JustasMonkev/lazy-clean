@@ -216,7 +216,7 @@ for (const [file, patterns] of LANGUAGE_REFERENCES) {
     ok(`${file} resolves in getLazyInstructions(${mode})`,
       instructions.getLazyInstructions(mode).includes(`(<${reference}>)`));
     ok(`${file} resolves in getFallbackInstructions(${mode})`,
-      instructions.getFallbackInstructions(mode).includes(reference));
+      instructions.getFallbackInstructions(mode).includes(`(<${reference}>)`));
   }
   for (const surface of [...RULES_FILES, ".opencode/command/lazy.md", ".opencode/command/lazy-review.md", ".opencode/command/lazy-audit.md"])
     ok(`${surface} routes to ${file}`, read(surface).includes(`<skills-dir>/lazy/references/${file}`));

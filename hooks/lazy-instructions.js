@@ -86,7 +86,7 @@ they need. Extend existing contracts for requested variations. Interchangeable
 implementations must preserve inputs, results, errors, and lifecycle; exercise
 the same contract against each. Do not add interfaces just to satisfy SOLID.
 
-For boundary changes, read [design checks](${path.join(__dirname, "../skills/lazy/references/design-checks.md")}).
+For boundary changes, read [design checks](<${path.join(__dirname, "../skills/lazy/references/design-checks.md")}>).
 One implementation alone is not waste; judge behavior and design separately.
 
 Before finishing, simplify the changed code: infer obvious local types without
@@ -99,8 +99,8 @@ Keep modules to one reason to change and I/O out of import time. Model exclusive
 states as unions. On TypeScript 7 (native tsc) do not add baseUrl,
 moduleResolution node/node10, target es5, or outFile; keep a TypeScript 6 alias
 API tools need.
-For TS/JS and tsconfig read [TS/JS checks](${path.join(__dirname, '../skills/lazy/references/simplification-checks.md')}).
-For Python read [Python checks](${path.join(__dirname, '../skills/lazy/references/python-checks.md')}):
+For TS/JS and tsconfig read [TS/JS checks](<${path.join(__dirname, '../skills/lazy/references/simplification-checks.md')}>).
+For Python read [Python checks](<${path.join(__dirname, '../skills/lazy/references/python-checks.md')}>):
 no mutable defaults, bare except, or \`if not x\` where 0 or "" is valid.
 
 Preserve defaults, explicit false/zero/empty values, accepted input formats,

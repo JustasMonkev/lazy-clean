@@ -1485,7 +1485,7 @@ ok("a failed default write keeps the level the user already had",
     // Split on the resolved directory, not a path regex: Windows paths start
     // with a drive letter and the checkout path may contain spaces.
     const links = template.split(skillsDir).slice(1)
-      .map((rest) => rest.match(/^([^)]*?\.md)\)/u)?.[1])
+      .map((rest) => rest.match(/^([^)>]*?\.md)>\)/u)?.[1])
       .filter(Boolean)
       .map((rest) => path.join(skillsDir, rest));
     ok(`OpenCode /${name} links the language checks`,
@@ -1499,11 +1499,16 @@ ok("a failed default write keeps the level the user already had",
 // String#replaceAll; the install path must land in the template verbatim.
 {
   const { parseCommandFile } = require(path.join(ROOT, ".opencode", "plugins", "lazy-frontmatter.cjs"));
-  const oddDir = path.join(SANDBOX, "lazy$&clean$'x", "skills");
+  // Spaces and `)` are also valid there but end a bare Markdown destination.
+  const oddDir = path.join(SANDBOX, "lazy $&clean$'x (copy)", "skills");
   const { template } = parseCommandFile(path.join(ROOT, ".opencode", "command", "lazy-review.md"), oddDir);
   ok("OpenCode inserts a skills path with replacement patterns literally",
     template.includes(`${oddDir}/lazy/references/python-checks.md`) && !template.includes("<skills-dir>"),
     template.slice(template.indexOf("TS/JS checks"), template.indexOf("TS/JS checks") + 160));
+  ok("OpenCode wraps link targets so spaces and parentheses stay in the link",
+    template.includes(`](<${oddDir}/lazy/references/python-checks.md>)`) &&
+    template.includes(`](<${oddDir}/lazy/references/simplification-checks.md>)`),
+    template.slice(template.indexOf("TS/JS checks"), template.indexOf("TS/JS checks") + 200));
 }
 
 // One drift guard over every command template, not just /lazy: the help card

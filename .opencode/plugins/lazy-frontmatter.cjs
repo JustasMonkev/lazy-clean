@@ -24,9 +24,14 @@ function parseCommandFile(filePath, skillsDir) {
   const description = match[1].match(/description:\s*(.+)/)?.[1]?.trim()
     ?.replace(/^(['"])([\s\S]*)\1$/u, '$2');
   const template = match[2].trim();
-  // A callback inserts the directory literally; a replacement string would
-  // expand `$&` or `$'` in a valid install path.
-  return { description, template: skillsDir ? template.replaceAll('<skills-dir>', () => skillsDir) : template };
+  if (!skillsDir) return { description, template };
+  // Callbacks insert the directory literally; a replacement string would expand
+  // `$&` or `$'`. Link targets go in `<...>` so spaces and `)`, which are valid
+  // in an install path, do not end the Markdown destination early.
+  const resolved = template
+    .replace(/\]\(<skills-dir>([^)\s]*)\)/gu, (_, rest) => `](<${skillsDir}${rest}>)`)
+    .replaceAll('<skills-dir>', () => skillsDir);
+  return { description, template: resolved };
 }
 
 module.exports = { parseCommandFile };
