@@ -24,7 +24,9 @@ function parseCommandFile(filePath, skillsDir) {
   const description = match[1].match(/description:\s*(.+)/)?.[1]?.trim()
     ?.replace(/^(['"])([\s\S]*)\1$/u, '$2');
   const template = match[2].trim();
-  return { description, template: skillsDir ? template.replaceAll('<skills-dir>', skillsDir) : template };
+  // A callback inserts the directory literally; a replacement string would
+  // expand `$&` or `$'` in a valid install path.
+  return { description, template: skillsDir ? template.replaceAll('<skills-dir>', () => skillsDir) : template };
 }
 
 module.exports = { parseCommandFile };

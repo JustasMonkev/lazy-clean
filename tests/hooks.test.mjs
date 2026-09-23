@@ -1488,6 +1488,17 @@ ok("a failed default write keeps the level the user already had",
   }
 }
 
+// `$&` and `$'` are valid in a directory name but are replacement patterns in
+// String#replaceAll; the install path must land in the template verbatim.
+{
+  const { parseCommandFile } = require(path.join(ROOT, ".opencode", "plugins", "lazy-frontmatter.cjs"));
+  const oddDir = path.join(SANDBOX, "lazy$&clean$'x", "skills");
+  const { template } = parseCommandFile(path.join(ROOT, ".opencode", "command", "lazy-review.md"), oddDir);
+  ok("OpenCode inserts a skills path with replacement patterns literally",
+    template.includes(`${oddDir}/lazy/references/python-checks.md`) && !template.includes("<skills-dir>"),
+    template.slice(template.indexOf("TS/JS checks"), template.indexOf("TS/JS checks") + 160));
+}
+
 // One drift guard over every command template, not just /lazy: the help card
 // carried the same stale claim that an omitted level means full, which sent the
 // agent to work at full while the transform injected the persisted level. Both
