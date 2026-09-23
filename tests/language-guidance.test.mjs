@@ -204,7 +204,7 @@ const LANGUAGE_REFERENCES = [
     /`@dataclass`/u, /configures/u, /Do not add a tool, loosen its config/u,
     /pytest\.raises/u, /`typing\.Protocol`, `TypedDict`, and `Literal` \(3\.8\)/u, /`dataclasses` and `from __future__ import annotations` \(3\.7\)/u, /on 3\.7 and later/u, /`functools\.cache`.*\(3\.9\)/u,
     /oldest version the project supports/u, /lru_cache\(maxsize=None\)/u, /typing_extensions/u,
-    /never add pytest to a unittest project/u, /private sentinel/u, /does not close.*contextlib\.closing/u, /self\.subTest/u, /assertRaises/u,
+    /never add pytest to a unittest project/u, /private sentinel/u, /`closing\(\.\.\.\)` alone closes without committing/u, /`with closing\(sqlite3\.connect\(path\)\) as conn, conn:`/u, /f-strings \(3\.6\)/u, /`str\.format` for f-strings/u, /self\.subTest/u, /assertRaises/u,
   ]],
 ];
 for (const [file, patterns] of LANGUAGE_REFERENCES) {

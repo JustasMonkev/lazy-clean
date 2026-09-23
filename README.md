@@ -168,8 +168,9 @@ Without Git, pass each changed path as a separate quoted argument.
 
 The main and subagent prompts use the same compact rules. They include a brief
 think → plan → check loop for multi-step work and a strong cut pass over the
-task-owned diff without forcing net-negative feature changes. Every surface
-ends with the same four-item finish checklist, checked against the diff rather
+task-owned diff without forcing net-negative feature changes. Every build
+surface (the `lazy` and `lazy-clean` skills, the injected ruleset, the rules
+files, and OpenCode's `/lazy`) ends with the same four-item finish checklist, checked against the diff rather
 than memory: requested needs done and nothing unasked added, each changed line
 traceable, tests that ran, and language checks applied. Detailed
 [risk checks](skills/lazy/references/risk-checks.md) are loaded for non-trivial

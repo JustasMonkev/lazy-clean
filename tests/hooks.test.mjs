@@ -1460,6 +1460,34 @@ ok("a failed default write keeps the level the user already had",
     res.stdout.includes("no-any"), res.stdout.slice(0, 200) || "<no output>");
 }
 
+// OpenCode sends a registered template to the model verbatim, so `<skills-dir>`
+// links must be expanded at registration into files that actually exist.
+{
+  const probe = spawnSync(process.execPath, ["--input-type=module", "-e", `
+    import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, ".opencode", "plugins", "lazy.mjs")).href)};
+    const hooks = await plugin({ client: { app: { log: async () => {} } } });
+    const config = {};
+    await hooks.config(config);
+    console.log(JSON.stringify(config.command));
+  `], { encoding: "utf8", env: baseEnv(freshHome("opencode-skills-dir").env), timeout: 20000 });
+  const commands = probe.status === 0 ? JSON.parse(probe.stdout.trim()) : {};
+  const skillsDir = path.join(ROOT, "skills");
+  for (const name of ["lazy", "lazy-review", "lazy-audit"]) {
+    const template = commands[name]?.template || "";
+    ok(`OpenCode /${name} resolves <skills-dir>`, template && !template.includes("<skills-dir>"), probe.stderr.slice(0, 200));
+    // Split on the resolved directory, not a path regex: Windows paths start
+    // with a drive letter and the checkout path may contain spaces.
+    const links = template.split(skillsDir).slice(1)
+      .map((rest) => rest.match(/^([^)]*?\.md)\)/u)?.[1])
+      .filter(Boolean)
+      .map((rest) => path.join(skillsDir, rest));
+    ok(`OpenCode /${name} links the language checks`,
+      links.includes(path.join(skillsDir, "lazy", "references", "simplification-checks.md")) &&
+      links.includes(path.join(skillsDir, "lazy", "references", "python-checks.md")), links.join(", "));
+    for (const link of links) ok(`OpenCode /${name} link ${link} exists`, fs.existsSync(link));
+  }
+}
+
 // One drift guard over every command template, not just /lazy: the help card
 // carried the same stale claim that an omitted level means full, which sent the
 // agent to work at full while the transform injected the persisted level. Both
