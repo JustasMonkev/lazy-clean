@@ -202,7 +202,9 @@ const LANGUAGE_REFERENCES = [
     /__name__ == "__main__"/u, /mutable default/iu, /`if not value`/u, /is None/u,
     /bare `except:`/u, /raise NewError\(\.\.\.\) from err/u, /typing\.Protocol/u,
     /`@dataclass`/u, /configures/u, /Do not add a tool, loosen its config/u,
-    /pytest\.raises/u,
+    /pytest\.raises/u, /`typing\.Protocol`, `TypedDict`, and `Literal` \(3\.8\)/u, /`functools\.cache`.*\(3\.9\)/u,
+    /oldest version the project supports/u, /lru_cache\(maxsize=None\)/u, /typing_extensions/u,
+    /never add pytest to a unittest project/u, /self\.subTest/u, /assertRaises/u,
   ]],
 ];
 for (const [file, patterns] of LANGUAGE_REFERENCES) {
@@ -218,10 +220,9 @@ for (const [file, patterns] of LANGUAGE_REFERENCES) {
   }
   for (const surface of [...RULES_FILES, ".opencode/command/lazy.md"])
     ok(`${surface} routes to ${file}`, read(surface).includes(`<skills-dir>/lazy/references/${file}`));
-  for (const skill of ["skills/lazy-clean/SKILL.md", "skills/lazy-review/SKILL.md", "skills/lazy-audit/SKILL.md"])
+  for (const skill of ["skills/lazy-clean/SKILL.md", "skills/lazy-review/SKILL.md", "skills/lazy-audit/SKILL.md", "skills/slop-check/SKILL.md"])
     ok(`${skill} routes to ${file}`, read(skill).includes(`../lazy/references/${file}`));
 }
-ok("slop-check routes Python to its checks", read("skills/slop-check/SKILL.md").includes("../lazy/references/python-checks.md"));
 
 // The inline basics must survive where a rules file is the only thing an agent
 // reads (Cursor, Copilot): a link alone to an uninstalled reference is nothing.
@@ -246,8 +247,7 @@ for (const mode of ["lite", "full", "ultra"]) {
 const FINISH_CHECKLIST = [/check the diff, not memory/iu, /nothing unasked was added/iu,
   /traces to the request or its verification/iu, /tests that ran/iu, /never claim an unrun check/iu];
 const finishSurfaces = [
-  ["skills/lazy/SKILL.md", read("skills/lazy/SKILL.md")],
-  ...[...RULES_FILES, ".opencode/command/lazy.md"].map((file) => [file, read(file)]),
+  ...BUILD_SURFACES.map((file) => [file, read(file)]),
   ...["lite", "full", "ultra"].flatMap((mode) => [
     [`getLazyInstructions(${mode})`, instructions.getLazyInstructions(mode)],
     [`getFallbackInstructions(${mode})`, instructions.getFallbackInstructions(mode)],

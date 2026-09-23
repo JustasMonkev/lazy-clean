@@ -7,11 +7,16 @@ change touches; it is not a request to restyle or re-type unrelated code.
 
 Read the version from `requires-python` in `pyproject.toml`, `.python-version`,
 `setup.cfg`, `tox.ini`, the lockfile, or `python --version`. Features that need a
-minimum version: built-in generics like `list[int]` (3.9), `match`, runtime
+minimum version: `typing.Protocol`, `TypedDict`, and `Literal` (3.8),
+`functools.cache` and built-in generics like `list[int]` (3.9), `match`, runtime
 `X | None`, `zip(strict=True)`, and `@dataclass(slots=True, kw_only=True)`
 (3.10), `tomllib`, `typing.Self`, and `except*` (3.11), `itertools.batched` and
-the `type` statement (3.12). If the version cannot be read, say so and use only
-syntax that the oldest plausible version accepts.
+the `type` statement (3.12). Gate on the oldest version the project supports,
+not the local interpreter. Below a gate, use an installed `typing_extensions`
+for typing names, `functools.lru_cache(maxsize=None)` for `cache`, and
+`typing.List[int]` or `from __future__ import annotations` for generics; do not
+add a backport dependency just for style. If the version cannot be read, say so
+and use only syntax that the oldest plausible version accepts.
 
 Run the formatter, linter, type checker, and test runner the project already
 configures (look in `pyproject.toml`, `setup.cfg`, `tox.ini`, `noxfile.py`, the
@@ -133,10 +138,15 @@ except FileNotFoundError:
 
 ## Check tests
 
-- Use the runner and style already in the repo (pytest or unittest). Use
-  `@pytest.mark.parametrize` instead of copy-pasted cases, and `tmp_path` and
-  `monkeypatch` instead of hand-built temp directories or global edits.
+- Use the runner and style already in the repo; never add pytest to a
+  unittest project or the reverse.
+  - pytest: `@pytest.mark.parametrize` instead of copy-pasted cases, `tmp_path`
+    and `monkeypatch` instead of hand-built temp directories or global edits,
+    and `pytest.raises(Error, match=...)` for failures.
+  - unittest: `self.subTest` for case tables, `tempfile.TemporaryDirectory` and
+    `unittest.mock.patch` as context managers, and `assertRaises` or
+    `assertRaisesRegex` for failures.
 - Patch a seam the code owns, where the name is looked up. Do not assert that a
   mock was called with the value the test just gave it.
 - Cover behavior, edges (empty, `None`, `0`, unicode, boundaries), and failure
-  modes; assert errors with `pytest.raises(Error, match=...)`.
+  modes.

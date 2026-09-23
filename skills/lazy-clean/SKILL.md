@@ -98,6 +98,16 @@ It does not change lazy intensity or replace the final checker scan.
 
 Ladder first. The checker finds slop in code that exists; the ladder stops the code from being written at all, and code never written has no findings.
 
+## Before you report
+
+Check the diff, not memory:
+1. Every requested need is done; nothing unasked was added.
+2. Each changed line traces to the request or its verification.
+3. Changed behavior has tests that ran; failures are reported.
+4. Language checks were applied; checker findings were triaged.
+
+Report changes, checks actually run, and limits. Never claim an unrun check.
+
 ## Upstream comparisons and ports
 
 When asked to compare or reuse upstream changes, read

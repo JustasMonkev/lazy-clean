@@ -40,7 +40,7 @@ Everything runs from this skill directory with plain `node`. Do not install any 
 
    It applies to that line and the next, takes several ids separated by commas, and the `slop-check-ignore-file` variant covers the whole file when written in its first 10 lines. The `-- <reason>` is required and must say something: an ignore with no reason, with an id that is not a rule, or a file-level one written too far down suppresses nothing and is itself reported as `no-unjustified-ignore`. The run summary counts what was suppressed, because a tree that is clean under forty ignores is not clean.
 
-3. Apply the manual review checklist below to the same code. These are the highest-value slop patterns that a mechanical scan cannot catch.
+3. Apply the manual review checklist below to the same code. For TS/JS, also apply [TS/JS checks](../lazy/references/simplification-checks.md): the TypeScript version and tsconfig pass, module shape, and type modeling. These are the highest-value slop patterns that a mechanical scan cannot catch.
 
 4. Report what was found, what was fixed, and any findings intentionally left in place with the reason.
 
