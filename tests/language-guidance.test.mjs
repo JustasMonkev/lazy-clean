@@ -202,7 +202,7 @@ const LANGUAGE_REFERENCES = [
     /__name__ == "__main__"/u, /mutable default/iu, /`if not value`/u, /is None/u,
     /bare `except:`/u, /raise NewError\(\.\.\.\) from err/u, /typing\.Protocol/u,
     /`@dataclass`/u, /configures/u, /Do not add a tool, loosen its config/u,
-    /pytest\.raises/u, /`typing\.Protocol`, `TypedDict`, and `Literal` \(3\.8\)/u, /`functools\.cache`.*\(3\.9\)/u,
+    /pytest\.raises/u, /`typing\.Protocol`, `TypedDict`, and `Literal` \(3\.8\)/u, /`dataclasses` and `from __future__ import annotations` \(3\.7\)/u, /on 3\.7 and later/u, /`functools\.cache`.*\(3\.9\)/u,
     /oldest version the project supports/u, /lru_cache\(maxsize=None\)/u, /typing_extensions/u,
     /never add pytest to a unittest project/u, /private sentinel/u, /does not close.*contextlib\.closing/u, /self\.subTest/u, /assertRaises/u,
   ]],

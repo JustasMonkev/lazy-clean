@@ -6,17 +6,20 @@ change touches; it is not a request to restyle or re-type unrelated code.
 ## Check the version and tools first
 
 Read the version from `requires-python` in `pyproject.toml`, `.python-version`,
-`setup.cfg`, `tox.ini`, the lockfile, or `python --version`. Features that need a
-minimum version: `typing.Protocol`, `TypedDict`, and `Literal` (3.8),
-`functools.cache` and built-in generics like `list[int]` (3.9), `match`, runtime
-`X | None`, `zip(strict=True)`, and `@dataclass(slots=True, kw_only=True)`
-(3.10), `tomllib`, `typing.Self`, and `except*` (3.11), `itertools.batched` and
-the `type` statement (3.12). Gate on the oldest version the project supports,
-not the local interpreter. Below a gate, use an installed `typing_extensions`
-for typing names, `functools.lru_cache(maxsize=None)` for `cache`, and
-`typing.List[int]` or `from __future__ import annotations` for generics; do not
-add a backport dependency just for style. If the version cannot be read, say so
-and use only syntax that the oldest plausible version accepts.
+`setup.cfg`, `tox.ini`, the lockfile, or `python --version`. Features that need
+a minimum version: `dataclasses` and `from __future__ import annotations` (3.7),
+`typing.Protocol`, `TypedDict`, and `Literal` (3.8), `functools.cache` and
+built-in generics like `list[int]` (3.9), `match`, runtime `X | None`,
+`zip(strict=True)`, and `@dataclass(slots=True, kw_only=True)` (3.10),
+`tomllib`, `typing.Self`, and `except*` (3.11), `itertools.batched` and the
+`type` statement (3.12). Gate on the oldest version the project supports, not
+the local interpreter. Below a gate, use an installed `typing_extensions` for
+typing names, `functools.lru_cache(maxsize=None)` for `cache`,
+`typing.List[int]` for generics (or `from __future__ import annotations` on 3.7
+and later), and `NamedTuple`, an already-installed `dataclasses` backport, or `attrs`
+before 3.7; do not add a backport dependency just for style. If the
+version cannot be read, say so and use only syntax that the oldest plausible
+version accepts.
 
 Run the formatter, linter, type checker, and test runner the project already
 configures (look in `pyproject.toml`, `setup.cfg`, `tox.ini`, `noxfile.py`, the
