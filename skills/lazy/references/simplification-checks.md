@@ -26,8 +26,11 @@ on 6 or 7; on 5.x or older, flag them only when the task is an upgrade:
 
 - `baseUrl`: write `paths` entries relative to the tsconfig, such as
   `"@/*": ["./src/*"]`.
-- `moduleResolution` `node`, `node10`, or `classic`: use `nodenext` for Node
-  or `bundler` for bundled apps.
+- `moduleResolution` `node`, `node10`, or `classic`: use `bundler` for bundled
+  apps, or `nodenext` for Node together with `module: "nodenext"`, which
+  TypeScript requires as a pair (TS5110). That pair changes emit and
+  `package.json` `type` semantics, so check the built output, not just the
+  type check.
 - `target: "es5"` and `downlevelIteration`: the lowest target is `es2015`;
   leave older output to the bundler or Babel.
 - `module` `amd`, `umd`, `systemjs`, or `none`, and `outFile`: use ES modules
@@ -41,7 +44,9 @@ TypeScript 6 and 7 changed defaults: `strict` is on, `module` is `esnext`,
 `target` is a current ECMAScript year, `rootDir` is the tsconfig directory,
 `noUncheckedSideEffectImports` is on, and `types` is `[]`, so global types such
 as Node's need `"types": ["node"]`. When an upgrade changes behavior, set the
-old value explicitly or fix the code; do not rely on the new default silently.
+old value explicitly only if the installed compiler still accepts it; a removed
+value, such as the old `es5` target default, needs a code change or moves to
+the bundler. Do not rely on the new default silently.
 `"ignoreDeprecations": "6.0"` is a temporary migration step, never a fix;
 mark it with `lazy:` and the version it has to go before.
 

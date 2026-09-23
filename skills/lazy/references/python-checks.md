@@ -16,10 +16,12 @@ the `type` statement (3.12). Gate on the oldest version the project supports,
 not the local interpreter. Below a gate, use `str.format` for f-strings, an
 installed `typing_extensions` for typing names,
 `functools.lru_cache(maxsize=None)` for `cache`, `typing.List[int]` for generics
-(or `from __future__ import annotations` on 3.7 and later), and `NamedTuple`, an
-already-installed `dataclasses` backport, or `attrs` before 3.7; do not add a
-backport dependency just for style. If the version cannot be read, say so and
-use only syntax that the oldest plausible version accepts.
+(`from __future__ import annotations` on 3.7 and later helps only when nothing
+evaluates the annotations; code read by `typing.get_type_hints` or a validator
+such as pydantic keeps `typing.List`), and `NamedTuple`, an already-installed
+`dataclasses` backport, or `attrs` before 3.7; do not add a backport dependency
+just for style. If the version cannot be read, say so and use only syntax that
+the oldest plausible version accepts.
 
 Run the formatter, linter, type checker, and test runner the project already
 configures (look in `pyproject.toml`, `setup.cfg`, `tox.ini`, `noxfile.py`, the

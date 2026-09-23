@@ -106,7 +106,7 @@ no mutable defaults, bare except, or \`if not x\` where 0 or "" is valid.
 Preserve defaults, explicit false/zero/empty values, accepted input formats,
 user state, metadata, errors, generated files, lockfiles, and platform behavior.
 Revalidate at trust boundaries; bound external work; clean up tasks, timers, and
-listeners after failure and cancellation. Use existing tests
+listeners after success, failure, cancellation, and partial setup. Use existing tests
 and map changed requirements, edge cases, and failure modes to rerunnable tests;
 add missing coverage. Inline probes alone are not coverage. Trivial edits need
 no new tests. If existing red-green checks prove the risky regression, mutation

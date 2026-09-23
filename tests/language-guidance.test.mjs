@@ -195,7 +195,7 @@ const LANGUAGE_REFERENCES = [
     /node_modules\/\.bin\/tsc -v/u, /Do not use `npx tsc`/u, /report it as unknown/u, /TypeScript 7 is the native \(Go\) compiler/u, /`tsgo`/u, /`@typescript\/typescript6`/u,
     /`baseUrl`/u, /`node10`/u, /`target: "es5"`/u, /`outFile`/u, /write `with`/u, /`namespace Foo \{\}`/u,
     /`types` is `\[\]`/u, /"ignoreDeprecations": "6\.0".*never a fix/u, /no stable programmatic API/u,
-    /typescript-eslint/u, /on 5\.x or older, flag them only when the task is an upgrade/u,
+    /typescript-eslint/u, /on 5\.x or older, flag them only when the task is an upgrade/u, /`nodenext` for Node together with `module: "nodenext"`/u, /only if the installed compiler still accepts it/u,
   ]],
   ["python-checks.md", [
     /requires-python/u, /\(3\.10\)/u, /one reason to change/iu, /import-time side effects/iu,
@@ -204,7 +204,7 @@ const LANGUAGE_REFERENCES = [
     /`@dataclass`/u, /configures/u, /Do not add a tool, loosen its config/u,
     /pytest\.raises/u, /`typing\.Protocol`, `TypedDict`, and `Literal` \(3\.8\)/u, /`dataclasses` and `from __future__ import annotations` \(3\.7\)/u, /on 3\.7 and later/u, /`functools\.cache`.*\(3\.9\)/u,
     /oldest version the project supports/u, /lru_cache\(maxsize=None\)/u, /typing_extensions/u,
-    /never add pytest to a unittest project/u, /private sentinel/u, /`closing\(\.\.\.\)` alone closes without committing/u, /`with closing\(sqlite3\.connect\(path\)\) as conn, conn:`/u, /f-strings \(3\.6\)/u, /Cleanup that must run on every exit.*`finally`.*`except BaseException:` that re-raises/u, /Keep an existing ABC when it enforces `@abstractmethod`/u, /`str\.format` for f-strings/u, /self\.subTest/u, /assertRaises/u,
+    /never add pytest to a unittest project/u, /private sentinel/u, /`closing\(\.\.\.\)` alone closes without committing/u, /`with closing\(sqlite3\.connect\(path\)\) as conn, conn:`/u, /f-strings \(3\.6\)/u, /helps only when nothing evaluates the annotations.*`typing\.get_type_hints`/u, /Cleanup that must run on every exit.*`finally`.*`except BaseException:` that re-raises/u, /Keep an existing ABC when it enforces `@abstractmethod`/u, /`str\.format` for f-strings/u, /self\.subTest/u, /assertRaises/u,
   ]],
 ];
 for (const [file, patterns] of LANGUAGE_REFERENCES) {

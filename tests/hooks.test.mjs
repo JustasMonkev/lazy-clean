@@ -432,6 +432,8 @@ ok("fallback carries no SKILL.md-only text", !fallback.includes("## Intensity"))
 for (const mode of ["lite", "full", "ultra"]) {
   const words = instructions.getFallbackInstructions(mode).split(/\s+/u).length;
   ok(`fallback prompt stays below 700 words in ${mode}`, words < 700, String(words));
+  ok(`fallback keeps cleanup on every exit path in ${mode}`,
+    /success, failure, cancellation, and partial setup/u.test(instructions.getFallbackInstructions(mode).replace(/\s+/gu, " ")));
 }
 ok("missing SKILL.md preserves concrete simplification checks",
   /infer obvious local types/.test(fallback) &&
