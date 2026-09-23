@@ -48,7 +48,9 @@ One caller alone is not a reason to inline or delete a function or file. Keep it
 
 ## Manual simplification pass
 
-Before finishing a TypeScript or JavaScript change, read and apply [TS/JS simplification checks](../lazy/references/simplification-checks.md). It is a concise pre-finish review with small before/after examples: infer obvious local types without `any` or bypass casts, normalize arguments once, handle returned errors directly, and compare lifetimes, callers, and error/cancellation/cleanup semantics before replacing or deleting code. Keep useful domain helpers and explicit multi-step control flow. Its TS/JS examples are illustrative; other languages keep their own syntax and idioms.
+Before finishing a TypeScript or JavaScript change, read and apply [TS/JS simplification checks](../lazy/references/simplification-checks.md). It is a concise pre-finish review with small before/after examples: infer obvious local types without `any` or bypass casts, normalize arguments once, handle returned errors directly, and compare lifetimes, callers, and error/cancellation/cleanup semantics before replacing or deleting code. Keep useful domain helpers and explicit multi-step control flow. It also covers module shape (one reason to change, minimal exports, no import-time side effects) and type modeling (unions over optional-field bags, `unknown` parsed at the boundary). Its TS/JS examples are illustrative; other languages keep their own syntax and idioms.
+
+Before finishing a Python change, read and apply [Python checks](../lazy/references/python-checks.md): the version gates for newer syntax, the project's configured linter and type checker, module shape, dataclasses over loose dicts, `Protocol` for new typing-only interfaces while existing runtime ABCs stay, and the idioms that silently change behavior (mutable defaults, `if not x` on valid zero or empty values, bare `except:` outside cleanup-and-re-raise paths).
 
 ## Tests that earn their place
 
@@ -102,3 +104,13 @@ When asked to compare or reuse upstream changes, read
 [upstream updates](references/upstream-updates.md) and the repository's
 `UPSTREAM.md` if present. Preserve local behavior and record partial adaptations;
 a reviewed upstream revision is not proof of a pristine merge base.
+
+## Before you report
+
+Check the diff, not memory:
+1. Every requested need is done; nothing unasked was added.
+2. Each changed line traces to the request or its verification.
+3. Changed behavior has tests that ran; failures are reported.
+4. Language checks were applied; checker findings were triaged.
+
+Report changes, checks actually run, and limits. Never claim an unrun check.

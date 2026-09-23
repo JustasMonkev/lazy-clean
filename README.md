@@ -31,9 +31,20 @@ Qoder and VS Code Copilot are detected by the hooks and get the right output sha
 
 The rulesets cover TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go. The agent detects the ones your project actually uses, reads their pinned or installed versions, and keeps advice compatible with them. If a needed version fact cannot be checked, it says so instead of guessing; latest-release research is only used when current-version advice is requested.
 
-The bundled checker script stays TS/JS-only; the other five languages get the manual review, because a zero-dependency scanner is not a parser.
+The bundled checker reads source text rather than calling the compiler, so it
+works the same on every TypeScript version, including TypeScript 7. It stays TS/JS-only; the other five languages get the manual review, because a zero-dependency scanner is not a parser.
 HTML is not scanned either: extract inline `<script>` code to a temporary `.js`
 or report a manual review. Zero files checked is no coverage, not a clean result.
+
+TypeScript/JavaScript and Python also get a pre-finish reference with before/after
+examples: [TS/JS checks](skills/lazy/references/simplification-checks.md) cover
+TypeScript 6/7 (the native `tsc`: removed tsconfig options, new defaults, and the
+TypeScript 6 alias API-based tools still need), module shape, exports, import-time side effects, discriminated unions, and
+boundary parsing; [Python checks](skills/lazy/references/python-checks.md) cover
+version gates, the project's configured linter and type checker, module shape,
+dataclasses and `Protocol`, and the idioms that silently change behavior
+(mutable defaults, `if not x`, bare `except:`). The rules files inline the key
+points for agents that never open a reference.
 
 The rulesets think before coding, state material assumptions when they matter,
 match existing style, cut only task-owned orphans, and define a verifiable goal.
@@ -157,7 +168,11 @@ Without Git, pass each changed path as a separate quoted argument.
 
 The main and subagent prompts use the same compact rules. They include a brief
 think → plan → check loop for multi-step work and a strong cut pass over the
-task-owned diff without forcing net-negative feature changes. Detailed
+task-owned diff without forcing net-negative feature changes. Every build
+surface (the `lazy` and `lazy-clean` skills, the injected ruleset, the rules
+files, and OpenCode's `/lazy`) ends with the same four-item finish checklist, checked against the diff rather
+than memory: requested needs done and nothing unasked added, each changed line
+traceable, tests that ran, and language checks applied. Detailed
 [risk checks](skills/lazy/references/risk-checks.md) are loaded for non-trivial
 code changes, not every task. All levels preserve requested scope, existing
 input formats, and the repo's test tools; none treats one-line code as a goal.

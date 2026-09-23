@@ -10,7 +10,12 @@
 // context object as its first argument. Keeping the parser in its own module
 // leaves exactly one plugin-shaped export on lazy.mjs.
 
-function parseCommandFile(filePath) {
+// Templates name bundled files as `<skills-dir>/...`, as the rules files do.
+// OpenCode sends a registered template to the model verbatim, so the plugin
+// passes its installed skills directory to turn those into openable paths.
+const { markdownLinkTarget } = require('../../hooks/lazy-instructions.js');
+
+function parseCommandFile(filePath, skillsDir) {
   const fs = require('fs');
   const content = fs.readFileSync(filePath, 'utf8');
   // Tolerate CRLF: a Windows checkout (autocrlf) delivers \r\n, npm ships \n.
@@ -20,7 +25,15 @@ function parseCommandFile(filePath) {
   // they show up in OpenCode's command list.
   const description = match[1].match(/description:\s*(.+)/)?.[1]?.trim()
     ?.replace(/^(['"])([\s\S]*)\1$/u, '$2');
-  return { description, template: match[2].trim() };
+  const template = match[2].trim();
+  if (!skillsDir) return { description, template };
+  // Callbacks insert the directory literally; a replacement string would expand
+  // `$&` or `$'`. Link targets are escaped and wrapped so every character a
+  // valid install path may contain stays inside the Markdown destination.
+  const resolved = template
+    .replace(/\]\(<skills-dir>([^)\s]*)\)/gu, (_, rest) => `](${markdownLinkTarget(skillsDir + rest)})`)
+    .replaceAll('<skills-dir>', () => skillsDir);
+  return { description, template: resolved };
 }
 
 module.exports = { parseCommandFile };

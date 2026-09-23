@@ -63,7 +63,7 @@ export default async ({ client } = {}) => {
       try {
         for (const file of fs.readdirSync(commandDir).filter((f) => f.endsWith('.md'))) {
           const name = path.basename(file, '.md');
-          const parsed = parseCommandFile(path.join(commandDir, file));
+          const parsed = parseCommandFile(path.join(commandDir, file), lazySkillsDir);
           if (parsed) config.command[name] = parsed;
         }
       } catch (e) {

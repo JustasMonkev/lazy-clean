@@ -23,7 +23,7 @@ Everything runs from this skill directory with plain `node`. Do not install any 
    - `--since=<git-ref>` keeps only findings on lines the diff against that ref added — `--since=HEAD` before a commit, `--since=origin/main` in CI — which is how an existing codebase adopts the checker without a baseline file.
    - `--disable=<rule-id>[,<rule-id>]` turns rules off for the run. An id that is not a rule warns on stderr and the run continues with that rule still on, because the alternative is a scan that reads as narrower than it is.
    - `--explain=<rule-id>` prints one rule's why, a slop/instead pair, and when the rule is wrong, then exits — no scan. Use it to judge a finding before rewriting correct code; an id that is not a rule exits 2.
-   - The checker reads TypeScript and JavaScript only. For any other language skip step 1 and treat the manual checklist below as the whole procedure — never report "clean" on the strength of a scan that read nothing.
+   - The checker reads TypeScript and JavaScript only. For any other language skip step 1 and treat the manual checklist below as the whole procedure — never report "clean" on the strength of a scan that read nothing. For Python, also apply [Python checks](../lazy/references/python-checks.md) and run the linter and type checker the project already configures.
    - HTML is not scanned. If the changed behavior is in an inline `<script>`, extract that script to a temporary `.js` for the checker or perform and report a manual review; zero files checked is no coverage, never a clean verdict.
 
 2. Triage every finding. The checker is heuristic, so findings are review prompts, not verdicts:
@@ -40,7 +40,7 @@ Everything runs from this skill directory with plain `node`. Do not install any 
 
    It applies to that line and the next, takes several ids separated by commas, and the `slop-check-ignore-file` variant covers the whole file when written in its first 10 lines. The `-- <reason>` is required and must say something: an ignore with no reason, with an id that is not a rule, or a file-level one written too far down suppresses nothing and is itself reported as `no-unjustified-ignore`. The run summary counts what was suppressed, because a tree that is clean under forty ignores is not clean.
 
-3. Apply the manual review checklist below to the same code. These are the highest-value slop patterns that a mechanical scan cannot catch.
+3. Apply the manual review checklist below to the same code. For TS/JS, also apply [TS/JS checks](../lazy/references/simplification-checks.md): the TypeScript version and tsconfig pass, module shape, and type modeling. These are the highest-value slop patterns that a mechanical scan cannot catch.
 
 4. Report what was found, what was fixed, and any findings intentionally left in place with the reason.
 
@@ -64,6 +64,7 @@ For each item, the question is the same: does this code earn its place, or does 
 - **Debug leftovers** — `console.log` tracing, timing code, temporary variables named `test`/`tmp`/`debug`.
 - **Edit-artifacts** — old and new versions of a function both kept, re-export aliases "for compatibility" when every call site could just be updated, comments describing the diff instead of the code.
 - **Comment and doc bloat** — JSDoc that restates the signature, section banner comments, README additions narrating the change. A comment should state a constraint the code cannot show.
+- **Python slop** — bare `except:` or `except Exception: pass`, mutable default arguments, `if not x` where `0` or `""` is valid, loose dicts where a dataclass names the shape, `utils.py` grab bags, work done at import time, and `# type: ignore` / `# noqa` without a code and reason.
 - **Test slop** — tests that assert a mock was called with the value it was just given, module-level mocks instead of real dependency seams, duplicated setup that hides what varies. Keep tests that catch real regressions; mutation evidence is optional when existing red-green checks already prove the risky behavior.
 
 ## Checker rules

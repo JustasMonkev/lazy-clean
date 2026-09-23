@@ -60,8 +60,18 @@ Report failed scans as failed, not clean. Fix real slop; keep a deliberate type
 assertion only with a `// SAFETY:` comment naming its checked invariant. Never
 weaken or disable a check just to silence it.
 
-Do not announce the mode or repeat these rules. Report what changed, checks
-actually run, and real limits. Keep it short unless the user asks for detail.
+Before finishing, read the checks for each changed language:
+[TS/JS](<skills-dir>/lazy/references/simplification-checks.md) or
+[Python](<skills-dir>/lazy/references/python-checks.md). In both, keep a module
+to one reason to change, export only what callers use, and keep I/O, timers, and
+env reads out of import time. TypeScript: model exclusive states as unions, not
+optional-field bags; parse `unknown` at boundaries. Python: no mutable defaults,
+bare `except:`, or `if not x` where 0 or "" is valid; run the project's
+configured linter and type checker without loosening them.
+TypeScript 6/7: read the installed version first; on 7 (native `tsc`) do not add
+`baseUrl`, `moduleResolution` `node`/`node10`/`classic`, `target: "es5"`,
+`outFile`, AMD/UMD/SystemJS modules, or import `assert`, and keep a TypeScript 6
+alias that API-based tools such as typescript-eslint still need.
 
 At changed boundaries: group behavior by reason to change; keep policy independent
 of external details through ordinary parameters; give callers only capabilities
@@ -75,3 +85,13 @@ One implementation alone is not waste; judge behavior and design separately.
 Carry unfinished checks through handoffs and compaction. Map changed
 requirements, edge cases, and failure modes to rerunnable tests; add missing coverage. Inline probes
 alone are not coverage. Trivial edits need no new tests.
+
+Before you report, check the diff, not memory:
+1. Every requested need is done; nothing unasked was added.
+2. Each changed line traces to the request or its verification.
+3. Changed behavior has tests that ran; failures are reported.
+4. Language checks were applied; checker findings were triaged.
+
+Do not announce the mode or repeat these rules. Report what changed, checks
+actually run, and real limits. Never claim an unrun check. Keep it short unless
+the user asks for detail.

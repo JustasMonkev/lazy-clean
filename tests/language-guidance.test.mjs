@@ -176,12 +176,108 @@ for (const mode of ["lite", "full", "ultra"]) {
   }
 }
 const levels = ["lite", "full", "ultra"].map((mode) => instructions.filterSkillBodyForMode(skillBody, mode));
-const guidanceLines = (text) => text.split("\n").filter((line) => /one caller|mutation|installed version|task-owned|red → green/iu.test(line));
+const guidanceLines = (text) => text.split("\n").filter((line) => /one caller|mutation|installed version|task-owned|red → green|python-checks|not memory|unrun check/iu.test(line));
 assert.ok(guidanceLines(skillBody).length > 0, "SKILL.md must carry the guidance for this check to mean anything");
 for (const [index, level] of levels.entries())
   ok(`level ${index} keeps every guidance line`,
     guidanceLines(level).length === guidanceLines(skillBody).length,
     `${guidanceLines(level).length} of ${guidanceLines(skillBody).length}`);
+
+// Clean and modular basics for the two languages with dedicated references.
+// Each reference must ship, carry its substance, and be reachable from every
+// surface that gives build or review advice, or the guidance exists only on disk.
+const LANGUAGE_REFERENCES = [
+  ["simplification-checks.md", [
+    /one reason to change/iu, /import-time side effects/iu, /discriminated union/iu,
+    /`unknown` and parse it once at the boundary/iu, /TypeScript 4\.9\+/u,
+    /Do not loosen `strict`/u, /Promise\.all.*failing fast/iu,
+    // TypeScript 6/7: native compiler naming, removed options, new defaults, API gap.
+    /node_modules\/\.bin\/tsc -v/u, /Do not use `npx tsc`/u, /report it as unknown/u, /TypeScript 7 is the native \(Go\) compiler/u, /`tsgo`/u, /`@typescript\/typescript6`/u,
+    /`baseUrl`/u, /`node10`/u, /`target: "es5"`/u, /`outFile`/u, /write `with`/u, /`namespace Foo \{\}`/u,
+    /`types` is `\[\]`/u, /"ignoreDeprecations": "6\.0".*never a fix/u, /no stable programmatic API/u,
+    /typescript-eslint/u, /on 5\.x or older, flag them only when the task is an upgrade/u, /`nodenext` for Node together with `module: "nodenext"`/u, /only if the installed compiler still accepts it/u,
+  ]],
+  ["python-checks.md", [
+    /requires-python/u, /\(3\.10\)/u, /one reason to change/iu, /import-time side effects/iu,
+    /__name__ == "__main__"/u, /mutable default/iu, /`if not value`/u, /is None/u,
+    /bare `except:`/u, /raise NewError\(\.\.\.\) from err/u, /typing\.Protocol/u,
+    /`@dataclass`/u, /configures/u, /Do not add a tool, loosen its config/u,
+    /pytest\.raises/u, /`typing\.Protocol`, `TypedDict`, and `Literal` \(3\.8\)/u, /`dataclasses` and `from __future__ import annotations` \(3\.7\)/u, /on 3\.7 and later/u, /`functools\.cache`.*\(3\.9\)/u,
+    /oldest version the project supports/u, /lru_cache\(maxsize=None\)/u, /typing_extensions/u,
+    /never add pytest to a unittest project/u, /private sentinel/u, /`closing\(\.\.\.\)` alone closes without committing/u, /`with closing\(sqlite3\.connect\(path\)\) as conn, conn:`/u, /f-strings \(3\.6\)/u, /helps only when nothing evaluates the annotations.*`typing\.get_type_hints`/u, /Cleanup that must run on every exit.*`finally`.*`except BaseException:` that re-raises/u, /Keep an existing ABC when it enforces `@abstractmethod`/u, /`str\.format` for f-strings/u, /self\.subTest/u, /assertRaises/u,
+  ]],
+];
+for (const [file, patterns] of LANGUAGE_REFERENCES) {
+  const reference = path.join(ROOT, "skills/lazy/references", file);
+  assert.ok(fs.existsSync(reference), `${file} must ship with the skill`);
+  const text = flat(fs.readFileSync(reference, "utf8"));
+  for (const pattern of patterns) ok(`${file} covers ${pattern}`, pattern.test(text));
+  for (const mode of ["lite", "full", "ultra"]) {
+    ok(`${file} resolves in getLazyInstructions(${mode})`,
+      instructions.getLazyInstructions(mode).includes(`(<${reference}>)`));
+    ok(`${file} resolves in getFallbackInstructions(${mode})`,
+      instructions.getFallbackInstructions(mode).includes(`(<${reference}>)`));
+  }
+  for (const surface of [...RULES_FILES, ".opencode/command/lazy.md", ".opencode/command/lazy-review.md", ".opencode/command/lazy-audit.md"])
+    ok(`${surface} routes to ${file}`, read(surface).includes(`<skills-dir>/lazy/references/${file}`));
+  for (const skill of ["skills/lazy-clean/SKILL.md", "skills/lazy-review/SKILL.md", "skills/lazy-audit/SKILL.md", "skills/slop-check/SKILL.md"])
+    ok(`${skill} routes to ${file}`, read(skill).includes(`../lazy/references/${file}`));
+}
+
+// The inline basics must survive where a rules file is the only thing an agent
+// reads (Cursor, Copilot): a link alone to an uninstalled reference is nothing.
+for (const file of [...RULES_FILES, ".opencode/command/lazy.md"]) {
+  const text = flat(read(file));
+  ok(`${file} inlines the module basics`, /one reason to change/iu.test(text) && /import time/iu.test(text));
+  ok(`${file} inlines the TypeScript union rule`, /exclusive states as unions/iu.test(text));
+  ok(`${file} inlines the Python behavior traps`, /mutable defaults/iu.test(text) && /bare `except:`/u.test(text));
+  ok(`${file} inlines the TypeScript 7 removals`,
+    /TypeScript 6\/7/u.test(text) && /`baseUrl`/u.test(text) && /`target: "es5"`/u.test(text) && /typescript-eslint/u.test(text));
+}
+for (const mode of ["lite", "full", "ultra"]) {
+  const text = flat(instructions.getFallbackInstructions(mode));
+  ok(`getFallbackInstructions(${mode}) carries the TypeScript 7 removals`,
+    /TypeScript 7 \(native tsc\)/u.test(text) && /baseUrl/u.test(text) && /TypeScript 6 alias/u.test(text));
+  ok(`getLazyInstructions(${mode}) routes tsconfig changes to the TS/JS checks`,
+    /TS\/JS and tsconfig/u.test(instructions.getLazyInstructions(mode)));
+}
+
+// The finish checklist is what turns the rules into a checked result instead of
+// a remembered one; it belongs at the end of every build surface.
+const FINISH_CHECKLIST = [/check the diff, not memory/iu, /nothing unasked was added/iu,
+  /traces to the request or its verification/iu, /tests that ran/iu, /never claim an unrun check/iu];
+const finishSurfaces = [
+  ...BUILD_SURFACES.map((file) => [file, read(file)]),
+  ...["lite", "full", "ultra"].flatMap((mode) => [
+    [`getLazyInstructions(${mode})`, instructions.getLazyInstructions(mode)],
+    [`getFallbackInstructions(${mode})`, instructions.getFallbackInstructions(mode)],
+  ]),
+];
+for (const [surface, raw] of finishSurfaces) {
+  const text = flat(raw);
+  for (const pattern of FINISH_CHECKLIST) ok(`${surface} finish checklist has ${pattern}`, pattern.test(text));
+  // Terminal means nothing substantive follows it: no later section heading.
+  const after = raw.slice(raw.search(/check the diff, not memory/iu));
+  ok(`${surface} ends with the finish checklist`, /check the diff, not memory/iu.test(raw) && !/^#{1,6} /mu.test(after));
+}
+
+// Skills-only `/lazy` is answered from SKILL.md, which also says a bare `/lazy`
+// reports the level: the no-announcement rule must not forbid that report.
+ok("skills/lazy/SKILL.md limits the no-announcement rule to ordinary work",
+  /Do not announce the mode during ordinary work/u.test(flat(read("skills/lazy/SKILL.md"))));
+
+// A relative link in a shipped skill that points nowhere sends the agent to a
+// file that is not there; skills-only installs copy skills/ as a whole, so
+// ../lazy/references links resolve there too.
+const skillMarkdown = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+  const full = path.join(dir, entry.name);
+  if (entry.isDirectory()) return skillMarkdown(full);
+  return entry.name.endsWith(".md") ? [full] : [];
+});
+for (const file of skillMarkdown(path.join(ROOT, "skills"))) {
+  for (const [, target] of fs.readFileSync(file, "utf8").matchAll(/\]\(((?:\.\.?\/|references\/)[^)#\s]+)[^)]*\)/gu))
+    ok(`${path.relative(ROOT, file)} link ${target} resolves`, fs.existsSync(path.resolve(path.dirname(file), target)));
+}
 
 console.log(`\n${passes} passed, ${failures} failed`);
 process.exit(failures === 0 ? 0 : 1);

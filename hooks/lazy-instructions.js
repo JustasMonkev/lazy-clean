@@ -45,6 +45,18 @@ function filterSkillBodyForMode(body, mode) {
     .join('\n');
 }
 
+// A Markdown link destination written as `<...>` may hold spaces and
+// parentheses, which are valid in an install path. `<` and `>` would end it,
+// `&name;` would decode as an entity, and a backslash before punctuation would
+// read as an escape, so encode exactly those; every valid path then survives
+// as one openable link. Entities, unlike `\<`, are also decoded by older
+// CommonMark parsers.
+const LINK_ENTITIES = { '<': '&lt;', '>': '&gt;', '&': '&amp;' };
+function markdownLinkTarget(filePath) {
+  return '<' + filePath.replace(/[<>]|&(?=#?\w+;)|\\(?=[!-/:-@[-`{-~])/gu,
+    (match) => LINK_ENTITIES[match] || '\\' + match) + '>';
+}
+
 const INTENSITY = {
   lite: 'Complete the task; mention a simpler option when useful.',
   full: 'Complete the task using the ladder and verify the goal.',
@@ -60,30 +72,25 @@ Use this level until /lazy off, "stop lazy", or "normal mode". Do not announce i
 ## Think, then act
 
 Before coding, state material assumptions, interpretations, and tradeoffs. Ask
-only when a missing answer blocks the result; use judgment for trivial choices.
-For multi-step work, write a brief step → check plan. Define a verifiable finish:
-bugs go red → green, refactors get before/after checks, and loop until verified.
-Carry unfinished checks through handoffs and compaction; a summary or skill
-description does not replace these instructions.
+only when a missing answer blocks the result. For multi-step work, write a brief
+step → check plan. Define a verifiable finish: bugs go red → green, refactors get
+before/after checks; loop until verified. Carry unfinished checks through
+handoffs and compaction; summaries do not replace these instructions.
 
 ## The ladder
 
-Complete every requested need with the clearest small solution. Correctness and
-scope come before size. Read affected code and trace callers, callbacks, retries,
+Complete every requested need with the clearest small solution. Read affected code and trace callers, callbacks, retries,
 restore/replay, and concurrent paths. Fix the shared cause. Reuse existing code,
 stdlib, native features, or installed dependencies before writing new code.
 Skip only unasked extras. Match existing style. Do not add speculative
-features/config, needless single-use abstractions, or impossible-state guards.
-Push back on unneeded scope and offer a simpler alternative. Review the
-task-owned diff: remove only orphans created by this task, mention unrelated dead
-code instead of deleting it, and cut additions that do not support the request.
-If 200 lines can be 50 with the same behavior and clearer structure, rewrite; do
-not compress formatting. Do not force a net-negative diff. Every simplification
-must preserve behavior.
-Preserve unrelated edits. One line is not a goal. One caller does not justify
-deleting domain helpers, tricky logic, side-effect boundaries, test seams, or
-framework contracts. Mark real shortcuts with lazy: and their ceiling. Keep
-security, accessibility, and hardware calibration.
+features/config, needless single-use abstractions, or impossible-state guards;
+offer a simpler alternative to unneeded scope. Review the task-owned diff: remove
+only orphans created by this task, mention unrelated dead code, and cut additions
+that do not support the request. Simplify structure, not formatting; preserve
+behavior and do not force a net-negative diff. Preserve unrelated edits. One
+caller does not justify deleting domain helpers, tricky logic, side-effect
+boundaries, test seams, or framework contracts. Mark real shortcuts with lazy:
+and their ceiling. Keep security, accessibility, and hardware calibration.
 
 At changed boundaries: group behavior by reason to change; keep policy independent
 of external details through ordinary parameters; give callers only capabilities
@@ -91,39 +98,49 @@ they need. Extend existing contracts for requested variations. Interchangeable
 implementations must preserve inputs, results, errors, and lifecycle; exercise
 the same contract against each. Do not add interfaces just to satisfy SOLID.
 
-For boundary changes, read [design checks](${path.join(__dirname, "../skills/lazy/references/design-checks.md")}).
+For boundary changes, read [design checks](${markdownLinkTarget(path.join(__dirname, "../skills/lazy/references/design-checks.md"))}).
 One implementation alone is not waste; judge behavior and design separately.
 
 Before finishing, simplify the changed code: infer obvious local types without
 any or unchecked casts; normalize overloaded arguments once; handle returned
-errors directly instead of throwing only to catch them locally. Use one-liners
-for clear value selection, explicit branches for multi-step work. Remove guards
+errors directly instead of throwing only to catch them locally. Remove guards
 and helpers only with evidence from callers and lifetimes. Match error and
 cancellation semantics when replacing code with native APIs. Preserve encoding
 and buffer ownership; prove risky removals with regression or mutation checks.
+Keep modules to one reason to change and I/O out of import time. Model exclusive
+states as unions. On TypeScript 7 (native tsc) do not add baseUrl,
+moduleResolution node/node10, target es5, or outFile; keep a TypeScript 6 alias
+API tools need.
+For TS/JS and tsconfig read [TS/JS checks](${markdownLinkTarget(path.join(__dirname, '../skills/lazy/references/simplification-checks.md'))}).
+For Python read [Python checks](${markdownLinkTarget(path.join(__dirname, '../skills/lazy/references/python-checks.md'))}):
+no mutable defaults, bare except, or \`if not x\` where 0 or "" is valid.
 
 Preserve defaults, explicit false/zero/empty values, accepted input formats,
 user state, metadata, errors, generated files, lockfiles, and platform behavior.
-Revalidate at new trust boundaries; bound external work; clean up tasks, timers,
-and listeners, including partial failures and cancellation. Use existing tests
+Revalidate at trust boundaries; bound external work; clean up tasks, timers, and
+listeners after success, failure, cancellation, and partial setup. Use existing tests
 and map changed requirements, edge cases, and failure modes to rerunnable tests;
-add missing coverage. Inline probes alone are not coverage. Trivial edits need no new tests. If existing red-green checks prove
-the risky regression, mutation work is optional; otherwise a small meaningful
-mutation can provide evidence. Never add a dependency just for it. If writing
-tests is the task, cover the full case list. Never claim unrun checks.
+add missing coverage. Inline probes alone are not coverage. Trivial edits need
+no new tests. If existing red-green checks prove the risky regression, mutation
+work is optional; otherwise a small meaningful mutation can provide evidence.
+Never add a dependency just for it. If writing tests is the task, cover the full
+case list.
 
 For TS/JS changes, finish with the bundled checker from the repo root:
 node "${path.join(__dirname, '../skills/slop-check/scripts/check.mjs')}" --since=HEAD
 Use the task base ref for committed changes, or quoted changed paths without Git.
-This includes new files and shell edits; triage only your scope. Report failed
-scans as failed, not clean. Findings need judgment, not blind fixes.
+Triage only your scope. Report failed scans as failed, not clean.
 
 TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect only languages in use.
-Read each version from its toolchain file, manifest, lockfile, or runtime. Before
-version-sensitive advice, keep it valid for the installed version. If a needed
-version fact cannot be checked, say so and do not guess; check the latest release
-only when the user asks for current-version advice. Report what changed, checks
-run, and limits, briefly.
+Read each version from its toolchain file, manifest, lockfile, or runtime. Keep
+advice valid for the installed version. If a needed version fact cannot be checked, say so and do not guess; research latest
+versions only when asked.
+
+Before you report, check the diff, not memory: every requested need is done and
+nothing unasked was added; each changed line traces to the request or its
+verification; changed behavior has tests that ran; language checks were applied
+and checker findings triaged. Report what changed, checks run, and limits,
+briefly. Never claim an unrun check.
 `;
 }
 
@@ -142,9 +159,7 @@ function getLazyInstructions(mode) {
   try {
     return 'LAZY MODE ACTIVE — level: ' + effectiveMode + '\n\n' +
       filterSkillBodyForMode(fs.readFileSync(SKILL_PATH, 'utf8'), effectiveMode)
-        .replace('(references/risk-checks.md)', '(<' + path.join(path.dirname(SKILL_PATH), 'references/risk-checks.md') + '>)')
-        .replace('(references/design-checks.md)', '(<' + path.join(path.dirname(SKILL_PATH), 'references/design-checks.md') + '>)')
-        .replace('(references/simplification-checks.md)', '(<' + path.join(path.dirname(SKILL_PATH), 'references/simplification-checks.md') + '>)')
+        .replace(/\(references\/([\w-]+\.md)\)/g, (_, file) => '(' + markdownLinkTarget(path.join(path.dirname(SKILL_PATH), 'references', file)) + ')')
         .replace('<skills-dir>', path.dirname(path.dirname(SKILL_PATH)));
   } catch (e) {
     return getFallbackInstructions(effectiveMode);
@@ -155,6 +170,7 @@ function getLazyInstructions(mode) {
 const getSubagentInstructions = getLazyInstructions;
 
 module.exports = {
+  markdownLinkTarget,
   filterSkillBodyForMode,
   getFallbackInstructions,
   getLazyInstructions,

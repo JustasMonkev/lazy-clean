@@ -428,6 +428,13 @@ const orphanInstructions = require(path.join(orphan, "hooks", "lazy-instructions
 const fallback = orphanInstructions.getLazyInstructions("ultra");
 ok("missing SKILL.md falls back cleanly", fallback.startsWith("LAZY MODE ACTIVE — level: ultra") && fallback.includes("## The ladder"));
 ok("fallback carries no SKILL.md-only text", !fallback.includes("## Intensity"));
+// A damaged install injects the fallback instead, so it shares the core budget.
+for (const mode of ["lite", "full", "ultra"]) {
+  const words = instructions.getFallbackInstructions(mode).split(/\s+/u).length;
+  ok(`fallback prompt stays below 700 words in ${mode}`, words < 700, String(words));
+  ok(`fallback keeps cleanup on every exit path in ${mode}`,
+    /success, failure, cancellation, and partial setup/u.test(instructions.getFallbackInstructions(mode).replace(/\s+/gu, " ")));
+}
 ok("missing SKILL.md preserves concrete simplification checks",
   /infer obvious local types/.test(fallback) &&
   /normalize overloaded arguments once/.test(fallback) &&
@@ -1458,6 +1465,68 @@ ok("a failed default write keeps the level the user already had",
     {}, { cwd: files });
   ok("a dash-leading filename still reports findings through the hook",
     res.stdout.includes("no-any"), res.stdout.slice(0, 200) || "<no output>");
+}
+
+// OpenCode sends a registered template to the model verbatim, so `<skills-dir>`
+// links must be expanded at registration into files that actually exist.
+{
+  const probe = spawnSync(process.execPath, ["--input-type=module", "-e", `
+    import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, ".opencode", "plugins", "lazy.mjs")).href)};
+    const hooks = await plugin({ client: { app: { log: async () => {} } } });
+    const config = {};
+    await hooks.config(config);
+    console.log(JSON.stringify(config.command));
+  `], { encoding: "utf8", env: baseEnv(freshHome("opencode-skills-dir").env), timeout: 20000 });
+  const commands = probe.status === 0 ? JSON.parse(probe.stdout.trim()) : {};
+  const skillsDir = path.join(ROOT, "skills");
+  for (const name of ["lazy", "lazy-review", "lazy-audit"]) {
+    const template = commands[name]?.template || "";
+    ok(`OpenCode /${name} resolves <skills-dir>`, template && !template.includes("<skills-dir>"), probe.stderr.slice(0, 200));
+    // Split on the resolved directory, not a path regex: Windows paths start
+    // with a drive letter and the checkout path may contain spaces.
+    const links = template.split(skillsDir).slice(1)
+      .map((rest) => rest.match(/^([^)>]*?\.md)>\)/u)?.[1])
+      .filter(Boolean)
+      .map((rest) => path.join(skillsDir, rest));
+    ok(`OpenCode /${name} links the language checks`,
+      links.includes(path.join(skillsDir, "lazy", "references", "simplification-checks.md")) &&
+      links.includes(path.join(skillsDir, "lazy", "references", "python-checks.md")), links.join(", "));
+    for (const link of links) ok(`OpenCode /${name} link ${link} exists`, fs.existsSync(link));
+  }
+}
+
+// `$&` and `$'` are valid in a directory name but are replacement patterns in
+// String#replaceAll; the install path must land in the template verbatim.
+{
+  const { parseCommandFile } = require(path.join(ROOT, ".opencode", "plugins", "lazy-frontmatter.cjs"));
+  // Spaces and `)` are also valid there but end a bare Markdown destination.
+  const oddDir = path.join(SANDBOX, "lazy $&clean$'x (copy)", "skills");
+  const { template } = parseCommandFile(path.join(ROOT, ".opencode", "command", "lazy-review.md"), oddDir);
+  ok("OpenCode inserts a skills path with replacement patterns literally",
+    template.includes(`${oddDir}/lazy/references/python-checks.md`) && !template.includes("<skills-dir>"),
+    template.slice(template.indexOf("TS/JS checks"), template.indexOf("TS/JS checks") + 160));
+  ok("OpenCode wraps link targets so spaces and parentheses stay in the link",
+    template.includes(`](<${oddDir}/lazy/references/python-checks.md>)`) &&
+    template.includes(`](<${oddDir}/lazy/references/simplification-checks.md>)`),
+    template.slice(template.indexOf("TS/JS checks"), template.indexOf("TS/JS checks") + 200));
+}
+
+// Link targets must survive every character a valid path can hold. Expected
+// values follow CommonMark pointy destinations: `<`/`>` as entities, `&` only
+// where it would otherwise decode as one, and a backslash only before
+// punctuation (so Windows separators stay readable).
+{
+  const target = instructions.markdownLinkTarget;
+  eq("link target keeps an ordinary path readable", target("/opt/lazy clean (copy)/x.md"), "</opt/lazy clean (copy)/x.md>");
+  eq("link target encodes angle brackets", target("/tmp/lazy>copy<x/y.md"), "</tmp/lazy&gt;copy&lt;x/y.md>");
+  eq("link target keeps a literal entity-shaped name", target("/tmp/r&amp;d/x.md"), "</tmp/r&amp;amp;d/x.md>");
+  eq("link target keeps a bare ampersand", target("/tmp/a$&b/x.md"), "</tmp/a$&b/x.md>");
+  eq("link target keeps Windows separators", target("C:\\Users\\me\\x.md"), "<C:\\Users\\me\\x.md>");
+  eq("link target escapes a backslash before punctuation", target("C:\\R~1\\(copy)\\x.md"), "<C:\\R~1\\\\(copy)\\x.md>");
+  const { parseCommandFile } = require(path.join(ROOT, ".opencode", "plugins", "lazy-frontmatter.cjs"));
+  const angled = parseCommandFile(path.join(ROOT, ".opencode", "command", "lazy-review.md"), "/tmp/lazy>copy/skills").template;
+  ok("OpenCode encodes angle brackets in resolved link targets",
+    angled.includes("](</tmp/lazy&gt;copy/skills/lazy/references/python-checks.md>)"), angled.slice(0, 120));
 }
 
 // One drift guard over every command template, not just /lazy: the help card

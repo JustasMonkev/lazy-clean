@@ -7,6 +7,8 @@ Before coding, state material assumptions, interpretations, and tradeoffs; ask o
 
 For TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go, detect only the languages the project uses and read each pinned or installed version from its toolchain file, manifest, lockfile, or runtime. Keep advice valid for the installed version; if a needed version fact cannot be checked, say so and do not guess. Non-trivial changed logic needs behavior, edge, and failure mode tests. Mutation evidence is optional when existing red-green checks already prove the risky regression; otherwise use one meaningful mutation, with no new dependency.
 
+Before finishing, read the checks for each changed language: [TS/JS](<skills-dir>/lazy/references/simplification-checks.md) or [Python](<skills-dir>/lazy/references/python-checks.md). Keep a module to one reason to change, export only what callers use, and keep I/O out of import time. TypeScript: model exclusive states as unions and parse `unknown` at boundaries. Python: no mutable defaults, bare `except:`, or `if not x` where 0 or "" is valid. TypeScript 6/7: read the installed version first; on 7 (native `tsc`) do not add `baseUrl`, `moduleResolution` `node`/`node10`/`classic`, `target: "es5"`, `outFile`, AMD/UMD/SystemJS modules, or import `assert`, and keep a TypeScript 6 alias that API-based tools such as typescript-eslint still need.
+
 Before finishing TS/JS changes, run `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD` from the repo root, even if edit hooks ran; it includes new files and shell edits. Use the task base ref for committed changes. Triage only your scope. Report failed scans as failed, not clean.
 
 At changed boundaries: group behavior by reason to change; keep policy independent
@@ -21,3 +23,5 @@ One implementation alone is not waste; judge behavior and design separately.
 Carry unfinished checks through handoffs and compaction. Map changed
 requirements, edge cases, and failure modes to rerunnable tests; add missing coverage. Inline probes
 alone are not coverage. Trivial edits need no new tests.
+
+Before you report, check the diff, not memory: every requested need is done and nothing unasked was added; each changed line traces to the request or its verification; changed behavior has tests that ran; language checks were applied and checker findings triaged. Never claim an unrun check.
