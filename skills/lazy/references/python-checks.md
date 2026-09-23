@@ -76,12 +76,17 @@ if __name__ == "__main__":
 ## Check idioms that change behavior
 
 - A mutable default is shared across calls. Use `None` and create the value
-  inside the function.
+  inside the function, unless callers already pass `None` with its own
+  meaning; then use a private sentinel (`_MISSING = object()`) so that input
+  keeps its behavior.
 - `if not value` treats `0`, `""`, `[]`, and `False` as missing, like `||` in
   JavaScript. Use `is None` when only a missing value should get the default.
 - Compare with `is None`, not `== None`. Use `isinstance` unless the exact type
   is the contract.
-- Use `with` for files, locks, connections, and temporary state. Bound network,
+- Use `with` for files, locks, connections, and temporary state, after checking
+  what the context manager's exit actually does: `with sqlite3.connect(...)`
+  commits or rolls back but does not close. Use `contextlib.closing` or keep the
+  explicit `close()` when exit does not release the resource. Bound network,
   subprocess, and queue waits with a timeout.
 - Prefer the standard library: `collections.Counter` and `defaultdict`,
   `itertools`, `functools.cache`, `dataclasses.replace`, `pathlib` (when the repo

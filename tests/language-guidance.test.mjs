@@ -192,7 +192,7 @@ const LANGUAGE_REFERENCES = [
     /`unknown` and parse it once at the boundary/iu, /TypeScript 4\.9\+/u,
     /Do not loosen `strict`/u, /Promise\.all.*failing fast/iu,
     // TypeScript 6/7: native compiler naming, removed options, new defaults, API gap.
-    /`npx tsc -v`/u, /TypeScript 7 is the native \(Go\) compiler/u, /`tsgo`/u, /`@typescript\/typescript6`/u,
+    /node_modules\/\.bin\/tsc -v/u, /Do not use `npx tsc`/u, /report it as unknown/u, /TypeScript 7 is the native \(Go\) compiler/u, /`tsgo`/u, /`@typescript\/typescript6`/u,
     /`baseUrl`/u, /`node10`/u, /`target: "es5"`/u, /`outFile`/u, /write `with`/u, /`namespace Foo \{\}`/u,
     /`types` is `\[\]`/u, /"ignoreDeprecations": "6\.0".*never a fix/u, /no stable programmatic API/u,
     /typescript-eslint/u, /on 5\.x or older, flag them only when the task is an upgrade/u,
@@ -204,7 +204,7 @@ const LANGUAGE_REFERENCES = [
     /`@dataclass`/u, /configures/u, /Do not add a tool, loosen its config/u,
     /pytest\.raises/u, /`typing\.Protocol`, `TypedDict`, and `Literal` \(3\.8\)/u, /`functools\.cache`.*\(3\.9\)/u,
     /oldest version the project supports/u, /lru_cache\(maxsize=None\)/u, /typing_extensions/u,
-    /never add pytest to a unittest project/u, /self\.subTest/u, /assertRaises/u,
+    /never add pytest to a unittest project/u, /private sentinel/u, /does not close.*contextlib\.closing/u, /self\.subTest/u, /assertRaises/u,
   ]],
 ];
 for (const [file, patterns] of LANGUAGE_REFERENCES) {

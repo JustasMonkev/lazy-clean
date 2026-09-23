@@ -1,20 +1,25 @@
 # TS/JS simplification checks
 
 Use this short pass before finishing a TypeScript or JavaScript change,
-including a `tsconfig.json` change. The examples are illustrative TS/JS syntax, not a requirement for Java, Python,
-Ruby, Rust, or Go; apply the same reasoning in the language being changed.
-Python changes have their own [Python checks](python-checks.md).
+including a `tsconfig.json` change. The examples are illustrative TS/JS syntax,
+not a requirement for Java, Python, Ruby, Rust, or Go; apply the same reasoning
+in the language being changed. Python changes have their own
+[Python checks](python-checks.md).
 
 ## Check the TypeScript version and tsconfig
 
-Read the installed `typescript` version from the lockfile or `npx tsc -v`, not
-from memory. TypeScript 7 is the native (Go) compiler shipped as the regular
-`typescript` package with the usual `tsc` command; `tsgo` and
-`@typescript/native-preview` were its preview names. TypeScript 6 is the last
-JavaScript-based release. A repo may pin both: `@typescript/typescript6`
-provides `tsc6`, often aliased as `typescript` for tools that need the old API.
-The language is the same, so these checks and the slop checker apply to every
-version; what changes is configuration, emit, and tooling.
+Read the `typescript` version from the lockfile,
+`node_modules/typescript/package.json`, or the local `node_modules/.bin/tsc -v`,
+not from memory. Do not use `npx tsc` to check: without a local install it can
+fetch an unrelated `tsc` package from the registry. If no local version is
+available, report it as unknown and follow the manifest's range. TypeScript 7 is
+the native (Go) compiler shipped as the regular `typescript` package with the
+usual `tsc` command; `tsgo` and `@typescript/native-preview` were its preview
+names. TypeScript 6 is the last JavaScript-based release. A repo may pin both:
+`@typescript/typescript6` provides `tsc6`, often aliased as `typescript` for
+tools that need the old API. The language is the same, so these checks and the
+slop checker apply to every version; what changes is configuration, emit, and
+tooling.
 
 TypeScript 6 deprecates these and TypeScript 7 rejects them. Do not suggest them
 on 6 or 7; on 5.x or older, flag them only when the task is an upgrade:
