@@ -4,6 +4,7 @@ description: >
   Quick-reference card for all lazy modes, skills, and commands.
   One-shot display, not a persistent mode. Trigger: /lazy-help,
   "lazy help", "what lazy commands", "how do I use lazy".
+disable-model-invocation: true
 ---
 
 # Lazy Help

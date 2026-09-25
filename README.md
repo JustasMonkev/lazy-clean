@@ -94,7 +94,7 @@ No packages, no npm, no plugin needed. Copy the skills into your global skills f
 cp -R /path/to/lazy-clean/skills/* ~/.claude/skills/
 ```
 
-That gives you all 9 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-verify`). Claude picks them up by description or by `/lazy-clean` etc. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
+That gives you all 9 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-verify`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
 
 What you DON'T get in skills-only mode: the automatic parts (ruleset injected every session, checker auto-run after every edit). Those need the hooks — install as a plugin for that:
 
@@ -119,11 +119,11 @@ Requires `node` 18+ on `PATH`. No dependencies to install.
 | Event | What happens |
 | --- | --- |
 | `SessionStart` | startup/clear initialize the default; resume/compact restore the session level |
-| `SubagentStart` | same ruleset injected into the subagent |
+| `SubagentStart` | same ruleset injected into the subagent, except read-only Explore agents |
 | `UserPromptSubmit` | `/lazy …` commands parsed, level flag updated |
 | `PostToolUse` on `Write`/`Edit`/`MultiEdit` | `skills/slop-check/scripts/check.mjs` runs on the edited file |
 
-Every subagent gets the ruleset (about 5KB of context) by default. To inject it only into matching `agent_type`s, set `LAZY_SUBAGENT_MATCHER` to a case-insensitive regex; `^(?!explore$)` skips the read-only Explore agents.
+Every subagent except the read-only Explore agents gets the ruleset (about 2,000 tokens on each of its requests). To choose which `agent_type`s get it, set `LAZY_SUBAGENT_MATCHER` to a case-insensitive regex; `.` injects it into Explore too.
 
 The checker only looks at `.ts .tsx .mts .cts .js .jsx .mjs .cjs`; anything else is skipped silently. Files written through `Bash` — heredocs, `sed -i`, codemods — are not seen by the hook at all; run the checker on those yourself.
 

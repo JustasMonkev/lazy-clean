@@ -996,9 +996,22 @@ eq("flag=off: inject nothing", [s.status, s.stdout], [0, ""]);
 s = subagent('{"agent_type":"general-purpose"}', { flag: "banana" });
 eq("an invalid flag reads as off, so nothing is injected", [s.status, s.stdout], [0, ""]);
 s = subagent('{"agent_type":"general-purpose"}', { flag: "ultra" });
-ok("no matcher: inject into every subagent", injected(s));
+ok("no matcher: inject into a general-purpose subagent", injected(s));
 ok("subagent payload is the compact shared ruleset",
   JSON.parse(s.stdout).hookSpecificOutput.additionalContext.includes("## Intensity"));
+// Explore agents are read-only; the ruleset only cost each of their requests context.
+s = subagent('{"agent_type":"Explore"}');
+eq("no matcher: skip the read-only Explore agents", [s.status, s.stdout], [0, ""]);
+for (const agentType of ["Plan", "explorer", "claude-code-guide"]) {
+  s = subagent(JSON.stringify({ agent_type: agentType }));
+  ok(`no matcher: inject into ${agentType}`, injected(s));
+}
+s = subagent('{"agent_type":"Explore"}', { matcher: "." });
+ok("a matcher of . injects into Explore too", injected(s));
+s = subagent('{"agent_type":"Explore"}', { matcher: "" });
+eq("an empty matcher keeps the default", [s.status, s.stdout], [0, ""]);
+s = subagent('{"agent_type":"Explore"}', { matcher: "[unclosed" });
+eq("an invalid matcher keeps the default", [s.status, s.stdout], [0, ""]);
 s = subagent('{"agent_type":"general-purpose"}', { flag: "review" });
 eq("flag=review injects the pointer",
   JSON.parse(s.stdout).hookSpecificOutput.additionalContext,

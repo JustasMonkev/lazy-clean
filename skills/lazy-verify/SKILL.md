@@ -1,6 +1,7 @@
 ---
 name: lazy-verify
 description: Explicitly requested, optional fix or preservation evidence through a separately reviewed local verification engine. Experimental; not a lazy intensity or automatic completion hook.
+disable-model-invocation: true
 ---
 
 # lazy-verify

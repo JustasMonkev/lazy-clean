@@ -6,6 +6,7 @@ description: >
   or a per-repo savings estimate. Trigger: /lazy-gain,
   "lazy gain", "what does lazy save", "show lazy impact",
   "lazy scoreboard".
+disable-model-invocation: true
 ---
 
 # Lazy Gain
