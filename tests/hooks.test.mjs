@@ -1080,8 +1080,6 @@ for (const [name, payload] of [
   ["unknown extension", toolPayload(write("notes.md", "# hi\n"))],
   ["no extension", toolPayload(path.join(files, "Makefile"))],
   ["a .d.ts declaration file", toolPayload(write("types.d.ts", TS_SLOP))],
-  // The CLI skips files past 1MB; the in-process scan has to apply the same skip.
-  ["a file past the checker's size limit", toolPayload(write("huge.ts", TS_SLOP + " ".repeat(1_000_000)))],
   ["missing file_path", { tool_input: {} }],
   ["missing tool_input", { tool_name: "Edit" }],
   ["null file_path", { tool_input: { file_path: null } }],

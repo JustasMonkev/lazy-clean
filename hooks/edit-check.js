@@ -4,9 +4,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const { pathToFileURL } = require('url');
+const { spawnSync } = require('child_process');
 
-const CHECKER = pathToFileURL(path.join(__dirname, '..', 'skills', 'slop-check', 'scripts', 'check.mjs')).href;
+const CHECKER = path.join(__dirname, '..', 'skills', 'slop-check', 'scripts', 'check.mjs');
 const EXTS = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs']);
 // Rules can carry startLine/endLine evidence beyond their diagnostic anchor.
 // Comment rules do not: a multi-line comment still reports at its `/**`,
@@ -80,7 +80,7 @@ function report(context) {
   } catch { /* A closed output pipe must not turn advice into a hook failure. */ }
 }
 
-async function finish() {
+function finish() {
   if (done) return;
   done = true;
   let data;
@@ -93,10 +93,22 @@ async function finish() {
   const file = toolInput.file_path;
   if (typeof file !== 'string' || !EXTS.has(path.extname(file).toLowerCase())) return;
   try {
-    // In-process rather than a second node: the spawn cost more than the scan.
-    // lintFile applies the CLI's own skips and throws for an unreadable path.
-    const all = (await import(CHECKER)).lintFile(file);
-    if (all.length === 0) return;
+    // maxBuffer: the default 1MB is ~3,000 findings of JSON. Overrunning it
+    // ends the child with a null status, which read as "the checker broke" and
+    // dropped the report for exactly the files that needed it most.
+    // `--` before the path: a file whose name starts with `-` is an unknown
+    // option to the checker, which exits 2, and this hook then reports nothing
+    // for a file the manual CLI can scan perfectly well after the same marker.
+    const res = spawnSync(process.execPath, [CHECKER, '--json', '--', file], { encoding: 'utf8', timeout: 20000, maxBuffer: 64e6 });
+    if (res.error || ![0, 1].includes(res.status) || !res.stdout) throw new Error('scan incomplete');
+    const all = JSON.parse(res.stdout);
+    if (!Array.isArray(all) || (res.status === 0) !== (all.length === 0) || all.some(f => !f || typeof f.path !== 'string'
+      || !Number.isInteger(f.line) || f.line < 1 || !Number.isInteger(f.column) || f.column < 1
+      || f.startLine !== undefined && (!Number.isInteger(f.startLine) || f.startLine < 1 || f.startLine > f.line)
+      || f.endLine !== undefined && (!Number.isInteger(f.endLine) || f.endLine < f.line)
+      || typeof f.rule !== 'string' || typeof f.message !== 'string'
+      || !['fix', 'review'].includes(f.severity))) throw new Error('invalid checker output');
+    if (res.status === 0) return;
 
     // Only report what this edit wrote. Handing back the whole file's findings
     // invited edits outside the task — the opposite of the surgical-changes
