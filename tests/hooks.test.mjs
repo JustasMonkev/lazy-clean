@@ -1017,6 +1017,11 @@ s = subagent('{"agent_type":"explore"}', { matcher: "explore|general" });
 ok("matcher: alternation", injected(s));
 s = subagent('{"agent_type":"general-purpose"}', { matcher: "^explore$" });
 eq("matcher: definite mismatch skips injection", [s.status, s.stdout], [0, ""]);
+// The README's example for skipping read-only Explore agents.
+s = subagent('{"agent_type":"Explore"}', { matcher: "^(?!explore$)" });
+eq("the documented Explore exclusion skips Explore", [s.status, s.stdout], [0, ""]);
+s = subagent('{"agent_type":"general-purpose"}', { matcher: "^(?!explore$)" });
+ok("the documented Explore exclusion still injects other agents", injected(s));
 for (const [name, payload] of [
   ["missing agent_type", '{}'],
   ["empty agent_type", '{"agent_type":""}'],
@@ -1244,6 +1249,14 @@ ok("a findings-heavy file has its finding list capped",
   contextOf(e).length < 20000, String(contextOf(e).length));
 ok("the cap says how many findings it dropped",
   /\(\d+ more on these lines, not listed\.\)/.test(contextOf(e)), contextOf(e).slice(-200));
+// Every line of that capped report used to repeat the absolute path and the
+// rule's message, which were most of its tokens.
+eq("a repeated message is stated once", contextOf(e).split("`any` disables the type system").length - 1, 1);
+ok("findings name the edited file without repeating its full path",
+  contextOf(e).includes("  many.ts:2:") && !contextOf(e).includes(bigTs), contextOf(e).slice(0, 300));
+e = editCheck(toolPayload(write("names.ts", "const enhancedFetch = wrap(fetch);\nconst enhancedLoad = wrap(load);\n")));
+ok("a rule's different messages are each kept",
+  contextOf(e).includes('"enhancedFetch" is named') && contextOf(e).includes('"enhancedLoad" is named'), contextOf(e));
 
 // --- .opencode plugin --------------------------------------------------------
 

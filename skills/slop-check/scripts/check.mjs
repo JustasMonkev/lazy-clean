@@ -3515,6 +3515,7 @@ function main() {
     if (findings.length > 0) console.log(renderTally(findings));
     console.log(summary);
   } else {
+    const statedMessages = new Set();
     for (const [severity, heading] of [
       ["fix", "Fix (mechanical, one correct answer):"],
       ["review", 'Review (heuristic — "deliberate, leaving it" is a valid answer):'],
@@ -3523,7 +3524,12 @@ function main() {
       if (group.length === 0) continue;
       console.log(heading);
       for (const finding of group) {
-        console.log(`  ${finding.path}:${finding.line}:${finding.column} ${finding.rule} — ${finding.message}`);
+        // Repeating a rule's message on every finding multiplied the output
+        // without adding information; `--explain` has the full reasoning.
+        const key = `${finding.rule}\0${finding.message}`;
+        const message = statedMessages.has(key) ? "" : ` — ${finding.message}`;
+        statedMessages.add(key);
+        console.log(`  ${finding.path}:${finding.line}:${finding.column} ${finding.rule}${message}`);
       }
     }
     if (findings.length >= 10) console.log(renderTally(findings));
