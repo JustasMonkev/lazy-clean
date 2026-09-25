@@ -835,6 +835,8 @@ expectNoRule("allows a versioned API name", "interface PaymentV2 { id: string }"
 expectNoRule("allows currentTemp", "let currentTemp = 20;", "no-slop-symbol-names");
 expectRule("flags shape in names", "const userShape = build();", "no-shape-in-symbol-names");
 expectNoRule("allows shape as the domain", "interface Shape { radius: number }", "no-shape-in-symbol-names");
+// The prose patterns are pre-tested without their `\b`s; the real test must still run.
+expectRule("a word containing rect does not disarm the shape rule", "const redirect = 1;\nconst userShape = build();", "no-shape-in-symbol-names");
 expectNoRule(
   "reads geometry context from the whole file, not one line",
   "export type Shape =\n  | { kind: 'circle'; radius: number }\n  | { kind: 'rect'; width: number };",
@@ -865,6 +867,7 @@ expectRule(
 expectRule("flags in-a-real-app comment", "// In a real app, fetch this from the API\nconst users = [];", "no-filler-comments");
 expectRule("flags simulate comment", "// Simulate network latency\nawait delay(100);", "no-filler-comments");
 expectNoRule("allows simulating a physical system", "// Simulate one fixed timestep of the rigid-body solver.\nstep(dt);", "no-filler-comments");
+expectNoRule("'interest of the code' is not filler", "// Kept in the interest of the code review history.\nconst a = 1;", "no-filler-comments");
 expectNoRule("allows documenting a placeholder prop", "/** Placeholder text for the search box. */\nplaceholder?: string;", "no-filler-comments");
 expectNoRule(
   "allows mock vocabulary in a test file",

@@ -1211,6 +1211,21 @@ e = editCheck({ tool_name: "Edit", tool_input: { file_path: ranges, old_string: 
 const scoped = contextOf(e);
 ok("an Edit reports the findings it wrote", scoped.includes("ranges.ts:2"));
 ok("an Edit does not report findings far from the edit", !scoped.includes("ranges.ts:4"));
+// replace_all wrote every occurrence; each one's line is counted on from the
+// previous match, so a miscount would drift further at each later occurrence.
+{
+  const lines = Array.from({ length: 45 }, (_, i) => `const ok${i + 1} = ${i + 1};`);
+  for (const line of [2, 20, 40]) lines[line - 1] = "const bad: any = 2;";
+  // Line 43 sits just past the last occurrence's range, where drift would reach.
+  for (const line of [10, 30, 43]) lines[line - 1] = "const other: any = 1;";
+  const replaced = write("replaced.ts", lines.join("\n") + "\n");
+  const out = contextOf(editCheck({ tool_name: "Edit",
+    tool_input: { file_path: replaced, old_string: "x", new_string: "const bad: any = 2;", replace_all: true } }));
+  ok("replace_all reports every occurrence it wrote",
+    ["replaced.ts:2:", "replaced.ts:20:", "replaced.ts:40:"].every((at) => out.includes(at)), out);
+  ok("replace_all does not report lines between occurrences",
+    ["replaced.ts:10:", "replaced.ts:30:", "replaced.ts:43:"].every((at) => !out.includes(at)), out);
+}
 // The hook cannot prove pre-existence, so it must not tell the agent the rest
 // of the file predates the edit — that reads as "leave your own slop alone".
 ok("an Edit counts the rest of the file without claiming it predates the edit",

@@ -629,16 +629,27 @@ const SLOP_NAME_PATTERN =
 // was cloned from still sitting in the same file, so require that sibling.
 const VERSIONED_NAME_PATTERN = /^(.+?)(?:Final|Updated|Fixed|New|Old|Copy|Temp|V\d+|_v\d+)$/u;
 
+// V8 compiles `\b` under the `iu` flags to lookarounds (`ſ` and the Kelvin
+// sign are word characters there), which turns off its literal scan: the prose
+// patterns below were the costliest regexes in the checker. The same source
+// without its `\b`s matches a superset, so testing it first is exact. Only
+// for sources with no `\\b` or `[\b]`, where removing `\b` changes meaning.
+function withBoundaryPrefilter(pattern) {
+  const loose = new RegExp(pattern.source.replaceAll(String.raw`\b`, ""), pattern.flags);
+  return { test: (text) => loose.test(text) && pattern.test(text) };
+}
+
 // "shape" is the domain in geometry, canvas, and tensor code. Read over the
 // whole file, because a `ShapeLayer` class sits well below the union that gives
 // it meaning — but only words that are unambiguously geometric. This list once
 // carried `path`, `render` and `draw`, which appear as identifiers in most
 // server and React files and disarmed the rule everywhere; narrowing the read
 // to a few lines instead traded that for missing the domain context above.
-const GEOMETRY_CONTEXT_PATTERN =
-  /\b(?:radius|circle|rect|rectangle|polygon|polyline|vertex|vertices|svg|canvas|geometry|bbox|tensor)\b/iu;
+const GEOMETRY_CONTEXT_PATTERN = withBoundaryPrefilter(
+  /\b(?:radius|circle|rect|rectangle|polygon|polyline|vertex|vertices|svg|canvas|geometry|bbox|tensor)\b/iu,
+);
 
-const FILLER_COMMENT_PATTERN = new RegExp(
+const FILLER_COMMENT_PATTERN = withBoundaryPrefilter(new RegExp(
   [
     String.raw`\bin a real(?:istic)? (?:app|application|implementation|project|scenario|world)\b`,
     String.raw`\bin production,? (?:you|we|this)\b`,
@@ -658,12 +669,12 @@ const FILLER_COMMENT_PATTERN = new RegExp(
     String.raw`^\s*\.\.\.\s*$`,
   ].join("|"),
   "iu",
-);
+));
 
 const NARRATION_COMMENT_PATTERN =
   /^\s*(?:now,? we|now,? let|first,|next,|then,|finally,|let's |lets |here,? we|we (?:now|then|first|simply|just|start|begin)\b|step \d)/iu;
 
-const CHANGE_NOTE_COMMENT_PATTERN = new RegExp(
+const CHANGE_NOTE_COMMENT_PATTERN = withBoundaryPrefilter(new RegExp(
   [
     String.raw`\bas requested\b`,
     String.raw`\bas per (?:your|our|the) (?:request|instructions?|feedback|comment)\b`,
@@ -675,10 +686,11 @@ const CHANGE_NOTE_COMMENT_PATTERN = new RegExp(
     String.raw`^\s*(?:NEW|UPDATED|CHANGED|ADDED|MODIFIED|FIXED)[:!]`,
   ].join("|"),
   "iu",
-);
+));
 
-const BACKCOMPAT_COMMENT_PATTERN =
-  /backwards?[- ]compat|\bonly for compatibility\b|\bkept for (?:backwards?|legacy|compat|the old)\b|^\s*deprecated,? use\b/iu;
+const BACKCOMPAT_COMMENT_PATTERN = withBoundaryPrefilter(
+  /backwards?[- ]compat|\bonly for compatibility\b|\bkept for (?:backwards?|legacy|compat|the old)\b|^\s*deprecated,? use\b/iu,
+);
 
 const TEXT_PRESENTATION_SYMBOLS = "\u2713\u2714\u2717\u2718\u26A0\u2022\u2026";
 const SYMBOL_RANGES = "\\u{2600}-\\u{27BF}\\u{2B00}-\\u{2BFF}";
@@ -966,14 +978,12 @@ function* iterateLineFindings(ctx) {
   const isGeometryFile = maskedLines.some((line) => GEOMETRY_CONTEXT_PATTERN.test(line));
   // Once per file, not once per line: a rule that cannot be trusted in this
   // file is out for the whole file.
-  const skipped = new Set(LINE_RULES.filter((rule) => rule.skipFile?.(ctx)));
+  const rules = LINE_RULES.filter((rule) => (!rule.tsOnly || isTypeScript) && !rule.skipFile?.(ctx));
   for (let index = 0; index < maskedLines.length; index += 1) {
     const line = maskedLines[index];
     if (!line.trim()) continue;
     const lineNumber = index + 1;
-    for (const rule of LINE_RULES) {
-      if (rule.tsOnly && !isTypeScript) continue;
-      if (skipped.has(rule)) continue;
+    for (const rule of rules) {
       if (rule.skipLine?.test(line)) continue;
       // `exempt` blanks just the part it matches, so the rest of the line is
       // still inspected; the blanks keep every column where it was.
@@ -1156,6 +1166,16 @@ const at = (pattern, text, index) => {
   pattern.lastIndex = index;
   const m = pattern.exec(text);
   return m ? pattern.lastIndex : -1;
+};
+// The same, read backwards: a lookbehind tried only at the end of `text`. An
+// unanchored `/...$/` retries from every offset of its SCAN_LIMIT window, and
+// these run once per `(` or array receiver in the file.
+const CONTROL_KEYWORD_END = /(?<=\b(?:if|for(?:\s+await)?|while|switch|with))$/uy;
+const FUNCTION_NAME_END = /(?<=\bfunction\s+([A-Za-z_$][\w$]*))$/uy;
+const IDENTIFIER_END = /(?<=([A-Za-z_$][\w$]*))$/uy;
+const endMatch = (pattern, text) => {
+  pattern.lastIndex = text.length;
+  return pattern.exec(text);
 };
 
 // The end of the type starting at `pos`, or -1 if there is not one there.
@@ -1587,9 +1607,9 @@ function arrayReceiverStart(text, end, isTypeScript = false, depth = 0) {
   while (end > 0 && (/\s/u.test(text[end - 1]) || isTypeScript && text[end - 1] === "!")) end -= 1;
   const last = text[end - 1];
   if (last !== ")" && last !== "]") {
-    const identifier = /[A-Za-z_$][\w$]*$/u.exec(text.slice(Math.max(0, end - SCAN_LIMIT), end));
+    const identifier = endMatch(IDENTIFIER_END, text.slice(Math.max(0, end - SCAN_LIMIT), end));
     if (!identifier) return -1;
-    const start = end - identifier[0].length;
+    const start = end - identifier[1].length;
     return /[\w$.#]/u.test(text[start - 1] ?? "") || /[.#]$/u.test(text.slice(Math.max(0, start - SCAN_LIMIT), start).trimEnd()) ? -1 : start;
   }
   const opener = last === ")" ? "(" : "[";
@@ -1819,7 +1839,7 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
     let parameters = match[1];
     let bodyStart = match.index + match[0].length;
     const prefix = masked.slice(Math.max(0, match.index - SCAN_LIMIT), match.index).trimEnd();
-    if (!parameters && /\b(?:if|for(?:\s+await)?|while|switch|with)$/u.test(prefix)) continue;
+    if (!parameters && endMatch(CONTROL_KEYWORD_END, prefix)) continue;
     if (!parameters) {
       const end = balancedEnd(masked, match.index);
       if (end === -1) continue;
@@ -1831,7 +1851,7 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
     }
     while (/\s/u.test(masked[bodyStart] ?? "")) bodyStart += 1;
     if (masked[bodyStart] === "{" && !/\bcatch$/u.test(prefix)) functionBodies.add(bodyStart);
-    const declaration = /\bfunction\s+([A-Za-z_$][\w$]*)$/u.exec(prefix);
+    const declaration = endMatch(FUNCTION_NAME_END, prefix);
     if (declaration) namedFunctions.push({ name: declaration[1], parameters: match.index, start: bodyStart, end: balancedEnd(masked, bodyStart) });
     const scopeEnd = masked[bodyStart] === "{" ? balancedEnd(masked, bodyStart) : arrayExpressionEnd(masked, bodyStart, isTypeScript);
     for (let parameter of arrayArguments(parameters, isTypeScript)) {
@@ -1938,7 +1958,7 @@ function arrayBindingEvidence(masked, isTypeScript = false, source = masked) {
       method = propertyKey(open, end);
     }
     const after = masked.slice(end, end + SCAN_LIMIT);
-    const loopTarget = /\bfor\s*(?:await\s*)?\(\s*$/u.test(before) && /^\s+(?:in|of)\b/u.test(after);
+    const loopTarget = /^\s+(?:in|of)\b/u.test(after) && /\bfor\s*(?:await\s*)?\(\s*$/u.test(before);
     if (propertyWrite.test(after) || /(?:\+\+|--)$/u.test(before) || loopTarget) recordWrite(`${match[1].replace(/\s/gu, "")}.${method}`, match.index);
   }
   for (const match of masked.matchAll(/(?<![\w$.#])(Object|Reflect)\s*\.\s*defineProperty\s*\(/gu)) {
