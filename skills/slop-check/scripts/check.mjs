@@ -3195,6 +3195,23 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
 // file — including a symlink loop — the same entry for free.
 const identity = (stats, target) => (stats.ino ? `${stats.dev}:${stats.ino}` : resolve(target));
 
+function isSourceFile(entry, stats) {
+  if (!stats.isFile() || stats.size > MAX_FILE_BYTES) return false;
+  // Case-insensitive: on a case-insensitive filesystem the PostToolUse hook
+  // accepts PROBE.TS, and a case-sensitive check then silently scanned
+  // nothing and reported clean.
+  const suffix = extname(entry).toLowerCase();
+  return SOURCE_EXTENSIONS.has(suffix) && !DECLARATION_FILE.test(entry);
+}
+
+// One file with the skips a CLI run over it applies: [] for anything the CLI
+// would not scan, a throw for a path it could not read. The edit hook calls
+// this in-process; spawning a second node added about 50ms to every write.
+export function lintFile(file) {
+  if (!isSourceFile(file, statSync(file))) return [];
+  return lintSource(readFileSync(file, "utf8"), displayPath(file));
+}
+
 function collectFiles(entry, scan) {
   let stats;
   try {
@@ -3224,12 +3241,7 @@ function collectFiles(entry, scan) {
     }
     return;
   }
-  if (!stats.isFile() || stats.size > MAX_FILE_BYTES) return;
-  // Case-insensitive: on a case-insensitive filesystem the PostToolUse hook
-  // accepts PROBE.TS and spawns the checker, which then silently scanned
-  // nothing and reported clean.
-  const suffix = extname(entry).toLowerCase();
-  if (!SOURCE_EXTENSIONS.has(suffix) || DECLARATION_FILE.test(entry)) return;
+  if (!isSourceFile(entry, stats)) return;
   // The same file can arrive twice (listed explicitly and again via its
   // directory); linting it twice would double every finding and the count.
   const key = identity(stats, entry);
