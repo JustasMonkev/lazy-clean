@@ -54,12 +54,20 @@ function render(findings) {
     ['fix', 'Fix (mechanical, one correct answer):'],
     ['review', 'Review (heuristic — "deliberate, leaving it" is a valid answer):'],
   ];
+  // Every finding is in the one file just edited, and a rule's message repeats
+  // verbatim; restating both on each line was most of a large report's tokens.
+  const stated = new Set();
   const lines = [];
   for (const [severity, heading] of groups) {
     const group = findings.filter(f => f.severity === severity);
     if (group.length === 0) continue;
     lines.push(heading);
-    for (const f of group) lines.push(`  ${f.path}:${f.line}:${f.column} ${f.rule} — ${f.message}`);
+    for (const f of group) {
+      const key = `${f.rule}\0${f.message}`;
+      const message = stated.has(key) ? '' : ` — ${f.message}`;
+      stated.add(key);
+      lines.push(`  ${path.basename(f.path)}:${f.line}:${f.column} ${f.rule}${message}`);
+    }
   }
   return lines.join('\n');
 }

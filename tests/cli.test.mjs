@@ -199,6 +199,15 @@ check("findings are grouped by whether the fix needs judgment", () => {
   assert.ok(result.stdout.indexOf("no-json-clone") > review, "a clone that is not equivalent is not mechanical");
 });
 
+check("a repeated message is stated once, on its first finding", () => {
+  write("repeated.ts", "const a: any = 1;\nconst b: any = 2;\nconst enhancedFetch = wrap(fetch);\nconst enhancedLoad = wrap(load);\n");
+  const result = run(["repeated.ts"]);
+  assert.equal(result.stdout.split("`any` disables the type system").length - 1, 1, result.stdout);
+  assert.match(result.stdout, /repeated\.ts:2:10 no-any\n/u);
+  assert.match(result.stdout, /"enhancedFetch" is named/u);
+  assert.match(result.stdout, /"enhancedLoad" is named/u);
+});
+
 check("--summary replaces findings with the per-rule tally", () => {
   const result = run(["mixed.ts", "--summary"]);
   assert.match(result.stdout, /1 no-json-clone/u);
