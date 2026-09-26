@@ -40,8 +40,13 @@ function writtenRanges(toolInput, content) {
     // A trailing newline is the end of the last written line, not a line of
     // its own: without this a one-line edit claimed the line below it too.
     const height = text.split('\n').length - (text.endsWith('\n') ? 1 : 0);
+    // Counted on from the previous match: re-splitting the whole prefix per
+    // match made a replace_all on a large file quadratic.
+    let start = 1;
+    let counted = 0;
     for (let from = at; from !== -1; from = content.indexOf(text, from + text.length)) {
-      const start = content.slice(0, from).split('\n').length;
+      start += content.slice(counted, from).split('\n').length - 1;
+      counted = from;
       ranges.push([start - PAD_UP, start + height - 1 + PAD_DOWN]);
       if (!edit.replace_all) break;
     }
