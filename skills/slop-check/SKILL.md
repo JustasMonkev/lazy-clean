@@ -64,6 +64,7 @@ For each item, the question is the same: does this code earn its place, or does 
 - **Debug leftovers** — `console.log` tracing, timing code, temporary variables named `test`/`tmp`/`debug`.
 - **Edit-artifacts** — old and new versions of a function both kept, re-export aliases "for compatibility" when every call site could just be updated, comments describing the diff instead of the code.
 - **Comment and doc bloat** — JSDoc that restates the signature, section banner comments, README additions narrating the change. A comment should state a constraint the code cannot show.
+- **Comments that explain what the code does** — a multi-line walkthrough of what a block does means the code does not say it. Rename, extract a named step, or simplify without changing behavior until the walkthrough is unnecessary, then delete it. Keep long comments that explain why: constraints, invariants, ordering, rejected alternatives, and the bug the obvious version would reintroduce.
 - **Python slop** — bare `except:` or `except Exception: pass`, mutable default arguments, `if not x` where `0` or `""` is valid, loose dicts where a dataclass names the shape, `utils.py` grab bags, work done at import time, and `# type: ignore` / `# noqa` without a code and reason.
 - **Test slop** — tests that assert a mock was called with the value it was just given, module-level mocks instead of real dependency seams, duplicated setup that hides what varies. Keep tests that catch real regressions; mutation evidence is optional when existing red-green checks already prove the risky behavior.
 
