@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Shared Lazy instruction builder for Claude hooks and Pi extension.
+// Shared Lazy instruction builder for Claude hooks and the OpenCode plugin.
 
 const fs = require('fs');
 const path = require('path');

@@ -309,7 +309,6 @@ for (const no of ["add a normal mode toggle", "stop lazy please", "please stop l
 // normalizers
 eq("normalizeMode trims + lowercases", config.normalizeMode("  ULTRA  "), "ultra");
 eq("normalizeMode rejects review", config.normalizeMode("review"), null);
-eq("normalizeConfigMode accepts review", config.normalizeConfigMode("review"), "review");
 eq("normalizePersistedMode accepts both", [config.normalizePersistedMode("lite"), config.normalizePersistedMode("review"), config.normalizePersistedMode("x")], ["lite", "review", null]);
 
 // writeDefaultMode

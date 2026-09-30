@@ -44,6 +44,7 @@ function writeHookOutput(event, context = '') {
     // like an error every session, and dims the completed-hook bullet from green
     // to neutral (#605). The mode stays visible through the hook-context line
     // Codex prints from additionalContext ("LAZY MODE ACTIVE — level: …").
+    // Qoder injects UserPromptSubmit additionalContext into the Agent's conversation.
     const output = {};
     if (context) {
       output.hookSpecificOutput = {

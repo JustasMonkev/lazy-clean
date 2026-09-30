@@ -83,7 +83,8 @@ function report(context) {
   } catch { /* A closed output pipe must not turn advice into a hook failure. */ }
 }
 
-function checkEdit(data) {
+function check(data) {
+  // A malformed tool payload (data === null) cannot identify a file to check.
   const toolInput = data?.tool_input || {};
   const file = toolInput.file_path;
   if (typeof file !== 'string' || !EXTS.has(path.extname(file).toLowerCase())) return;
@@ -143,4 +144,4 @@ function checkEdit(data) {
 process.stdout.on('error', () => { /* The host may close the advisory pipe early. */ });
 
 // No exit() after the write: stdout to a pipe is async, exit() would truncate it.
-readHookInput(checkEdit, { waitForEnd: true });
+readHookInput(check, { waitForEnd: true });
