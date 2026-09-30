@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { readHookInput } = require('./lazy-input');
 
 const CHECKER = path.join(__dirname, '..', 'skills', 'slop-check', 'scripts', 'check.mjs');
 const EXTS = new Set(['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs']);
@@ -17,9 +18,6 @@ const PAD_DOWN = 1;
 // A findings list past this is not review context, it is a wall. The file is
 // still there to scan in full if the agent wants the rest.
 const MAX_REPORTED = 40;
-
-let input = '';
-let done = false;
 
 // Line ranges this tool call actually wrote. null means "the whole file": a
 // Write authored all of it, and an edit we cannot locate unambiguously has no
@@ -85,15 +83,7 @@ function report(context) {
   } catch { /* A closed output pipe must not turn advice into a hook failure. */ }
 }
 
-function finish() {
-  if (done) return;
-  done = true;
-  let data;
-  try {
-    data = JSON.parse(input.replace(/^\uFEFF/, ''));
-  } catch {
-    return; // A malformed tool payload cannot identify a file to check.
-  }
+function checkEdit(data) {
   const toolInput = data?.tool_input || {};
   const file = toolInput.file_path;
   if (typeof file !== 'string' || !EXTS.has(path.extname(file).toLowerCase())) return;
@@ -152,13 +142,5 @@ function finish() {
 
 process.stdout.on('error', () => { /* The host may close the advisory pipe early. */ });
 
-process.stdin.on('data', chunk => {
-  input += chunk;
-  // Bound stdin: a hook payload can carry a whole Write, never 32MB+.
-  if (input.length > 32e6) { finish(); process.stdin.destroy(); }
-});
 // No exit() after the write: stdout to a pipe is async, exit() would truncate it.
-process.stdin.on('end', finish);
-// Never hang the session: same never-block contract as the lazy hooks.
-process.stdin.on('error', () => { finish(); process.stdin.destroy(); });
-setTimeout(() => { if (!done) { finish(); process.stdin.destroy(); } }, 1000).unref();
+readHookInput(checkEdit, { waitForEnd: true });

@@ -32,31 +32,18 @@ function getSessionState(sessionId) {
 }
 const { readMode, setMode, clearMode } = getSessionState();
 
-function writeHookOutput(event, mode, context = '') {
+function writeHookOutput(event, context = '') {
   if (isCopilot) {
     // Copilot reads additionalContext on SessionStart; ignores output elsewhere.
     process.stdout.write(JSON.stringify(
       event === 'SessionStart' && context ? { additionalContext: context } : {}));
     return;
   }
-  if (isCodex) {
+  if (isCodex || isQoder) {
     // No systemMessage: Codex renders it as a yellow `warning:` line that reads
     // like an error every session, and dims the completed-hook bullet from green
     // to neutral (#605). The mode stays visible through the hook-context line
     // Codex prints from additionalContext ("LAZY MODE ACTIVE — level: …").
-    const output = {};
-    if (context) {
-      output.hookSpecificOutput = {
-        hookEventName: event,
-        additionalContext: context,
-      };
-    }
-    process.stdout.write(JSON.stringify(output));
-    return;
-  }
-  if (isQoder) {
-    // Qoder: hookSpecificOutput JSON, same shape as Codex minus systemMessage.
-    // UserPromptSubmit additionalContext is injected into the Agent's conversation.
     const output = {};
     if (context) {
       output.hookSpecificOutput = {

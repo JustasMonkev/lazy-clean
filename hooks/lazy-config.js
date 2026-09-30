@@ -30,7 +30,7 @@ function normalizeConfigMode(mode) {
 }
 
 function normalizePersistedMode(mode) {
-  return normalizeMode(mode) || normalizeConfigMode(mode);
+  return normalizeConfigMode(mode);
 }
 
 // "stop lazy" / "normal mode" turn lazy off, but only as a standalone
@@ -106,14 +106,7 @@ function getDefaultMode() {
 // Hide the status-bar indicator while keeping lazy active (#324).
 // LAZY_HIDE_STATUS=1 (or any truthy value; 0/false/empty mean "don't hide")
 // takes precedence, else config.hideStatus === true.
-// The statusline re-reads and re-validates this file on EVERY prompt render,
-// and `hideStatus` cannot be trusted until the whole document parses. A config
-// far larger than the handful of keys lazy stores is a mistake rather than a
-// preference, and reading it stalls the prompt -- 1MB measured at ~30s in the
-// shell parser. Above the cap the file is not read and the badge shows, which
-// is the same direction an unparseable config already takes. The cap is applied
-// in the shell and PowerShell statuslines too: it is part of the answer, so all
-// three have to share it or they disagree.
+// The statusline reads config on each render; oversized files show the badge.
 const CONFIG_SIZE_LIMIT = 65536;
 
 function getHideStatus() {
@@ -154,24 +147,6 @@ function writeDefaultMode(mode) {
   return normalized;
 }
 
-// Persist the status-badge preference (#618). Mirrors writeDefaultMode; the
-// LAZY_HIDE_STATUS env var still wins over the stored value on read.
-function writeHideStatus(hide) {
-  const configPath = getConfigPath();
-  fs.mkdirSync(path.dirname(configPath), { recursive: true });
-  let config = {};
-  try {
-    config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
-    if (!config || typeof config !== 'object' || Array.isArray(config)) config = {};
-  } catch (_) {
-    // Same as writeDefaultMode: a missing or corrupt config is replaced, not
-    // a reason to drop the setting.
-  }
-  config.hideStatus = hide === true;
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
-  return config.hideStatus;
-}
-
 module.exports = {
   CONFIG_SIZE_LIMIT,
   DEFAULT_MODE,
@@ -188,5 +163,4 @@ module.exports = {
   normalizePersistedMode,
   isDeactivationCommand,
   writeDefaultMode,
-  writeHideStatus,
 };

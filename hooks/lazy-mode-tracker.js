@@ -68,7 +68,7 @@ readHookInput((data) => {
         // way back. The review ruleset goes out for THIS turn and the live level
         // is untouched -- which is what OpenCode already did, so this is the two
         // hosts agreeing rather than a new rule.
-        writeHookOutput('UserPromptSubmit', readMode() || 'off', getLazyInstructions('review'));
+        writeHookOutput('UserPromptSubmit', getLazyInstructions('review'));
         return;
       }
       if (cmd === '/lazy' || cmd === '/lazy:lazy') {
@@ -191,13 +191,13 @@ readHookInput((data) => {
           : 'LAZY MODE OFF — start with /lazy lite|full|ultra.';
       }
       if (currentMode && currentMode !== 'off') {
-        writeHookOutput('UserPromptSubmit', currentMode,
+        writeHookOutput('UserPromptSubmit',
           [notice, getLazyInstructions(currentMode)].filter(Boolean).join('\n\n'));
         return;
       }
     }
 
-    if (notice) writeHookOutput('UserPromptSubmit', readMode() || 'off', notice);
+    if (notice) writeHookOutput('UserPromptSubmit', notice);
   } catch (e) {
     // Silent fail
   }

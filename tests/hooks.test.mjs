@@ -167,7 +167,7 @@ function parses(text) {
 
 // --- hook input --------------------------------------------------------------
 
-for (const { name, chunks, expected, fallback } of [
+for (const { name, chunks, expected, fallback, waitForEnd, finishEvent } of [
   { name: "complete object", chunks: ['{"session_id":"A"}'], expected: { session_id: "A" } },
   { name: "chunked BOM object", chunks: ['\uFEFF{', '"nested":{"text":"}\\\""},', '"off":false,"zero":0,"empty":""}  \n'],
     expected: { nested: { text: '}"' }, off: false, zero: 0, empty: "" } },
@@ -177,6 +177,18 @@ for (const { name, chunks, expected, fallback } of [
   { name: "partial object", chunks: ['{"session_id":'], expected: null, fallback: true },
   { name: "malformed object", chunks: ['{oops}'], expected: null, fallback: true },
   { name: "non-object input", chunks: ['[]'], expected: null, fallback: true },
+  { name: "edit object waits for EOF", chunks: ['{"tool_input":{"file_path":"app.ts"}}'],
+    expected: { tool_input: { file_path: "app.ts" } }, fallback: true, waitForEnd: true, finishEvent: "end" },
+  { name: "edit object tolerates BOM", chunks: ['\uFEFF{"off":false,"zero":0,"empty":""}'],
+    expected: { off: false, zero: 0, empty: "" }, fallback: true, waitForEnd: true, finishEvent: "end" },
+  { name: "edit rejects trailing data", chunks: ['{"tool_input":{}}', 'garbage'],
+    expected: null, fallback: true, waitForEnd: true, finishEvent: "end" },
+  { name: "edit object survives an open pipe", chunks: ['{"tool_input":{}}'],
+    expected: { tool_input: {} }, fallback: true, waitForEnd: true },
+  { name: "edit partial input on stream error", chunks: ['{"tool_input":'],
+    expected: null, fallback: true, waitForEnd: true, finishEvent: "error" },
+  { name: "edit rejects oversized UTF-8 input", chunks: ['{"pad":"' + 'é'.repeat(16_000_000) + '"}'],
+    expected: null, waitForEnd: true },
 ]) {
   const stdin = new PassThrough();
   let timeout;
@@ -188,13 +200,16 @@ for (const { name, chunks, expected, fallback } of [
   };
   vm.runInNewContext(fs.readFileSync(path.join(HOOKS, "lazy-input.js"), "utf8"), context);
   const received = [];
-  context.module.exports.readHookInput((data) => received.push(data));
+  context.module.exports.readHookInput((data) => received.push(data), { waitForEnd });
   for (const [index, chunk] of chunks.entries()) {
     stdin.write(chunk);
     if (index < chunks.length - 1) eq(`${name}: waits for the remaining chunks`, received.length, 0);
   }
   eq(`${name}: callback count before timeout or EOF`, received.length, fallback ? 0 : 1);
-  if (fallback) timeout();
+  if (fallback) {
+    if (finishEvent) stdin.emit(finishEvent);
+    else timeout();
+  }
   eq(`${name}: parsed payload`, JSON.stringify(received), JSON.stringify([expected]));
   ok(`${name}: clears timer and destroys stdin`, cleared && stdin.destroyed);
   eq(`${name}: removes input listeners`, ["data", "end", "error"].map((event) => stdin.listenerCount(event)), [0, 0, 0]);
@@ -297,7 +312,7 @@ eq("normalizeMode rejects review", config.normalizeMode("review"), null);
 eq("normalizeConfigMode accepts review", config.normalizeConfigMode("review"), "review");
 eq("normalizePersistedMode accepts both", [config.normalizePersistedMode("lite"), config.normalizePersistedMode("review"), config.normalizePersistedMode("x")], ["lite", "review", null]);
 
-// writeDefaultMode / writeHideStatus
+// writeDefaultMode
 const writeBox = freshHome("write");
 withEnv(writeBox.env, () => {
   eq("writeDefaultMode normalizes", config.writeDefaultMode(" ULTRA "), "ultra");
@@ -318,9 +333,8 @@ withEnv(writeBox.env, () => {
   eq("writeDefaultMode repairs an array config", JSON.parse(fs.readFileSync(writeBox.config, "utf8")), { defaultMode: "full" });
 
   writeConfig(writeBox, "not json at all");
-  eq("writeHideStatus repairs a corrupt config", config.writeHideStatus(true), true);
-  eq("writeHideStatus persisted", JSON.parse(fs.readFileSync(writeBox.config, "utf8")), { hideStatus: true });
-  eq("writeHideStatus coerces to strict boolean", config.writeHideStatus("truthy string"), false);
+  eq("writeDefaultMode repairs a corrupt config", config.writeDefaultMode("lite"), "lite");
+  eq("repaired config persists the default", JSON.parse(fs.readFileSync(writeBox.config, "utf8")), { defaultMode: "lite" });
 });
 
 // Unwritable config location: mkdir/write throws so the caller can report it.
@@ -450,7 +464,7 @@ fs.writeFileSync(RUNTIME_PROBE, `
 const r = require(${JSON.stringify(path.join(HOOKS, "lazy-runtime.js"))});
 const out = { isCopilot: r.isCopilot, isCodex: r.isCodex, isQoder: r.isQoder };
 if (process.env.PROBE_SET) { r.setMode(process.env.PROBE_SET); out.read = r.readMode(); }
-if (process.env.PROBE_WRITE) r.writeHookOutput(process.env.PROBE_EVENT, 'full', process.env.PROBE_CTX || '');
+if (process.env.PROBE_WRITE) r.writeHookOutput(process.env.PROBE_EVENT, process.env.PROBE_CTX || '');
 else process.stdout.write(JSON.stringify(out));
 `);
 

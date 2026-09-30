@@ -34,7 +34,7 @@ readHookInput((data) => {
       try { setMode('off'); } catch (e) { /* activation remains advisory */ }
     } else clearMode();
     const hookOutput = (isCodex || isCopilot) ? '' : 'OK';
-    writeHookOutput('SessionStart', 'off', hookOutput);
+    writeHookOutput('SessionStart', hookOutput);
     return;
   }
 
@@ -97,7 +97,7 @@ readHookInput((data) => {
   }
 
   try {
-    writeHookOutput('SessionStart', mode, output);
+    writeHookOutput('SessionStart', output);
   } catch (e) {
     // Silent fail — stdout closed/EPIPE at hook exit must not surface as a hook failure
   }

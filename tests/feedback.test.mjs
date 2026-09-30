@@ -12,6 +12,7 @@ try {
   const hook = join(root, 'hooks/edit-check.js');
   const checker = join(root, 'skills/slop-check/scripts/check.mjs');
   copyFileSync(fileURLToPath(new URL('../hooks/edit-check.js', import.meta.url)), hook);
+  copyFileSync(fileURLToPath(new URL('../hooks/lazy-input.js', import.meta.url)), join(root, 'hooks/lazy-input.js'));
   const file = join(root, 'app.ts');
   writeFileSync(file, 'export const n = 1;\n');
   for (const source of [
