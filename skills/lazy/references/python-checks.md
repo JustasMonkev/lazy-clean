@@ -45,6 +45,11 @@ the reason: `# type: ignore[arg-type]  # vendor stub is wrong; see issue 12`.
 - Pass collaborators (a clock, a session, a path, a callable) as ordinary
   parameters, defaulted at the entry point, when a test or second caller needs
   a seam. Do not add a DI container, registry, or ABC hierarchy for it.
+- Merge two similar functions only when what differs is a value and both
+  change for the same reason; pass that value as an ordinary parameter. When
+  behavior differs, keep both named functions (not one with a `bool` switch)
+  and move only the shared step into a private helper they call. Leave
+  look-alikes from separate domains apart.
 
 ```python
 # Before: the import connects and reads the environment; tests must patch globals.
