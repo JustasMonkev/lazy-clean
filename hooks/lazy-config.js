@@ -104,14 +104,7 @@ function getDefaultMode() {
 // Hide the status-bar indicator while keeping lazy active (#324).
 // LAZY_HIDE_STATUS=1 (or any truthy value; 0/false/empty mean "don't hide")
 // takes precedence, else config.hideStatus === true.
-// The statusline re-reads and re-validates this file on EVERY prompt render,
-// and `hideStatus` cannot be trusted until the whole document parses. A config
-// far larger than the handful of keys lazy stores is a mistake rather than a
-// preference, and reading it stalls the prompt -- 1MB measured at ~30s in the
-// shell parser. Above the cap the file is not read and the badge shows, which
-// is the same direction an unparseable config already takes. The cap is applied
-// in the shell and PowerShell statuslines too: it is part of the answer, so all
-// three have to share it or they disagree.
+// The statusline reads config on each render; oversized files show the badge.
 const CONFIG_SIZE_LIMIT = 65536;
 
 function getHideStatus() {
@@ -130,7 +123,11 @@ function getHideStatus() {
   }
 }
 
-function writeConfigValue(key, value) {
+function writeDefaultMode(mode) {
+  // lazy: only a runtime level can be a default; review is session-only (#377).
+  const normalized = normalizeMode(mode);
+  if (!normalized) return null;
+
   const configPath = getConfigPath();
   fs.mkdirSync(path.dirname(configPath), { recursive: true });
   let config = {};
@@ -141,22 +138,9 @@ function writeConfigValue(key, value) {
     // No config yet, or an unreadable one: start from an empty object rather
     // than refuse to record the preference.
   }
-  config[key] = value;
+  config.defaultMode = normalized;
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
-  return value;
-}
-
-function writeDefaultMode(mode) {
-  // lazy: only a runtime level can be a default; review is session-only (#377).
-  const normalized = normalizeMode(mode);
-  return normalized && writeConfigValue('defaultMode', normalized);
-}
-
-// Persist the status-badge preference (#618). The LAZY_HIDE_STATUS env var
-// still wins over the stored value on read.
-function writeHideStatus(hide) {
-  const hideStatus = hide === true;
-  return writeConfigValue('hideStatus', hideStatus);
+  return normalized;
 }
 
 module.exports = {
@@ -170,5 +154,4 @@ module.exports = {
   normalizePersistedMode,
   isDeactivationCommand,
   writeDefaultMode,
-  writeHideStatus,
 };

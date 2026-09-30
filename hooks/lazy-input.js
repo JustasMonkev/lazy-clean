@@ -1,5 +1,5 @@
 // Lifecycle hosts can leave stdin open. Bound bytes and waiting on every path.
-function readHookInput(callback) {
+function readHookInput(callback, { waitForEnd = false } = {}) {
   const chunks = [];
   let data = null;
   let bytes = 0;
@@ -18,11 +18,14 @@ function readHookInput(callback) {
   function onData(chunk) {
     bytes += Buffer.byteLength(chunk);
     if (bytes > 32e6) {
+      chunks.length = 0;
       finish();
       return;
     }
     if (complete) return;
     chunks.push(chunk);
+    // Edit payloads validate the whole stream, including trailing invalid data.
+    if (waitForEnd) return;
     // Find the object boundary once; JSON.parse still validates the full payload.
     for (const char of chunk) {
       if (inString) {
@@ -53,6 +56,12 @@ function readHookInput(callback) {
   function finish() {
     if (done) return;
     done = true;
+    if (waitForEnd) {
+      try {
+        const parsed = JSON.parse(chunks.join('').replace(/^\uFEFF/, ''));
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) data = parsed;
+      } catch { /* Malformed payloads cannot identify a file to check. */ }
+    }
     clearTimeout(timer);
     process.stdin.removeListener('data', onData);
     process.stdin.removeListener('end', finish);

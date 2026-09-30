@@ -144,4 +144,4 @@ function check(data) {
 process.stdout.on('error', () => { /* The host may close the advisory pipe early. */ });
 
 // No exit() after the write: stdout to a pipe is async, exit() would truncate it.
-readHookInput(check);
+readHookInput(check, { waitForEnd: true });
