@@ -26,6 +26,6 @@ readHookInput((data) => {
   const agentType = data ? String(data.agent_type || '').trim() : '';
   if (agentType && !matcher.test(agentType)) return;
   try {
-    writeHookOutput('SubagentStart', mode, getSubagentInstructions(mode));
+    writeHookOutput('SubagentStart', getSubagentInstructions(mode));
   } catch (e) { /* a closed output pipe must not break the host */ }
 });

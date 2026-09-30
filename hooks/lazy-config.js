@@ -17,20 +17,18 @@ const DEFAULT_MODE = 'full';
 const VALID_MODES = ['off', 'lite', 'full', 'ultra', 'review'];
 const RUNTIME_MODES = ['off', 'lite', 'full', 'ultra'];
 
-function normalizeMode(mode) {
+function pickMode(mode, modes) {
   if (typeof mode !== 'string') return null;
   const normalized = mode.trim().toLowerCase();
-  return RUNTIME_MODES.includes(normalized) ? normalized : null;
+  return modes.includes(normalized) ? normalized : null;
 }
 
-function normalizeConfigMode(mode) {
-  if (typeof mode !== 'string') return null;
-  const normalized = mode.trim().toLowerCase();
-  return VALID_MODES.includes(normalized) ? normalized : null;
+function normalizeMode(mode) {
+  return pickMode(mode, RUNTIME_MODES);
 }
 
 function normalizePersistedMode(mode) {
-  return normalizeMode(mode) || normalizeConfigMode(mode);
+  return pickMode(mode, VALID_MODES);
 }
 
 // "stop lazy" / "normal mode" turn lazy off, but only as a standalone
@@ -71,6 +69,11 @@ function getConfigPath() {
   return path.join(getConfigDir(), 'config.json');
 }
 
+// Strip UTF-8 BOM (common on Windows-saved files) so JSON.parse doesn't choke.
+function readConfig() {
+  return JSON.parse(fs.readFileSync(getConfigPath(), 'utf8').replace(/^\uFEFF/, ''));
+}
+
 function getClaudeDir() {
   // lazy: CLAUDE_CONFIG_DIR overrides ~/.claude, matching Claude Code.
   return process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
@@ -78,23 +81,18 @@ function getClaudeDir() {
 
 function getDefaultMode() {
   // 1. Environment variable (highest priority)
-  const envMode = (process.env.LAZY_DEFAULT_MODE || '').trim();
   // lazy: a default must be a runtime level (off/lite/full/ultra); review is
-  // a session-only mode, never a valid default (#377). Validate against
-  // RUNTIME_MODES so a stray env var or config can't make review the default.
-  if (envMode && RUNTIME_MODES.includes(envMode.toLowerCase())) {
-    return envMode.toLowerCase();
-  }
+  // a session-only mode, never a valid default (#377). normalizeMode rejects
+  // it so a stray env var or config can't make review the default.
+  const envMode = normalizeMode(process.env.LAZY_DEFAULT_MODE);
+  if (envMode) return envMode;
 
   // 2. Config file
   try {
-    const configPath = getConfigPath();
-    // Strip UTF-8 BOM (common on Windows-saved files) so JSON.parse doesn't choke
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
-    // trim() like the env path above: the file is hand-editable, and
+    // Trimmed like the env path above: the file is hand-editable, and
     // " ultra " silently fell back to full.
-    const fileMode = config.defaultMode && String(config.defaultMode).trim().toLowerCase();
-    if (fileMode && RUNTIME_MODES.includes(fileMode)) return fileMode;
+    const fileMode = normalizeMode(String(readConfig().defaultMode));
+    if (fileMode) return fileMode;
   } catch (e) {
     // Config file doesn't exist or is invalid — fall through
   }
@@ -123,68 +121,52 @@ function getHideStatus() {
     return v !== '' && v !== '0' && v !== 'false' && v !== 'no';
   }
   try {
-    const configPath = getConfigPath();
-    const stat = fs.statSync(configPath);
+    const stat = fs.statSync(getConfigPath());
     if (!stat.isFile() || stat.size > CONFIG_SIZE_LIMIT) return false;
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
-    return config.hideStatus === true;
+    return readConfig().hideStatus === true;
   } catch (_) {
     // No config, no preference: the badge shows.
     return false;
   }
 }
 
-function writeDefaultMode(mode) {
-  // lazy: only a runtime level can be a default; review is session-only (#377).
-  const normalized = normalizeMode(mode);
-  if (!normalized) return null;
-
+function writeConfigValue(key, value) {
   const configPath = getConfigPath();
   fs.mkdirSync(path.dirname(configPath), { recursive: true });
   let config = {};
   try {
-    config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
+    config = readConfig();
     if (!config || typeof config !== 'object' || Array.isArray(config)) config = {};
   } catch (_) {
     // No config yet, or an unreadable one: start from an empty object rather
     // than refuse to record the preference.
   }
-  config.defaultMode = normalized;
+  config[key] = value;
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
-  return normalized;
+  return value;
 }
 
-// Persist the status-badge preference (#618). Mirrors writeDefaultMode; the
-// LAZY_HIDE_STATUS env var still wins over the stored value on read.
+function writeDefaultMode(mode) {
+  // lazy: only a runtime level can be a default; review is session-only (#377).
+  const normalized = normalizeMode(mode);
+  return normalized && writeConfigValue('defaultMode', normalized);
+}
+
+// Persist the status-badge preference (#618). The LAZY_HIDE_STATUS env var
+// still wins over the stored value on read.
 function writeHideStatus(hide) {
-  const configPath = getConfigPath();
-  fs.mkdirSync(path.dirname(configPath), { recursive: true });
-  let config = {};
-  try {
-    config = JSON.parse(fs.readFileSync(configPath, 'utf8').replace(/^\uFEFF/, ''));
-    if (!config || typeof config !== 'object' || Array.isArray(config)) config = {};
-  } catch (_) {
-    // Same as writeDefaultMode: a missing or corrupt config is replaced, not
-    // a reason to drop the setting.
-  }
-  config.hideStatus = hide === true;
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
-  return config.hideStatus;
+  const hideStatus = hide === true;
+  return writeConfigValue('hideStatus', hideStatus);
 }
 
 module.exports = {
-  CONFIG_SIZE_LIMIT,
   DEFAULT_MODE,
-  VALID_MODES,
   RUNTIME_MODES,
   getDefaultMode,
-  getConfigDir,
-  getConfigPath,
   getClaudeDir,
   getHideStatus,
   isShellSafe,
   normalizeMode,
-  normalizeConfigMode,
   normalizePersistedMode,
   isDeactivationCommand,
   writeDefaultMode,

@@ -34,7 +34,7 @@ readHookInput((data) => {
       try { setMode('off'); } catch (e) { /* activation remains advisory */ }
     } else clearMode();
     const hookOutput = (isCodex || isCopilot) ? '' : 'OK';
-    writeHookOutput('SessionStart', 'off', hookOutput);
+    writeHookOutput('SessionStart', hookOutput);
     return;
   }
 
@@ -50,15 +50,9 @@ readHookInput((data) => {
 
   // 3. Detect missing statusline config — nudge Claude to help set it up
   if (!isCodex && !isCopilot) try {
-    let hasStatusline = false;
-    if (fs.existsSync(settingsPath)) {
-      // Strip UTF-8 BOM some editors prepend on Windows (breaks JSON.parse)
-      const raw = fs.readFileSync(settingsPath, 'utf8').replace(/^\uFEFF/, '');
-      const settings = JSON.parse(raw);
-      if (settings.statusLine) {
-        hasStatusline = true;
-      }
-    }
+    // Strip UTF-8 BOM some editors prepend on Windows (breaks JSON.parse)
+    const hasStatusline = fs.existsSync(settingsPath) &&
+      Boolean(JSON.parse(fs.readFileSync(settingsPath, 'utf8').replace(/^\uFEFF/, '')).statusLine);
 
     // Nudge at most once — the flag file marks that the user has already seen
     // (and implicitly declined) the statusline setup offer. Repeating it every
@@ -97,7 +91,7 @@ readHookInput((data) => {
   }
 
   try {
-    writeHookOutput('SessionStart', mode, output);
+    writeHookOutput('SessionStart', output);
   } catch (e) {
     // Silent fail — stdout closed/EPIPE at hook exit must not surface as a hook failure
   }
