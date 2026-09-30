@@ -2,10 +2,14 @@
 // lazy — UserPromptSubmit hook to track which lazy mode is active
 // Inspects user input for /lazy commands and writes mode to flag file
 
-const { getDefaultMode, isDeactivationCommand, normalizeMode, writeDefaultMode } = require('./lazy-config');
+const { RUNTIME_MODES, getDefaultMode, isDeactivationCommand, normalizeMode, writeDefaultMode } = require('./lazy-config');
 const { getSessionState, isQoder, writeHookOutput } = require('./lazy-runtime');
 const { readHookInput } = require('./lazy-input');
 const { getLazyInstructions } = require('./lazy-instructions');
+
+const reportNotice = (mode) => (mode && mode !== 'off'
+  ? 'LAZY MODE ACTIVE — level: ' + mode
+  : 'LAZY MODE OFF — start with /lazy lite|full|ultra.');
 
 readHookInput((data) => {
   if (!data) return;
@@ -33,6 +37,8 @@ readHookInput((data) => {
     // Session-scoped state needs explicit off so restore cannot mistake it for
     // an uninitialized session. Legacy no-ID callers retain absence-as-off.
     // Verify writes before reporting a successful switch.
+    let notice = null;
+    let deactivated = false;
     const turnOff = () => {
       if (isQoder || scoped) {
         try {
@@ -40,15 +46,16 @@ readHookInput((data) => {
         } catch (e) { /* checked below, not assumed */ }
         // In scoped state absence means "not initialized", not off, so
         // only an explicit `off` on disk counts as deactivated here.
-        return readMode() === 'off';
+        deactivated = readMode() === 'off';
+      } else {
+        clearMode();
+        deactivated = readMode() === null;
       }
-      clearMode();
-      return readMode() === null;
+      notice = deactivated
+        ? 'LAZY MODE OFF'
+        : 'LAZY: could not turn lazy off — the mode state could not be written, so lazy is still active.';
     };
 
-    let notice = null;
-    let modeSwitched = false;
-    let deactivated = false;
     // Outer scope because Qoder initializes the mode further down and has to
     // re-answer a bare `/lazy` from the level that initialization produced.
     let isReportOnly = false;
@@ -68,7 +75,7 @@ readHookInput((data) => {
         // way back. The review ruleset goes out for THIS turn and the live level
         // is untouched -- which is what OpenCode already did, so this is the two
         // hosts agreeing rather than a new rule.
-        writeHookOutput('UserPromptSubmit', readMode() || 'off', getLazyInstructions('review'));
+        writeHookOutput('UserPromptSubmit', getLazyInstructions('review'));
         return;
       }
       if (cmd === '/lazy' || cmd === '/lazy:lazy') {
@@ -78,7 +85,7 @@ readHookInput((data) => {
         // valid default (#377), so only off/lite/full/ultra are accepted.
         if (arg === 'default') {
           const dmode = parts[2];
-          if (dmode === 'off' || dmode === 'lite' || dmode === 'full' || dmode === 'ultra') {
+          if (RUNTIME_MODES.includes(dmode)) {
             // A missing scoped level is derived from the config default
             // whenever no flag exists, so this session has to be pinned BEFORE
             // the default moves. Pinning afterwards left a failed pin with the
@@ -117,10 +124,7 @@ readHookInput((data) => {
             notice = 'LAZY: ' + (dmode ? '"' + dmode + '" is not' : 'a default level is required —') + ' one of off|lite|full|ultra.';
           }
           handled = true; // don't fall through to the session-mode switch
-        } else if (arg === 'lite') mode = 'lite';
-        else if (arg === 'full') mode = 'full';
-        else if (arg === 'ultra') mode = 'ultra';
-        else if (arg === 'off') mode = 'off';
+        } else if (RUNTIME_MODES.includes(arg)) mode = arg;
         else if (arg === '') {
           // Report what is live, never what the config would start. Reporting
           // the default said "ACTIVE — level: full" while the flag was absent,
@@ -139,31 +143,21 @@ readHookInput((data) => {
       if (handled) {
         // The branch above already said what happened.
       } else if (isReportOnly) {
-        notice = mode && mode !== 'off' ? 'LAZY MODE ACTIVE — level: ' + mode : 'LAZY MODE OFF — start with /lazy lite|full|ultra.';
+        notice = reportNotice(mode);
       } else if (mode && mode !== 'off') {
         // A failed write must say so, same as the off path below: setMode()
         // throwing landed in the outer silent catch, so /lazy ultra printed
         // nothing and the old level stayed live while the user believed it
         // changed. Read the level back from disk instead of assuming.
         try { setMode(mode); } catch (e) { /* verified by readMode below */ }
-        modeSwitched = readMode() === mode;
-        notice = modeSwitched
+        notice = readMode() === mode
           ? 'LAZY MODE CHANGED — level: ' + mode
           : 'LAZY: could not switch to ' + mode + ' — the mode state could not be written, so the previous level is still active.';
       } else if (mode === 'off') {
-        deactivated = turnOff();
-        notice = deactivated
-          ? 'LAZY MODE OFF'
-          : 'LAZY: could not turn lazy off — the mode state could not be written, so lazy is still active.';
+        turnOff();
       }
-    }
-
-    // Detect deactivation
-    if (!modeSwitched && !deactivated && isDeactivationCommand(prompt)) {
-      deactivated = turnOff();
-      notice = deactivated
-        ? 'LAZY MODE OFF'
-        : 'LAZY: could not turn lazy off — the mode state could not be written, so lazy is still active.';
+    } else if (isDeactivationCommand(prompt)) {
+      turnOff();
     }
 
     // Qoder has no SessionStart event, so UserPromptSubmit does double duty:
@@ -185,19 +179,15 @@ readHookInput((data) => {
       // The report-only notice above was computed before this initialization
       // ran, so a bare `/lazy` on the first Qoder prompt said OFF in the same
       // message that turned lazy on. Answer from the level that is live now.
-      if (isReportOnly) {
-        notice = currentMode && currentMode !== 'off'
-          ? 'LAZY MODE ACTIVE — level: ' + currentMode
-          : 'LAZY MODE OFF — start with /lazy lite|full|ultra.';
-      }
+      if (isReportOnly) notice = reportNotice(currentMode);
       if (currentMode && currentMode !== 'off') {
-        writeHookOutput('UserPromptSubmit', currentMode,
+        writeHookOutput('UserPromptSubmit',
           [notice, getLazyInstructions(currentMode)].filter(Boolean).join('\n\n'));
         return;
       }
     }
 
-    if (notice) writeHookOutput('UserPromptSubmit', readMode() || 'off', notice);
+    if (notice) writeHookOutput('UserPromptSubmit', notice);
   } catch (e) {
     // Silent fail
   }

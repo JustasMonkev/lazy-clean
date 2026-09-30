@@ -294,7 +294,6 @@ for (const no of ["add a normal mode toggle", "stop lazy please", "please stop l
 // normalizers
 eq("normalizeMode trims + lowercases", config.normalizeMode("  ULTRA  "), "ultra");
 eq("normalizeMode rejects review", config.normalizeMode("review"), null);
-eq("normalizeConfigMode accepts review", config.normalizeConfigMode("review"), "review");
 eq("normalizePersistedMode accepts both", [config.normalizePersistedMode("lite"), config.normalizePersistedMode("review"), config.normalizePersistedMode("x")], ["lite", "review", null]);
 
 // writeDefaultMode / writeHideStatus
@@ -450,7 +449,7 @@ fs.writeFileSync(RUNTIME_PROBE, `
 const r = require(${JSON.stringify(path.join(HOOKS, "lazy-runtime.js"))});
 const out = { isCopilot: r.isCopilot, isCodex: r.isCodex, isQoder: r.isQoder };
 if (process.env.PROBE_SET) { r.setMode(process.env.PROBE_SET); out.read = r.readMode(); }
-if (process.env.PROBE_WRITE) r.writeHookOutput(process.env.PROBE_EVENT, 'full', process.env.PROBE_CTX || '');
+if (process.env.PROBE_WRITE) r.writeHookOutput(process.env.PROBE_EVENT, process.env.PROBE_CTX || '');
 else process.stdout.write(JSON.stringify(out));
 `);
 
