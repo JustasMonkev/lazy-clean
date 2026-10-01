@@ -1,0 +1,4 @@
+interface:
+  display_name: "Layz-test"
+  short_description: "Test behavior and explain remaining manual checks"
+  default_prompt: "Use $layz-test to test this code and explain what still needs manual testing."

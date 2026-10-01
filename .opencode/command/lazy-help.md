@@ -2,6 +2,10 @@
 description: Quick reference for lazy levels, skills, and commands
 ---
 
+Also show `/layz-test`: test the requested code across applicable layers, add
+missing behavioral checks, and end with manual steps and automation limits.
+It is a one-shot skill and never changes lazy mode.
+
 Also show `/lazy-verify`: experimental, explicitly opt-in fix/preserve evidence
 through a separately reviewed local engine and policy. It is not a lazy level,
 does not change persisted mode, and never runs automatically.
