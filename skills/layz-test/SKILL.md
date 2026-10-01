@@ -73,8 +73,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     `GIT_ALTERNATE_OBJECT_DIRECTORIES`) first. Clone with `--no-hardlinks`,
     `--no-checkout`, and hooks disabled, with no shared or alternate object
     store; remove the clone's remotes, or point them at private repositories
-    inside the temporary directory, before checking out. Then recreate the
-    index, unstaged changes, and untracked files separately. A non-Git source
+    inside the temporary directory. Do not check out: copy the user's
+    working-tree bytes into the clone so no smudge filter or other conversion
+    helper runs, then recreate the index, unstaged changes, and untracked files
+    separately. A non-Git source
     stays without Git.
   - Reapply the ACLs and extended attributes the tests depend on. If the
     source state, Git or filesystem, cannot be reproduced faithfully, treat the
@@ -126,7 +128,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   authorization; report missing prerequisites instead of inventing credentials.
   Never call a live payment, email, SMS, or other third-party account unless it
   is an isolated sandbox or the user approves; otherwise report it as blocked
-  automation that needs a sandbox or approval.
+  automation that needs a sandbox or approval. Run isolated commands with an
+  allowlisted environment: drop inherited credentials, tokens, and agent
+  sockets such as `SSH_AUTH_SOCK`, and add back only sandbox or user-approved
+  credentials.
 - Prove a risky test can fail: reproduce a regression by running the same new
   test, unchanged, against only the old production code in the disposable copy,
   where its intended assertion fails, then passing against the fix; or, in the
