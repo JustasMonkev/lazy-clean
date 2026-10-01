@@ -1,0 +1,4 @@
+interface:
+  display_name: "Layz-test"
+  short_description: "Find reproducible bugs and explain manual test gaps"
+  default_prompt: "Use $layz-test to find and reproduce bugs in this code and explain what still needs manual testing."

@@ -18,7 +18,7 @@ Same ruleset, five levels of wiring — pick whatever your agent supports.
 | Tier | Platforms | What you get | Files |
 | --- | --- | --- | --- |
 | Full hooks | Claude Code, Codex | Compact ruleset injected at session and subagent start, `/lazy` level switching, slop-check auto-run after every Write/Edit | `hooks/lazy-clean.json` via `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` |
-| Plugin | OpenCode | Ruleset injected every turn plus seven slash commands | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
+| Plugin | OpenCode | Ruleset injected every turn plus eight slash commands | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
 | Rules file | Cursor, Copilot | Always-on ruleset for all seven supported languages; run the TS/JS-only checker by hand after TS/JS changes | `.cursor/rules/lazy-clean.mdc`, `.github/copilot-instructions.md` |
 | `AGENTS.md` | Everything else that reads it — Codex, Zed, Amp, Jules | The compact ruleset plus the post-edit checker step | `AGENTS.md` |
 | Skills only | Anything that reads `~/.claude/skills` | Every skill on demand, no automation | `skills/` |
@@ -86,6 +86,16 @@ is private/ignored in this repository; contracts remain reviewable. See the
 commands, policy schema, limits and exits, and the
 [RFC](docs/specs/lazy-verify-integration.md) for engine/release acceptance gates.
 
+## Testing code with layz-test
+
+Invoke `/layz-test <files or change>` (Codex: `@layz-test`) to map behaviors,
+find reproducible bugs, run applicable checks with existing tools, and add missing
+regression coverage.
+The report ends with manual steps and why automation cannot settle each check;
+missing dependencies or browsers are listed as blocked automation. Passing
+checks apply only to the stated scope. This instruction-only skill adds no
+runner or dependencies and does not change lazy mode.
+
 ## Install — zero-install, skills only
 
 No packages, no npm, no plugin needed. Copy the skills into your global skills folder:
@@ -94,7 +104,7 @@ No packages, no npm, no plugin needed. Copy the skills into your global skills f
 cp -R /path/to/lazy-clean/skills/* ~/.claude/skills/
 ```
 
-That gives you all 9 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-verify`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
+That gives you all 10 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-verify`, `layz-test`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
 
 What you DON'T get in skills-only mode: the automatic parts (ruleset injected every session, checker auto-run after every edit). Those need the hooks — install as a plugin for that:
 
@@ -199,7 +209,7 @@ It covers that line and the next, takes several ids separated by commas, and `sl
 
 The `-- <reason>` is not decoration. An ignore with no reason, with an id that is not a rule, or a file-level one written too far down suppresses nothing and is reported as `no-unjustified-ignore` — the same standard the checker already holds `@ts-expect-error` to, because an ignore that silently does nothing is worse than no ignore. The run summary counts what was suppressed: clean under forty ignores is not clean.
 
-Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `slop-check`, `lazy-clean` (the main workflow).
+Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `slop-check`, `lazy-clean` (the main workflow), `lazy-verify`, `layz-test`.
 
 ## Intensity
 
