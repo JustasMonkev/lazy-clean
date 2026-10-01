@@ -57,15 +57,18 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   exit. Give the copy independent Git metadata, such as a local clone with the
   uncommitted changes applied, never a `.git` file or `gitdir` that points back
   to the user's repository. Keep symlinks as symlinks; if one points outside the
-  repository, ask before running write-capable commands through it. Before
+  repository, ask before running write-capable commands through it. Point
+  `HOME`, `TMPDIR`, and tool caches inside the private directory, and ask before
+  a command writes to any other path or shared service outside it. Before
   deleting the copy, move the redacted failure artifacts the report cites
   (logs, traces, screenshots) to a private evidence directory. If the suite
   cannot run from a copy, ask before running write-capable commands in place;
   when approved, back up the tree byte for byte to a private directory before
   each such command, record what the command wrote, and restore from the backup
   only files that still hold exactly that output, reporting any other change as
-  a conflict. The user's tree only gains the tests you keep and the snapshots
-  they need.
+  a conflict. Delete those backups on every exit once restoring is done; keep
+  one only for an unresolved conflict, and say where. The user's tree only
+  gains the tests you keep and the snapshots they need.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
@@ -103,7 +106,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   the defect. Separate pre-existing failures from new ones.
 - Before reporting, confirm the user's tree differs from its starting state only
   by the tests you added, the snapshots they need, and requested changes; name
-  any other change instead of reverting it.
+  any other change instead of reverting it. If tested source changed after the
+  copy was made, refresh the copy and rerun the affected checks, or report the
+  newer state as untested.
 - Rerun affected checks after test edits. Review TS/JS changes with the installed
   slop checker when available; its clean result is not behavioral evidence.
 
