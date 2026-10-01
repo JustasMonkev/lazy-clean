@@ -277,6 +277,8 @@ for (const [description, pattern] of [
   ["covers every test layer", /Static:.*Behavior:.*Edges:.*Failure modes:.*Contracts:.*Lifecycle and concurrency:.*Integration:.*End-to-end:.*Platform:.*Security:.*Regression:/u],
   ["adds no benchmarks", /do not add benchmarks/iu],
   ["advertises Playwright only as the configured runner", /^(?!.*Playwright when installed).*Playwright when it is the configured runner/u],
+  ["reports inapplicable layers apart from unrun checks", /list a layer that does not apply under \*\*Not applicable\*\* with its reason.*## Not applicable <layer — why it does not apply/u],
+  ["skips mutation probes for trivial targets", /Docs, config, and trivial edits need no mutation probe\. For non-trivial behavior/u],
   ["keeps the final check within the selected scope", /widen to the whole repo only when that is its established fast check or the user agrees/u],
   ["never weakens tests", /Never skip, disable, or weaken a test/u],
   ["keeps unrun checks apart", /## Not run.*Checks that did not run go under \*\*Not run\*\*/u],

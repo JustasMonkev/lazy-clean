@@ -48,7 +48,8 @@ through the repo's documented setup.
 ## 3. Case list
 
 Before writing tests, list each requirement and the cases that cover it. Apply
-every layer below that fits the target; skip a layer only with a reason.
+every layer below that fits the target; list a layer that does not apply
+under **Not applicable** with its reason.
 
 - **Static:** the project's type checker, linter, and build, as configured, and
   its formatter in check or dry-run mode only; with no such mode, the formatter
@@ -104,7 +105,8 @@ Rerun a failure once: a second failure is real, and a pass on the retry is a
 flaky failure, reported with both results under **Failures found**. Never skip,
 disable, or weaken a test to get green.
 
-If existing red-green checks already prove the risky behavior, mutation work is
+Docs, config, and trivial edits need no mutation probe. For non-trivial
+behavior, if existing red-green checks already prove the risk, mutation work is
 optional; otherwise run a small meaningful mutation check: pick a test that
 passes, leave it unchanged, flip one branch, boundary, operator, or return value
 in the production code it exercises, confirm that test's intended assertion now
@@ -143,6 +145,9 @@ before you started, and name any change you cannot attribute.
 
 ## Not run
 <check — why it could not run here>
+
+## Not applicable
+<layer — why it does not apply to this target>
 
 ## Needs manual testing
 - <what to check> — why: <reason it cannot be automated here> — how: <steps and expected result>
