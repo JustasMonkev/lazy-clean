@@ -57,19 +57,25 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   tests you keep, the snapshots they need, and production fixes the user asked
   for.
   - Record the starting state of the user's tree, with read-only Git commands
-    (`GIT_OPTIONAL_LOCKS=0`, diffs with `--no-textconv --no-ext-diff`):
-    `git status`, the unstaged and staged diffs, copies of untracked files,
-    and checksums of ignored files the tests read, or a checksum listing
-    without Git. Keep these in a private temporary directory outside the
-    repository and delete it on every exit once the final audit is done.
+    (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
+    `--no-textconv --no-ext-diff`): `git status`, the unstaged and staged
+    diffs, copies of untracked files, and checksums of ignored files the tests
+    read, or a checksum listing without Git. Include the ACLs and extended
+    attributes the tests depend on. Keep these in a private temporary
+    directory outside the repository and delete it on every exit once the
+    final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit.
   - If the source is a Git worktree, give the copy independent Git metadata,
-    never a `.git` file or `gitdir` that points back to the user's repository:
-    clone with `--no-hardlinks` and no shared or alternate object store, then
-    recreate the index, unstaged changes, and untracked files separately.
-    Remove the clone's remotes, or point them at private repositories inside
-    the temporary directory. A non-Git source stays without Git.
+    never a `.git` file or `gitdir` that points back to the user's repository.
+    Clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
+    `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`,
+    `GIT_ALTERNATE_OBJECT_DIRECTORIES`) first. Clone with `--no-hardlinks`,
+    `--no-checkout`, and hooks disabled, with no shared or alternate object
+    store; remove the clone's remotes, or point them at private repositories
+    inside the temporary directory, before checking out. Then recreate the
+    index, unstaged changes, and untracked files separately. A non-Git source
+    stays without Git.
   - Reapply the ACLs and extended attributes the tests depend on. If the
     source state, Git or filesystem, cannot be reproduced faithfully, treat the
     target as unable to run from a copy.
