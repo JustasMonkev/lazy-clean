@@ -57,11 +57,11 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   tests you keep, the snapshots they need, and production fixes the user asked
   for.
   - Record the starting state of the user's tree, with read-only Git commands
-    (`GIT_OPTIONAL_LOCKS=0`): `git status`, the unstaged and
-    staged diffs, copies of untracked files, and checksums of ignored files the
-    tests read, or a checksum listing without Git. Keep these in a private
-    temporary directory outside the repository and delete it on every exit
-    once the final audit is done.
+    (`GIT_OPTIONAL_LOCKS=0`, diffs with `--no-textconv --no-ext-diff`):
+    `git status`, the unstaged and staged diffs, copies of untracked files,
+    and checksums of ignored files the tests read, or a checksum listing
+    without Git. Keep these in a private temporary directory outside the
+    repository and delete it on every exit once the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit.
   - If the source is a Git worktree, give the copy independent Git metadata,
@@ -76,7 +76,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
     running write-capable commands through it.
   - Point temp and cache locations inside the private directory (`TMPDIR`,
-    `TMP`, `TEMP`, and the tools' cache variables). When a command would write
+    `TMP`, `TEMP`, and the tools' cache variables). If the behavior under test
+    depends on those locations, keep them equivalent in the private directory
+    or treat the target as unable to run faithfully from a copy. When a command
+    would write
     into the user's home, give it a private home (`HOME`, `USERPROFILE`,
     app-data variables) and keep installed toolchains reachable read-only or
     as a private copy, never through a writable path into the user's toolchain
@@ -134,7 +137,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   by the tests you added, the snapshots they need, and requested changes; name
   any other change instead of reverting it. If tested source changed after the
   copy was made, refresh the copy and rerun the affected checks, or report the
-  newer state as untested.
+  newer state as untested. If a command rewrote tested production files inside
+  the copy, such as a pretest code generator, report it and rerun from the
+  intended state, or report that state as untested.
 - Rerun affected checks after test edits. Review TS/JS changes with the installed
   slop checker when available; its clean result is not behavioral evidence.
 
