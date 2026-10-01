@@ -22,7 +22,9 @@ Test what the user names. Otherwise test the task-owned diff against its base,
 including untracked files. Otherwise ask; do not test the whole repo by default.
 Before you change anything, record `git status` and the diff, and save a copy of
 every file that is already modified or untracked, so the final state can be
-checked against the exact starting contents.
+checked against the exact starting contents. Keep the copies in a private
+temporary directory outside the repo and delete it on every exit once the final
+comparison is done.
 Read the code under test and trace its callers, callbacks, retries,
 restore/replay, and concurrent paths: a bug in a shared helper is tested through
 the shared helper.
@@ -37,10 +39,11 @@ If a needed version fact cannot be checked, say so and do not guess.
 Find the runners, configs, fixtures, and CI jobs already in use: package
 scripts, Makefile, pyproject, Cargo, go.mod, Gemfile, Maven/Gradle, workflow
 files. Use them. Never add a dependency or a second runner; a missing tool goes
-in the report as a check that did not run. If Playwright is installed, it is the
-browser and end-to-end tool: reuse its config and fixtures, locate by role,
-label, or text, and use its web-first assertions. Install browsers only through
-the repo's documented setup.
+in the report as a check that did not run. If Playwright is the target's
+configured browser runner, it is the browser and end-to-end tool: reuse its
+config and fixtures, locate by role, label, or text, and use its web-first
+assertions. Otherwise keep the repo's own browser runner. Install browsers only
+through the repo's documented setup.
 
 ## 3. Case list
 
@@ -107,8 +110,10 @@ in the production code it exercises, confirm that test's intended assertion now
 fails because of the mutation, revert, and confirm it passes again. A test that
 already failed, or a mutation of the test itself, proves nothing. Save the
 file's exact bytes before the mutation and restore them after success, failure,
-timeout, or interruption, then confirm the file matches the saved copy; never
-restore with a Git checkout that could discard edits made before the task.
+timeout, or interruption, then confirm the file matches the saved copy. Restore
+only if the file still holds exactly the mutated bytes; if anything else changed
+it, report the conflict instead of overwriting. Never restore with a Git
+checkout that could discard edits made before the task.
 Never add a dependency for it.
 
 Before finishing test changes, read and apply
@@ -121,8 +126,9 @@ separate quoted argument.
 
 Before reporting, compare `git status`, the diff, and the saved copies with the
 state you recorded at the start. Keep the tests you added and changes the task
-asked for. Revert generated files, updated snapshots, and other edits your
-commands made unless the user asked for them, never touch edits that were there
+asked for, including snapshots a test you added needs. Revert other generated
+files, snapshot churn, and edits your commands made unless the user asked for
+them, never touch edits that were there
 before you started, and name any change you cannot attribute.
 
 ## 6. Report

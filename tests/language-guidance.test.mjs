@@ -273,7 +273,7 @@ for (const language of LANGUAGES) ok(`lazy-test lists ${language}`, lists(lazyTe
 for (const [description, pattern] of [
   ["reads installed versions", /toolchain file, manifest, lockfile, or runtime.*installed version.*do not guess/iu],
   ["uses only the repo's tools", /Never add a dependency or a second runner/u],
-  ["reuses installed Playwright", /If Playwright is installed, it is the browser and end-to-end tool/u],
+  ["reuses Playwright only as the configured runner", /If Playwright is the target's configured browser runner, it is the browser and end-to-end tool.*Otherwise keep the repo's own browser runner/u],
   ["covers every test layer", /Static:.*Behavior:.*Edges:.*Failure modes:.*Contracts:.*Lifecycle and concurrency:.*Integration:.*End-to-end:.*Platform:.*Security:.*Regression:/u],
   ["adds no benchmarks", /do not add benchmarks/iu],
   ["never weakens tests", /Never skip, disable, or weaken a test/u],
@@ -286,6 +286,9 @@ for (const [description, pattern] of [
   ["mutates production code, not the test", /leave it unchanged, flip one .* in the production code it exercises.*a mutation of the test itself, proves nothing/u],
   ["keeps the new test in the old-code run", /the same new test, run in an isolated copy holding only the old production code, fails on its intended assertion/u],
   ["saves dirty files before running anything", /save a copy of every file that is already modified or untracked/u],
+  ["deletes the saved copies on every exit", /private temporary directory outside the repo and delete it on every exit/u],
+  ["never overwrites edits made during the probe", /Restore only if the file still holds exactly the mutated bytes.*report the conflict instead of overwriting/u],
+  ["keeps snapshots the added tests need", /including snapshots a test you added needs\. Revert other generated files, snapshot churn/u],
   ["routes test edits through the language checks", /simplification-checks\.md.*python-checks\.md/u],
   ["scans committed changes from the task base", /--since=HEAD.*task base ref instead of `HEAD` once they are committed/u],
   ["bounds commands and cleans up their processes", /non-interactively, never in watch mode, with a timeout.*stop the servers, browsers, and workers it started on every exit path/u],
