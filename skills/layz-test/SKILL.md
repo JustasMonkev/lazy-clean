@@ -49,26 +49,31 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
 
 ## Execute and challenge
 
-- Record the starting state of the user's tree (`git status` and the diff, or a
-  checksum listing without Git). Run every command that can write files, such as
+- Record the starting state of the user's tree: `git status`, the unstaged and
+  staged diffs, and copies of untracked files, or a checksum listing without
+  Git. Run every command that can write files, such as
   installs, builds, test runs, snapshot updates, mutation probes, and old-code
   reproductions, in a disposable copy of the working tree, uncommitted and
   ignored files included, in a private temporary directory deleted on every
-  exit. Give the copy independent Git metadata, such as a local clone with the
-  uncommitted changes applied, never a `.git` file or `gitdir` that points back
-  to the user's repository. Keep symlinks as symlinks; if one points outside the
+  exit. If the source is a Git worktree, give the copy independent Git
+  metadata, such as a local clone with the uncommitted changes applied, never a
+  `.git` file or `gitdir` that points back to the user's repository; a non-Git
+  source stays without Git. Keep symlinks as symlinks; if one points outside the
   repository, ask before running write-capable commands through it. Point
-  `HOME`, `TMPDIR`, and tool caches inside the private directory, and ask before
-  a command writes to any other path or shared service outside it. Before
+  home, temp, and cache locations inside the private directory (`HOME`,
+  `USERPROFILE`, `TMPDIR`, `TMP`, `TEMP`, and the platform's app-data and cache
+  variables), and ask before a command writes to any other path or shared
+  service outside it. Before
   deleting the copy, move the redacted failure artifacts the report cites
   (logs, traces, screenshots) to a private evidence directory. If the suite
   cannot run from a copy, ask before running write-capable commands in place;
-  when approved, back up the tree byte for byte to a private directory before
-  each such command, record what the command wrote, and restore from the backup
-  only files that still hold exactly that output, reporting any other change as
-  a conflict. Delete those backups on every exit once restoring is done; keep
-  one only for an unresolved conflict, and say where. The user's tree only
-  gains the tests you keep and the snapshots they need.
+  when approved, ask the user to pause other edits to the tree while each such
+  command runs, back up the tree byte for byte to a private directory first,
+  record what the command wrote, and restore from the backup only files that
+  still hold exactly that output, reporting any other change as a conflict.
+  Delete those backups on every exit once restoring is done; keep one only for
+  an unresolved conflict, and say where. The user's tree only gains the tests
+  you keep and the snapshots they need.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
