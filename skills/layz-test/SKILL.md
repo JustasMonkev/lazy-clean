@@ -50,8 +50,11 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
 ## Execute and challenge
 
 - Isolate every command that can write files, such as installs, builds, test
-  runs, snapshot updates, mutation probes, and old-code reproductions. The
-  user's tree only gains the tests you keep and the snapshots they need.
+  runs, snapshot updates, mutation probes, and old-code reproductions. Nothing
+  they do may change the user's tree, Git directories or refs, home, installed
+  toolchains, or anything else outside a private temporary directory; where a
+  rule below cannot guarantee that, ask first. The user's tree only gains the
+  tests you keep and the snapshots they need.
   - Record the starting state of the user's tree: `git status`, the unstaged and
     staged diffs, copies of untracked files, and checksums of ignored files the
     tests read, or a checksum listing without Git. Keep these in a private
@@ -62,29 +65,33 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - If the source is a Git worktree, give the copy independent Git metadata,
     never a `.git` file or `gitdir` that points back to the user's repository:
     clone with `--no-hardlinks` and no shared or alternate object store, then
-    recreate the index, unstaged changes, and untracked files separately. If
-    that state cannot be reproduced faithfully, treat the target as unable to
-    run from a copy. A non-Git source stays without Git.
+    recreate the index, unstaged changes, and untracked files separately.
+    Remove the clone's remotes, or point them at private repositories inside
+    the temporary directory. A non-Git source stays without Git.
+  - Reapply the ACLs and extended attributes the tests depend on. If the
+    source state, Git or filesystem, cannot be reproduced faithfully, treat the
+    target as unable to run from a copy.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
     running write-capable commands through it.
   - Point temp and cache locations inside the private directory (`TMPDIR`,
-    `TMP`, `TEMP`, and the tools' cache variables). Keep installed toolchains
-    reachable: when a command would write into the user's home, give it a
-    private home (`HOME`, `USERPROFILE`, app-data variables) and point
-    toolchain variables such as `RUSTUP_HOME` at the installed ones. Ask before
-    a command writes to any other path or shared service outside the private
-    directory.
+    `TMP`, `TEMP`, and the tools' cache variables). When a command would write
+    into the user's home, give it a private home (`HOME`, `USERPROFILE`,
+    app-data variables) and keep installed toolchains reachable read-only or
+    as a private copy, never through a writable path into the user's toolchain
+    state such as `RUSTUP_HOME`. Ask before a command writes to any other path
+    or shared service outside the private directory.
   - Before deleting the copy, move the redacted failure artifacts the report
     cites (logs, traces, screenshots) to a private evidence directory.
   - If the suite cannot run from a copy, ask before running write-capable
     commands in place. When approved, ask the user to pause other edits to the
     tree while each such command runs, and back up the tree first: bytes, file
-    modes, symlink targets, which paths exist, and ACLs and extended attributes
-    where the platform has them. Record what the command
-    changed, restore from the backup only paths that still hold exactly that
-    result, and report any other change as a conflict. Delete those backups on
-    every exit once restoring is done; keep one only for an unresolved
-    conflict, and say where.
+    modes, symlink targets, which paths exist, ACLs and extended attributes
+    where the platform has them, and the Git directories the tree points to
+    (`git rev-parse --absolute-git-dir` and `--git-common-dir`). Record what
+    the command changed, restore from the backup only paths that still hold
+    exactly that result, and report any other change as a conflict. Delete
+    those backups on every exit once restoring is done; keep one only for an
+    unresolved conflict, and say where.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
