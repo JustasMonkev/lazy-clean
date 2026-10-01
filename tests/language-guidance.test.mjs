@@ -280,6 +280,7 @@ for (const [description, pattern] of [
   ["keeps unrun checks apart", /## Not run.*Checks that did not run go under \*\*Not run\*\*/u],
   ["ends with manual testing and why", /## Needs manual testing - <what to check> — why: .* — how: /u],
   ["refuses effort as a manual-testing reason", /"Too much work" is not a reason/u],
+  ["keeps open spec questions out of manual testing", /open spec or product question is not manual testing/u],
   ["never claims full coverage", /Never claim "fully tested" or an unrun check/u],
 ]) ok(`lazy-test ${description}`, pattern.test(lazyTest));
 ok("lazy-test has a risk-scoped mutation policy", protectsUsefulMutationTest(lazyTest));

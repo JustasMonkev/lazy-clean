@@ -128,7 +128,8 @@ not possible, for a reason such as:
 - usability, wording, or legal judgment that needs a person.
 
 "Too much work" is not a reason: if the installed tools can check it, automate
-it. If nothing remains, write `Needs manual testing: none — every case above ran
+it. An open spec or product question is not manual testing; list it under
+**Failures found** as a question for the owner. If nothing remains, write `Needs manual testing: none — every case above ran
 automatically.`
 
 Never claim "fully tested" or an unrun check. Checks that did not run go under
