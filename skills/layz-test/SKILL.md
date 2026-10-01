@@ -22,7 +22,9 @@ tests. Keep this a one-shot testing workflow; do not change lazy mode or hooks.
    silently replace a whole-repository request with a sample.
 2. Read pinned and installed tool versions and test commands from the project.
    Reuse its runner, fixtures, assertions, and installed dependencies. Do not
-   download tools or add a framework merely to measure this workflow.
+   download tools or add a framework merely to measure this workflow. If the
+   lockfile declares a runner that is not installed yet, run the repository's
+   documented locked install in the disposable copy before calling it blocked.
 3. Make a compact behavior → test → result table. Enumerate happy paths,
    boundaries (including false/zero/empty), invalid inputs, and failure modes.
    Trace retries, restore/replay, cancellation, concurrency, and cleanup where
@@ -52,9 +54,15 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   installs, builds, test runs, snapshot updates, mutation probes, and old-code
   reproductions, in a disposable copy of the working tree, uncommitted and
   ignored files included, in a private temporary directory deleted on every
-  exit. If the suite cannot run from a copy, ask before running write-capable
-  commands in place. The user's tree only gains the tests you keep and the
-  snapshots they need.
+  exit. Copy a symlink that points outside the repository as its target, or ask
+  before running write-capable commands through it. Before deleting the copy,
+  move the redacted failure artifacts the report cites (logs, traces,
+  screenshots) to a private evidence directory. If the suite cannot run from a
+  copy, ask before running write-capable commands in place; when approved,
+  checksum files before each such command and afterwards restore only files
+  that still hold exactly what it wrote, reporting any other change as a
+  conflict. The user's tree only gains the tests you keep and the snapshots
+  they need.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
@@ -69,14 +77,18 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   and affected caller. Separate confirmed defects from unclear requirements,
   environment failures, and synthetic mutations. If none is confirmed, say so
   and list the hypotheses tested; never invent a finding to meet a bug quota.
-- Give external work a timeout and a bounded workload; clean up processes,
-  listeners, timers, temporary data, and mutations on success and failure.
+- Run commands non-interactively, never in watch mode. Give external work a
+  timeout and a bounded workload; stop the process tree each command starts and
+  clean up listeners, timers, temporary data, and mutations on success,
+  failure, cancellation, and partial setup.
   Use isolated test data. Run destructive or costly external checks only within
   authorization; report missing prerequisites instead of inventing credentials.
   Never call a live payment, email, SMS, or other third-party account unless it
   is an isolated sandbox or the user approves; otherwise report it as blocked
   automation that needs a sandbox or approval.
-- Prove a risky test can fail: reproduce a regression, or, in the disposable
+- Prove a risky test can fail: reproduce a regression by running the same new
+  test, unchanged, against only the old production code in the disposable copy,
+  where its intended assertion fails, then passing against the fix; or, in the
   copy, leave a passing test unchanged, mutate a relevant production
   branch/boundary, and observe that test's intended assertion fail; revert and
   rerun green. A mutation of the test itself or a setup/import failure is not
