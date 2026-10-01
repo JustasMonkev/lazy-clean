@@ -53,9 +53,12 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   runs, snapshot updates, mutation probes, and old-code reproductions. Nothing
   they do may change the user's tree, Git directories or refs, home, installed
   toolchains, or anything else outside a private temporary directory; where a
-  rule below cannot guarantee that, ask first. The user's tree only gains the
-  tests you keep, the snapshots they need, and production fixes the user asked
-  for.
+  rule below cannot guarantee that, ask first. A copy and redirected variables
+  do not stop a command that writes to an absolute path or finds the original
+  checkout, so run these commands under an OS-level filesystem sandbox that
+  allows writes only inside the private directory; where none is available,
+  ask first. The user's tree only gains the tests you keep, the snapshots they
+  need, and production fixes the user asked for.
   - Record the starting state of the user's tree, with read-only Git commands
     (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
     `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean`
@@ -79,26 +82,31 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     (`GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` set to an empty file), passing
     only the settings the tests need, such as an identity, with `-c`. Remove
     the clone's remotes, or point them at private repositories inside the
-    temporary directory. Do not check out: copy the user's
-    working-tree bytes into the clone so no smudge filter or other conversion
-    helper runs, then recreate the index, unstaged changes, untracked files,
-    and the refs the tests read (local branches, tags, custom refs, stashes)
-    separately. A non-Git source stays without Git.
+    temporary directory. Do not check out: copy the user's working-tree bytes
+    into the clone so no smudge filter or other conversion helper runs, then
+    recreate the index, unstaged changes, untracked files, `HEAD` (the same
+    branch, or the same detached commit), and the refs the tests read (local
+    branches, tags, custom refs, stashes) separately. A non-Git source stays
+    without Git.
   - Reapply the ACLs and extended attributes the tests depend on. If the
     source state, Git or filesystem, cannot be reproduced faithfully, treat the
     target as unable to run from a copy.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
-    running write-capable commands through it.
+    running write-capable commands through it. If the checks read its target,
+    snapshot the target into the private directory and point the copy's link
+    at the snapshot, or compare the target again before reporting and mark the
+    run unfaithful if it changed.
   - Point temp and cache locations inside the private directory (`TMPDIR`,
     `TMP`, `TEMP`, and the tools' cache variables). If the behavior under test
     depends on those locations, keep them equivalent in the private directory
-    or treat the target as unable to run faithfully from a copy. When a command
-    would write
-    into the user's home, give it a private home (`HOME`, `USERPROFILE`,
-    app-data variables) and keep installed toolchains reachable read-only or
-    as a private copy, never through a writable path into the user's toolchain
-    state such as `RUSTUP_HOME`. Ask before a command writes to any other path
-    or shared service outside the private directory.
+    or treat the target as unable to run faithfully from a copy. Give every
+    isolated command a private home (`HOME`, `USERPROFILE`, app-data
+    variables), so files such as `.npmrc`, `.netrc`, or cloud credentials stay
+    out of reach; expose only required, user-approved home state read-only, and
+    keep installed toolchains reachable read-only or as a private copy, never
+    through a writable path into the user's toolchain state such as
+    `RUSTUP_HOME`. Ask before a command writes to any other path or shared
+    service outside the private directory.
   - Before deleting the copy, move every redacted artifact the report cites,
     from passing or failing runs (logs, traces, screenshots, coverage), to a
     private evidence directory.
