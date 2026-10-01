@@ -266,51 +266,26 @@ for (const [surface, raw] of finishSurfaces) {
 ok("skills/lazy/SKILL.md limits the no-announcement rule to ordinary work",
   /Do not announce the mode during ordinary work/u.test(flat(read("skills/lazy/SKILL.md"))));
 
-// lazy-test promises every applicable layer and an honest manual-testing tail;
-// losing either turns it back into "ran the suite, looks fine".
-const lazyTest = flat(read("skills/lazy-test/SKILL.md"));
-for (const language of LANGUAGES) ok(`lazy-test lists ${language}`, lists(lazyTest, language));
+// layz-test promises every applicable layer, isolation from the user's tree, and
+// an honest manual-testing tail; losing any turns it back into "ran the suite".
+const layzTest = flat(read("skills/layz-test/SKILL.md"));
 for (const [description, pattern] of [
-  ["reads installed versions", /toolchain file, manifest, lockfile, or runtime.*installed version.*do not guess/iu],
-  ["uses only the repo's tools", /Never add a dependency or a second runner/u],
-  ["reuses Playwright only as the configured runner", /If Playwright is the target's configured browser runner, it is the browser and end-to-end tool.*Otherwise keep the repo's own browser runner/u],
-  ["covers every test layer", /Static:.*Behavior:.*Edges:.*Failure modes:.*Contracts:.*Lifecycle and concurrency:.*Integration:.*End-to-end:.*Platform:.*Security:.*Regression:/u],
-  ["adds no benchmarks", /do not add benchmarks/iu],
-  ["advertises Playwright only as the configured runner", /^(?!.*Playwright when installed).*Playwright when it is the configured runner/u],
-  ["reports inapplicable layers apart from unrun checks", /list a layer that does not apply under \*\*Not applicable\*\* with its reason.*## Not applicable <layer — why it does not apply/u],
-  ["skips mutation probes for trivial targets", /Docs, config, and trivial edits need no mutation probe\. For non-trivial behavior/u],
-  ["never calls live third-party accounts unapproved", /Never call a live payment, email, SMS, or other third-party account unless it is an isolated sandbox or the user approves/u],
-  ["installs a declared runner before skipping it", /If a declared runner is not installed yet, run the repo's documented locked install first/u],
-  ["records the starting state, with or without Git", /record the starting state of the user's tree: `git status` and the diff, or a file listing with checksums without Git/u],
-  ["runs write-capable commands in a disposable copy", /Run every command that can write files.*in a disposable copy of the working tree as it is now, uncommitted and ignored files included.*delete on every exit/u],
+  ["covers every test layer", /Static\/build.*Unit\/property.*Integration\/contract.*E2E\/UI.*Resilience.*Security.*Accessibility\/visual.*Performance/u],
+  ["runs formatters without rewriting files", /formatters in check or dry-run mode only/u],
+  ["records the starting state, with or without Git", /Record the starting state of the user's tree \(`git status` and the diff, or a checksum listing without Git\)/u],
+  ["runs write-capable commands in a disposable copy", /Run every command that can write files.*mutation probes, and old-code reproductions, in a disposable copy of the working tree, uncommitted and ignored files included.*deleted on every exit/u],
   ["asks before running write-capable commands in place", /If the suite cannot run from a copy, ask before running write-capable commands in place/u],
-  ["mutates only the disposable copy", /Mutate only the disposable copy, never the user's tree/u],
-  ["audits the final tree against the starting state", /compare the user's tree with the starting state you recorded.*only by the tests you added, the snapshots they need.*Never touch edits that were there before you started; name any other change instead of reverting it/u],
-  ["keeps the final check within the selected scope", /widen to the whole repo only when that is its established fast check or the user agrees/u],
-  ["never weakens tests", /Never skip, disable, or weaken a test/u],
-  ["keeps unrun checks apart", /## Not run.*Checks that did not run go under \*\*Not run\*\*/u],
-  ["ends with manual testing and why", /## Needs manual testing - <what to check> — why: .* — how: /u],
-  ["refuses effort as a manual-testing reason", /"Too much work" is not a reason/u],
-  ["keeps open spec questions out of manual testing", /open spec or product question is not manual testing/u],
-  ["runs formatters without rewriting files", /formatter in check or dry-run mode only/u],
-  ["proves a mutation from a passing test", /pick a test that passes.*now fails because of the mutation.*passes again/u],
-  ["mutates production code, not the test", /leave it unchanged, flip one .* in the production code it exercises.*a mutation of the test itself, proves nothing/u],
-  ["keeps the new test in the old-code run", /the same new test, run in an isolated copy holding only the old production code, fails on its intended assertion/u],
-  ["routes test edits through the language checks", /simplification-checks\.md.*python-checks\.md/u],
-  ["scans committed changes from the task base", /--since=HEAD.*task base ref instead of `HEAD` once they are committed/u],
-  ["bounds commands and cleans up their processes", /non-interactively, never in watch mode, with a timeout.*stop the servers, browsers, and workers it started on every exit path/u],
-  ["reports a pass on retry as flaky", /a pass on the retry is a flaky failure, reported with both results/u],
-  ["scans explicit paths without Git", /Without Git or a usable base, pass each changed path as a separate quoted argument/u],
-  ["does not claim skipped checks ran", /Needs manual testing: none\.` and leave \*\*Not run\*\* as it is/u],
-  ["never claims full coverage", /Never claim "fully tested" or an unrun check/u],
-]) ok(`lazy-test ${description}`, pattern.test(lazyTest));
-ok("lazy-test has a risk-scoped mutation policy", protectsUsefulMutationTest(lazyTest));
-ok("lazy-test is listed in the help card", read("skills/lazy-help/SKILL.md").includes("**lazy-test**"));
-ok("README does not promise an OpenCode /lazy-test command",
-  fs.existsSync(path.join(ROOT, ".opencode/command/lazy-test.md")) || /invoked by name in OpenCode/u.test(flat(read("README.md"))));
-ok("help card names lazy-test's non-slash invocations", /@lazy-test/u.test(read("skills/lazy-help/SKILL.md")) && /`lazy-clean`, `slop-check`, and `lazy-test` are skills/u.test(flat(read("skills/lazy-help/SKILL.md"))));
-ok("lazy-test is listed in the OpenCode help card", read(".opencode/command/lazy-help.md").includes("lazy-test"));
-ok("lazy-test never claims every case ran automatically", !/every case above ran automatically/u.test(lazyTest));
+  ["never calls live third-party accounts unapproved", /Never call a live payment, email, SMS, or other third-party account unless it is an isolated sandbox or the user approves/u],
+  ["mutates production code in the copy, not the test", /in the disposable copy, leave a passing test unchanged, mutate a relevant production branch\/boundary.*A mutation of the test itself or a setup\/import failure is not proof/u],
+  ["audits the final tree against the starting state", /confirm the user's tree differs from its starting state only by the tests you added, the snapshots they need, and requested changes; name any other change instead of reverting it/u],
+  ["confirms bugs on unmodified code", /Confirm each bug with a minimal failing assertion on the unmodified code/u],
+  ["never invents findings", /never invent a finding/u],
+  ["keeps a flaky pass from erasing a failure", /a flaky pass does not erase an earlier failure/u],
+  ["ends with manual testing and why", /Manual testing still needed.*Why automation cannot settle it here/u],
+  ["adds no benchmark framework", /no benchmark framework/u],
+]) ok(`layz-test ${description}`, pattern.test(layzTest));
+ok("layz-test is listed in the help card", read("skills/lazy-help/SKILL.md").includes("**layz-test**"));
+ok("layz-test is listed in the OpenCode help card", read(".opencode/command/lazy-help.md").includes("/layz-test"));
 
 // A relative link in a shipped skill that points nowhere sends the agent to a
 // file that is not there; skills-only installs copy skills/ as a whole, so

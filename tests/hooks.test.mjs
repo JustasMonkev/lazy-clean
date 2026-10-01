@@ -696,7 +696,7 @@ r = track({ prompt: "/lazy UTRA" }, { flag: "ultra", config: null });
 eq("/lazy <TYPO> is echoed lowercased", r.stdout, 'LAZY: unknown level "utra" — use lite|full|ultra|off.');
 
 // Other lazy-* skills own their own dispatch: the tracker stays out of the way.
-for (const other of ["/lazy-help", "/lazy-audit", "/lazy-clean", "/lazyfoo bar"]) {
+for (const other of ["/lazy-help", "/lazy-audit", "/lazy-clean", "/layz-test", "/lazyfoo bar"]) {
   r = track({ prompt: other }, { flag: "ultra" });
   eq(`${other} is left to its own skill`, [r.status, r.stdout, r.flag], [0, "", "ultra"]);
 }
@@ -1533,6 +1533,11 @@ ok("a failed default write keeps the level the user already had",
   `], { encoding: "utf8", env: baseEnv(freshHome("opencode-skills-dir").env), timeout: 20000 });
   const commands = probe.status === 0 ? JSON.parse(probe.stdout.trim()) : {};
   const skillsDir = path.join(ROOT, "skills");
+  const testCommand = commands["layz-test"];
+  const testSkill = path.join(skillsDir, "layz-test", "SKILL.md");
+  ok("OpenCode /layz-test resolves its installed skill",
+    testCommand?.template.includes(testSkill) && !testCommand.template.includes("<skills-dir>") && fs.existsSync(testSkill));
+  ok("OpenCode /layz-test preserves arguments for the model", testCommand?.template.includes("$ARGUMENTS"));
   for (const name of ["lazy", "lazy-review", "lazy-audit"]) {
     const template = commands[name]?.template || "";
     ok(`OpenCode /${name} resolves <skills-dir>`, template && !template.includes("<skills-dir>"), probe.stderr.slice(0, 200));
