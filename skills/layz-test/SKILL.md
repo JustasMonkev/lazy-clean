@@ -68,11 +68,13 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean`
     and `.process` overridden with an empty value, or direct file reads
     instead of Git): `git status`, the unstaged and staged diffs, copies of
-    untracked files, and checksums of ignored files the tests read, or a
-    checksum listing without Git. Include `HEAD`, the refs the tests read, and
-    the file modes, timestamps, ACLs, and extended attributes they depend on.
+    untracked files (only checksums for secrets), and checksums of ignored
+    files the tests read, or a checksum listing without Git. Include `HEAD`,
+    the refs the tests read, and the file modes, timestamps, ACLs, and
+    extended attributes they depend on.
     Keep these in a private temporary directory outside the repository and
-    delete it on every exit once the final audit is done.
+    outside what isolated commands can read, and delete it on every exit once
+    the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit. Leave out
     secrets such as `.env` files, keys, and production configuration; supply
