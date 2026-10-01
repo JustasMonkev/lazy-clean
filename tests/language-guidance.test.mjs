@@ -279,6 +279,9 @@ for (const [description, pattern] of [
   ["advertises Playwright only as the configured runner", /^(?!.*Playwright when installed).*Playwright when it is the configured runner/u],
   ["reports inapplicable layers apart from unrun checks", /list a layer that does not apply under \*\*Not applicable\*\* with its reason.*## Not applicable <layer — why it does not apply/u],
   ["skips mutation probes for trivial targets", /Docs, config, and trivial edits need no mutation probe\. For non-trivial behavior/u],
+  ["never calls live third-party accounts unapproved", /Never call a live payment, email, SMS, or other third-party account unless it is an isolated sandbox or the user approves/u],
+  ["installs a declared runner before skipping it", /If a declared runner is not installed yet, run the repo's documented locked install first/u],
+  ["reports cleanup conflicts instead of restoring", /only where the file still holds exactly what your command wrote; if anything else changed it during the run, report the conflict instead of restoring/u],
   ["keeps the final check within the selected scope", /widen to the whole repo only when that is its established fast check or the user agrees/u],
   ["never weakens tests", /Never skip, disable, or weaken a test/u],
   ["keeps unrun checks apart", /## Not run.*Checks that did not run go under \*\*Not run\*\*/u],
@@ -299,7 +302,7 @@ for (const [description, pattern] of [
   ["reports a pass on retry as flaky", /a pass on the retry is a flaky failure, reported with both results/u],
   ["restores mutated bytes on every exit", /Save the file's exact bytes before the mutation and restore them after success, failure, timeout, or interruption/u],
   ["scans explicit paths without Git", /Without Git or a usable base, pass each changed path as a separate quoted argument/u],
-  ["audits the diff against the starting state", /record `git status` and the diff.*compare `git status`, the diff, and the saved copies with the state you recorded.*never touch edits that were there before you started/u],
+  ["audits the diff against the starting state", /record `git status` and the diff.*compare `git status`, the diff, and the saved copies with the state you recorded.*Never touch edits that were there before you started/u],
   ["does not claim skipped checks ran", /Needs manual testing: none\.` and leave \*\*Not run\*\* as it is/u],
   ["never claims full coverage", /Never claim "fully tested" or an unrun check/u],
 ]) ok(`lazy-test ${description}`, pattern.test(lazyTest));

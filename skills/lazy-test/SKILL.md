@@ -38,12 +38,13 @@ If a needed version fact cannot be checked, say so and do not guess.
 
 Find the runners, configs, fixtures, and CI jobs already in use: package
 scripts, Makefile, pyproject, Cargo, go.mod, Gemfile, Maven/Gradle, workflow
-files. Use them. Never add a dependency or a second runner; a missing tool goes
-in the report as a check that did not run. If Playwright is the target's
-configured browser runner, it is the browser and end-to-end tool: reuse its
-config and fixtures, locate by role, label, or text, and use its web-first
-assertions. Otherwise keep the repo's own browser runner. Install browsers only
-through the repo's documented setup.
+files. Use them. Never add a dependency or a second runner. If a declared runner
+is not installed yet, run the repo's documented locked install first; a tool
+still missing after that goes in the report as a check that did not run. If
+Playwright is the target's configured browser runner, it is the browser and
+end-to-end tool: reuse its config and fixtures, locate by role, label, or text,
+and use its web-first assertions. Otherwise keep the repo's own browser runner.
+Install browsers only through the repo's documented setup.
 
 ## 3. Case list
 
@@ -68,7 +69,10 @@ under **Not applicable** with its reason.
   double calls, races, and stale results; cleanup after success, failure, and
   cancellation. See [risk checks](../lazy/references/risk-checks.md).
 - **Integration:** real collaborators where the existing tests use them; fakes
-  only at true boundaries such as network, clock, and randomness.
+  only at true boundaries such as network, clock, and randomness. Never call a
+  live payment, email, SMS, or other third-party account unless it is an
+  isolated sandbox or the user approves; otherwise list that check under
+  **Needs manual testing**.
 - **End-to-end:** user flows through the browser, CLI subprocess, or HTTP API
   the project exposes, including keyboard use and accessible names.
 - **Platform:** the OS and runtime matrix CI runs; path separators, line endings,
@@ -131,8 +135,10 @@ Before reporting, compare `git status`, the diff, and the saved copies with the
 state you recorded at the start. Keep the tests you added and changes the task
 asked for, including snapshots a test you added needs. Revert other generated
 files, snapshot churn, and edits your commands made unless the user asked for
-them, never touch edits that were there
-before you started, and name any change you cannot attribute.
+them, but only where the file still holds exactly what your command wrote; if
+anything else changed it during the run, report the conflict instead of
+restoring. Never touch edits that were there before you started, and name any
+change you cannot attribute.
 
 ## 6. Report
 
