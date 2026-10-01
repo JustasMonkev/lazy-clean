@@ -276,6 +276,8 @@ for (const [description, pattern] of [
   ["reuses Playwright only as the configured runner", /If Playwright is the target's configured browser runner, it is the browser and end-to-end tool.*Otherwise keep the repo's own browser runner/u],
   ["covers every test layer", /Static:.*Behavior:.*Edges:.*Failure modes:.*Contracts:.*Lifecycle and concurrency:.*Integration:.*End-to-end:.*Platform:.*Security:.*Regression:/u],
   ["adds no benchmarks", /do not add benchmarks/iu],
+  ["advertises Playwright only as the configured runner", /^(?!.*Playwright when installed).*Playwright when it is the configured runner/u],
+  ["keeps the final check within the selected scope", /widen to the whole repo only when that is its established fast check or the user agrees/u],
   ["never weakens tests", /Never skip, disable, or weaken a test/u],
   ["keeps unrun checks apart", /## Not run.*Checks that did not run go under \*\*Not run\*\*/u],
   ["ends with manual testing and why", /## Needs manual testing - <what to check> — why: .* — how: /u],

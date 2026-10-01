@@ -2,13 +2,13 @@
 name: lazy-test
 description: >
   Test code as completely as the repo's own tools allow: static checks, unit,
-  integration, end-to-end and browser (Playwright when installed), edge cases,
-  failure modes, contracts, lifecycle and concurrency, platform and security
-  paths, plus a mutation probe. Adds rerunnable tests with the installed runner,
-  runs them, and ends with what still needs manual testing and why it cannot be
-  automated here. Use when the user says "test this fully", "test everything",
-  "what needs manual testing", "lazy-test", or "/lazy-test". Never adds a
-  dependency.
+  integration, end-to-end and browser (Playwright when it is the configured
+  runner), edge cases, failure modes, contracts, lifecycle and concurrency,
+  platform and security paths, plus a mutation probe. Adds rerunnable tests
+  with the installed runner, runs them, and ends with what still needs manual
+  testing and why it cannot be automated here. Use when the user says "test
+  this fully", "test everything", "what needs manual testing", "lazy-test", or
+  "/lazy-test". Never adds a dependency.
 ---
 
 # lazy-test
@@ -97,11 +97,12 @@ stays as it is.
 
 Run every command non-interactively, never in watch mode, with a timeout that
 fits the repo, and stop the servers, browsers, and workers it started on every
-exit path. Run the new tests, then the affected suite, then the repo's fast full
-check. Record each command and its result. Rerun a failure once: a second
-failure is real, and a pass on the retry is a flaky failure, reported with both
-results under **Failures found**. Never skip, disable, or weaken a test to get
-green.
+exit path. Run the new tests, then the affected suite, then the repo's fast
+check for that target; widen to the whole repo only when that is its
+established fast check or the user agrees. Record each command and its result.
+Rerun a failure once: a second failure is real, and a pass on the retry is a
+flaky failure, reported with both results under **Failures found**. Never skip,
+disable, or weaken a test to get green.
 
 If existing red-green checks already prove the risky behavior, mutation work is
 optional; otherwise run a small meaningful mutation check: pick a test that
