@@ -54,8 +54,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   they do may change the user's tree, Git directories or refs, home, installed
   toolchains, or anything else outside a private temporary directory; where a
   rule below cannot guarantee that, ask first. The user's tree only gains the
-  tests you keep and the snapshots they need.
-  - Record the starting state of the user's tree: `git status`, the unstaged and
+  tests you keep, the snapshots they need, and production fixes the user asked
+  for.
+  - Record the starting state of the user's tree, with read-only Git commands
+    (`GIT_OPTIONAL_LOCKS=0`): `git status`, the unstaged and
     staged diffs, copies of untracked files, and checksums of ignored files the
     tests read, or a checksum listing without Git. Keep these in a private
     temporary directory outside the repository and delete it on every exit
@@ -84,7 +86,8 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     cites (logs, traces, screenshots) to a private evidence directory.
   - If the suite cannot run from a copy, ask before running write-capable
     commands in place. When approved, ask the user to pause other edits to the
-    tree while each such command runs, and back up the tree first: bytes, file
+    tree and to every Git directory it shares with other worktrees while each
+    such command runs, and back up the tree first: bytes, file
     modes, symlink targets, which paths exist, ACLs and extended attributes
     where the platform has them, and the Git directories the tree points to
     (`git rev-parse --absolute-git-dir` and `--git-common-dir`). Record what
