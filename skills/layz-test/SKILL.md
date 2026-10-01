@@ -70,8 +70,8 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     instead of Git): `git status`, the unstaged and staged diffs, copies of
     untracked files (only checksums for secrets), and checksums of ignored
     files the tests read, or a checksum listing without Git. Include `HEAD`,
-    the refs the tests read, and the file modes, timestamps, ACLs, and
-    extended attributes they depend on.
+    the refs and repository config the tests read, and the file modes,
+    owners, timestamps, ACLs, and extended attributes they depend on.
     Keep these in a private temporary directory outside the repository and
     outside what isolated commands can read, and delete it on every exit once
     the final audit is done.
@@ -84,7 +84,8 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     Clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
     `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`,
     `GIT_ALTERNATE_OBJECT_DIRECTORIES`) first. Clone with `--no-hardlinks`,
-    `--no-checkout`, with no shared or alternate object store, and run the
+    `--no-checkout`, and `--dissociate`, with no shared or alternate object
+    store, and run the
     clone and every Git command in the copy with hooks disabled
     (`core.hooksPath` set to an empty private directory) and the user's global
     and system config ignored (`GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` set
@@ -96,12 +97,17 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     into the clone so no smudge filter or other conversion helper runs, then
     recreate the index, unstaged changes, untracked files, `HEAD` (the same
     branch, or the same detached commit), and the refs the tests read (local
-    branches, tags, custom refs, stashes) separately. Give each initialized
-    submodule the same independent metadata and state, or mark the checks
-    that depend on it unfaithful. A non-Git source stays without Git.
-  - Reapply the file modes, timestamps, ACLs, and extended attributes the
-    tests depend on. If the source state, Git or filesystem, cannot be reproduced
-    faithfully, treat the target as unable to run from a copy.
+    branches, tags, custom refs, stashes) separately. Replay the repository
+    and worktree config settings the checks read (`git config --local` and
+    `--worktree`). If a left-out secret is reachable from the clone's history,
+    stashes, or refs, drop the refs and objects that carry it, or treat the
+    target as unable to run safely from a copy. Give each initialized
+    submodule and every other nested repository the same independent metadata
+    and state, or mark the checks that depend on it unfaithful. A non-Git
+    source stays without Git.
+  - Reapply the file modes, owners, timestamps, ACLs, and extended attributes
+    the tests depend on. If the source state, Git or filesystem, cannot be
+    reproduced faithfully, treat the target as unable to run from a copy.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
     running write-capable commands through it. If the checks read its target,
     snapshot the target into the private directory and point the copy's link
@@ -164,7 +170,8 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   locale, `TZ`, `CI`, and feature flags, or report the affected checks as
   unfaithful.
 - Prove a risky test can fail: reproduce a regression by running the same new
-  test, unchanged, against only the old production code in the disposable copy,
+  test, unchanged, against the complete old non-test product state (code,
+  generated files, schemas, lockfiles, configuration) in the disposable copy,
   where its intended assertion fails, then passing against the fix; or, in the
   copy, leave a passing test unchanged, mutate a relevant production
   branch/boundary, and observe that test's intended assertion fail; revert and
