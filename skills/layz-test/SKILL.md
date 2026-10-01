@@ -53,9 +53,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   runs, snapshot updates, mutation probes, and old-code reproductions. The
   user's tree only gains the tests you keep and the snapshots they need.
   - Record the starting state of the user's tree: `git status`, the unstaged and
-    staged diffs, and copies of untracked files, or a checksum listing without
-    Git. Keep these in a private temporary directory outside the repository and
-    delete it on every exit once the final audit is done.
+    staged diffs, copies of untracked files, and checksums of ignored files the
+    tests read, or a checksum listing without Git. Keep these in a private
+    temporary directory outside the repository and delete it on every exit
+    once the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit.
   - If the source is a Git worktree, give the copy independent Git metadata,
@@ -66,16 +67,20 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     run from a copy. A non-Git source stays without Git.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
     running write-capable commands through it.
-  - Point home, temp, and cache locations inside the private directory (`HOME`,
-    `USERPROFILE`, `TMPDIR`, `TMP`, `TEMP`, and the platform's app-data and
-    cache variables), and ask before a command writes to any other path or
-    shared service outside it.
+  - Point temp and cache locations inside the private directory (`TMPDIR`,
+    `TMP`, `TEMP`, and the tools' cache variables). Keep installed toolchains
+    reachable: when a command would write into the user's home, give it a
+    private home (`HOME`, `USERPROFILE`, app-data variables) and point
+    toolchain variables such as `RUSTUP_HOME` at the installed ones. Ask before
+    a command writes to any other path or shared service outside the private
+    directory.
   - Before deleting the copy, move the redacted failure artifacts the report
     cites (logs, traces, screenshots) to a private evidence directory.
   - If the suite cannot run from a copy, ask before running write-capable
     commands in place. When approved, ask the user to pause other edits to the
     tree while each such command runs, and back up the tree first: bytes, file
-    modes, symlink targets, and which paths exist. Record what the command
+    modes, symlink targets, which paths exist, and ACLs and extended attributes
+    where the platform has them. Record what the command
     changed, restore from the backup only paths that still hold exactly that
     result, and report any other change as a conflict. Delete those backups on
     every exit once restoring is done; keep one only for an unresolved
