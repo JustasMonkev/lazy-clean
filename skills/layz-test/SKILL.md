@@ -58,9 +58,11 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   for.
   - Record the starting state of the user's tree, with read-only Git commands
     (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
-    `--no-textconv --no-ext-diff`): `git status`, the unstaged and staged
-    diffs, copies of untracked files, and checksums of ignored files the tests
-    read, or a checksum listing without Git. Include the ACLs and extended
+    `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean`
+    and `.process` overridden with an empty value, or direct file reads
+    instead of Git): `git status`, the unstaged and staged diffs, copies of
+    untracked files, and checksums of ignored files the tests read, or a
+    checksum listing without Git. Include the ACLs and extended
     attributes the tests depend on. Keep these in a private temporary
     directory outside the repository and delete it on every exit once the
     final audit is done.
@@ -71,13 +73,17 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     Clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
     `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`,
     `GIT_ALTERNATE_OBJECT_DIRECTORIES`) first. Clone with `--no-hardlinks`,
-    `--no-checkout`, and hooks disabled, with no shared or alternate object
-    store; remove the clone's remotes, or point them at private repositories
-    inside the temporary directory. Do not check out: copy the user's
+    `--no-checkout`, with no shared or alternate object store, and run every
+    Git command in the copy with hooks disabled (`core.hooksPath` set to an
+    empty private directory) and the user's global and system config ignored
+    (`GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` set to an empty file), passing
+    only the settings the tests need, such as an identity, with `-c`. Remove
+    the clone's remotes, or point them at private repositories inside the
+    temporary directory. Do not check out: copy the user's
     working-tree bytes into the clone so no smudge filter or other conversion
-    helper runs, then recreate the index, unstaged changes, and untracked files
-    separately. A non-Git source
-    stays without Git.
+    helper runs, then recreate the index, unstaged changes, untracked files,
+    and the refs the tests read (local branches, tags, custom refs, stashes)
+    separately. A non-Git source stays without Git.
   - Reapply the ACLs and extended attributes the tests depend on. If the
     source state, Git or filesystem, cannot be reproduced faithfully, treat the
     target as unable to run from a copy.
@@ -93,8 +99,12 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     as a private copy, never through a writable path into the user's toolchain
     state such as `RUSTUP_HOME`. Ask before a command writes to any other path
     or shared service outside the private directory.
-  - Before deleting the copy, move the redacted failure artifacts the report
-    cites (logs, traces, screenshots) to a private evidence directory.
+  - Before deleting the copy, move every redacted artifact the report cites,
+    from passing or failing runs (logs, traces, screenshots, coverage), to a
+    private evidence directory.
+  - When copying kept tests and snapshots back, compare each destination with
+    its baseline and its current state; if it changed since the copy was made,
+    merge the change or report a conflict instead of overwriting it.
   - If the suite cannot run from a copy, ask before running write-capable
     commands in place. When approved, ask the user to pause other edits to the
     tree and to every Git directory it shares with other worktrees while each
@@ -131,7 +141,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   automation that needs a sandbox or approval. Run isolated commands with an
   allowlisted environment: drop inherited credentials, tokens, and agent
   sockets such as `SSH_AUTH_SOCK`, and add back only sandbox or user-approved
-  credentials.
+  credentials. Keep the non-secret variables the behavior depends on, such as
+  locale, `TZ`, `CI`, and feature flags, or report the affected checks as
+  unfaithful.
 - Prove a risky test can fail: reproduce a regression by running the same new
   test, unchanged, against only the old production code in the disposable copy,
   where its intended assertion fails, then passing against the fix; or, in the
