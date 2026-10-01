@@ -89,7 +89,8 @@ commands, policy schema, limits and exits, and the
 ## Testing code with layz-test
 
 Invoke `/layz-test <files or change>` (Codex: `@layz-test`) to map behaviors,
-run applicable checks with existing tools, and add missing regression coverage.
+find reproducible bugs, run applicable checks with existing tools, and add missing
+regression coverage.
 The report ends with manual steps and why automation cannot settle each check;
 missing dependencies or browsers are listed as blocked automation. Passing
 checks apply only to the stated scope. This instruction-only skill adds no

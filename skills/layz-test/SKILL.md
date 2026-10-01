@@ -1,7 +1,7 @@
 ---
 name: layz-test
 description: >
-  Test code across applicable layers, add missing behavioral coverage, run the
+  Find and reproduce bugs across applicable layers, add behavioral coverage, run the
   checks, and finish with manual testing steps and why automation cannot settle
   them. Use when asked to fully test code, assess test coverage, identify manual
   testing gaps, or invoke layz-test. Use existing tools; no benchmark framework.
@@ -29,7 +29,9 @@ tests. Keep this a one-shot testing workflow; do not change lazy mode or hooks.
    relevant. Derive expected results from requirements or established contracts;
    label unclear expectations rather than copying the implementation into tests.
 
-Consider every layer below. Run applicable checks; mark the others blocked,
+Honor explicit exclusions, including requests for no security testing. Mark
+excluded layers not run and do not execute them through a bundled suite.
+Consider every remaining layer below. Run applicable checks; mark the others blocked,
 not run, or not applicable with a concrete reason. Add domain-specific risks.
 
 | Layer | What to check when applicable |
@@ -49,6 +51,16 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
   remaining component. Test count and line coverage alone do not prove behavior.
+- Actively look for defects, not just passing coverage. Write concrete failure
+  hypotheses from callers and contracts, then challenge them with boundaries,
+  malformed input, generated cases, and adverse event ordering as applicable.
+  Use an independent oracle or invariant; a test that repeats the implementation
+  cannot establish correctness. Follow suspicious results through real callers.
+- Confirm each bug with a minimal failing assertion on the unmodified code:
+  record the contract, input or event sequence, expected and actual behavior,
+  and affected caller. Separate confirmed defects from unclear requirements,
+  environment failures, and synthetic mutations. If none is confirmed, say so
+  and list the hypotheses tested; never invent a finding to meet a bug quota.
 - Give external work a timeout and a bounded workload; clean up processes,
   listeners, timers, temporary data, and mutations on success and failure.
   Use isolated test data. Run destructive or costly external checks only within
