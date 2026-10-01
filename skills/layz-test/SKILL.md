@@ -57,8 +57,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   relevant branch/boundary and observe the expected assertion failure. Restore
   the exact source and rerun green. Do not count a setup/import failure as proof.
 - Do not weaken assertions, skip failing cases, or change production behavior
-  just to get green. Report product defects with a reproducer; fix them only
-  within the requested scope. Separate pre-existing failures from new ones.
+  just to get green. Fix product defects only when the user has requested fixes
+  for this task; a supplied file or diff is testing scope, not authorization to
+  change production behavior. Otherwise retain the failing reproducer and report
+  the defect. Separate pre-existing failures from new ones.
 - Rerun affected checks after test edits. Review TS/JS changes with the installed
   slop checker when available; its clean result is not behavioral evidence.
 
@@ -66,6 +68,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
 
 Report the tested revision/worktree and environment, changed tests, the behavior
 table, exact commands, exit status, assertion results, and evidence/log paths.
+Before saving or sharing commands, results, logs, or evidence, redact credentials
+and sensitive data. Use rerunnable placeholders and explicitly note each
+redaction without exposing its original value.
 Use **pass**, **fail**, **blocked**, **not run**, and **not applicable** explicitly.
 Record skips and retries; a flaky pass does not erase an earlier failure. Never
 describe a planned, empty, or blocked run as tested. State remaining coverage

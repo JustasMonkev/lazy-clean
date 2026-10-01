@@ -37,7 +37,7 @@ Level sticks until changed or session end.
 | **lazy-verify** | `/lazy-verify` | Experimental opt-in fix/preserve evidence; needs a reviewed local engine and policy. Independent of lazy mode. |
 | **layz-test** | `/layz-test` | Run applicable tests, fill behavioral gaps, and explain remaining manual checks. |
 
-Codex uses `@lazy`, `@lazy-review`, and `@lazy-help`; Claude Code uses the
+Codex uses `@lazy`, `@lazy-review`, `@lazy-help`, and `@layz-test`; Claude Code uses the
 slash-command forms above. OpenCode ships the seven `/lazy*` commands and `/layz-test` as slash
 commands; `lazy-clean` and `slop-check` are skills, invoked by name or
 description.
