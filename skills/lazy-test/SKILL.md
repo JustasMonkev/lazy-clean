@@ -19,7 +19,8 @@ rerunnable tests, and finish with an honest list of what only a person can check
 ## 1. Scope
 
 Test what the user names. Otherwise test the task-owned diff against its base,
-including untracked files. Otherwise ask; do not test the whole repo by default.
+including untracked files. Otherwise ask; do not test the whole repo by default. Record `git status`
+before you change anything, so the final diff can be checked against it.
 Read the code under test and trace its callers, callbacks, retries,
 restore/replay, and concurrent paths: a bug in a shared helper is tested through
 the shared helper.
@@ -87,22 +88,36 @@ stays as it is.
 
 ## 5. Run and prove
 
-Run the new tests, then the affected suite, then the repo's fast full check.
-Record each command and its result. Rerun a failure once; a second failure is
-real. Never skip, disable, or weaken a test to get green.
+Run every command non-interactively, never in watch mode, with a timeout that
+fits the repo, and stop the servers, browsers, and workers it started on every
+exit path. Run the new tests, then the affected suite, then the repo's fast full
+check. Record each command and its result. Rerun a failure once: a second
+failure is real, and a pass on the retry is a flaky failure, reported with both
+results under **Failures found**. Never skip, disable, or weaken a test to get
+green.
 
 If existing red-green checks already prove the risky behavior, mutation work is
 optional; otherwise run a small meaningful mutation check: pick a test that
 passes, flip one branch, boundary, operator, or return value, confirm that test
 now fails because of the mutation, revert, and confirm it passes again. A test
-that already failed proves nothing. Never add a dependency for it.
+that already failed proves nothing. Save the file's exact bytes before the
+mutation and restore them after success, failure, timeout, or interruption,
+then confirm the file matches the saved copy; never restore with a Git checkout
+that could discard edits made before the task. Never add a dependency for it.
 
 Before finishing test changes, read and apply
 [TS/JS checks](../lazy/references/simplification-checks.md) to TS/JS and
 [Python checks](../lazy/references/python-checks.md) to Python. For TS/JS, run
 `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD` on uncommitted
 changes, or with the task base ref instead of `HEAD` once they are committed,
-and triage it.
+and triage it. Without Git or a usable base, pass each changed path as a
+separate quoted argument.
+
+Before reporting, compare `git status` and the diff with the state you recorded
+at the start. Keep the tests you added and changes the task asked for. Revert
+generated files, updated snapshots, and other edits your commands made unless
+the user asked for them, never touch edits that were there before you started,
+and name any change you cannot attribute.
 
 ## 6. Report
 

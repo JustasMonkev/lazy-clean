@@ -37,10 +37,10 @@ Level sticks until changed or session end.
 | **slop-check** | `/slop-check` | Delete AI slop in TS/JS: bundled checker plus a manual checklist. |
 | **lazy-verify** | `/lazy-verify` | Experimental opt-in fix/preserve evidence; needs a reviewed local engine and policy. Independent of lazy mode. |
 
-Codex uses `@lazy`, `@lazy-review`, and `@lazy-help`; Claude Code uses the
-slash-command forms above. OpenCode ships the seven `/lazy*` commands as slash
-commands; `lazy-clean` and `slop-check` are skills, invoked by name or
-description.
+Codex uses `@lazy`, `@lazy-review`, `@lazy-help`, and `@lazy-test`; Claude Code
+uses the slash-command forms above. OpenCode ships the seven `/lazy*` commands
+as slash commands; `lazy-clean`, `slop-check`, and `lazy-test` are skills,
+invoked by name or description.
 
 ## Deactivate
 

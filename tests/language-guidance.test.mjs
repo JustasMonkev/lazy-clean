@@ -285,6 +285,11 @@ for (const [description, pattern] of [
   ["proves a mutation from a passing test", /pick a test that passes.*now fails because of the mutation.*passes again/u],
   ["routes test edits through the language checks", /simplification-checks\.md.*python-checks\.md/u],
   ["scans committed changes from the task base", /--since=HEAD.*task base ref instead of `HEAD` once they are committed/u],
+  ["bounds commands and cleans up their processes", /non-interactively, never in watch mode, with a timeout.*stop the servers, browsers, and workers it started on every exit path/u],
+  ["reports a pass on retry as flaky", /a pass on the retry is a flaky failure, reported with both results/u],
+  ["restores mutated bytes on every exit", /Save the file's exact bytes before the mutation and restore them after success, failure, timeout, or interruption/u],
+  ["scans explicit paths without Git", /Without Git or a usable base, pass each changed path as a separate quoted argument/u],
+  ["audits the diff against the starting state", /Record `git status` before you change anything.*compare `git status` and the diff with the state you recorded.*never touch edits that were there before you started/u],
   ["does not claim skipped checks ran", /Needs manual testing: none\.` and leave \*\*Not run\*\* as it is/u],
   ["never claims full coverage", /Never claim "fully tested" or an unrun check/u],
 ]) ok(`lazy-test ${description}`, pattern.test(lazyTest));
@@ -292,6 +297,7 @@ ok("lazy-test has a risk-scoped mutation policy", protectsUsefulMutationTest(laz
 ok("lazy-test is listed in the help card", read("skills/lazy-help/SKILL.md").includes("**lazy-test**"));
 ok("README does not promise an OpenCode /lazy-test command",
   fs.existsSync(path.join(ROOT, ".opencode/command/lazy-test.md")) || /invoked by name in OpenCode/u.test(flat(read("README.md"))));
+ok("help card names lazy-test's non-slash invocations", /@lazy-test/u.test(read("skills/lazy-help/SKILL.md")) && /`lazy-clean`, `slop-check`, and `lazy-test` are skills/u.test(flat(read("skills/lazy-help/SKILL.md"))));
 ok("lazy-test is listed in the OpenCode help card", read(".opencode/command/lazy-help.md").includes("lazy-test"));
 ok("lazy-test never claims every case ran automatically", !/every case above ran automatically/u.test(lazyTest));
 
