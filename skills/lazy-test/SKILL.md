@@ -19,8 +19,10 @@ rerunnable tests, and finish with an honest list of what only a person can check
 ## 1. Scope
 
 Test what the user names. Otherwise test the task-owned diff against its base,
-including untracked files. Otherwise ask; do not test the whole repo by default. Record `git status`
-before you change anything, so the final diff can be checked against it.
+including untracked files. Otherwise ask; do not test the whole repo by default.
+Before you change anything, record `git status` and the diff, and save a copy of
+every file that is already modified or untracked, so the final state can be
+checked against the exact starting contents.
 Read the code under test and trace its callers, callbacks, retries,
 restore/replay, and concurrent paths: a bug in a shared helper is tested through
 the shared helper.
@@ -69,8 +71,10 @@ every layer below that fits the target; skip a layer only with a reason.
   and shell quoting. Run what this machine can; name the rest.
 - **Security:** trust boundaries, injection, path traversal, redirects; values
   revalidated after parsing or persistence.
-- **Regression:** for a bug, red → green — the test fails on the old code and
-  passes on the new.
+- **Regression:** for a bug, red → green — the same new test, run in an
+  isolated copy holding only the old production code, fails on its intended
+  assertion, then passes against the fix. A missing test or setup error is not
+  red.
 
 Performance is tested only against a stated budget or a real complexity risk;
 do not add benchmarks.
@@ -98,12 +102,14 @@ green.
 
 If existing red-green checks already prove the risky behavior, mutation work is
 optional; otherwise run a small meaningful mutation check: pick a test that
-passes, flip one branch, boundary, operator, or return value, confirm that test
-now fails because of the mutation, revert, and confirm it passes again. A test
-that already failed proves nothing. Save the file's exact bytes before the
-mutation and restore them after success, failure, timeout, or interruption,
-then confirm the file matches the saved copy; never restore with a Git checkout
-that could discard edits made before the task. Never add a dependency for it.
+passes, leave it unchanged, flip one branch, boundary, operator, or return value
+in the production code it exercises, confirm that test's intended assertion now
+fails because of the mutation, revert, and confirm it passes again. A test that
+already failed, or a mutation of the test itself, proves nothing. Save the
+file's exact bytes before the mutation and restore them after success, failure,
+timeout, or interruption, then confirm the file matches the saved copy; never
+restore with a Git checkout that could discard edits made before the task.
+Never add a dependency for it.
 
 Before finishing test changes, read and apply
 [TS/JS checks](../lazy/references/simplification-checks.md) to TS/JS and
@@ -113,11 +119,11 @@ changes, or with the task base ref instead of `HEAD` once they are committed,
 and triage it. Without Git or a usable base, pass each changed path as a
 separate quoted argument.
 
-Before reporting, compare `git status` and the diff with the state you recorded
-at the start. Keep the tests you added and changes the task asked for. Revert
-generated files, updated snapshots, and other edits your commands made unless
-the user asked for them, never touch edits that were there before you started,
-and name any change you cannot attribute.
+Before reporting, compare `git status`, the diff, and the saved copies with the
+state you recorded at the start. Keep the tests you added and changes the task
+asked for. Revert generated files, updated snapshots, and other edits your
+commands made unless the user asked for them, never touch edits that were there
+before you started, and name any change you cannot attribute.
 
 ## 6. Report
 
