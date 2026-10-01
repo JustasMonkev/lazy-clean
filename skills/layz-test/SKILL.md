@@ -55,9 +55,11 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   toolchains, or anything else outside a private temporary directory; where a
   rule below cannot guarantee that, ask first. A copy and redirected variables
   do not stop a command that writes to an absolute path or finds the original
-  checkout, so run these commands under an OS-level filesystem sandbox that
-  allows writes only inside the private directory; where none is available,
-  ask first. The user's tree only gains the tests you keep, the snapshots they
+  checkout, so run these commands under an OS-level sandbox that allows
+  writes only inside the private directory, hides the original checkout, and
+  denies network access except to approved sandbox endpoints; where none is
+  available, ask first, and mark a run that read the original checkout
+  unfaithful. The user's tree only gains the tests you keep, the snapshots they
   need, and production fixes the user asked for.
   - Record the starting state of the user's tree, with read-only Git commands
     (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
@@ -65,7 +67,7 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     and `.process` overridden with an empty value, or direct file reads
     instead of Git): `git status`, the unstaged and staged diffs, copies of
     untracked files, and checksums of ignored files the tests read, or a
-    checksum listing without Git. Include the ACLs and extended
+    checksum listing without Git. Include the timestamps, ACLs, and extended
     attributes the tests depend on. Keep these in a private temporary
     directory outside the repository and delete it on every exit once the
     final audit is done.
@@ -76,11 +78,13 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     Clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
     `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`,
     `GIT_ALTERNATE_OBJECT_DIRECTORIES`) first. Clone with `--no-hardlinks`,
-    `--no-checkout`, with no shared or alternate object store, and run every
-    Git command in the copy with hooks disabled (`core.hooksPath` set to an
-    empty private directory) and the user's global and system config ignored
-    (`GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` set to an empty file), passing
-    only the settings the tests need, such as an identity, with `-c`. Remove
+    `--no-checkout`, with no shared or alternate object store, and run the
+    clone and every Git command in the copy with hooks disabled
+    (`core.hooksPath` set to an empty private directory) and the user's global
+    and system config ignored (`GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` set
+    to an empty file), passing only the settings the tests need, such as an
+    identity, with `-c`. When a repository hook is under test, point
+    `core.hooksPath` at the copy's own hooks, never the user's. Remove
     the clone's remotes, or point them at private repositories inside the
     temporary directory. Do not check out: copy the user's working-tree bytes
     into the clone so no smudge filter or other conversion helper runs, then
@@ -88,9 +92,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     branch, or the same detached commit), and the refs the tests read (local
     branches, tags, custom refs, stashes) separately. A non-Git source stays
     without Git.
-  - Reapply the ACLs and extended attributes the tests depend on. If the
-    source state, Git or filesystem, cannot be reproduced faithfully, treat the
-    target as unable to run from a copy.
+  - Reapply the timestamps, ACLs, and extended attributes the tests depend
+    on. If the source state, Git or filesystem, cannot be reproduced
+    faithfully, treat the target as unable to run from a copy.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
     running write-capable commands through it. If the checks read its target,
     snapshot the target into the private directory and point the copy's link
@@ -116,9 +120,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - If the suite cannot run from a copy, ask before running write-capable
     commands in place. When approved, ask the user to pause other edits to the
     tree and to every Git directory it shares with other worktrees while each
-    such command runs, and back up the tree first: bytes, file
-    modes, symlink targets, which paths exist, ACLs and extended attributes
-    where the platform has them, and the Git directories the tree points to
+    such command runs, and back up the tree first: bytes, file modes, symlink
+    targets, which paths exist, timestamps, ACLs and extended attributes where
+    the platform has them, and the Git directories the tree points to
     (`git rev-parse --absolute-git-dir` and `--git-common-dir`). Record what
     the command changed, restore from the backup only paths that still hold
     exactly that result, and report any other change as a conflict. Delete
