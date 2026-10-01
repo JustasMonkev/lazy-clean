@@ -20,11 +20,15 @@ rerunnable tests, and finish with an honest list of what only a person can check
 
 Test what the user names. Otherwise test the task-owned diff against its base,
 including untracked files. Otherwise ask; do not test the whole repo by default.
-Before you change anything, record `git status` and the diff, and save a copy of
-every file that is already modified or untracked, so the final state can be
-checked against the exact starting contents. Keep the copies in a private
-temporary directory outside the repo and delete it on every exit once the final
-comparison is done.
+Before you change anything, record the starting state of the user's tree:
+`git status` and the diff, or a file listing with checksums without Git.
+
+Run every command that can write files, such as installs, builds, test runs,
+snapshot updates, the mutation probe, and the old-code run, in a disposable copy
+of the working tree as it is now, uncommitted and ignored files included, kept
+in a private temporary directory that you delete on every exit. If the suite
+cannot run from a copy, ask before running write-capable commands in place. In
+the user's tree, only add the tests you keep and the snapshots they need.
 Read the code under test and trace its callers, callbacks, retries,
 restore/replay, and concurrent paths: a bug in a shared helper is tested through
 the shared helper.
@@ -115,13 +119,9 @@ optional; otherwise run a small meaningful mutation check: pick a test that
 passes, leave it unchanged, flip one branch, boundary, operator, or return value
 in the production code it exercises, confirm that test's intended assertion now
 fails because of the mutation, revert, and confirm it passes again. A test that
-already failed, or a mutation of the test itself, proves nothing. Save the
-file's exact bytes before the mutation and restore them after success, failure,
-timeout, or interruption, then confirm the file matches the saved copy. Restore
-only if the file still holds exactly the mutated bytes; if anything else changed
-it, report the conflict instead of overwriting. Never restore with a Git
-checkout that could discard edits made before the task.
-Never add a dependency for it.
+already failed, or a mutation of the test itself, proves nothing. Mutate only
+the disposable copy, never the user's tree, so an interruption cannot leave
+broken code behind. Never add a dependency for it.
 
 Before finishing test changes, read and apply
 [TS/JS checks](../lazy/references/simplification-checks.md) to TS/JS and
@@ -131,14 +131,10 @@ changes, or with the task base ref instead of `HEAD` once they are committed,
 and triage it. Without Git or a usable base, pass each changed path as a
 separate quoted argument.
 
-Before reporting, compare `git status`, the diff, and the saved copies with the
-state you recorded at the start. Keep the tests you added and changes the task
-asked for, including snapshots a test you added needs. Revert other generated
-files, snapshot churn, and edits your commands made unless the user asked for
-them, but only where the file still holds exactly what your command wrote; if
-anything else changed it during the run, report the conflict instead of
-restoring. Never touch edits that were there before you started, and name any
-change you cannot attribute.
+Before reporting, compare the user's tree with the starting state you recorded.
+It should differ only by the tests you added, the snapshots they need, and
+changes the task asked for. Never touch edits that were there before you
+started; name any other change instead of reverting it.
 
 ## 6. Report
 
