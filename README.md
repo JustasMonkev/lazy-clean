@@ -88,7 +88,9 @@ commands, policy schema, limits and exits, and the
 
 ## Testing a change
 
-`/lazy-test` tests the named code, or the task diff, with the repo's own runners:
+The `lazy-test` skill (`/lazy-test` in Claude Code; invoked by name in OpenCode,
+which has no `lazy-test` command) tests the named code, or the task diff, with
+the repo's own runners:
 static checks, behavior, edges, failure modes, contracts, lifecycle,
 end-to-end (Playwright when installed), platform, and security paths. It saves
 what it adds as rerunnable tests, never adds a dependency or a benchmark, keeps

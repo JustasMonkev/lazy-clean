@@ -290,6 +290,8 @@ for (const [description, pattern] of [
 ]) ok(`lazy-test ${description}`, pattern.test(lazyTest));
 ok("lazy-test has a risk-scoped mutation policy", protectsUsefulMutationTest(lazyTest));
 ok("lazy-test is listed in the help card", read("skills/lazy-help/SKILL.md").includes("**lazy-test**"));
+ok("README does not promise an OpenCode /lazy-test command",
+  fs.existsSync(path.join(ROOT, ".opencode/command/lazy-test.md")) || /invoked by name in OpenCode/u.test(flat(read("README.md"))));
 ok("lazy-test is listed in the OpenCode help card", read(".opencode/command/lazy-help.md").includes("lazy-test"));
 ok("lazy-test never claims every case ran automatically", !/every case above ran automatically/u.test(lazyTest));
 
