@@ -281,10 +281,17 @@ for (const [description, pattern] of [
   ["ends with manual testing and why", /## Needs manual testing - <what to check> — why: .* — how: /u],
   ["refuses effort as a manual-testing reason", /"Too much work" is not a reason/u],
   ["keeps open spec questions out of manual testing", /open spec or product question is not manual testing/u],
+  ["runs formatters without rewriting files", /formatter in check or dry-run mode only/u],
+  ["proves a mutation from a passing test", /pick a test that passes.*now fails because of the mutation.*passes again/u],
+  ["routes test edits through the language checks", /simplification-checks\.md.*python-checks\.md/u],
+  ["scans committed changes from the task base", /--since=HEAD.*task base ref instead of `HEAD` once they are committed/u],
+  ["does not claim skipped checks ran", /Needs manual testing: none\.` and leave \*\*Not run\*\* as it is/u],
   ["never claims full coverage", /Never claim "fully tested" or an unrun check/u],
 ]) ok(`lazy-test ${description}`, pattern.test(lazyTest));
 ok("lazy-test has a risk-scoped mutation policy", protectsUsefulMutationTest(lazyTest));
 ok("lazy-test is listed in the help card", read("skills/lazy-help/SKILL.md").includes("**lazy-test**"));
+ok("lazy-test is listed in the OpenCode help card", read(".opencode/command/lazy-help.md").includes("lazy-test"));
+ok("lazy-test never claims every case ran automatically", !/every case above ran automatically/u.test(lazyTest));
 
 // A relative link in a shipped skill that points nowhere sends the agent to a
 // file that is not there; skills-only installs copy skills/ as a whole, so

@@ -44,8 +44,9 @@ the repo's documented setup.
 Before writing tests, list each requirement and the cases that cover it. Apply
 every layer below that fits the target; skip a layer only with a reason.
 
-- **Static:** the project's type checker, linter, formatter, and build, as
-  configured. Never loosen them to get green.
+- **Static:** the project's type checker, linter, and build, as configured, and
+  its formatter in check or dry-run mode only; with no such mode, the formatter
+  goes under **Not run**. Never loosen them to get green.
 - **Behavior:** each changed requirement, through its public entry point.
 - **Edges:** empty, zero, false, null, boundaries and one past them, maximum
   sizes, duplicates, ordering, Unicode, whitespace, paths with spaces, time
@@ -91,12 +92,17 @@ Record each command and its result. Rerun a failure once; a second failure is
 real. Never skip, disable, or weaken a test to get green.
 
 If existing red-green checks already prove the risky behavior, mutation work is
-optional; otherwise run a small meaningful mutation check: flip one branch,
-boundary, operator, or return value, confirm a test fails, revert, and rerun.
-Never add a dependency for it.
+optional; otherwise run a small meaningful mutation check: pick a test that
+passes, flip one branch, boundary, operator, or return value, confirm that test
+now fails because of the mutation, revert, and confirm it passes again. A test
+that already failed proves nothing. Never add a dependency for it.
 
-Before finishing TS/JS test changes, run
-`node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD` and triage it.
+Before finishing test changes, read and apply
+[TS/JS checks](../lazy/references/simplification-checks.md) to TS/JS and
+[Python checks](../lazy/references/python-checks.md) to Python. For TS/JS, run
+`node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD` on uncommitted
+changes, or with the task base ref instead of `HEAD` once they are committed,
+and triage it.
 
 ## 6. Report
 
@@ -129,8 +135,8 @@ not possible, for a reason such as:
 
 "Too much work" is not a reason: if the installed tools can check it, automate
 it. An open spec or product question is not manual testing; list it under
-**Failures found** as a question for the owner. If nothing remains, write `Needs manual testing: none — every case above ran
-automatically.`
+**Failures found** as a question for the owner. If no case needs a person,
+write `Needs manual testing: none.` and leave **Not run** as it is.
 
 Never claim "fully tested" or an unrun check. Checks that did not run go under
 **Not run**, not **Tested**.
