@@ -57,8 +57,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   do not stop a command that writes to an absolute path or finds the original
   checkout, so run these commands under an OS-level sandbox that allows
   writes only inside the private directory, hides the original checkout, and
-  denies network access except to approved sandbox endpoints; where none is
-  available, ask first, and mark a run that read the original checkout
+  denies network access except to approved sandbox endpoints, and, as the
+  platform allows, keeps host processes, IPC sockets such as Docker or D-Bus,
+  devices, and the Windows registry out of reach; where none is available,
+  ask first, and mark a run that read the original checkout
   unfaithful. The user's tree only gains the tests you keep, the snapshots they
   need, and production fixes the user asked for.
   - Record the starting state of the user's tree, with read-only Git commands
@@ -67,12 +69,14 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     and `.process` overridden with an empty value, or direct file reads
     instead of Git): `git status`, the unstaged and staged diffs, copies of
     untracked files, and checksums of ignored files the tests read, or a
-    checksum listing without Git. Include the timestamps, ACLs, and extended
-    attributes the tests depend on. Keep these in a private temporary
-    directory outside the repository and delete it on every exit once the
-    final audit is done.
+    checksum listing without Git. Include `HEAD`, the refs the tests read, and
+    the file modes, timestamps, ACLs, and extended attributes they depend on.
+    Keep these in a private temporary directory outside the repository and
+    delete it on every exit once the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
-    included, in a private temporary directory deleted on every exit.
+    included, in a private temporary directory deleted on every exit. Leave out
+    secrets such as `.env` files, keys, and production configuration; supply
+    sandbox or user-approved replacements when the tests need them.
   - If the source is a Git worktree, give the copy independent Git metadata,
     never a `.git` file or `gitdir` that points back to the user's repository.
     Clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
@@ -90,10 +94,11 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     into the clone so no smudge filter or other conversion helper runs, then
     recreate the index, unstaged changes, untracked files, `HEAD` (the same
     branch, or the same detached commit), and the refs the tests read (local
-    branches, tags, custom refs, stashes) separately. A non-Git source stays
-    without Git.
-  - Reapply the timestamps, ACLs, and extended attributes the tests depend
-    on. If the source state, Git or filesystem, cannot be reproduced
+    branches, tags, custom refs, stashes) separately. Give each initialized
+    submodule the same independent metadata and state, or mark the checks
+    that depend on it unfaithful. A non-Git source stays without Git.
+  - Reapply the file modes, timestamps, ACLs, and extended attributes the
+    tests depend on. If the source state, Git or filesystem, cannot be reproduced
     faithfully, treat the target as unable to run from a copy.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
     running write-capable commands through it. If the checks read its target,
@@ -170,11 +175,12 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   the defect. Separate pre-existing failures from new ones.
 - Before reporting, confirm the user's tree differs from its starting state only
   by the tests you added, the snapshots they need, and requested changes; name
-  any other change instead of reverting it. If tested source changed after the
-  copy was made, refresh the copy and rerun the affected checks, or report the
-  newer state as untested. If a command rewrote tested production files inside
-  the copy, such as a pretest code generator, report it and rerun from the
-  intended state, or report that state as untested.
+  any other change instead of reverting it. If tested source, its metadata, or
+  the refs the tests read changed after the copy was made, refresh the copy
+  and rerun the affected checks, or report the newer state as untested. If a
+  command rewrote tested production files inside the copy, such as a pretest
+  code generator, report it and rerun from the intended state, or report that
+  state as untested.
 - Rerun affected checks after test edits. Review TS/JS changes with the installed
   slop checker when available; its clean result is not behavioral evidence.
 
