@@ -266,6 +266,25 @@ for (const [surface, raw] of finishSurfaces) {
 ok("skills/lazy/SKILL.md limits the no-announcement rule to ordinary work",
   /Do not announce the mode during ordinary work/u.test(flat(read("skills/lazy/SKILL.md"))));
 
+// lazy-test promises every applicable layer and an honest manual-testing tail;
+// losing either turns it back into "ran the suite, looks fine".
+const lazyTest = flat(read("skills/lazy-test/SKILL.md"));
+for (const language of LANGUAGES) ok(`lazy-test lists ${language}`, lists(lazyTest, language));
+for (const [description, pattern] of [
+  ["reads installed versions", /toolchain file, manifest, lockfile, or runtime.*installed version.*do not guess/iu],
+  ["uses only the repo's tools", /Never add a dependency or a second runner/u],
+  ["reuses installed Playwright", /If Playwright is installed, it is the browser and end-to-end tool/u],
+  ["covers every test layer", /Static:.*Behavior:.*Edges:.*Failure modes:.*Contracts:.*Lifecycle and concurrency:.*Integration:.*End-to-end:.*Platform:.*Security:.*Regression:/u],
+  ["adds no benchmarks", /do not add benchmarks/iu],
+  ["never weakens tests", /Never skip, disable, or weaken a test/u],
+  ["keeps unrun checks apart", /## Not run.*Checks that did not run go under \*\*Not run\*\*/u],
+  ["ends with manual testing and why", /## Needs manual testing - <what to check> — why: .* — how: /u],
+  ["refuses effort as a manual-testing reason", /"Too much work" is not a reason/u],
+  ["never claims full coverage", /Never claim "fully tested" or an unrun check/u],
+]) ok(`lazy-test ${description}`, pattern.test(lazyTest));
+ok("lazy-test has a risk-scoped mutation policy", protectsUsefulMutationTest(lazyTest));
+ok("lazy-test is listed in the help card", read("skills/lazy-help/SKILL.md").includes("**lazy-test**"));
+
 // A relative link in a shipped skill that points nowhere sends the agent to a
 // file that is not there; skills-only installs copy skills/ as a whole, so
 // ../lazy/references links resolve there too.

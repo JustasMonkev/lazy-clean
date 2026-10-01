@@ -33,6 +33,7 @@ Level sticks until changed or session end.
 | **lazy-gain** | `/lazy-gain` | Measured-impact scoreboard: less code, less cost, more speed. |
 | **lazy-help** | `/lazy-help` | This card. |
 | **lazy-clean** | `/lazy-clean` | Both passes on one change: the ladder while writing, the checker after. |
+| **lazy-test** | `/lazy-test` | Test with the repo's own tools in every applicable layer, then list what needs manual testing and why. |
 | **slop-check** | `/slop-check` | Delete AI slop in TS/JS: bundled checker plus a manual checklist. |
 | **lazy-verify** | `/lazy-verify` | Experimental opt-in fix/preserve evidence; needs a reviewed local engine and policy. Independent of lazy mode. |
 

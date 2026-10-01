@@ -86,6 +86,15 @@ is private/ignored in this repository; contracts remain reviewable. See the
 commands, policy schema, limits and exits, and the
 [RFC](docs/specs/lazy-verify-integration.md) for engine/release acceptance gates.
 
+## Testing a change
+
+`/lazy-test` tests the named code, or the task diff, with the repo's own runners:
+static checks, behavior, edges, failure modes, contracts, lifecycle,
+end-to-end (Playwright when installed), platform, and security paths. It saves
+what it adds as rerunnable tests, never adds a dependency or a benchmark, keeps
+checks that could not run apart from those that passed, and ends with what
+still needs manual testing and why it cannot be automated there.
+
 ## Install — zero-install, skills only
 
 No packages, no npm, no plugin needed. Copy the skills into your global skills folder:
@@ -94,7 +103,7 @@ No packages, no npm, no plugin needed. Copy the skills into your global skills f
 cp -R /path/to/lazy-clean/skills/* ~/.claude/skills/
 ```
 
-That gives you all 9 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-verify`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
+That gives you all 10 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-test`, `lazy-verify`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
 
 What you DON'T get in skills-only mode: the automatic parts (ruleset injected every session, checker auto-run after every edit). Those need the hooks — install as a plugin for that:
 
@@ -199,7 +208,7 @@ It covers that line and the next, takes several ids separated by commas, and `sl
 
 The `-- <reason>` is not decoration. An ignore with no reason, with an id that is not a rule, or a file-level one written too far down suppresses nothing and is reported as `no-unjustified-ignore` — the same standard the checker already holds `@ts-expect-error` to, because an ignore that silently does nothing is worse than no ignore. The run summary counts what was suppressed: clean under forty ignores is not clean.
 
-Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `slop-check`, `lazy-clean` (the main workflow).
+Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `lazy-test`, `slop-check`, `lazy-clean` (the main workflow).
 
 ## Intensity
 
