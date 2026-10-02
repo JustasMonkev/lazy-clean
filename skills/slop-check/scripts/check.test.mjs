@@ -1028,6 +1028,26 @@ expectNoRule("allows asserting a number", "expect(totalItems(state)).toBe(4);", 
   console.log("ok   compiler metadata does not become new suppression rationale through the API");
 }
 
+{
+  const directive = "// eslint-disable-next-line no-console\nconnect(options);\n";
+  for (const [comment, expected] of [
+    ["/* exported foo, bar */", false],
+    ["// exported foo, bar", true],
+    ["/** Vendor runtime requires this suppression. @see issue */", true],
+    ["/** @description Vendor runtime requires this suppression. @see issue */", true],
+    ["/** @see issue */", false],
+    ["/** incorrect. @see issue */", false],
+  ]) {
+    const findings = lintSource(`${comment}\n${directive}`, "sample.js", { addedLines: new Set([1]) });
+    assert.equal(findings.some(f => f.rule === "no-unjustified-suppression"), expected, comment);
+  }
+  const source = "// SAFETY: parsed by the schema above\nconst user = payload as User;\n";
+  const findings = lintSource(source, "sample.ts", { addedLines: new Set([2]) });
+  assert.ok(findings.some(f => f.rule === "require-safety-comment-for-type-assertion"));
+  assert.ok(!lintSource(source, "sample.ts").some(f => f.rule === "require-safety-comment-for-type-assertion"));
+  console.log("ok   changed assertions require review and JSDoc prose remains separate from tag metadata");
+}
+
 // --- suppression and doc slop ------------------------------------------------
 
 expectRule("flags bare ts-ignore", "// @ts-ignore\nconst parsed = legacyParse(input);", "no-unjustified-suppression");

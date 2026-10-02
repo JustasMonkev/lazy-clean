@@ -664,6 +664,7 @@ check("--since reviews new rationale for every suppression family and preserves 
       "/** @throws {Error} When startup fails. */", "/** @exception {Error} When startup fails. */",
       "/** @yields {string} The next account identifier. */", "/** @customTag Account metadata used by the documentation plugin. */",
       "/* c8 ignore stop */", "/* v8 ignore stop */",
+      "/* exported foo, bar */",
       '/// <reference types="node" />', '/// <reference path="dependency.d.ts" />', '/// <reference lib="es2020" />',
       '/// <reference no-default-lib="true" />', '/// <amd-module name="legacy" />', '/// <amd-dependency path="legacy" />',
       "initialize(); // Parse options before connecting",
@@ -693,6 +694,12 @@ check("--since combines contiguous standalone rationale without crossing code, g
     ["email-prose.js", bare, `/** Vendor contact user@example.com requires this workaround. */\n${bare}`, 1, 1, 2],
     ["after-code.ts", `initialize();\n${bare}`, `initialize();\n/// <reference types="node" />\n${bare}`, 1, 2, 3],
     ["fake-xml.ts", bare, `/// <not-a-reference types="node" />\n${bare}`, 1, 1, 2],
+    ["mixed-tag.js", bare, `/** Vendor runtime requires this suppression. @see issue */\n${bare}`, 1, 1, 2],
+    ["mixed-lines.js", bare, `/**\n * Vendor runtime requires this suppression.\n * @see issue\n */\n${bare}`, 1, 1, 5],
+    ["inline-link.js", bare, `/** Vendor runtime requires {@link issue} for this suppression. */\n${bare}`, 1, 1, 2],
+    ["description-tag.js", bare, `/** @description Vendor runtime requires this suppression. @see issue */\n${bare}`, 1, 1, 2],
+    ["one-word-tag.js", bare, `/** incorrect. @see issue */\n${bare}`, 0],
+    ["exported-prose.js", bare, `// exported foo, bar\n${bare}`, 1, 1, 2],
   ];
   try {
     git("init", "-q");
@@ -710,6 +717,73 @@ check("--since combines contiguous standalone rationale without crossing code, g
     const result = run(["--since=HEAD", "--json", file], repo);
     assert.equal(result.status, status, `${file}: ${result.stderr || result.stdout}`);
     if (status === 1) assert.ok(JSON.parse(result.stdout).some(f => f.rule === "no-unjustified-suppression" && f.startLine === startLine && f.line === line), file);
+  }
+});
+
+check("--since keeps legacy safety evidence attached to its baseline assertion", () => {
+  const repo = join(root, "assertion-attachments");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const marker = "// SAFETY: parsed by the schema above\n";
+  const original = `${marker}const stable = 1;\n`;
+  const oldAssertion = `${marker}const old = oldPayload as User;\n`;
+  const cases = [
+    ["inserted.ts", original, `${marker}const user = payload as User;\nconst stable = 1;\n`],
+    ["angle.ts", original, `${marker}const user = <User>payload;\nconst stable = 1;\n`],
+    ["multiline.ts", original, `${marker}const user = payload as {\n id: string;\n};\nconst stable = 1;\n`],
+    ["before-old.ts", oldAssertion, `${marker}const user = payload as User;\nconst old = oldPayload as User;\n`],
+    ["same-line.ts", oldAssertion, `${marker}const user = payload as User; const old = oldPayload as User;\n`],
+    ["existing.ts", oldAssertion, oldAssertion.replace("oldPayload", "nextPayload"), 0],
+  ];
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    for (const [file, base] of cases) writeFileSync(join(repo, file), base);
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since assertion attachment (git unavailable)");
+    return;
+  }
+  for (const [file, , source, expected = 1] of cases) {
+    writeFileSync(join(repo, file), source);
+    const result = run(["--since=HEAD", "--json", file], repo);
+    assert.equal(result.status, expected, `${file}: ${result.stderr || result.stdout}`);
+    const findings = JSON.parse(result.stdout);
+    if (expected) assert.ok(findings.some(f => f.rule === "require-safety-comment-for-type-assertion" && f.line === 2), file);
+    assert.ok(!findings.some(f => f.rule === "no-new-justification-comments"), file);
+  }
+});
+
+check("--since reports deletion-only edits inside surviving justification comments", () => {
+  const repo = join(root, "deleted-rationale");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const cases = [
+    ["safety.ts", "/* SAFETY:\n * validated by the schema\n * vendor fields checked\n */\nconst user = payload as User;\n", "no-new-justification-comments"],
+    ["lazy.js", "/* lazy:\n * deliberate timing policy\n * vendor fields checked\n */\nawait new Promise(resolve => setTimeout(resolve, 1000));\n", "no-new-justification-comments"],
+    ["suppression.js", "/* eslint-disable no-console\n * vendor fields checked\n */\nconsole.log(value);\n", "no-unjustified-suppression"],
+    ["explanation.js", "/* Vendor diagnostic is incorrect.\n * vendor fields checked\n */\n// eslint-disable-next-line no-console\nconsole.log(value);\n", "no-unjustified-suppression"],
+  ];
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    for (const [file, source] of cases) writeFileSync(join(repo, file), source);
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since deleted rationale (git unavailable)");
+    return;
+  }
+  for (const [file, original, rule] of cases) {
+    writeFileSync(join(repo, file), original.replace(" * vendor fields checked\n", ""));
+    const result = run(["--since=HEAD", "--json", file], repo);
+    assert.equal(result.status, 1, `${file}: ${result.stderr || result.stdout}`);
+    const findings = JSON.parse(result.stdout);
+    assert.ok(findings.some(f => f.rule === rule && (f.startLine ?? f.line) === 1), file);
+    assert.ok(!findings.some(f => f.rule === "require-safety-comment-for-type-assertion" || f.rule === "no-arbitrary-sleep"), "unchanged code stays out of scope");
   }
 });
 
