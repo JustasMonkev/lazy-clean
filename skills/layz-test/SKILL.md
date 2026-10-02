@@ -65,6 +65,8 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   ask first, and mark a run that read the original checkout
   unfaithful. The user's tree only gains the tests you keep, the snapshots they
   need, and production fixes the user asked for.
+  - Read the source without changing access times (a read-only snapshot or a
+    no-atime read); if that is not possible, ask first.
   - Record the starting state of the user's tree, with read-only Git commands
     (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
     `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean` and
@@ -90,7 +92,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     sandbox or user-approved replacements when the tests need them. Classify
     each path without following it before reading it: never read FIFOs,
     sockets, or device nodes; recreate them privately where supported, or mark
-    the checks that depend on them unfaithful.
+    the checks that depend on them unfaithful. Stop at mount points inside the
+    tree: copy a mounted directory only from a user-approved snapshot of its
+    intended contents, or mark the checks that depend on it unfaithful.
   - If the source is a Git worktree, give the copy independent Git metadata,
     never a `.git` file or `gitdir` that points back to the user's repository.
     Clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
@@ -124,7 +128,8 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - Reapply the file modes, owners, timestamps, ACLs, and extended attributes
     the tests depend on, and recreate hard-link groups among copied files. If
     the source state, Git or filesystem, cannot be reproduced faithfully, treat
-    the target as unable to run from a copy.
+    the target as unable to run from a copy. Before running checks, compare the
+    completed copy with the baseline and refresh it if they differ.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
     running write-capable commands through it. Retarget an absolute link into
     the repository to the same path in the copy. If the checks read its target,
@@ -159,7 +164,8 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     extended attributes where the platform has them, and the Git directories the
     tree points to (`git rev-parse --absolute-git-dir` and `--git-common-dir`).
     Record what the command changed, restore from the backup only paths that
-    still hold exactly that result, and report any other change as a conflict.
+    still hold exactly that result, rechecked immediately before an atomic
+    replacement, and report any other change as a conflict.
     Delete those backups on every exit once restoring is done; keep one only for
     an unresolved conflict, and say where.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
