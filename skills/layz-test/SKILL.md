@@ -72,9 +72,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     in-place backup), classify each path without following it, at the moment of
     each read (no-follow, descriptor-relative opens that check the type and
     mount), or ask the user to pause edits while preparing. Never read FIFOs,
-    sockets, or device nodes, and stop at mount points: recreate FIFOs and
-    sockets privately, recreate a device node only when its device is
-    virtualized or the user approves, copy a mounted directory only from a
+    sockets, or device nodes, and stop at mount points: recreate a FIFO or
+    socket privately only for checks that read the node itself and mark checks
+    that talk through it unfaithful, recreate a device node only when its device
+    is virtualized or the user approves, copy a mounted directory only from a
     user-approved snapshot of its intended contents, or mark the checks that
     depend on them unfaithful. Before that, check the size, file count, and
     expected time of everything preparation reads or copies (the tree, its Git
@@ -163,8 +164,8 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     its target, snapshot the target into the private directory and present the
     snapshot at the link's original literal target inside the sandbox, or point
     the link at the snapshot and mark the checks that read link targets
-    unfaithful, or compare the target again before reporting and mark the run
-    unfaithful if it changed.
+    unfaithful. Either way, or with no snapshot, compare the original target
+    again after the run and rerun or mark the run unfaithful if it changed.
   - Point temp and cache locations inside the private directory (`TMPDIR`,
     `TMP`, `TEMP`, and the tools' cache variables). If the behavior under test
     depends on those locations, keep them equivalent in the private directory
@@ -182,32 +183,30 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - When copying kept tests, snapshots, and requested fixes back, compare each
     destination with its baseline and its current state; if it changed since the
     copy was made, merge the change or report a conflict instead of overwriting
-    it. Make the final check and the replacement one step: hold the user's pause
-    on that file across both, or use an atomic exchange whose displaced file is
-    verified as unchanged before committing, and report a conflict if it
-    changed. Keep the destination's file metadata, including hard-link groups,
-    unless the change was requested; where an atomic rename cannot, write in
-    place only while the user pauses edits to that file, or report a conflict
-    and leave the proposed file in the evidence directory. For any conflict,
-    save the proposed file or patch in the private evidence directory before the
-    copy is deleted, and report where.
+    it. Write a destination only while the user pauses edits to that file,
+    covering the final check, the write, and any metadata fix-up, and keep its
+    file metadata unless the change was requested; never write through a hard
+    link to a file outside the tree without approval. Without a pause, or if the
+    file changed, report a conflict instead. For any conflict, save the proposed
+    file or patch in the private evidence directory before the copy is deleted,
+    and report where.
   - If the suite cannot run from a copy, ask before running write-capable
-    commands in place. When approved, use the same sandbox except that the tree
-    and the Git directories it points to are visible and writable along with the
-    private directory, keeping every other restriction; ask the user to pause
-    other edits to the tree and to every Git directory it shares with other
-    worktrees from before the backup until restoring is done, and back up the
-    tree first, classifying paths as above, into a location the command cannot
-    read or write: bytes, symlink targets, which paths exist, file metadata
-    where the platform has it, and the Git directories the tree points to
-    (`git rev-parse --absolute-git-dir` and `--git-common-dir`). Keep mounted
+    commands in place. When approved, use the same sandbox except that the tree,
+    the Git directories it points to, and any external paths the user approves
+    are visible and writable along with the private directory, keeping every
+    other restriction; ask the user to pause other edits to the tree and to
+    every Git directory it shares with other worktrees from before the backup
+    until restoring is done, and back up the tree first, classifying paths as
+    above, into a location the command cannot read or write: bytes, symlink
+    targets, which paths exist, file metadata where the platform has it, the Git
+    directories the tree points to (`git rev-parse --absolute-git-dir` and
+    `--git-common-dir`), and every approved writable external path. Keep mounted
     paths, and files with links from outside the tree, out of the command's
     reach unless the user approves them. Record what the command changed, verify
     the backup, restore from it only paths that still hold exactly that result,
-    with the check and the replacement made one step as for copy-back, and
-    report any other change as a conflict. Delete those backups on every exit
-    once restoring is done; keep one only for an unresolved conflict, and say
-    where.
+    under the same pause as copy-back, and report any other change as a
+    conflict. Delete those backups on every exit once restoring is done; keep
+    one only for an unresolved conflict, and say where.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
