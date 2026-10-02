@@ -79,9 +79,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     user-approved snapshot of its intended contents, or mark the checks that
     depend on them unfaithful. Before that, check the size, file count, and
     expected time of everything preparation reads or copies (the tree, its Git
-    directories with their caches and alternate object stores, and snapshotted
-    symlink targets and Git config includes) against a budget; if it would
-    exceed it, ask first or report the affected checks as blocked.
+    directories with their caches and alternate object stores, snapshotted
+    symlink targets and Git config includes, and approved external paths an
+    in-place backup copies) against a budget; if it would exceed it, ask first
+    or report the affected checks as blocked.
   - In the rules below, file metadata means everything about a file beyond its
     bytes that the checks can observe, such as file modes, owners, timestamps,
     ACLs, extended attributes, named streams such as NTFS alternate data
@@ -155,15 +156,15 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     the user's approval, classified the same way, with secrets left out, and
     compared again after the run, rerunning or marking the dependent checks
     unfaithful if it changed), path-valued settings such as `core.worktree`,
-    include paths, and `includeIf` `gitdir:` conditions retargeted to the copy,
-    replacing credentials such as authenticated remote URLs or
-    `http.extraHeader` with sandbox or user-approved values, or mark the checks
-    that depend on any of it unfaithful. If a left-out secret is in any of the
-    clone's objects, reachable or not, or in a reproduced extension store such
-    as the Git LFS cache, purge those objects and the refs that carry them, or
-    treat the target as unable to run safely from a copy. Give each initialized
-    submodule and every other nested repository the same independent metadata
-    and state, or mark the checks that depend on it unfaithful. A bare
+    include paths, and `includeIf` `gitdir:` and `gitdir/i:` conditions
+    retargeted to the copy, replacing credentials such as authenticated remote
+    URLs or `http.extraHeader` with sandbox or user-approved values, or mark the
+    checks that depend on any of it unfaithful. If a left-out secret is in any
+    of the clone's objects, reachable or not, or in a reproduced extension store
+    such as the Git LFS cache, purge those objects and the refs that carry them,
+    or treat the target as unable to run safely from a copy. Give each
+    initialized submodule and every other nested repository the same independent
+    metadata and state, or mark the checks that depend on it unfaithful. A bare
     repository gets the same independent copy of its Git directory and Git
     state, skipping worktree-only steps such as `git status`. A non-Git source
     stays without Git.
@@ -279,11 +280,11 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
 - Before reporting, confirm the user's tree differs from its starting state only
   by the tests you added, the snapshots they need, and requested changes; name
   any other change instead of reverting it. If tested source, its metadata, or
-  the refs the tests read changed after the copy was made, refresh the copy
-  and rerun the affected checks, or report the newer state as untested. If a
-  command rewrote tested production files inside the copy, such as a pretest
-  code generator, report it and rerun from the intended state, or report that
-  state as untested.
+  the refs the tests read changed after the copy was made, refresh the copy and
+  rerun the affected checks within a retry and time limit, or report the newer
+  state as untested. If a command rewrote tested production files inside the
+  copy, such as a pretest code generator, report it and rerun from the intended
+  state, or report that state as untested.
 - Rerun affected checks after test edits. Review TS/JS changes with the installed
   slop checker when available; its clean result is not behavioral evidence.
 
