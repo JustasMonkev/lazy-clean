@@ -68,14 +68,18 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
     `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean` and
     `.process` overridden with an empty value and `.required` set to `false`, or
-    direct file reads instead of Git): `git status`, the unstaged and staged
-    diffs, copies of untracked files (only checksums for secrets), and checksums
-    of ignored files the tests read, or a checksum listing without Git. Include
-    `HEAD`, the refs, reflogs, and repository config the tests read, and the
-    file modes, owners, timestamps, ACLs, and extended attributes they depend
-    on. Keep these in a private temporary directory outside the repository and
-    outside what isolated commands can read, and delete it on every exit once
-    the final audit is done.
+    direct file reads instead of Git), with network access denied so a partial
+    clone cannot lazily fetch missing objects (also set `GIT_NO_LAZY_FETCH=1`
+    where the installed Git supports it); if an object is missing, read the file
+    directly or report that state as unavailable. Record `git status`, the
+    unstaged and staged diffs, copies of untracked files (only checksums for
+    secrets), and checksums of ignored files the tests read, or a checksum
+    listing without Git. Include `HEAD`, the refs, reflogs, in-progress
+    operation state, and repository config the tests read, and the file modes,
+    hard-link groups, owners, timestamps, ACLs, and extended attributes they
+    depend on. Keep these in a private temporary directory outside the
+    repository and outside what isolated commands can read, and delete it on
+    every exit once the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit. Leave out
     secrets such as `.env` files, keys, and production configuration; supply
@@ -100,14 +104,17 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     into the clone so no smudge filter or other conversion helper runs, then
     recreate the index, unstaged changes, untracked files, `HEAD` (the same
     branch, or the same detached commit), and the refs the tests read (local
-    branches, tags, custom refs, stashes, and their reflogs) separately. Replay
-    the repository and worktree config settings the checks read
-    (`git config --local` and `--worktree`). If a left-out secret is reachable
-    from the clone's history, stashes, or refs, drop the refs and objects that
-    carry it, or treat the target as unable to run safely from a copy. Give each
-    initialized submodule and every other nested repository the same independent
-    metadata and state, or mark the checks that depend on it unfaithful. A
-    non-Git source stays without Git.
+    branches, tags, custom refs, stashes, and their reflogs) separately, along
+    with any in-progress merge, rebase, cherry-pick, revert, or bisect state
+    (`MERGE_HEAD`, `CHERRY_PICK_HEAD`, the sequencer and rebase directories), or
+    mark the checks that depend on it unfaithful. Replay the repository and
+    worktree config settings the checks read (`git config --local` and
+    `--worktree`). If a left-out secret is in any of the clone's objects,
+    reachable or not, purge those objects and the refs that carry them, or treat
+    the target as unable to run safely from a copy. Give each initialized
+    submodule and every other nested repository the same independent metadata
+    and state, or mark the checks that depend on it unfaithful. A non-Git source
+    stays without Git.
   - Reapply the file modes, owners, timestamps, ACLs, and extended attributes
     the tests depend on, and recreate hard-link groups among copied files. If
     the source state, Git or filesystem, cannot be reproduced faithfully, treat
