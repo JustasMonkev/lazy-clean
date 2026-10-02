@@ -196,18 +196,13 @@ and size for paired passing runs. This fork makes no measured improvement
 claim without real comparable runs. `npm test` checks the benchmark machinery
 without calling an AI service.
 
-## Silencing a rule
+## Review findings and existing suppressions
 
-Every rule can be turned off, because a heuristic you cannot turn off is one you end up ignoring entirely. To record a false positive where it happened, name the rule and say why:
+For a genuine false positive, verify the invariant and explain the evidence in the final response. Do not add suppression comments to make the scan clean. Remove ineffective existing ignores and address the underlying findings.
 
-```ts
-// slop-check-ignore no-any -- the vendor typing is `any`; narrowed at the call site below
-const parsed = raw as any;
-```
+Existing justified `slop-check-ignore` directives remain supported for compatibility. They cover their line and the next and accept several rule IDs separated by commas. Existing `slop-check-ignore-file` directives in a file's first 10 lines cover the whole file. `--disable=<rule-id>,...` turns rules off for one run; it does not verify that a finding is harmless.
 
-It covers that line and the next, takes several ids separated by commas, and `slop-check-ignore-file` in a file's first 10 lines covers the whole file. `--disable=<rule-id>,...` turns rules off for one run.
-
-The `-- <reason>` is not decoration. An ignore with no reason, with an id that is not a rule, or a file-level one written too far down suppresses nothing and is reported as `no-unjustified-ignore` — the same standard the checker already holds `@ts-expect-error` to, because an ignore that silently does nothing is worse than no ignore. The run summary counts what was suppressed: clean under forty ignores is not clean.
+An existing ignore with no reason after `--`, an unknown rule ID, or a file-level directive below line 10 suppresses nothing and is reported as `no-unjustified-ignore`. The run summary counts suppressions; a clean result with suppressions is not evidence that the ignored code was checked.
 
 Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `slop-check`, `lazy-clean` (the main workflow), `lazy-verify`, `layz-test`.
 

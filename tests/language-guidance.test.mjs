@@ -137,6 +137,7 @@ const COMMENT_CONTRACT = [
 for (const file of [...BUILD_SURFACES, "skills/slop-check/SKILL.md"])
   for (const [description, pattern] of COMMENT_CONTRACT)
     ok(`${file} ${description}`, pattern.test(flat(read(file))));
+ok("README does not provide a new suppression-comment recipe", !/\/\/\s*slop-check-ignore/u.test(read("README.md")));
 const DELIVERY_CONTRACT = [
   ...COMMENT_CONTRACT,
   ["states material assumptions", /material assumptions/iu],

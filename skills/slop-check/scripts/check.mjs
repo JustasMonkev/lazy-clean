@@ -2656,9 +2656,6 @@ function* iterateCommentFindings(ctx) {
   for (const [index, comment] of comments.entries()) {
     const start = offsetToPosition(lineStarts, comment.start);
     const endLine = offsetToPosition(lineStarts, Math.max(comment.start, comment.end - 1)).line;
-    // Multi-line comments carry their span for the same reason block rules do:
-    // the finding is reported at the opener, but the text that triggered it can
-    // sit many lines below, and both --since and the hook scope by written line.
     const position = endLine > start.line ? { ...start, endLine } : start;
     const body = comment.text.replace(/^\/\/+\s?|^\/\*+|\*+\/$/gu, "").replace(/^\s*\*\s?/gmu, "");
 
@@ -2670,11 +2667,11 @@ function* iterateCommentFindings(ctx) {
       continue;
     }
     if (NARRATION_COMMENT_PATTERN.test(body)) {
-      yield { ...position, rule: "no-narration-comments", message: "Possible narration comment (\"now we...\", \"first, ...\"). Remove only repeated steps; retain reasons for ordering or other constraints the code cannot show." };
+      yield { ...position, rule: "no-narration-comments", message: "Possible narration comment (\"now we...\", \"first, ...\"). Verify ordering and other constraints before removing nonessential comments; explain relevant rationale in the final response." };
       continue;
     }
     if (CHANGE_NOTE_COMMENT_PATTERN.test(body)) {
-      yield { ...position, rule: "no-change-note-comments", message: "Possible edit narration. Remove only obsolete change notes; retain enduring design rationale, decision references, and constraints the code cannot show." };
+      yield { ...position, rule: "no-change-note-comments", message: "Possible edit narration. Verify lasting design decisions and constraints before removing nonessential comments; explain relevant rationale in the final response." };
       continue;
     }
     if (BACKCOMPAT_COMMENT_PATTERN.test(body) && !/@deprecated/u.test(comment.text)) {
@@ -2690,29 +2687,18 @@ function* iterateCommentFindings(ctx) {
       continue;
     }
 
-    // TypeScript requires the directive on the line directly above the error,
-    // so the reason often sits in the comment above THAT, where it does not
-    // disturb the placement. That is the reason being stated, not missing --
-    // asking for it to be repeated on the directive line is the rule failing to
-    // read what is already there. A preceding directive does not count: two
-    // bare suppressions in a row justify nothing.
     const previous = comments[index - 1];
     const explainedAbove = previous !== undefined
       && offsetToPosition(lineStarts, Math.max(previous.start, previous.end - 1)).line === start.line - 1
-      // A LINE comment only. TypeScript's placement rule is what pushes the
-      // reason onto the line above, and that is how people write it; a `/** */`
-      // block above documents the DECLARATION. Prettier's `@param`/`@returns`
-      // block sitting over `// @ts-expect-error: fine` explains the function's
-      // types and says nothing about why the checker is wrong.
       && previous.kind === "line"
       && !SUPPRESSION_DIRECTIVE_PATTERN.test(previous.text)
       && isJustification(previous);
     if (SUPPRESSION_DIRECTIVE_PATTERN.test(body) && !suppressionIsJustified(body) && !explainedAbove) {
-      yield { ...position, rule: "no-unjustified-suppression", message: "A type-checker suppression with no stated reason hides the problem instead of the noise. State why the checker is wrong on the same line, or fix what it reported." };
+      yield { ...position, rule: "no-unjustified-suppression", message: "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response." };
       continue;
     }
     if (OBVIOUS_DOC_COMMENT_PATTERN.test(body) || accessorDocOnlyRestates(body)) {
-      yield { ...position, rule: "no-obvious-doc-comments", message: "This doc comment restates the declaration below it. Say why the code exists, or delete the comment." };
+      yield { ...position, rule: "no-obvious-doc-comments", message: "This doc comment restates the declaration below it. Verify relevant contracts before removing nonessential documentation; explain useful constraints in the final response." };
       continue;
     }
 
@@ -2996,7 +2982,7 @@ const RULE_EXPLANATIONS = {
     exceptions: "Preserve functional type or tool metadata. JavaScript JSDoc may supply the actual types; this rule is TS-only. Explain relevant parameter constraints in the final response instead of adding code comments.",
   },
   "no-obvious-doc-comments": {
-    why: "\"This function takes a user and returns a token\" restates the declaration below it. A doc comment earns its place by saying WHY the code exists, not WHAT it is.",
+    why: "\"This function takes a user and returns a token\" restates the declaration below it. Verify relevant contracts, remove nonessential documentation, and explain useful constraints in the final response.",
     slop: "// Getter for the cached value.\nconst cached = { get value() { return cache; } };",
     correct: "const cached = { get value() { return cache; } };",
     exceptions: "Verify invalidation, ownership, and other contracts before removing documentation. Explain relevant constraints in the final response; preserve required licenses and functional type or tool metadata.",
@@ -3017,7 +3003,7 @@ const RULE_EXPLANATIONS = {
     why: "Bare TypeScript suppression directives and biome-ignore directives need a concrete justification for the diagnostic being suppressed. Fix the actual reported problem when possible. The example below addresses a TypeScript boundary error, not every possible lint or formatting diagnostic.",
     slop: "// @ts-expect-error\nconnect(options);",
     correct: "if (typeof options !== \"object\" || options === null || !(\"host\" in options) || typeof options.host !== \"string\") {\n  throw new TypeError(\"Expected a configuration with a string host\");\n}\nconnect(options);",
-    exceptions: "A proven compiler or vendor-typing defect may need a TypeScript suppression with a concrete reason; missing runtime validation is not that reason. For biome-ignore, fix its named Biome lint/formatting diagnostic or state why that specific suppression is necessary, preserving the affected statement. Do not apply the JSON-validation example to an unrelated Biome rule. This connect example assumes the API needs only host.",
+    exceptions: "A proven compiler or vendor-typing defect may require an existing functional TypeScript suppression. Verify the specific defect and explain the evidence in the final response; missing runtime validation is not a compiler defect. For biome-ignore, fix its named Biome lint/formatting diagnostic or verify why the existing directive is necessary, preserving the affected statement. Do not apply the JSON-validation example to an unrelated Biome rule. This connect example assumes the API needs only host.",
   },
 };
 
@@ -3082,10 +3068,6 @@ function parseIgnoreDirective(text) {
   };
 }
 
-// A directive that does not suppress is worse than no directive: the author
-// stopped looking. Every way one can fail to apply is reported at its own line,
-// under the same standard the checker already holds `@ts-expect-error` to -- a
-// stated reason, not a word.
 function collectSuppressions(comments, lineStarts) {
   const forLine = new Map();
   const forFile = new Set();
@@ -3095,9 +3077,6 @@ function collectSuppressions(comments, lineStarts) {
     for (const id of ids) set.add(id);
     forLine.set(lineNumber, set);
   };
-  // Comments, not raw lines: the directive is only a directive where a reader
-  // would take it as one. Scanning the text found it inside string literals too,
-  // and the first file that cost was this checker's own test fixtures.
   for (const comment of comments) {
     const match = IGNORE_DIRECTIVE.exec(comment.text);
     if (!match) continue;
@@ -3117,7 +3096,7 @@ function collectSuppressions(comments, lineStarts) {
       findings.push({
         ...position,
         rule: "no-unjustified-ignore",
-        message: `This ignore ${fault}, so it suppresses nothing. Write \`slop-check-ignore <rule-id> -- <why the rule is wrong here>\`, or delete it.`,
+        message: `This ignore ${fault}, so it suppresses nothing. Remove the ineffective directive; fix the reported code or explain the checked invariant for a false positive in the final response.`,
       });
       continue;
     }

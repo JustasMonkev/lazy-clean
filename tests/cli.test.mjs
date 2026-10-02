@@ -793,7 +793,42 @@ check("empty-catch findings put justification in the response", () => {
   assert.match(JSON.parse(result.stdout).find(f => f.rule === "no-empty-catch").message, /final response/u);
 });
 
-for (const rule of ["require-safety-comment-for-type-assertion", "no-empty-catch", "no-unjustified-ignore"])
+check("malformed-ignore findings never recommend replacement comments", () => {
+  for (const [name, source] of [
+    ["missing-reason", "// slop-check-ignore no-any\nconst parsed: any = input;\n"],
+    ["missing-rule", "// slop-check-ignore -- parsed at the boundary\n"],
+    ["unknown-rule", "// slop-check-ignore no-such-rule -- parsed at the boundary\n"],
+    ["late-file-ignore", `${"\n".repeat(10)}// slop-check-ignore-file no-any -- parsed at the boundary\nconst parsed: any = input;\n`],
+  ]) {
+    const file = write(`${name}.ts`, source);
+    for (const args of [[file], ["--json", file]]) {
+      const result = run(args);
+      assert.equal(result.status, 1);
+      const message = args.length === 1 ? result.stdout : JSON.parse(result.stdout).find(f => f.rule === "no-unjustified-ignore").message;
+      assert.match(message, /suppresses nothing/u);
+      assert.match(message, /final response/u);
+      assert.doesNotMatch(message, /Write `slop-check-ignore|<why the rule is wrong here>/u);
+    }
+  }
+});
+
+check("comment findings move useful rationale to the response", () => {
+  for (const [rule, source] of [
+    ["no-narration-comments", "// First, write the journal so crash recovery can replay an interrupted update.\nwriteJournal();\napplyUpdate();\n"],
+    ["no-change-note-comments", "// As discussed in ADR-17, retry only idempotent requests\nretry(request);\n"],
+    ["no-obvious-doc-comments", "/** Constructor */\nclass AuthClient {}\n"],
+    ["no-unjustified-suppression", "// @ts-expect-error\nconnect(options);\n"],
+  ]) {
+    const file = write(`${rule}.ts`, source);
+    const result = run(["--json", file]);
+    assert.equal(result.status, 1);
+    const finding = JSON.parse(result.stdout).find(f => f.rule === rule);
+    assert.match(finding.message, /final response/u);
+    assert.doesNotMatch(finding.message, /retain reasons|retain enduring design rationale|Say why the code exists|on the same line/u);
+  }
+});
+
+for (const rule of ["require-safety-comment-for-type-assertion", "no-empty-catch", "no-unjustified-ignore", "no-unjustified-suppression"])
   check(`${rule} explanation never asks for a new justification comment`, () => {
     const result = run([`--explain=${rule}`]);
     assert.equal(result.status, 0);
