@@ -94,9 +94,14 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     directories), Git info files such as `info/exclude`, the rerere cache
     (`rr-cache`), hooks in `.git/hooks`, the Git LFS object cache, repository
     and worktree config with the files it includes, and linked worktrees.
-  - Record the starting state of the user's tree, after classifying the
-    repository's config includes the same way (approved if outside the checkout)
-    before any Git command loads them, with read-only Git commands
+  - Record the starting state of the user's tree. Before the first Git command,
+    clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
+    `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`,
+    `GIT_ALTERNATE_OBJECT_DIRECTORIES`) for every Git command in this workflow,
+    and classify every file the repository's config makes Git read (includes,
+    `core.excludesFile`, `core.attributesFile`, and similar) the same way,
+    approved if outside the checkout, or override that setting and report the
+    state it affects as unavailable. Use read-only Git commands
     (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
     `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean` and
     `.process` overridden with an empty value and `.required` set to `false`, or
@@ -124,17 +129,14 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     user-approved replacements when the tests need them.
   - If the source is a Git worktree, give the copy independent Git metadata,
     never a `.git` file or `gitdir` that points back to the user's repository.
-    Clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
-    `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`,
-    `GIT_ALTERNATE_OBJECT_DIRECTORIES`) first. Clone with `--no-hardlinks`,
-    `--no-checkout`, and `--dissociate`, with no shared or alternate object
-    store, and run the clone and every Git command in the copy with hooks
-    disabled (`core.hooksPath` set to an empty private directory) and the user's
-    global and system config ignored (`GIT_CONFIG_GLOBAL` and
-    `GIT_CONFIG_SYSTEM` set to an empty file), passing only the settings the
-    tests need, such as an identity, with `-c`, or, when the tests observe
-    config scope, as approved sanitized values in private files at their
-    original scopes. When a repository hook is under test, point
+    Clone with `--no-hardlinks`, `--no-checkout`, and `--dissociate`, with no
+    shared or alternate object store, and run the clone and every Git command in
+    the copy with hooks disabled (`core.hooksPath` set to an empty private
+    directory) and the user's global and system config ignored
+    (`GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` set to an empty file), passing
+    only the settings the tests need, such as an identity, with `-c`, or, when
+    the tests observe config scope, as approved sanitized values in private
+    files at their original scopes. When a repository hook is under test, point
     `core.hooksPath` at the copy's own hooks, never the user's. Remove the
     clone's remotes, or point them at private repositories inside the temporary
     directory. Do not check out: copy the user's working-tree bytes into the
@@ -155,7 +157,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     those objects and the refs that carry them, or treat the target as unable to
     run safely from a copy. Give each initialized submodule and every other
     nested repository the same independent metadata and state, or mark the
-    checks that depend on it unfaithful. A non-Git source stays without Git.
+    checks that depend on it unfaithful. A bare repository gets the same
+    independent copy of its Git directory and Git state, skipping worktree-only
+    steps such as `git status`. A non-Git source stays without Git.
   - Reapply the file metadata the tests depend on. If the source state, Git or
     filesystem, cannot be reproduced faithfully, treat the target as unable to
     run from a copy. Before running checks, compare the completed copy with the
@@ -187,7 +191,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - Before deleting the copy, move every redacted artifact the report cites,
     from passing or failing runs (logs, traces, screenshots, coverage), to a
     private evidence directory outside the disposable temporary directory, kept
-    after the report for the user to review and delete.
+    after the report for the user to review and delete. Classify each artifact
+    without following it and export only bounded regular files and directories;
+    record links and special nodes instead of exporting them.
   - When copying kept tests, snapshots, and requested fixes back, compare each
     destination with its baseline and its current state; if it changed since the
     copy was made, merge the change or report a conflict instead of overwriting
