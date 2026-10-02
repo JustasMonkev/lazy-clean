@@ -94,7 +94,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     directories), Git info files such as `info/exclude`, the rerere cache
     (`rr-cache`), hooks in `.git/hooks`, the Git LFS object cache, repository
     and worktree config with the files it includes, and linked worktrees.
-  - Record the starting state of the user's tree, with read-only Git commands
+  - Record the starting state of the user's tree, after classifying the
+    repository's config includes the same way (approved if outside the checkout)
+    before any Git command loads them, with read-only Git commands
     (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
     `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean` and
     `.process` overridden with an empty value and `.required` set to `false`, or
@@ -184,7 +186,8 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     service outside the private directory.
   - Before deleting the copy, move every redacted artifact the report cites,
     from passing or failing runs (logs, traces, screenshots, coverage), to a
-    private evidence directory.
+    private evidence directory outside the disposable temporary directory, kept
+    after the report for the user to review and delete.
   - When copying kept tests, snapshots, and requested fixes back, compare each
     destination with its baseline and its current state; if it changed since the
     copy was made, merge the change or report a conflict instead of overwriting
