@@ -38,7 +38,7 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
 
 | Layer | What to check when applicable |
 | --- | --- |
-| Static/build | Lint, types, compilation, packaging, public API compatibility; formatters in check or dry-run mode only. |
+| Static/build | Lint, types, compilation, packaging, public API compatibility; formatters in check or dry-run mode, or write mode in the disposable copy when formatter output is under test. |
 | Unit/property | Branches, boundaries, malformed input, invariants, generated cases. |
 | Integration/contract | Real dependency boundaries, serialization, persistence, error semantics. |
 | E2E/UI | Critical user flows, navigation, keyboard use, browser/device variants. |
@@ -56,7 +56,8 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   rule below cannot guarantee that, ask first. A copy and redirected variables
   do not stop a command that writes to an absolute path or finds the original
   checkout, so run these commands under an OS-level sandbox that allows
-  writes only inside the private directory, hides the original checkout, and
+  writes only inside the private directory, hides the original checkout (only
+  the preparation clone may read it, read-only), and
   denies network access except to approved sandbox endpoints, and, as the
   platform allows, keeps host processes, IPC sockets such as Docker or D-Bus,
   devices, and the Windows registry out of reach; where none is available,
@@ -65,14 +66,14 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   need, and production fixes the user asked for.
   - Record the starting state of the user's tree, with read-only Git commands
     (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
-    `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean`
-    and `.process` overridden with an empty value, or direct file reads
-    instead of Git): `git status`, the unstaged and staged diffs, copies of
-    untracked files (only checksums for secrets), and checksums of ignored
-    files the tests read, or a checksum listing without Git. Include `HEAD`,
-    the refs and repository config the tests read, and the file modes,
-    owners, timestamps, ACLs, and extended attributes they depend on.
-    Keep these in a private temporary directory outside the repository and
+    `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean` and
+    `.process` overridden with an empty value and `.required` set to `false`, or
+    direct file reads instead of Git): `git status`, the unstaged and staged
+    diffs, copies of untracked files (only checksums for secrets), and checksums
+    of ignored files the tests read, or a checksum listing without Git. Include
+    `HEAD`, the refs, reflogs, and repository config the tests read, and the
+    file modes, owners, timestamps, ACLs, and extended attributes they depend
+    on. Keep these in a private temporary directory outside the repository and
     outside what isolated commands can read, and delete it on every exit once
     the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
@@ -88,26 +89,25 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`,
     `GIT_ALTERNATE_OBJECT_DIRECTORIES`) first. Clone with `--no-hardlinks`,
     `--no-checkout`, and `--dissociate`, with no shared or alternate object
-    store, and run the
-    clone and every Git command in the copy with hooks disabled
-    (`core.hooksPath` set to an empty private directory) and the user's global
-    and system config ignored (`GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` set
-    to an empty file), passing only the settings the tests need, such as an
-    identity, with `-c`. When a repository hook is under test, point
-    `core.hooksPath` at the copy's own hooks, never the user's. Remove
-    the clone's remotes, or point them at private repositories inside the
+    store, and run the clone and every Git command in the copy with hooks
+    disabled (`core.hooksPath` set to an empty private directory) and the user's
+    global and system config ignored (`GIT_CONFIG_GLOBAL` and
+    `GIT_CONFIG_SYSTEM` set to an empty file), passing only the settings the
+    tests need, such as an identity, with `-c`. When a repository hook is under
+    test, point `core.hooksPath` at the copy's own hooks, never the user's.
+    Remove the clone's remotes, or point them at private repositories inside the
     temporary directory. Do not check out: copy the user's working-tree bytes
     into the clone so no smudge filter or other conversion helper runs, then
     recreate the index, unstaged changes, untracked files, `HEAD` (the same
     branch, or the same detached commit), and the refs the tests read (local
-    branches, tags, custom refs, stashes) separately. Replay the repository
-    and worktree config settings the checks read (`git config --local` and
-    `--worktree`). If a left-out secret is reachable from the clone's history,
-    stashes, or refs, drop the refs and objects that carry it, or treat the
-    target as unable to run safely from a copy. Give each initialized
-    submodule and every other nested repository the same independent metadata
-    and state, or mark the checks that depend on it unfaithful. A non-Git
-    source stays without Git.
+    branches, tags, custom refs, stashes, and their reflogs) separately. Replay
+    the repository and worktree config settings the checks read
+    (`git config --local` and `--worktree`). If a left-out secret is reachable
+    from the clone's history, stashes, or refs, drop the refs and objects that
+    carry it, or treat the target as unable to run safely from a copy. Give each
+    initialized submodule and every other nested repository the same independent
+    metadata and state, or mark the checks that depend on it unfaithful. A
+    non-Git source stays without Git.
   - Reapply the file modes, owners, timestamps, ACLs, and extended attributes
     the tests depend on, and recreate hard-link groups among copied files. If
     the source state, Git or filesystem, cannot be reproduced faithfully, treat
@@ -138,13 +138,13 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     commands in place. When approved, ask the user to pause other edits to the
     tree and to every Git directory it shares with other worktrees while each
     such command runs, and back up the tree first: bytes, file modes, symlink
-    targets, which paths exist, owners, timestamps, ACLs and extended
-    attributes where the platform has them, and the Git directories the tree
-    points to (`git rev-parse --absolute-git-dir` and `--git-common-dir`).
+    targets, which paths exist, hard-link groups, owners, timestamps, ACLs and
+    extended attributes where the platform has them, and the Git directories the
+    tree points to (`git rev-parse --absolute-git-dir` and `--git-common-dir`).
     Record what the command changed, restore from the backup only paths that
     still hold exactly that result, and report any other change as a conflict.
-    Delete those backups on every exit once restoring is done; keep one only
-    for an unresolved conflict, and say where.
+    Delete those backups on every exit once restoring is done; keep one only for
+    an unresolved conflict, and say where.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
