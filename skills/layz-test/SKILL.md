@@ -69,9 +69,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - Read the source without changing access times (a read-only snapshot or a
     no-atime read); if that is not possible, ask first.
   - Before any step reads the tree (the starting record, the copy, or an
-    in-place backup), classify each path without following it. Never read
-    FIFOs, sockets, or device nodes, and stop at mount points: recreate special
-    files privately where supported, copy a mounted directory only from a
+    in-place backup), classify each path without following it. Never read FIFOs,
+    sockets, or device nodes, and stop at mount points: recreate FIFOs and
+    sockets privately, recreate a device node only when its device is
+    virtualized or the user approves, copy a mounted directory only from a
     user-approved snapshot of its intended contents, or mark the checks that
     depend on them unfaithful.
   - In the rules below, file metadata means everything about a file beyond its
@@ -103,12 +104,14 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit, on a
     filesystem with the same semantics as the source (case sensitivity, name
-    limits, rename and locking behavior, file watching), or mark the checks
-    that depend on those semantics unfaithful. Present the copy at a path
-    equivalent to the source checkout (length, characters, depth, drive), or
-    mark the checks that depend on the checkout path unfaithful. Leave out
-    secrets such as `.env` files, keys, and production configuration; supply
-    sandbox or user-approved replacements when the tests need them.
+    limits, rename and locking behavior, file watching), or mark the checks that
+    depend on those semantics unfaithful. Present the copy at a path equivalent
+    to the source checkout (length, characters, depth, drive), or mark the
+    checks that depend on the checkout path unfaithful. Leave out secrets such
+    as `.env` files, keys, and production configuration; supply sandbox or
+    user-approved replacements when the tests need them. Before copying, check
+    the copy's size, file count, and expected time against a budget; if it would
+    exceed it, ask first or report the affected checks as blocked.
   - If the source is a Git worktree, give the copy independent Git metadata,
     never a `.git` file or `gitdir` that points back to the user's repository.
     Clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
@@ -165,7 +168,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     its baseline and its current state; if it changed since the copy was made,
     merge the change or report a conflict instead of overwriting it. Recheck the
     destination immediately before an atomic rename into place, and report a
-    conflict if it changed in between.
+    conflict if it changed in between. For any conflict, save the proposed file
+    or patch in the private evidence directory before the copy is deleted, and
+    report where.
   - If the suite cannot run from a copy, ask before running write-capable
     commands in place. When approved, ask the user to pause other edits to the
     tree and to every Git directory it shares with other worktrees from before
@@ -196,19 +201,21 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   and list the hypotheses tested; never invent a finding to meet a bug quota.
 - Run commands non-interactively, never in watch mode. Give external work a
   timeout and a bounded workload. Keep a service a setup command starts alive
-  until the tests that depend on it finish, then stop every process tree the
-  scenario started and clean up listeners, timers, temporary data, and
-  mutations on success, failure, cancellation, and partial setup.
-  Use isolated test data. Run destructive or costly external checks only within
-  authorization; report missing prerequisites instead of inventing credentials.
-  Never call a live payment, email, SMS, or other third-party account unless it
-  is an isolated sandbox or the user approves; otherwise report it as blocked
-  automation that needs a sandbox or approval. Run isolated commands with an
-  allowlisted environment: drop inherited credentials, tokens, and agent
-  sockets such as `SSH_AUTH_SOCK`, and add back only sandbox or user-approved
-  credentials. Keep the non-secret variables the behavior depends on, such as
-  locale, `TZ`, `CI`, and feature flags, or report the affected checks as
-  unfaithful.
+  until the tests that depend on it finish, then tear down the scenario as a
+  unit: run it in a lifecycle container such as a cgroup, PID namespace, or
+  Windows Job so daemons that leave the process tree stop too, or report the
+  check as blocked where none is available; clean up listeners, timers,
+  temporary data, and mutations on success, failure, cancellation, and partial
+  setup. Use isolated test data. Run destructive or costly external checks only
+  within authorization; report missing prerequisites instead of inventing
+  credentials. Never call a live payment, email, SMS, or other third-party
+  account unless it is an isolated sandbox or the user approves; otherwise
+  report it as blocked automation that needs a sandbox or approval. Run isolated
+  commands with an allowlisted environment: drop inherited credentials, tokens,
+  and agent sockets such as `SSH_AUTH_SOCK`, and add back only sandbox or
+  user-approved credentials. Keep the non-secret variables the behavior depends
+  on, such as locale, `TZ`, `CI`, and feature flags, or report the affected
+  checks as unfaithful.
 - Prove a risky test can fail: reproduce a regression by running the same new
   test, unchanged, against the complete old non-test product state (code,
   generated files, schemas, lockfiles, configuration, dependencies freshly
