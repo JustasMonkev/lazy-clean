@@ -78,11 +78,12 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     is virtualized or the user approves, copy a mounted directory only from a
     user-approved snapshot of its intended contents, or mark the checks that
     depend on them unfaithful. Before that, check the size, file count, and
-    expected time of everything preparation reads or copies (the tree, its Git
-    directories with their caches and alternate object stores, snapshotted
-    symlink targets and Git config includes, and approved external paths an
-    in-place backup copies) against a budget; if it would exceed it, ask first
-    or report the affected checks as blocked.
+    expected time of everything preparation reads or copies (such as the tree,
+    its Git directories with their caches and alternate object stores,
+    snapshotted symlink targets and files Git config makes Git read, approved
+    external paths an in-place backup copies, and privately copied toolchains)
+    against a budget; if it would exceed it, ask first or report the affected
+    checks as blocked.
   - In the rules below, file metadata means everything about a file beyond its
     bytes that the checks can observe, such as file modes, owners, timestamps,
     ACLs, extended attributes, named streams such as NTFS alternate data
@@ -102,7 +103,8 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     `GIT_ALTERNATE_OBJECT_DIRECTORIES`, `GIT_SHALLOW_FILE`), config overrides
     (`GIT_CONFIG_PARAMETERS`, `GIT_CONFIG_COUNT`, `GIT_CONFIG_GLOBAL`,
     `GIT_CONFIG_SYSTEM`), and trace destinations (`GIT_TRACE*`), and set only
-    the ones these rules name, and classify every file Git's config makes it
+    the ones these rules name plus approved non-secret ones the behavior depends
+    on, such as `GIT_AUTHOR_NAME`, and classify every file Git's config makes it
     read (includes, `core.excludesFile`, `core.attributesFile`, and similar) the
     same way, approved if outside the checkout, or override that setting and
     report the state it affects as unavailable. Use read-only Git commands
@@ -282,12 +284,13 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   the defect. Separate pre-existing failures from new ones.
 - Before reporting, confirm the user's tree differs from its starting state only
   by the tests you added, the snapshots they need, and requested changes; name
-  any other change instead of reverting it. If tested source, its metadata, or
-  the Git state the tests read changed after the copy was made, refresh the copy
-  and rerun the affected checks within a retry and time limit, or report the
-  newer state as untested. If a command rewrote tested production files inside
-  the copy, such as a pretest code generator, report it and rerun from the
-  intended state, or report that state as untested.
+  any other change instead of reverting it. If tested source, its metadata, the
+  Git state the tests read, or another input they read from outside the copy,
+  such as approved home state or a toolchain, changed after the copy was made,
+  refresh the copy and rerun the affected checks within a retry and time limit,
+  or report the newer state as untested. If a command rewrote tested production
+  files inside the copy, such as a pretest code generator, report it and rerun
+  from the intended state, or report that state as untested.
 - Rerun affected checks after test edits. Review TS/JS changes with the installed
   slop checker when available; its clean result is not behavioral evidence.
 
