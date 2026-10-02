@@ -77,8 +77,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     virtualized or the user approves, copy a mounted directory only from a
     user-approved snapshot of its intended contents, or mark the checks that
     depend on them unfaithful. Before that, check the size, file count, and
-    expected time of reading and copying the tree against a budget; if it would
-    exceed it, ask first or report the affected checks as blocked.
+    expected time of reading and copying the tree, its Git directories, and
+    their caches against a budget; if it would exceed it, ask first or report
+    the affected checks as blocked.
   - In the rules below, file metadata means everything about a file beyond its
     bytes that the checks can observe, such as file modes, owners, timestamps,
     ACLs, extended attributes, named streams such as NTFS alternate data
@@ -140,11 +141,11 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     credentials such as authenticated remote URLs or `http.extraHeader` with
     sandbox or user-approved values, or mark the checks that depend on any of it
     unfaithful. If a left-out secret is in any of the clone's objects, reachable
-    or not, purge those objects and the refs that carry them, or treat the
-    target as unable to run safely from a copy. Give each initialized submodule
-    and every other nested repository the same independent metadata and state,
-    or mark the checks that depend on it unfaithful. A non-Git source stays
-    without Git.
+    or not, or in a reproduced extension store such as the Git LFS cache, purge
+    those objects and the refs that carry them, or treat the target as unable to
+    run safely from a copy. Give each initialized submodule and every other
+    nested repository the same independent metadata and state, or mark the
+    checks that depend on it unfaithful. A non-Git source stays without Git.
   - Reapply the file metadata the tests depend on. If the source state, Git or
     filesystem, cannot be reproduced faithfully, treat the target as unable to
     run from a copy. Before running checks, compare the completed copy with the
@@ -239,13 +240,13 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
 - Prove a risky test can fail: reproduce a regression by running the same new
   test, unchanged, against the complete old non-test product state (code,
   generated files, schemas, lockfiles, configuration, dependencies freshly
-  installed from the old lockfile, and the old pinned toolchain version, or
-  report the proof blocked if that cannot be restored) in the disposable copy,
-  where its intended assertion fails, then passing against the fix; or, in the
-  copy, leave a passing test unchanged, mutate a relevant production
-  branch/boundary, and observe that test's intended assertion fail; revert and
-  rerun green. A mutation of the test itself or a setup/import failure is not
-  proof.
+  installed from the old lockfile, the old pinned toolchain version, and the old
+  Git state the product reads such as `HEAD`, tags, and the index, or report the
+  proof blocked if that cannot be restored) in the disposable copy, where its
+  intended assertion fails, then passing against the fix; or, in the copy, leave
+  a passing test unchanged, mutate a relevant production branch/boundary, and
+  observe that test's intended assertion fail; revert and rerun green. A
+  mutation of the test itself or a setup/import failure is not proof.
 - Do not weaken assertions, skip failing cases, or change production behavior
   just to get green. Fix product defects only when the user has requested fixes
   for this task; a supplied file or diff is testing scope, not authorization to
