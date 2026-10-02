@@ -160,6 +160,8 @@ Assertion tallies display `type assertion review`. The legacy rule ID `require-s
 
 Emoji, sequencing comments, change-note comments, and apparently obvious documentation comments are review findings. Retain symbols required by a specification; put useful contracts and rationale in the final response. Existing `SAFETY:` and `slop-check-ignore` directives remain supported for compatibility, but new ones are not a remedy for findings.
 
+With `--since`, newly added or edited `SAFETY:`, `lazy:`, and `slop-check-ignore` comments are reported as `no-new-justification-comments`. New comments do not justify assertions, empty catches, or hard-coded sleeps, and new ignore directives do not suppress findings. Untouched legacy comments retain their exemptions. Full-file scans without added-line provenance retain legacy handling.
+
 `--explain=<rule-id>` prints one rule's reasoning — why it fires, a slop/instead pair, and when the rule is wrong — and runs no scan. Read it before rewriting code a finding landed on that you believe is correct:
 
 ```

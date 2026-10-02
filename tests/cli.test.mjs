@@ -344,6 +344,61 @@ check("--since keeps only findings on lines the diff added", () => {
   assert.doesNotMatch(since.stdout, /require-safety-comment/u, "pre-existing findings stay out of scope");
 });
 
+check("--since rejects new justification markers and preserves legacy evidence", () => {
+  const repo = join(root, "new-justifications");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const legacy = "// SAFETY: parsed by the schema above\nconst user = payload as User;\n";
+  const block = "/* SAFETY:\n * parsed by the schema above\n */\nconst user = payload as User;\n";
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "legacy.ts"), legacy);
+    writeFileSync(join(repo, "existing-assertion.ts"), SLOP);
+    writeFileSync(join(repo, "block.ts"), block);
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since justification provenance (git unavailable)");
+    return;
+  }
+  writeFileSync(join(repo, "legacy.ts"), `${legacy}export const added = 1;\n`);
+  assert.equal(run(["--since=HEAD", "legacy.ts"], repo).status, 0);
+  assert.equal(run(["--json", "legacy.ts"], repo).status, 0);
+  const cases = [
+    ["new.ts", legacy, "require-safety-comment-for-type-assertion"],
+    ["inline.ts", "const user = payload as User; // SAFETY: parsed by the schema above\n", "require-safety-comment-for-type-assertion"],
+    ["angle.ts", "// SAFETY: parsed by the schema above\nconst user = <User>payload;\n", "require-safety-comment-for-type-assertion"],
+    ["multiline.ts", "/* SAFETY:\n * parsed by the schema above\n */\nconst user = payload as {\n  id: string;\n};\n", "require-safety-comment-for-type-assertion"],
+    ["ignored.ts", "// slop-check-ignore require-safety-comment-for-type-assertion -- parsed at the boundary\nconst user = payload as User;\n", "require-safety-comment-for-type-assertion"],
+    ["file-ignored.ts", "// slop-check-ignore-file require-safety-comment-for-type-assertion -- parsed at the boundary\nconst user = payload as User;\n", "require-safety-comment-for-type-assertion"],
+    ["catch.ts", "try { save(); } catch {\n  // SAFETY: the resource is already gone\n}\n", "no-empty-catch"],
+    ["sleep.ts", "// lazy: deliberate timing policy\nawait new Promise(resolve => setTimeout(resolve, 1000));\n", "no-arbitrary-sleep"],
+  ];
+  for (const [file, source, rule] of cases) {
+    writeFileSync(join(repo, file), source);
+    const result = run(["--since=HEAD", "--json", file], repo);
+    assert.equal(result.status, 1, file);
+    const findings = JSON.parse(result.stdout);
+    assert.ok(findings.some(f => f.rule === "no-new-justification-comments"), file);
+    assert.ok(findings.some(f => f.rule === rule), file);
+    assert.match(findings.find(f => f.rule === "no-new-justification-comments").message, /final response/u);
+  }
+  writeFileSync(join(repo, "existing-assertion.ts"), `// SAFETY: parsed by the schema above\n${SLOP}`);
+  const addedOnly = run(["--since=HEAD", "--json", "existing-assertion.ts"], repo);
+  assert.equal(addedOnly.status, 1);
+  assert.deepEqual(JSON.parse(addedOnly.stdout).map(f => f.rule), ["no-new-justification-comments"]);
+  writeFileSync(join(repo, "block.ts"), block.replace("schema above", "schema at the boundary"));
+  const editedBlock = run(["--since=HEAD", "--json", "block.ts"], repo);
+  assert.equal(editedBlock.status, 1);
+  const marker = JSON.parse(editedBlock.stdout).find(f => f.rule === "no-new-justification-comments");
+  assert.equal(marker.line, 1);
+  assert.equal(marker.endLine, 3);
+  writeFileSync(join(repo, "metadata.ts"), "// SPDX-License-Identifier: MIT\n// @ts-expect-error vendor stub is missing the strict option\nconnect(options);\nconst text = '// SAFETY: only string data';\n");
+  assert.equal(run(["--since=HEAD", "metadata.ts"], repo).status, 0);
+});
+
 // The tally is part of the same report `--since` scopes to the diff. Counting
 // every ignore in a file one of whose lines changed reported "1 suppressed" for
 // an untouched ignore somebody else wrote, which reads as this change having

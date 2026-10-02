@@ -132,12 +132,15 @@ const COMMENT_CONTRACT = [
   ["forbids added code comments", /do not add code comments/iu],
   ["removes nonessential comments", /remove nonessential comments/iu],
   ["preserves licenses and tool directives", /required license notices and functional tool directives/iu],
-  ["reports rationale outside code", /final response/iu],
+  ["reports rationale outside code", /(?:rationale|constraints)[^.]*final response/iu],
 ];
 for (const file of [...BUILD_SURFACES, "skills/slop-check/SKILL.md"])
   for (const [description, pattern] of COMMENT_CONTRACT)
     ok(`${file} ${description}`, pattern.test(flat(read(file))));
 ok("README does not provide a new suppression-comment recipe", !/\/\/\s*slop-check-ignore/u.test(read("README.md")));
+ok("Python slop distinguishes existing directives from new suppressions",
+  /Python slop[^\n]*existing[^\n]*functional[^\n]*final response/u.test(read("skills/slop-check/SKILL.md"))
+  && !/`# type: ignore` \/ `# noqa` without a code and reason/u.test(read("skills/slop-check/SKILL.md")));
 const DELIVERY_CONTRACT = [
   ...COMMENT_CONTRACT,
   ["states material assumptions", /material assumptions/iu],

@@ -28,6 +28,7 @@ Triage every finding per `<skills-dir>/slop-check/SKILL.md`:
 
 - Fix real slop — delete the pointless code, restore real type evidence.
 - Do not add code comments; remove nonessential comments from code you touch. Keep required license notices and functional tool directives.
+- Report rationale and constraints in the final response.
 - Retain a necessary type assertion or swallowed error only after checking its invariant; explain it in the final response, never in a `SAFETY:`, `lazy:`, or suppression comment.
 - A genuine false positive stays as-is; say so briefly. Never rewrite correct code to silence the checker, and never weaken or disable a check.
 

@@ -26,7 +26,7 @@ Do not announce the mode during ordinary work.
 
 ## The ladder
 
-Before fixing, trace affected code, callers, callbacks, retries, restore/replay,
+First, trace affected code, callers, callbacks, retries, restore/replay,
 and concurrent use. Fix the shared cause.
 
 1. Skip speculative work, never an explicit requirement.
@@ -39,7 +39,7 @@ side effects, test seams, readability, and framework contracts.
 No avoidable dependency or unrelated cleanup.
 Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
-Report checked invariants, shortcut ceilings, and upgrade paths in the final response.
+Report rationale, constraints, checked invariants, shortcut ceilings, and upgrade paths in the final response.
 Never add `SAFETY:`, `lazy:`, or suppression comments.
 
 Match existing style. Reject speculative features/config, needless

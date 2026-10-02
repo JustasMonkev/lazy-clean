@@ -2659,6 +2659,10 @@ function* iterateCommentFindings(ctx) {
     const position = endLine > start.line ? { ...start, endLine } : start;
     const body = comment.text.replace(/^\/\/+\s?|^\/\*+|\*+\/$/gu, "").replace(/^\s*\*\s?/gmu, "");
 
+    if (ctx.newComments.has(comment) && (/\b(?:SAFETY|lazy)\s*:/u.test(body) || IGNORE_DIRECTIVE.test(comment.text))) {
+      yield { ...position, rule: "no-new-justification-comments", message: "New justification marker. Remove it; verify the code's invariant and explain rationale and constraints in the final response." };
+      continue;
+    }
     if (inTestFile && /\bmock\b/iu.test(body) && !/\b(?:placeholder|not implemented|TODO)\b/iu.test(body)) {
       continue;
     }
@@ -2999,6 +3003,12 @@ const RULE_EXPLANATIONS = {
     correct: "const raw: unknown = input;\nif (typeof raw !== \"string\") throw new TypeError(\"Expected a string\");",
     exceptions: "Existing justified ignores remain supported. Do not add an ignore to silence a finding; fix the code or report the checked invariant in the final response.",
   },
+  "no-new-justification-comments": {
+    why: "A newly added SAFETY, lazy, or slop-check-ignore marker cannot serve as verification. Check the code's invariant and explain rationale and constraints in the final response.",
+    slop: "// SAFETY: parsed by the schema above\nconst user = payload as User;",
+    correct: "const user = payload;",
+    exceptions: "This rule requires added-line provenance from --since or the lintSource addedLines option. Untouched legacy comments retain compatibility; full-file scans without provenance keep legacy handling. Preserve required licenses and functional tool directives. The example preserves the shown declaration's runtime value; validate actual required fields before using opaque input. Necessary assertions may remain as review findings after the marker is removed.",
+  },
   "no-unjustified-suppression": {
     why: "Bare TypeScript suppression directives and biome-ignore directives need a concrete justification for the diagnostic being suppressed. Fix the actual reported problem when possible. The example below addresses a TypeScript boundary error, not every possible lint or formatting diagnostic.",
     slop: "// @ts-expect-error\nconnect(options);",
@@ -3022,7 +3032,7 @@ const STANDALONE_RULE_IDS = [
   "no-catch-fake-success", "no-change-note-comments", "no-emoji",
   "no-empty-catch", "no-empty-type-declaration", "no-filler-comments",
   "no-foreach-push", "no-let-if-else-assign", "no-log-and-rethrow",
-  "no-message-only-rethrow", "no-narration-comments", "no-obvious-doc-comments",
+  "no-message-only-rethrow", "no-narration-comments", "no-new-justification-comments", "no-obvious-doc-comments",
   "no-promise-constructor-wrapper", "no-reduce-accumulator-copy", "no-restating-comments",
   "no-shape-in-symbol-names", "no-slop-symbol-names", "no-typed-jsdoc",
   "no-unjustified-ignore", "no-unjustified-suppression", "no-unknown-alias",
@@ -3110,18 +3120,26 @@ function collectSuppressions(comments, lineStarts) {
   return { forLine, forFile, findings };
 }
 
-export function lintSource(rawSource, filePath, { disabled } = {}) {
+export function lintSource(rawSource, filePath, { disabled, addedLines } = {}) {
   const extension = extname(filePath).toLowerCase();
-  // A leading BOM is not part of line 1: it defeats the shebang skip and shifts
-  // every column on that line by one.
   const source = rawSource.charCodeAt(0) === 0xfeff ? rawSource.slice(1) : rawSource;
   const { masked, comments } = maskSource(source, { jsx: JSX_EXTENSIONS.has(extension) });
+  const lineStarts = buildLineStarts(masked);
+  const newComments = new Set();
+  if (addedLines) {
+    for (const comment of comments) {
+      const first = offsetToPosition(lineStarts, comment.start).line;
+      const last = offsetToPosition(lineStarts, Math.max(comment.start, comment.end - 1)).line;
+      for (let line = first; line <= last; line += 1) {
+        if (addedLines.has(line)) {
+          newComments.add(comment);
+          break;
+        }
+      }
+    }
+  }
   const declaredNames = new Set();
   for (const match of masked.matchAll(SLOP_DECLARATION_PATTERN)) declaredNames.add(match[1]);
-  // `any` bound as a VALUE somewhere in this file: after a declaration keyword,
-  // or as a parameter. `function pick(any: number)` is a legal binding and the
-  // declaration-keyword set does not cover parameter lists, so the reference in
-  // its body was still reported as the type.
   const bindsAny = declaredNames.has("any") || PARAMETER_ANY.test(masked) || DESTRUCTURED_ANY.test(masked);
   const ctx = {
     path: filePath,
@@ -3129,21 +3147,22 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
     declaredNames,
     bindsAny,
     isTypeScript: TYPESCRIPT_EXTENSIONS.has(extension),
-    // TS but not TSX: in a .tsx file `<User>` opens an element, not an assertion.
     angleAssertions: TYPESCRIPT_EXTENSIONS.has(extension) && !JSX_EXTENSIONS.has(extension),
     masked,
     maskedLines: masked.split("\n"),
     rawLines: source.split("\n"),
     comments,
-    lineStarts: buildLineStarts(masked),
+    newComments,
+    lineStarts,
   };
-  const suppressions = collectSuppressions(ctx.comments, ctx.lineStarts);
+  const legacyCtx = addedLines ? { ...ctx, comments: comments.filter(comment => !newComments.has(comment)) } : ctx;
+  const suppressions = collectSuppressions(legacyCtx.comments, lineStarts);
   const findings = [
     ...iterateLineFindings(ctx),
-    ...iterateBlockFindings(ctx),
-    ...iterateCandidateFindings(ctx),
+    ...iterateBlockFindings(legacyCtx),
+    ...iterateCandidateFindings(legacyCtx),
     ...iterateArrayFindings(ctx),
-    ...iterateAssertionFindings(ctx),
+    ...iterateAssertionFindings(legacyCtx),
     ...iterateCommentFindings(ctx),
     ...suppressions.findings,
   ];
@@ -3476,7 +3495,7 @@ function main() {
       continue;
     }
     linted += 1;
-    const fileFindings = lintSource(source, displayPath(file), { disabled });
+    const fileFindings = lintSource(source, displayPath(file), { disabled, addedLines: changed });
     // Evidence can precede the diagnostic anchor (a receiver) or follow it
     // (a reducer seed). Match the same evidence span as the PostToolUse hook.
     const touched = (finding) => {

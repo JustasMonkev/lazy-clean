@@ -61,7 +61,7 @@ For each item, the question is the same: does this code earn its place, or does 
 - **Edit-artifacts** — old and new versions of a function both kept, re-export aliases "for compatibility" when every call site could just be updated, comments describing the diff instead of the code.
 - **Comment and doc bloat** — remove nonessential code comments, including JSDoc that restates the signature and section banners. Put useful constraints and rationale in the final response.
 - **Comments that explain what the code does** — use a better name or simpler shape, then delete the walkthrough without changing behavior. Do not add single-use helpers only to remove a comment. Explain tricky logic, constraints, and ordering in the final response.
-- **Python slop** — bare `except:` or `except Exception: pass`, mutable default arguments, `if not x` where `0` or `""` is valid, loose dicts where a dataclass names the shape, `utils.py` grab bags, work done at import time, and `# type: ignore` / `# noqa` without a code and reason.
+- **Python slop** — bare `except:` or `except Exception: pass`, mutable default arguments, `if not x` where `0` or `""` is valid, loose dicts where a dataclass names the shape, `utils.py` grab bags, and work done at import time. Verify the named diagnostic before retaining an existing functional `# type: ignore` or `# noqa`; explain the evidence in the final response and do not add suppression comments.
 - **Test slop** — tests that assert a mock was called with the value it was just given, module-level mocks instead of real dependency seams, duplicated setup that hides what varies. Keep tests that catch real regressions; mutation evidence is optional when existing red-green checks already prove the risky behavior.
 
 ## Checker rules
@@ -84,7 +84,7 @@ annotations, and ambiguous bindings are outside its coverage. Repeated binding
 names in separate scopes can suppress findings; expressions beyond the scanner's
 bounded window are skipped.
 
-Comment slop: `no-filler-comments`, `no-narration-comments`, `no-change-note-comments`, `no-backcompat-comments`, `no-restating-comments`, `no-obvious-doc-comments`, `no-typed-jsdoc`, `no-unjustified-suppression`, `no-unjustified-ignore`, `no-emoji`.
+Comment slop: `no-filler-comments`, `no-narration-comments`, `no-change-note-comments`, `no-backcompat-comments`, `no-restating-comments`, `no-obvious-doc-comments`, `no-typed-jsdoc`, `no-unjustified-suppression`, `no-unjustified-ignore`, `no-new-justification-comments`, `no-emoji`.
 
 One production implementation is not evidence of waste. Before removing a
 boundary, check what external details and independent reasons for change its

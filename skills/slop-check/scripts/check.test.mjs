@@ -1590,17 +1590,18 @@ expectSuppression(
   assert.deepEqual(unknown, [], "explanations for rules the checker does not emit");
 
   for (const [id, explanation] of Object.entries(RULE_EXPLANATIONS)) {
+    const options = id === "no-new-justification-comments" ? { addedLines: new Set([1]) } : undefined;
     for (const field of ["why", "slop", "correct", "exceptions"]) {
       if (typeof explanation[field] !== "string" || explanation[field].trim().length === 0) {
         failures += 1;
         console.error(`FAIL --explain ${id}: ${field} is missing or too short`);
       }
     }
-    if (!lintSource(explanation.slop, "sample.ts").some((finding) => finding.rule === id)) {
+    if (!lintSource(explanation.slop, "sample.ts", options).some((finding) => finding.rule === id)) {
       failures += 1;
       console.error(`FAIL --explain ${id}: slop example no longer triggers the rule`);
     }
-    const kept = lintSource(explanation.correct, "sample.ts");
+    const kept = lintSource(explanation.correct, "sample.ts", options);
     if (kept.length > 0) {
       failures += 1;
       console.error(`FAIL --explain ${id}: correct example still has findings [${kept.map((f) => f.rule).join(", ")}]`);

@@ -94,7 +94,7 @@ and hardware calibration.
 
 Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
-Report checked invariants, shortcut ceilings, and upgrade paths in the final response.
+Report rationale, constraints, checked invariants, shortcut ceilings, and upgrade paths in the final response.
 Never add SAFETY:, lazy:, or suppression comments.
 
 At changed boundaries: group behavior by reason to change; keep policy independent
