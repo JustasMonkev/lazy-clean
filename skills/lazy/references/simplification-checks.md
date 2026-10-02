@@ -195,6 +195,10 @@ function describe(result: Result) {
 - Use early returns for guard clauses instead of nesting the main path.
 - When a new caller would pass a boolean that switches behavior, prefer two
   named functions or an options object; keep existing signatures unchanged.
+- Merge two similar functions only when what differs is a value and both
+  change for the same reason; pass that value as an ordinary parameter. When
+  behavior differs, keep both named functions and move only the shared step
+  into a private helper they call. Leave look-alikes from separate domains apart.
 - Name values by domain meaning (`retryDelayMs`, `activeUsers`), not by type or
   shape (`data`, `obj2`, `userArray`).
 - Use `Promise.all` for independent awaits only when failing fast is correct;

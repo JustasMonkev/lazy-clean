@@ -196,6 +196,8 @@ const LANGUAGE_REFERENCES = [
     /`baseUrl`/u, /`node10`/u, /`target: "es5"`/u, /`outFile`/u, /write `with`/u, /`namespace Foo \{\}`/u,
     /`types` is `\[\]`/u, /"ignoreDeprecations": "6\.0".*never a fix/u, /no stable programmatic API/u,
     /typescript-eslint/u, /on 5\.x or older, flag them only when the task is an upgrade/u, /`nodenext` for Node together with `module: "nodenext"`/u, /only if the installed compiler still accepts it/u,
+    // Merging near-duplicates: a value may become a parameter; a behavior switch may not.
+    /Merge two similar functions only when.*same reason.*ordinary parameter.*shared step.*private helper/u,
   ]],
   ["python-checks.md", [
     /requires-python/u, /\(3\.10\)/u, /one reason to change/iu, /import-time side effects/iu,
@@ -204,6 +206,7 @@ const LANGUAGE_REFERENCES = [
     /`@dataclass`/u, /configures/u, /Do not add a tool, loosen its config/u,
     /pytest\.raises/u, /`typing\.Protocol`, `TypedDict`, and `Literal` \(3\.8\)/u, /`dataclasses` and `from __future__ import annotations` \(3\.7\)/u, /on 3\.7 and later/u, /`functools\.cache`.*\(3\.9\)/u,
     /oldest version the project supports/u, /lru_cache\(maxsize=None\)/u, /typing_extensions/u,
+    /Merge two similar functions only when.*same reason.*ordinary parameter.*shared step.*private helper/u,
     /never add pytest to a unittest project/u, /private sentinel/u, /`closing\(\.\.\.\)` alone closes without committing/u, /`with closing\(sqlite3\.connect\(path\)\) as conn, conn:`/u, /f-strings \(3\.6\)/u, /helps only when nothing evaluates the annotations.*`typing\.get_type_hints`/u, /Cleanup that must run on every exit.*`finally`.*`except BaseException:` that re-raises/u, /Keep an existing ABC when it enforces `@abstractmethod`/u, /`str\.format` for f-strings/u, /self\.subTest/u, /assertRaises/u,
   ]],
 ];
