@@ -130,27 +130,30 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     disabled (`core.hooksPath` set to an empty private directory) and the user's
     global and system config ignored (`GIT_CONFIG_GLOBAL` and
     `GIT_CONFIG_SYSTEM` set to an empty file), passing only the settings the
-    tests need, such as an identity, with `-c`. When a repository hook is under
-    test, point `core.hooksPath` at the copy's own hooks, never the user's.
-    Remove the clone's remotes, or point them at private repositories inside the
-    temporary directory. Do not check out: copy the user's working-tree bytes
-    into the clone so no smudge filter or other conversion helper runs, then
-    recreate the index, unstaged changes, untracked files, and the Git state the
-    tests read separately: `HEAD` on the same branch or the same detached
-    commit, linked worktrees as private retargeted worktrees, repository and
-    worktree config (`git config --local` and `--worktree`) with included files
-    snapshotted into the private directory (an include outside the checkout
-    only with the user's approval, classified the same way, with secrets left
-    out, and compared again after the run), path-valued settings such as
-    `core.worktree` and include paths retargeted to the copy, replacing
-    credentials such as authenticated remote URLs or `http.extraHeader` with
-    sandbox or user-approved values, or mark the checks that depend on any of it
-    unfaithful. If a left-out secret is in any of the clone's objects, reachable
-    or not, or in a reproduced extension store such as the Git LFS cache, purge
-    those objects and the refs that carry them, or treat the target as unable to
-    run safely from a copy. Give each initialized submodule and every other
-    nested repository the same independent metadata and state, or mark the
-    checks that depend on it unfaithful. A non-Git source stays without Git.
+    tests need, such as an identity, with `-c`, or, when the tests observe
+    config scope, as approved sanitized values in private files at their
+    original scopes. When a repository hook is under test, point
+    `core.hooksPath` at the copy's own hooks, never the user's. Remove the
+    clone's remotes, or point them at private repositories inside the temporary
+    directory. Do not check out: copy the user's working-tree bytes into the
+    clone so no smudge filter or other conversion helper runs, then recreate the
+    index, unstaged changes, untracked files, and the Git state the tests read
+    separately: `HEAD` on the same branch or the same detached commit, linked
+    worktrees as private retargeted worktrees, repository and worktree config
+    (`git config --local` and `--worktree`) with included files snapshotted into
+    the private directory (an include outside the checkout only with the user's
+    approval, classified the same way, with secrets left out, and compared again
+    after the run, rerunning or marking the dependent checks unfaithful if it
+    changed), path-valued settings such as `core.worktree` and include paths
+    retargeted to the copy, replacing credentials such as authenticated remote
+    URLs or `http.extraHeader` with sandbox or user-approved values, or mark the
+    checks that depend on any of it unfaithful. If a left-out secret is in any
+    of the clone's objects, reachable or not, or in a reproduced extension store
+    such as the Git LFS cache, purge those objects and the refs that carry them,
+    or treat the target as unable to run safely from a copy. Give each
+    initialized submodule and every other nested repository the same independent
+    metadata and state, or mark the checks that depend on it unfaithful. A
+    non-Git source stays without Git.
   - Reapply the file metadata the tests depend on. If the source state, Git or
     filesystem, cannot be reproduced faithfully, treat the target as unable to
     run from a copy. Before running checks, compare the completed copy with the
