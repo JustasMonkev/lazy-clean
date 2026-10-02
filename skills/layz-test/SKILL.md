@@ -23,8 +23,9 @@ tests. Keep this a one-shot testing workflow; do not change lazy mode or hooks.
 2. Read pinned and installed tool versions and test commands from the project.
    Reuse its runner, fixtures, assertions, and installed dependencies. Do not
    download tools or add a framework merely to measure this workflow. If the
-   lockfile declares a runner that is not installed yet, run the repository's
-   documented locked install in the disposable copy before calling it blocked.
+   lockfile declares a runner that is missing or whose runnable version differs
+   from the lockfile, run the repository's documented locked install in the
+   disposable copy before calling it blocked.
 3. Make a compact behavior → test → result table. Enumerate happy paths,
    boundaries (including false/zero/empty), invalid inputs, and failure modes.
    Trace retries, restore/replay, cancellation, concurrency, and cleanup where
@@ -81,7 +82,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     repository and outside what isolated commands can read, and delete it on
     every exit once the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
-    included, in a private temporary directory deleted on every exit. Leave out
+    included, in a private temporary directory deleted on every exit, on a
+    filesystem with the same semantics as the source (case sensitivity, name
+    limits, rename and locking behavior, file watching), or mark the checks
+    that depend on those semantics unfaithful. Leave out
     secrets such as `.env` files, keys, and production configuration; supply
     sandbox or user-approved replacements when the tests need them. Classify
     each path without following it before reading it: never read FIFOs,
@@ -183,7 +187,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   unfaithful.
 - Prove a risky test can fail: reproduce a regression by running the same new
   test, unchanged, against the complete old non-test product state (code,
-  generated files, schemas, lockfiles, configuration) in the disposable copy,
+  generated files, schemas, lockfiles, configuration, and dependencies freshly
+  installed from the old lockfile, or report the proof blocked if that graph
+  cannot be restored) in the disposable copy,
   where its intended assertion fails, then passing against the fix; or, in the
   copy, leave a passing test unchanged, mutate a relevant production
   branch/boundary, and observe that test's intended assertion fail; revert and
