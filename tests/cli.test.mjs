@@ -519,15 +519,15 @@ check("--since preserves unchanged comments beside code edits and rejects copied
     ["joined-lines.js", split, joined],
     ["split-lines.js", joined, split],
     ["leading.js", leading, leading.replace('"old"', '"new"')],
-    ["trailing.ts", trailing, trailing.replace("oldPayload", "nextPayload")],
+    ["trailing.ts", trailing, trailing.replace("oldPayload", "nextPayload"), 1],
     ["block.js", '/* eslint\n no-console: off\n*/ console.log("old");\n', '/* eslint\n no-console: off\n*/ console.log("new");\n'],
     ["prefix.js", `doWork(); ${leading}`, leading],
     ["suffix.js", leading, "/* eslint no-console: off */\n"],
     ["shifted.js", `const first = 1;\n\n${leading}`, `const first = 1;\n\n\n${leading.replace('"old"', '"new"')}`],
     ["crlf.js", leading.replaceAll("\n", "\r\n"), leading.replace('"old"', '"new"').replaceAll("\n", "\r\n")],
     ["lone-cr.js", leading.replaceAll("\n", "\r"), leading.replace('"old"', '"new"').replaceAll("\n", "\r")],
-    ["bom.ts", `\ufeff${trailing}`, `\ufeff${trailing.replace("oldPayload", "nextPayload")}`],
-    ["unicode.ts", trailing.replace("above", "above ✓"), trailing.replace("oldPayload", "nextPayload").replace("above", "above ✓")],
+    ["bom.ts", `\ufeff${trailing}`, `\ufeff${trailing.replace("oldPayload", "nextPayload")}`, 1],
+    ["unicode.ts", trailing.replace("above", "above ✓"), trailing.replace("oldPayload", "nextPayload").replace("above", "above ✓"), 1],
     ["no-eof-newline.js", leading.trimEnd(), leading.replace('"old"', '"new"').trimEnd()],
   ];
   const lineEndings = ["\n", "\r\n", "\r"];
@@ -570,14 +570,18 @@ check("--since preserves unchanged comments beside code edits and rejects copied
     writeFileSync(join(repo, file), source);
     const result = run(["--since=HEAD", "--json", file], repo);
     assert.equal(result.status, expected, `${file}: ${result.stderr || result.stdout}`);
-    if (expected === 1) assert.ok(JSON.parse(result.stdout).some(f => f.rule === "no-unjustified-suppression"), file);
+    if (expected === 1) {
+      const findings = JSON.parse(result.stdout);
+      assert.ok(findings.some(f => f.rule === (file.endsWith(".ts") ? "require-safety-comment-for-type-assertion" : "no-unjustified-suppression")), file);
+      if (file.endsWith(".ts")) assert.ok(!findings.some(f => f.rule === "no-new-justification-comments"), file);
+    }
   }
   git("mv", "leading.js", "renamed.js");
   git("config", "diff.renames", "false");
   const renamed = run(["--since=HEAD", "--json", "renamed.js"], repo);
   assert.equal(renamed.status, 0, `rename: ${renamed.stderr || renamed.stdout}`);
   git("mv", "trailing.ts", "renamed.ts");
-  writeFileSync(join(repo, "renamed.ts"), trailing);
+    writeFileSync(join(repo, "renamed.ts"), trailing);
   const renamedSafety = run(["--since=HEAD", "--json", "renamed.ts"], repo);
   assert.equal(renamedSafety.status, 0, `safety rename: ${renamedSafety.stderr || renamedSafety.stdout}`);
   git("mv", "renamed.ts", "trailing.ts");
@@ -589,6 +593,31 @@ check("--since preserves unchanged comments beside code edits and rejects copied
   const copied = run(["--since=HEAD", "--json", "copies.ts"], repo);
   assert.equal(copied.status, 1, `copied: ${copied.stderr || copied.stdout}`);
   assert.equal(JSON.parse(copied.stdout).filter(f => f.rule === "no-new-justification-comments").length, 1);
+});
+
+check("--since retains comment provenance for low-similarity renames", () => {
+  const repo = join(root, "low-similarity-renames");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const retained = "// SAFETY: parsed by the schema above\nconst user = payload as User;\n";
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "old.ts"), `${retained}const previous = "${"old".repeat(70)}";\n`);
+    git("add", "-A");
+    git("commit", "-qm", "base");
+    git("config", "diff.renames", "false");
+    git("mv", "old.ts", "next.ts");
+  } catch {
+    console.log("skip --since low-similarity rename (git unavailable)");
+    return;
+  }
+  writeFileSync(join(repo, "next.ts"), `${retained}const replacement = "${"new".repeat(70)}";\n`);
+  const similarity = /^R(\d+)\s/u.exec(git("diff", "-M1%", "--name-status", "HEAD"));
+  assert.ok(similarity && Number(similarity[1]) > 0 && Number(similarity[1]) < 50);
+  const result = run(["--since=HEAD", "--json", "next.ts"], repo);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
 });
 
 check("--since cleans comparison snapshots after success and Git failure", () => {
@@ -667,9 +696,12 @@ check("--since reviews new rationale for every suppression family and preserves 
     assert.ok(JSON.parse(result.stdout).some(f => f.rule === "no-unjustified-suppression" && f.startLine === 1 && f.line === 2), directive);
     for (const prefix of [
       "// SPDX-License-Identifier: MIT", "/*! @license MIT */", "/*! SPDX-License-Identifier: MIT */", "/*! Copyright Vendor */",
+      "/*! ISC License */", "/*! For license information please see app.LICENSE.txt */",
       "/** @param options Stable account identifier, never a display name. */",
       "/** @throws {Error} When startup fails. */", "/** @exception {Error} When startup fails. */",
       "/** @yields {string} The next account identifier. */", "/** @customTag Account metadata used by the documentation plugin. */",
+      "/**\n * @param options\n *   Stable options passed to the vendor API.\n */",
+      "/**\n * @throws {Error}\n *   When the connection fails.\n */",
       "/* c8 ignore stop */", "/* v8 ignore stop */",
       "/* exported foo, bar */",
       '/// <reference types="node" />', '/// <reference path="dependency.d.ts" />', '/// <reference lib="es2020" />',
@@ -711,6 +743,7 @@ check("--since combines contiguous standalone rationale without crossing code, g
     ["after-tags.js", bare, `/**\n * @see vendor-issue\n * Vendor runtime requires this suppression.\n * @param options\n */\n${bare}`, 1, 1, 6],
     ["after-description.js", bare, `/**\n * @description Vendor runtime requires\n * this suppression.\n * @see issue\n */\n${bare}`, 1, 1, 6],
     ["tags-only.js", bare, `/**\n * @see vendor-issue\n * @param options\n */\n${bare}`, 0],
+    ["after-continuation.js", bare, `/**\n * @param options\n *   Stable options passed to the vendor API.\n *\n * Vendor runtime requires this suppression.\n */\n${bare}`, 1, 1, 7],
   ];
   try {
     git("init", "-q");
@@ -744,7 +777,13 @@ check("--since keeps legacy safety evidence attached to its baseline assertion",
     ["multiline.ts", original, `${marker}const user = payload as {\n id: string;\n};\nconst stable = 1;\n`],
     ["before-old.ts", oldAssertion, `${marker}const user = payload as User;\nconst old = oldPayload as User;\n`],
     ["same-line.ts", oldAssertion, `${marker}const user = payload as User; const old = oldPayload as User;\n`],
-    ["existing.ts", oldAssertion, oldAssertion.replace("oldPayload", "nextPayload"), 0],
+    ["existing.ts", oldAssertion, oldAssertion.replace("oldPayload", "nextPayload")],
+    ["type.ts", oldAssertion, oldAssertion.replace("as User", "as AdministratorRecord")],
+    ["angle-type.ts", `${marker}const user = <User>payload;\n`, `${marker}const user = <AdministratorRecord>payload;\n`],
+    ["angle-operand.ts", `${marker}const user = <User>payload;\n`, `${marker}const user = <User>nextPayload;\n`],
+    ["property.ts", `${marker}const user = payload.user as User;\n`, `${marker}const user = payload.admin as User;\n`],
+    ["multiline-type.ts", `${marker}const user = payload as {\n id: string;\n};\n`, `${marker}const user = payload as {\n id: number;\n};\n`],
+    ["untouched.ts", oldAssertion, `${oldAssertion}export const added = 1;\n`, 0],
   ];
   try {
     git("init", "-q");
@@ -776,6 +815,8 @@ check("--since reports deletion-only edits inside surviving justification commen
     ["lazy.js", "/* lazy:\n * deliberate timing policy\n * vendor fields checked\n */\nawait new Promise(resolve => setTimeout(resolve, 1000));\n", "no-new-justification-comments"],
     ["suppression.js", "/* eslint-disable no-console\n * vendor fields checked\n */\nconsole.log(value);\n", "no-unjustified-suppression"],
     ["explanation.js", "/* Vendor diagnostic is incorrect.\n * vendor fields checked\n */\n// eslint-disable-next-line no-console\nconsole.log(value);\n", "no-unjustified-suppression"],
+    ["whole.ts", "// Vendor declaration is incorrect in version 1.\n// @ts-ignore\nlegacyCall();\n", "no-unjustified-suppression", "// Vendor declaration is incorrect in version 1.\n"],
+    ["whole-eslint.js", "// Vendor declaration is incorrect in version 1.\n// eslint-disable-next-line no-console\nconsole.log(value);\n", "no-unjustified-suppression", "// Vendor declaration is incorrect in version 1.\n"],
   ];
   try {
     git("init", "-q");
@@ -788,8 +829,8 @@ check("--since reports deletion-only edits inside surviving justification commen
     console.log("skip --since deleted rationale (git unavailable)");
     return;
   }
-  for (const [file, original, rule] of cases) {
-    writeFileSync(join(repo, file), original.replace(" * vendor fields checked\n", ""));
+  for (const [file, original, rule, removed = " * vendor fields checked\n"] of cases) {
+    writeFileSync(join(repo, file), original.replace(removed, ""));
     const result = run(["--since=HEAD", "--json", file], repo);
     assert.equal(result.status, 1, `${file}: ${result.stderr || result.stdout}`);
     const findings = JSON.parse(result.stdout);

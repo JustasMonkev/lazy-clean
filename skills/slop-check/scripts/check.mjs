@@ -2502,7 +2502,11 @@ function* iterateAssertionFindings(ctx) {
       for (let l = line; l <= endLine; l += 1) commentLines.add(l);
     }
   }
-  const evidenceApplies = (offset, line) => !ctx.addedLines?.has(line) || ctx.legacyAssertionStarts?.has(offset) === true;
+  const evidenceApplies = (offset, line, endLine = line) => {
+    if (ctx.legacyAssertionStarts !== undefined) return ctx.legacyAssertionStarts.has(offset);
+    for (let at = line; at <= endLine; at += 1) if (ctx.addedLines?.has(at)) return false;
+    return true;
+  };
   // `import { readFile as read, ... }` spans lines; skipping only the line the
   // keyword sits on left every aliased specifier below it flagged.
   let inSpecifierList = false;
@@ -2560,11 +2564,12 @@ function* iterateAssertionFindings(ctx) {
   // its last line and a `/** SAFETY: ... */` block still counts. The old
   // three-line window was a blanket: one comment exempted every assertion
   // within three lines of it, including ones it says nothing about.
-  const unjustified = (offset) => {
+  const unjustified = (offset, end) => {
     const { line, column } = offsetToPosition(lineStarts, offset);
+    const endLine = offsetToPosition(lineStarts, Math.max(offset, end - 1)).line;
     if (skippedLines.has(line)) return null;
-    if ((commentLines.has(line) || commentLines.has(line - 1)) && evidenceApplies(offset, line)) return null;
-    return { line, column };
+    if ((commentLines.has(line) || commentLines.has(line - 1)) && evidenceApplies(offset, line, endLine)) return null;
+    return { line, column, ...(endLine > line && { endLine }) };
   };
 
   // An assertion whose TYPE spans lines — `payload as {\n  id: string;\n}` is
@@ -2580,7 +2585,7 @@ function* iterateAssertionFindings(ctx) {
     if (candidate[1] && inCatchBlock(candidate[1], candidate.index)) continue;
     const lineStart = lineStarts[offsetToPosition(lineStarts, asAt).line - 1];
     if (/\[[^\]]*\bin\b[^\]]*$/u.test(masked.slice(lineStart, asAt))) continue;
-    const at = unjustified(asAt);
+    const at = unjustified(asAt, candidate.index + candidate[0].trimEnd().length);
     if (!at) continue;
     yield {
       ...at,
@@ -2595,7 +2600,7 @@ function* iterateAssertionFindings(ctx) {
   // even though it is TypeScript.
   if (ctx.angleAssertions) {
     for (const candidate of matchAngleAssertions(masked)) {
-      const at = unjustified(candidate.open);
+      const at = unjustified(candidate.open, candidate.index + candidate[0].trimEnd().length);
       if (!at) continue;
       yield {
         ...at,
@@ -2616,8 +2621,12 @@ function suppressionExplanation(comment) {
   let body = commentBody(comment.text);
   if (!comment.text.startsWith("/**")) return body;
   body = body.replace(/\{@[A-Za-z][\w-]*\b[^}]*\}/gu, " ");
+  let tagIndent;
   return body.split(/\r\n|[\n\r]/u).map(line => {
     const tags = [...line.matchAll(/(?:^|\s)@([A-Za-z][\w-]*)\b/gu)];
+    const indent = line.search(/\S/u);
+    if (!tags.length && tagIndent !== undefined && indent > tagIndent) return "";
+    tagIndent = tags.length && !/^(?:description|desc)$/u.test(tags.at(-1)[1]) ? indent : undefined;
     let prose = line.slice(0, tags[0]?.index ?? line.length);
     for (const [index, tag] of tags.entries()) {
       if (/^(?:description|desc)$/u.test(tag[1])) prose += ` ${line.slice(tag.index + tag[0].length, tags[index + 1]?.index ?? line.length)}`;
@@ -2630,6 +2639,7 @@ function isCommentMetadata(comment, masked) {
   const body = commentBody(comment.text);
   return /^\s*(?:SPDX-License-Identifier:|Copyright\b|(?:MIT|Apache|BSD|MPL)\s+License\b|@(?:license|copyright)\b|@ts-check\b|(?:eslint|oxlint)-enable\b|biome-ignore-end\b|(?:c8|v8)\s+ignore\s+stop\b|node:coverage\s+enable\b|globals?\s|eslint-env\b)/iu.test(body)
     || (comment.kind === "block" && /^\s*exported\s/u.test(body))
+    || (comment.text.startsWith("/*!") && /\blicen[cs]e\b/iu.test(body))
     || (comment.text.startsWith("/**") && !suppressionExplanation(comment).trim())
     || (/^\/\/\/[^\S\r\n]*<(?:reference|amd-module|amd-dependency)(?=[\s/>])/u.test(comment.text) && !masked.slice(0, comment.start).trim());
 }
@@ -2689,6 +2699,24 @@ function suppressionIsJustified(body) {
 
 const TEST_FILE_PATTERN = /(?:^|[\\/])(?:__tests__|__mocks__|test|tests|fixtures)[\\/]|\.(?:test|spec)\.[cm]?[jt]sx?$/u;
 
+function precedingExplanation(ctx, index) {
+  let line = offsetToPosition(ctx.lineStarts, ctx.comments[index].start).line;
+  let text = "";
+  const comments = [];
+  for (let from = index - 1; from >= 0; from -= 1) {
+    const previous = ctx.comments[from];
+    const start = offsetToPosition(ctx.lineStarts, previous.start);
+    if (offsetToPosition(ctx.lineStarts, Math.max(previous.start, previous.end - 1)).line !== line - 1
+      || ctx.source.slice(ctx.lineStarts[start.line - 1], previous.start).trim()
+      || ctx.source.slice(previous.end, ctx.lineStarts[line - 1]).trim()
+      || isDiffSuppression(previous.text) || isCommentMetadata(previous, ctx.masked) || IGNORE_DIRECTIVE.test(previous.text)) break;
+    text = `${suppressionExplanation(previous)}\n${text}`;
+    line = start.line;
+    comments.push(previous);
+  }
+  return { line, text, comments };
+}
+
 function* iterateCommentFindings(ctx) {
   const { comments, lineStarts, maskedLines, isTypeScript } = ctx;
   const inTestFile = TEST_FILE_PATTERN.test(ctx.path);
@@ -2703,25 +2731,12 @@ function* iterateCommentFindings(ctx) {
       continue;
     }
     if (isDiffSuppression(body)) {
-      let explanationLine = start.line;
-      let explanation = "";
-      let explanationAdded = false;
-      for (let from = index - 1; from >= 0; from -= 1) {
-        const previous = comments[from];
-        const previousStart = offsetToPosition(lineStarts, previous.start);
-        if (offsetToPosition(lineStarts, Math.max(previous.start, previous.end - 1)).line !== explanationLine - 1
-          || ctx.source.slice(lineStarts[previousStart.line - 1], previous.start).trim()
-          || ctx.source.slice(previous.end, lineStarts[explanationLine - 1]).trim()
-          || isDiffSuppression(previous.text) || isCommentMetadata(previous, ctx.masked) || IGNORE_DIRECTIVE.test(previous.text)) break;
-        explanation = `${suppressionExplanation(previous)}\n${explanation}`;
-        explanationLine = previousStart.line;
-        explanationAdded ||= ctx.newComments.has(previous);
-      }
-      const newExplanation = explanationAdded && isJustification({ text: explanation });
-      if (ctx.newComments.has(comment) || newExplanation) {
+      const explanation = precedingExplanation(ctx, index);
+      const newExplanation = explanation.comments.some(previous => ctx.newComments.has(previous)) && isJustification(explanation);
+      if (ctx.newComments.has(comment) || newExplanation || ctx.removedExplanationLines?.has(start.line)) {
         yield {
           ...position,
-          ...(newExplanation && { startLine: explanationLine }),
+          ...(newExplanation && { startLine: explanation.line }),
           rule: "no-unjustified-suppression",
           message: "New or changed checker suppression. Fix the underlying diagnostic or verify that this functional directive is required; explain the evidence in the final response. Adding a reason comment is not verification.",
         };
@@ -3190,7 +3205,7 @@ function collectSuppressions(comments, lineStarts) {
   return { forLine, forFile, findings };
 }
 
-export function lintSource(rawSource, filePath, { disabled, addedLines, unchangedCommentStarts, legacyAssertionStarts } = {}) {
+export function lintSource(rawSource, filePath, { disabled, addedLines, unchangedCommentStarts, legacyAssertionStarts, removedExplanationLines } = {}) {
   const extension = extname(filePath).toLowerCase();
   const sourceOffset = rawSource.charCodeAt(0) === 0xfeff ? 1 : 0;
   const source = rawSource.slice(sourceOffset);
@@ -3228,6 +3243,7 @@ export function lintSource(rawSource, filePath, { disabled, addedLines, unchange
     comments,
     newComments,
     addedLines,
+    removedExplanationLines,
     legacyAssertionStarts: legacyAssertionStarts && new Set([...legacyAssertionStarts].map(offset => offset - sourceOffset)),
     lineStarts,
   };
@@ -3402,7 +3418,7 @@ function addedLines(ref) {
   // The prefixes are pinned because diff.mnemonicprefix renames `b/` to `w/`,
   // and quotepath is off so a non-ASCII name arrives verbatim, not C-quoted.
   const diff = git([
-    "-C", root, "-c", "core.quotepath=false", "diff", "-M", "-U0", "--no-color", "--no-ext-diff", "--no-textconv",
+    "-C", root, "-c", "core.quotepath=false", "diff", "-M1%", "-U0", "--no-color", "--no-ext-diff", "--no-textconv",
     "--src-prefix=a/", "--dst-prefix=b/", "--end-of-options", ref, "--",
   ]);
   // A `+++ ` line is a header only where a header can appear: directly after the
@@ -3441,7 +3457,8 @@ function addedLines(ref) {
 function commentProvenance(rawSource, file, change, ref) {
   const unchanged = new Set();
   const legacyAssertionStarts = new Set();
-  const provenance = { unchangedCommentStarts: unchanged, legacyAssertionStarts };
+  const removedExplanationLines = new Set();
+  const provenance = { unchangedCommentStarts: unchanged, legacyAssertionStarts, removedExplanationLines };
   if (change.basePath === null) return provenance;
   const git = (args, root = change.root) => execFileSync("git", ["--literal-pathspecs", "-C", root, ...args], { encoding: "utf8", maxBuffer: 64e6 });
   const base = git(["show", "--end-of-options", `${ref}:${change.basePath}`]).replaceAll("\r\n", "\n");
@@ -3547,7 +3564,9 @@ function commentProvenance(rawSource, file, change, ref) {
   preserve(source.length - newAt);
   const baseScan = maskSource(base, { jsx: JSX_EXTENSIONS.has(extname(change.basePath).toLowerCase()) });
   const sourceScan = maskSource(source, { jsx: JSX_EXTENSIONS.has(extname(file).toLowerCase()) });
-  const baseComments = new Map(baseScan.comments.map(comment => [`${comment.start}:${comment.end}`, comment.text]));
+  const baseComments = new Map(baseScan.comments.map((comment, index) => [`${comment.start}:${comment.end}`, { comment, index }]));
+  const preservedBaseStarts = new Set();
+  const preservedComments = [];
   const safetyAttachments = [];
   let spanAt = 0;
   for (const comment of sourceScan.comments) {
@@ -3555,9 +3574,12 @@ function commentProvenance(rawSource, file, change, ref) {
     const span = spans[spanAt];
     if (!span || span.start > comment.start || span.end < comment.end) continue;
     const oldStart = span.baseStart + comment.start - span.start;
-    if (baseComments.get(`${oldStart}:${oldStart + comment.end - comment.start}`) !== comment.text) continue;
+    const baseline = baseComments.get(`${oldStart}:${oldStart + comment.end - comment.start}`);
+    if (baseline?.comment.text !== comment.text) continue;
+    preservedBaseStarts.add(oldStart);
     const position = offsetToPosition(sourceLines, comment.start);
     unchanged.add(rawLines[position.line - 1] + position.column - 1);
+    preservedComments.push({ comment, baseline, line: position.line });
     if (/\bSAFETY\s*:/u.test(comment.text)) safetyAttachments.push({
       oldFirst: offsetToPosition(baseLines, oldStart).line,
       oldLast: offsetToPosition(baseLines, oldStart + comment.end - comment.start - 1).line + 1,
@@ -3565,21 +3587,39 @@ function commentProvenance(rawSource, file, change, ref) {
       newLast: offsetToPosition(sourceLines, comment.end - 1).line + 1,
     });
   }
+  const baseContext = { comments: baseScan.comments, source: base, masked: baseScan.masked, lineStarts: baseLines };
+  for (const { comment, baseline, line } of preservedComments) {
+    if (!isDiffSuppression(comment.text)) continue;
+    const explanation = precedingExplanation(baseContext, baseline.index);
+    if (isJustification(explanation) && explanation.comments.some(previous => !preservedBaseStarts.has(previous.start)))
+      removedExplanationLines.add(line);
+  }
   if (TYPESCRIPT_EXTENSIONS.has(extname(file).toLowerCase()) && safetyAttachments.length) {
-    const offsets = (masked, path) => [
-      ...[...matchAssertions(masked)].map(candidate => candidate.index + /\bas\s/u.exec(candidate[0]).index),
-      ...(JSX_EXTENSIONS.has(extname(path).toLowerCase()) ? [] : [...matchAngleAssertions(masked)].map(candidate => candidate.open)),
-    ].sort((a, b) => a - b);
-    const oldAssertions = new Set(offsets(baseScan.masked, change.basePath));
+    const claims = (scan, path, lines) => [
+      ...[...matchAssertions(scan.masked)].map(candidate => ({
+        offset: candidate.index + /\bas\s/u.exec(candidate[0]).index,
+        start: lines[offsetToPosition(lines, candidate.index).line - 1],
+        end: candidate.index + candidate[0].trimEnd().length,
+      })),
+      ...(JSX_EXTENSIONS.has(extname(path).toLowerCase()) ? [] : [...matchAngleAssertions(scan.masked)].map(candidate => ({
+        offset: candidate.open,
+        start: lines[offsetToPosition(lines, candidate.index).line - 1],
+        end: lines[offsetToPosition(lines, candidate.index + candidate[0].length).line] ?? scan.masked.length,
+      }))),
+    ].sort((a, b) => a.start - b.start || a.offset - b.offset);
+    const oldAssertions = new Map(claims(baseScan, change.basePath, baseLines).map(claim => [claim.offset, claim]));
     spanAt = 0;
-    for (const offset of offsets(sourceScan.masked, file)) {
-      while (spanAt < spans.length && spans[spanAt].end <= offset) spanAt += 1;
+    for (const claim of claims(sourceScan, file, sourceLines)) {
+      while (spanAt < spans.length && spans[spanAt].end <= claim.start) spanAt += 1;
       const span = spans[spanAt];
-      if (!span || span.start > offset || span.end < offset + (sourceScan.masked[offset] === "<" ? 1 : 2)) continue;
-      const oldOffset = span.baseStart + offset - span.start;
-      if (!oldAssertions.has(oldOffset)) continue;
+      if (!span || span.start > claim.start || span.end < claim.end) continue;
+      const oldOffset = span.baseStart + claim.offset - span.start;
+      const oldClaim = oldAssertions.get(oldOffset);
+      if (!oldClaim || oldClaim.start !== span.baseStart + claim.start - span.start
+        || oldClaim.end !== span.baseStart + claim.end - span.start
+        || base.slice(oldClaim.start, oldClaim.end) !== source.slice(claim.start, claim.end)) continue;
       const oldLine = offsetToPosition(baseLines, oldOffset).line;
-      const position = offsetToPosition(sourceLines, offset);
+      const position = offsetToPosition(sourceLines, claim.offset);
       if (safetyAttachments.some(c => c.oldFirst <= oldLine && oldLine <= c.oldLast && c.newFirst <= position.line && position.line <= c.newLast))
         legacyAssertionStarts.add(rawLines[position.line - 1] + position.column - 1);
     }
@@ -3738,6 +3778,7 @@ function main() {
     // Evidence can precede the diagnostic anchor (a receiver) or follow it
     // (a reducer seed). Match the same evidence span as the PostToolUse hook.
     const touched = (finding) => {
+      if (finding.rule === "no-unjustified-suppression" && provenance?.removedExplanationLines.has(finding.line)) return true;
       for (let line = finding.startLine ?? finding.line; line <= (finding.endLine ?? finding.line); line += 1) {
         if (changed.has(line) || fileFindings.changedCommentLines.has(line)) return true;
       }
