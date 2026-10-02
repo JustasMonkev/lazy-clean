@@ -17,7 +17,8 @@
  * code.
  */
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { extname, isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -2610,15 +2611,16 @@ function* iterateAssertionFindings(ctx) {
 const SUPPRESSION_DIRECTIVE_PATTERN = /@ts-(?:ignore|expect-error|nocheck)\b|\bbiome-ignore\b/u;
 const DIFF_SUPPRESSION_DIRECTIVE_PATTERN = new RegExp(`^\\s*(?:(?:\\/\\/+|\\/\\*+)\\s*)?(?:\\*\\s*)?(?:${SUPPRESSION_DIRECTIVE_PATTERN.source}|\\b(?:(?:eslint|oxlint)-disable(?:-next-line|-line)?|deno-(?:lint|fmt)-ignore(?:-file)?|prettier-ignore|(?:istanbul|c8|v8)\\s+ignore|node:coverage\\s+(?:ignore|disable)))\\b`, "u");
 
-function isCommentMetadata(comment) {
+function isCommentMetadata(comment, masked) {
   const body = commentBody(comment.text);
-  return /^\s*(?:SPDX-License-Identifier:|Copyright\b|(?:MIT|Apache|BSD|MPL)\s+License\b|@(?:license|copyright)\b|@ts-check\b|(?:eslint|oxlint)-enable\b|biome-ignore-end\b|node:coverage\s+enable\b|globals?\s|eslint-env\b)/iu.test(body)
-    || (comment.text.startsWith("/**") && /(?:^|\s|\{)@[A-Za-z][\w-]*\b/u.test(body));
+  return /^\s*(?:SPDX-License-Identifier:|Copyright\b|(?:MIT|Apache|BSD|MPL)\s+License\b|@(?:license|copyright)\b|@ts-check\b|(?:eslint|oxlint)-enable\b|biome-ignore-end\b|(?:c8|v8)\s+ignore\s+stop\b|node:coverage\s+enable\b|globals?\s|eslint-env\b)/iu.test(body)
+    || (comment.text.startsWith("/**") && /(?:^|\s|\{)@[A-Za-z][\w-]*\b/u.test(body))
+    || (/^\/\/\/[^\S\r\n]*<(?:reference|amd-module|amd-dependency)(?=[\s/>])/u.test(comment.text) && !masked.slice(0, comment.start).trim());
 }
 
 function isDiffSuppression(body) {
   body = commentBody(body);
-  if (/^\s*biome-ignore-end\b/u.test(body)) return false;
+  if (/^\s*(?:biome-ignore-end\b|(?:c8|v8)\s+ignore\s+stop\b)/u.test(body)) return false;
   if (DIFF_SUPPRESSION_DIRECTIVE_PATTERN.test(body)) return true;
   const configuration = /^\s*(?:\/\*+\s*)?eslint\s+([\s\S]*?)(?:\*+\/)?\s*$/u.exec(body)?.[1];
   if (configuration === undefined) return false;
@@ -2694,7 +2696,7 @@ function* iterateCommentFindings(ctx) {
         if (offsetToPosition(lineStarts, Math.max(previous.start, previous.end - 1)).line !== explanationLine - 1
           || ctx.source.slice(lineStarts[previousStart.line - 1], previous.start).trim()
           || ctx.source.slice(previous.end, lineStarts[explanationLine - 1]).trim()
-          || isDiffSuppression(previous.text) || isCommentMetadata(previous) || IGNORE_DIRECTIVE.test(previous.text)) break;
+          || isDiffSuppression(previous.text) || isCommentMetadata(previous, ctx.masked) || IGNORE_DIRECTIVE.test(previous.text)) break;
         explanation = `${commentBody(previous.text)}\n${explanation}`;
         explanationLine = previousStart.line;
         explanationAdded ||= ctx.newComments.has(previous);
@@ -3417,17 +3419,29 @@ function addedLines(ref) {
 function unchangedCommentStarts(rawSource, file, change, ref) {
   const unchanged = new Set();
   if (change.basePath === null) return unchanged;
-  const git = args => execFileSync("git", ["--literal-pathspecs", "-C", change.root, ...args], { encoding: "utf8", maxBuffer: 64e6 });
+  const git = (args, root = change.root) => execFileSync("git", ["--literal-pathspecs", "-C", root, ...args], { encoding: "utf8", maxBuffer: 64e6 });
   const base = git(["show", "--end-of-options", `${ref}:${change.basePath}`]).replaceAll("\r\n", "\n");
   const source = rawSource.replaceAll("\r\n", "\n");
   const baseLines = buildLineStarts(base);
   const sourceLines = buildLineStarts(source);
   const rawLines = buildLineStarts(rawSource);
-  const diff = git([
-    "-c", "core.quotepath=false", "diff", "--word-diff=porcelain", "--word-diff-regex=.", "-U0",
-    "--no-color", "--no-ext-diff", "--no-textconv", "--src-prefix=a/", "--dst-prefix=b/",
-    "--end-of-options", ref, "--", change.basePath, relative(change.root, file),
-  ]);
+  const directory = mkdtempSync(join(tmpdir(), "slop-check-comment-"));
+  let diff;
+  try {
+    writeFileSync(join(directory, "base"), base);
+    writeFileSync(join(directory, "source"), source);
+    try {
+      diff = git([
+        "-c", "core.quotepath=false", "diff", "--no-index", "--word-diff=porcelain", "--word-diff-regex=.", "-U0",
+        "--no-color", "--no-ext-diff", "--no-textconv", "--src-prefix=a/", "--dst-prefix=b/", "--", "base", "source",
+      ], directory);
+    } catch (error) {
+      if (error.status !== 1) throw error;
+      diff = error.stdout;
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
   const spans = [];
   let oldAt = 0;
   let newAt = 0;
@@ -3453,7 +3467,7 @@ function unchangedCommentStarts(rawSource, file, change, ref) {
       active = false;
     } else if (!inHunk && line.startsWith("+++ ")) {
       const target = line.slice(4);
-      active = target !== "/dev/null" && resolve(change.root, diffTargetPath(target)) === file;
+      active = target !== "/dev/null" && diffTargetPath(target) === "source";
     } else if (active && line.startsWith("@@ ")) {
       checkHunk();
       const hunk = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/u.exec(line);
@@ -3482,7 +3496,6 @@ function unchangedCommentStarts(rawSource, file, change, ref) {
           oldAt = oldNext;
           newAt = newNext;
           const consumeLength = (value, at) => {
-            if (char === "\r" && value[at] === "\n") return index < text.length - 1 ? 1 : 0;
             if (value[at] !== char) throw new Error("source changed during comment comparison");
             return 1;
           };

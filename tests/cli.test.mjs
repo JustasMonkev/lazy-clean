@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { execFileSync } from "node:child_process";
-import { chmodSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -427,6 +427,7 @@ check("--since reviews new compiler suppressions and new explanations for old di
     writeFileSync(join(repo, "legacy-eslint.js"), "/* eslint no-console: off */\nconsole.log(value);\n");
     writeFileSync(join(repo, "edited-eslint.js"), "/* eslint no-console: error */\nconsole.log(value);\n");
     writeFileSync(join(repo, "biome-range.js"), "// biome-ignore-start lint: generated payload\nconnect(options);\n");
+    for (const tool of ["c8", "v8"]) writeFileSync(join(repo, `${tool}-range.js`), `/* ${tool} ignore start */\nconnect(options);\n`);
     git("add", "-A");
     git("commit", "-qm", "base");
   } catch {
@@ -436,6 +437,11 @@ check("--since reviews new compiler suppressions and new explanations for old di
   writeFileSync(join(repo, "biome-range.js"), "// biome-ignore-start lint: generated payload\nconnect(options);\n// biome-ignore-end lint: generated payload\n");
   assert.equal(run(["--since=HEAD", "--json", "biome-range.js"], repo).status, 0);
   assert.equal(run(["--json", "biome-range.js"], repo).status, 0);
+  for (const tool of ["c8", "v8"]) {
+    const file = `${tool}-range.js`;
+    writeFileSync(join(repo, file), `/* ${tool} ignore start */\nconnect(options);\n/* ${tool} ignore stop */\n`);
+    assert.equal(run(["--since=HEAD", "--json", file], repo).status, 0, file);
+  }
   writeFileSync(join(repo, "legacy.ts"), `${justified}export const added = 1;\n`);
   assert.equal(run(["--since=HEAD", "legacy.ts"], repo).status, 0);
   writeFileSync(join(repo, "legacy-eslint.js"), "/* eslint no-console: off */\nconsole.log(value);\nexport const added = 1;\n");
@@ -530,10 +536,21 @@ check("--since preserves unchanged comments beside code edits and rejects copied
     cases.push([":(exclude)special.ts", leading, leading.replace('"old"', '"new"')]);
   }
   const multiline = '/* eslint\n no-console: off\n*/ console.log("old");\n';
+  const plain = "const first = 1;\nconst last = 2;\n";
+  const insertions = [
+    ["start", `const inserted = 3;\n${plain}`],
+    ["middle", "const first = 1;\nconst inserted = 3;\nconst last = 2;\n"],
+    ["end", `${plain}const inserted = 3;\n`],
+    ["blank", "const first = 1;\n\nconst last = 2;\n"],
+  ];
   for (const [oldIndex, oldEnding] of lineEndings.entries())
     for (const [newIndex, newEnding] of lineEndings.entries()) {
       cases.push([`format-${oldIndex}-${newIndex}.js`, leading.replaceAll("\n", oldEnding), leading.replace('"old"', '"new"').replaceAll("\n", newEnding)]);
+      cases.push([`style-${oldIndex}-${newIndex}.js`, leading.replaceAll("\n", oldEnding), leading.replaceAll("\n", newEnding)]);
       cases.push([`multiline-${oldIndex}-${newIndex}.js`, multiline.replaceAll("\n", oldEnding), multiline.replace('"old"', '"new"').replaceAll("\n", newEnding), (oldEnding === "\r") !== (newEnding === "\r") ? 1 : 0]);
+      for (const [name, inserted] of insertions)
+        for (const prefix of ["", "/* eslint no-console: off */ "])
+          cases.push([`insert-${oldIndex}-${newIndex}-${name}-${prefix ? "comment" : "plain"}.js`, `${prefix}${plain}`.replaceAll("\n", oldEnding), `${prefix}${inserted}`.replaceAll("\n", newEnding)]);
     }
   const marker = "// SAFETY: parsed by the schema above\n";
   const copies = `${marker}const first = payload as User;\nconst second = payload as User;\n`;
@@ -566,6 +583,51 @@ check("--since preserves unchanged comments beside code edits and rejects copied
   const copied = run(["--since=HEAD", "--json", "copies.ts"], repo);
   assert.equal(copied.status, 1, `copied: ${copied.stderr || copied.stdout}`);
   assert.equal(JSON.parse(copied.stdout).filter(f => f.rule === "no-new-justification-comments").length, 1);
+});
+
+check("--since cleans comparison snapshots after success and Git failure", () => {
+  if (process.platform === "win32") {
+    console.log("skip comparison cleanup shim (POSIX executable)");
+    return;
+  }
+  const repo = join(root, "comparison-cleanup");
+  const shim = join(root, "comparison-git");
+  const record = join(root, "comparison-directory.txt");
+  mkdirSync(repo, { recursive: true });
+  mkdirSync(shim, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  let realGit;
+  try {
+    realGit = execFileSync("which", ["git"], { encoding: "utf8" }).trim();
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "app.js"), '/* eslint no-console: off */ console.log("old");\n');
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip comparison cleanup (git unavailable)");
+    return;
+  }
+  writeFileSync(join(shim, "git"), `#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args.includes("--no-index")) {
+  require("node:fs").writeFileSync(${JSON.stringify(record)}, args[args.indexOf("-C") + 1]);
+  if (process.env.SLOP_TEST_DIFF_FAIL === "1") process.exit(2);
+}
+const result = require("node:child_process").spawnSync(${JSON.stringify(realGit)}, args, { stdio: "inherit" });
+process.exit(result.status ?? 2);
+`);
+  chmodSync(join(shim, "git"), 0o755);
+  writeFileSync(join(repo, "app.js"), '/* eslint no-console: off */ console.log("new");\n');
+  for (const [fail, status] of [["0", 0], ["1", 2]]) {
+    const result = spawnSync(process.execPath, [CHECKER, "--since=HEAD", "--json", "app.js"], {
+      cwd: repo, encoding: "utf8", env: { ...process.env, PATH: `${shim}:${process.env.PATH}`, SLOP_TEST_DIFF_FAIL: fail },
+    });
+    assert.equal(result.status, status, result.stderr || result.stdout);
+    assert.equal(existsSync(readFileSync(record, "utf8")), false, "comparison directory is removed");
+    if (status === 2) assert.match(result.stderr, /cannot compare comments/u);
+  }
 });
 
 check("--since reviews new rationale for every suppression family and preserves required metadata", () => {
@@ -601,6 +663,9 @@ check("--since reviews new rationale for every suppression family and preserves 
       "// SPDX-License-Identifier: MIT", "/** @param options Stable account identifier, never a display name. */",
       "/** @throws {Error} When startup fails. */", "/** @exception {Error} When startup fails. */",
       "/** @yields {string} The next account identifier. */", "/** @customTag Account metadata used by the documentation plugin. */",
+      "/* c8 ignore stop */", "/* v8 ignore stop */",
+      '/// <reference types="node" />', '/// <reference path="dependency.d.ts" />', '/// <reference lib="es2020" />',
+      '/// <reference no-default-lib="true" />', '/// <amd-module name="legacy" />', '/// <amd-dependency path="legacy" />',
       "initialize(); // Parse options before connecting",
       "initialize(); /* Parse options before connecting */",
       "/* Parse options before connecting */ initialize();",
@@ -626,6 +691,8 @@ check("--since combines contiguous standalone rationale without crossing code, g
     ["one-word.js", bare, `// incorrect.\n//\n${bare}`, 0],
     ["metadata.js", bare, `/** @throws {Error} When startup fails. */\n// incorrect.\n${bare}`, 0],
     ["email-prose.js", bare, `/** Vendor contact user@example.com requires this workaround. */\n${bare}`, 1, 1, 2],
+    ["after-code.ts", `initialize();\n${bare}`, `initialize();\n/// <reference types="node" />\n${bare}`, 1, 2, 3],
+    ["fake-xml.ts", bare, `/// <not-a-reference types="node" />\n${bare}`, 1, 1, 2],
   ];
   try {
     git("init", "-q");

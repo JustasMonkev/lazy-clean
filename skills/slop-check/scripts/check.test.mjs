@@ -1016,6 +1016,18 @@ expectRule("flags tautological equality", "expect(false).toEqual(false);", "no-t
 expectNoRule("allows asserting a computed boolean", "expect(isPaid(invoice)).toBe(true);", "no-tautological-assertion");
 expectNoRule("allows asserting a number", "expect(totalItems(state)).toBe(4);", "no-tautological-assertion");
 
+{
+  const directive = "// eslint-disable-next-line no-console\nconnect(options);\n";
+  for (const metadata of [
+    '/// <reference types="node" />', '/// <reference path="dependency.d.ts" />', '/// <reference lib="es2020" />',
+    '/// <reference no-default-lib="true" />', '/// <amd-module name="legacy" />', '/// <amd-dependency path="legacy" />',
+  ]) {
+    const findings = lintSource(`${metadata}\n${directive}`, "sample.ts", { addedLines: new Set([1]) });
+    assert.ok(!findings.some(f => f.rule === "no-unjustified-suppression"), metadata);
+  }
+  console.log("ok   compiler metadata does not become new suppression rationale through the API");
+}
+
 // --- suppression and doc slop ------------------------------------------------
 
 expectRule("flags bare ts-ignore", "// @ts-ignore\nconst parsed = legacyParse(input);", "no-unjustified-suppression");
