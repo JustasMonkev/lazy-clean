@@ -1636,7 +1636,7 @@ expectSuppression(
   assert.deepEqual(ternary([1]), [true, false]);
   const ignored = lintSource(RULE_EXPLANATIONS["no-unjustified-ignore"].correct, "sample.ts");
   assert.equal(ignored.length, 0);
-  assert.equal(ignored.suppressed.length, 1);
+  assert.equal(ignored.suppressed.length, 0);
   const booleanReturn = new Function("items", RULE_EXPLANATIONS["no-boolean-return-branches"].correct);
   assert.equal(booleanReturn([]), false);
   assert.equal(booleanReturn([1, 2]), true);

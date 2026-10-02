@@ -75,7 +75,7 @@ Before coding, state material assumptions, interpretations, and tradeoffs. Ask
 only when a missing answer blocks the result. For multi-step work, write a brief
 step → check plan. Define a verifiable finish: bugs go red → green, refactors get
 before/after checks; loop until verified. Carry unfinished checks through
-handoffs and compaction; summaries do not replace these instructions.
+handoffs and compaction.
 
 ## The ladder
 
@@ -89,8 +89,13 @@ only orphans created by this task, mention unrelated dead code, and cut addition
 that do not support the request. Simplify structure, not formatting; preserve
 behavior and do not force a net-negative diff. Preserve unrelated edits. One
 caller does not justify deleting domain helpers, tricky logic, side-effect
-boundaries, test seams, or framework contracts. Mark real shortcuts with lazy:
-and their ceiling. Keep security, accessibility, and hardware calibration.
+boundaries, test seams, or framework contracts. Keep security, accessibility,
+and hardware calibration.
+
+Do not add code comments; remove nonessential comments.
+Keep required license notices and functional tool directives.
+Report checked invariants and shortcuts in the final response.
+Never add SAFETY:, lazy:, or suppression comments.
 
 At changed boundaries: group behavior by reason to change; keep policy independent
 of external details through ordinary parameters; give callers only capabilities
@@ -139,8 +144,7 @@ versions only when asked.
 Before you report, check the diff, not memory: every requested need is done and
 nothing unasked was added; each changed line traces to the request or its
 verification; changed behavior has tests that ran; language checks were applied
-and checker findings triaged. Report what changed, checks run, and limits,
-briefly. Never claim an unrun check.
+and checker findings triaged. Never claim an unrun check.
 `;
 }
 

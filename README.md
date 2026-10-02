@@ -137,7 +137,7 @@ Every subagent except the read-only Explore agents gets the ruleset (about 2,000
 
 The checker only looks at `.ts .tsx .mts .cts .js .jsx .mjs .cjs`; anything else is skipped silently. Files written through `Bash` — heredocs, `sed -i`, codemods — are not seen by the hook at all; run the checker on those yourself.
 
-Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. A failed checker run reports `check failed`; it does not claim the edit was clean. It reports findings on the lines attributed to that edit and counts findings elsewhere in the file whose origin is unknown. Those other findings may come from earlier edits in the same task; the final scan still covers them. Triage them per `skills/slop-check/SKILL.md`: fix real slop, justify false positives, keep deliberate assertions with a `// SAFETY:` comment.
+Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. A failed checker run reports `check failed`; it does not claim the edit was clean. It reports findings on the lines attributed to that edit and counts findings elsewhere in the file whose origin is unknown. Those other findings may come from earlier edits in the same task; the final scan still covers them. Triage them per `skills/slop-check/SKILL.md`: fix real slop and report checked invariants for retained findings in the final response. Do not add code comments, including `SAFETY:`, `lazy:`, or suppression comments; remove nonessential comments from code you touch. Keep required license notices and functional tool directives.
 
 ## Running the checker yourself
 
@@ -156,7 +156,7 @@ node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
 
 Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. A message shared by several findings is printed once, on the first. `--summary` replaces the finding list with the per-rule tally, which is the number that tells you whether a codebase is worth a full pass. The run summary line still prints; `--json` is the machine-readable form.
 
-Emoji, sequencing comments, change-note comments, and apparently obvious documentation comments are review findings: retain symbols required by a specification and comments that carry useful contracts, enduring design rationale, or reasons for ordering.
+Emoji, sequencing comments, change-note comments, and apparently obvious documentation comments are review findings. Retain symbols required by a specification; put useful contracts and rationale in the final response. Existing `SAFETY:` and `slop-check-ignore` directives remain supported for compatibility, but new ones are not a remedy for findings.
 
 `--explain=<rule-id>` prints one rule's reasoning — why it fires, a slop/instead pair, and when the rule is wrong — and runs no scan. Read it before rewriting code a finding landed on that you believe is correct:
 

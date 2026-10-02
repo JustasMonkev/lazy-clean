@@ -774,6 +774,33 @@ check("--explain prints one rule's explanation and exits 0", () => {
   assert.doesNotMatch(result.stdout, /clean|finding/u, "no scan runs");
 });
 
+check("assertion findings request evidence without adding comments", () => {
+  write("assertions.ts", "const a = input as User;\nconst b = input as {\n  id: string;\n};\nconst c = <User>input;\n");
+  const result = run(["--json", "assertions.ts"]);
+  assert.equal(result.status, 1);
+  const findings = JSON.parse(result.stdout).filter(f => f.rule === "require-safety-comment-for-type-assertion");
+  assert.equal(findings.length, 3);
+  for (const finding of findings) {
+    assert.match(finding.message, /checked invariant.*final response/u);
+    assert.doesNotMatch(finding.message, /immediately before|SAFETY:/u);
+  }
+});
+
+check("empty-catch findings put justification in the response", () => {
+  write("swallow.ts", "try { save(); } catch {}\n");
+  const result = run(["--json", "swallow.ts"]);
+  assert.equal(result.status, 1);
+  assert.match(JSON.parse(result.stdout).find(f => f.rule === "no-empty-catch").message, /final response/u);
+});
+
+for (const rule of ["require-safety-comment-for-type-assertion", "no-empty-catch", "no-unjustified-ignore"])
+  check(`${rule} explanation never asks for a new justification comment`, () => {
+    const result = run([`--explain=${rule}`]);
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /final response/u);
+    assert.doesNotMatch(result.stdout, /needs a comment|comment is the difference|SAFETY comment is valid|slop-check-ignore no-any --/u);
+  });
+
 check("--explain reports a mechanical tier for a mechanical rule", () => {
   const result = run(["--explain=no-double-negation-condition"]);
   assert.equal(result.status, 0);

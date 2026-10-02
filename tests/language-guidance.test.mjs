@@ -128,7 +128,17 @@ for (const file of BUILD_SURFACES) {
 // it: SKILL.md is filtered per level, and subagents get the condensed fallback.
 // Both paths must still carry the guidance.
 const instructions = require(path.join(ROOT, "hooks", "lazy-instructions.js"));
+const COMMENT_CONTRACT = [
+  ["forbids added code comments", /do not add code comments/iu],
+  ["removes nonessential comments", /remove nonessential comments/iu],
+  ["preserves licenses and tool directives", /required license notices and functional tool directives/iu],
+  ["reports rationale outside code", /final response/iu],
+];
+for (const file of [...BUILD_SURFACES, "skills/slop-check/SKILL.md"])
+  for (const [description, pattern] of COMMENT_CONTRACT)
+    ok(`${file} ${description}`, pattern.test(flat(read(file))));
 const DELIVERY_CONTRACT = [
+  ...COMMENT_CONTRACT,
   ["states material assumptions", /material assumptions/iu],
   ["defines a plan and verifiable finish", /step.*check plan/iu],
   ["uses task-owned surgical scope", /task-owned/iu],

@@ -28,17 +28,13 @@ Everything runs from this skill directory with plain `node`. Do not install any 
 
 2. Triage every finding. The checker is heuristic, so findings are review prompts, not verdicts:
    - Fix real slop by removing the pointless code or restoring real type evidence — prefer inference, `as const`, `satisfies`, named owner contracts, and parsing at the boundary.
-   - A justified type assertion needs a `// SAFETY:` comment stating the checked invariant immediately before it.
-   - A justified swallowed error needs a comment inside the catch block explaining why.
+   - Do not add code comments; remove nonessential comments from code you touch. Keep required license notices and functional tool directives.
+   - Retain a necessary type assertion or swallowed error only after checking its invariant; explain it in the final response, never in a `SAFETY:`, `lazy:`, or suppression comment.
    - If a finding is a genuine false positive, leave the code alone and say so briefly. Never rewrite correct code into something worse just to silence the checker, and never weaken or disable a check.
 
-   To record a false positive in the code, write a reason and silence that one rule:
-
-   ```ts
-   // slop-check-ignore no-any -- the vendor typing is `any`; narrowed at the call site below
-   ```
-
-   It applies to that line and the next, takes several ids separated by commas, and the `slop-check-ignore-file` variant covers the whole file when written in its first 10 lines. The `-- <reason>` is required and must say something: an ignore with no reason, with an id that is not a rule, or a file-level one written too far down suppresses nothing and is itself reported as `no-unjustified-ignore`. The run summary counts what was suppressed, because a tree that is clean under forty ignores is not clean.
+   Report false positives and their checked invariants in the final response.
+   Existing `SAFETY:` and `slop-check-ignore` directives remain supported for
+   compatibility; do not add them. A retained finding is not a clean scan.
 
 3. Apply the manual review checklist below to the same code. For TS/JS, also apply [TS/JS checks](../lazy/references/simplification-checks.md): the TypeScript version and tsconfig pass, module shape, and type modeling. These are the highest-value slop patterns that a mechanical scan cannot catch.
 
@@ -63,8 +59,8 @@ For each item, the question is the same: does this code earn its place, or does 
 - **Error handling that hides errors** — catch-log-continue, retries around non-transient failures, fallback values that turn failure into silently wrong behavior.
 - **Debug leftovers** — `console.log` tracing, timing code, temporary variables named `test`/`tmp`/`debug`.
 - **Edit-artifacts** — old and new versions of a function both kept, re-export aliases "for compatibility" when every call site could just be updated, comments describing the diff instead of the code.
-- **Comment and doc bloat** — JSDoc that restates the signature, section banner comments, README additions narrating the change. A comment should state a constraint the code cannot show.
-- **Comments that explain what the code does** — a multi-line walkthrough of straightforward code means a better name or simpler shape should say it instead. Fix the code without changing behavior, then delete the walkthrough; do not add single-use helpers only to remove a comment. Keep walkthroughs of irreducibly tricky logic (an algorithm, parser, or state machine) and long comments that explain why: constraints, invariants, ordering, rejected alternatives, and the bug the obvious version would reintroduce.
+- **Comment and doc bloat** — remove nonessential code comments, including JSDoc that restates the signature and section banners. Put useful constraints and rationale in the final response.
+- **Comments that explain what the code does** — use a better name or simpler shape, then delete the walkthrough without changing behavior. Do not add single-use helpers only to remove a comment. Explain tricky logic, constraints, and ordering in the final response.
 - **Python slop** — bare `except:` or `except Exception: pass`, mutable default arguments, `if not x` where `0` or `""` is valid, loose dicts where a dataclass names the shape, `utils.py` grab bags, work done at import time, and `# type: ignore` / `# noqa` without a code and reason.
 - **Test slop** — tests that assert a mock was called with the value it was just given, module-level mocks instead of real dependency seams, duplicated setup that hides what varies. Keep tests that catch real regressions; mutation evidence is optional when existing red-green checks already prove the risky behavior.
 

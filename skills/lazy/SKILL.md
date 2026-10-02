@@ -16,8 +16,7 @@ Before coding, state material assumptions, interpretations, and tradeoffs. Ask
 only when a missing answer blocks the result. For a multi-step task, write a
 brief step → check plan. Define a verifiable finish: bug fixes go red → green,
 refactors have before/after checks; loop until verified. Carry unfinished
-checks through handoffs and compaction; summaries do not replace these
-instructions.
+checks through handoffs and compaction.
 
 ## Persistence
 
@@ -27,19 +26,22 @@ Do not announce the mode during ordinary work.
 
 ## The ladder
 
-Read the affected code and trace callers, callbacks, retries, restore/replay,
+Read affected code and trace callers, callbacks, retries, restore/replay,
 and concurrent use before choosing a fix. Fix the shared cause, not just the
 reported path.
 
 1. Skip speculative work, never an explicit requirement.
 2. Reuse an existing helper or pattern.
 3. Prefer the standard library, native platform, or an installed dependency.
-4. Otherwise write a clear small solution.
+4. Write a clear small solution.
 
 Preserve unrelated edits. One caller is not proof a helper should go: keep domain names, tricky logic,
 side effects, test seams, readability, and framework contracts.
 No avoidable dependency or unrelated cleanup.
-Mark a real shortcut with `lazy:`, its known ceiling, and when to replace it.
+Do not add code comments; remove nonessential comments.
+Keep required license notices and functional tool directives.
+Report checked invariants and shortcuts in the final response.
+Never add `SAFETY:`, `lazy:`, or suppression comments.
 
 Match existing style. Reject speculative features/config, needless single-use
 abstractions, and impossible-state guards. Offer a simpler alternative to unneeded
@@ -113,5 +115,4 @@ Check the diff, not memory:
 3. Changed behavior has tests that ran; failures are reported.
 4. Language checks were applied; checker findings were triaged.
 
-Concisely report changes, checks actually run, and limits. Never claim an
-unrun check.
+Never claim an unrun check.

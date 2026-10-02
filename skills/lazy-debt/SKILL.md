@@ -9,9 +9,8 @@ description: >
   `lazy:` markers only, not generic TODOs. One-shot report, changes nothing.
 ---
 
-Every deliberate lazy shortcut is marked with a `lazy:` comment naming
-its ceiling and upgrade path. This collects them into one ledger so a deferral
-can't quietly become permanent.
+Collect existing `lazy:` comments into a ledger. Do not add new markers:
+shortcut ceilings and upgrade paths now belong in the final response.
 
 ## Scan
 
