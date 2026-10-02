@@ -145,29 +145,31 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     `core.hooksPath` at the copy's own hooks, never the user's. Keep the clone's
     remotes with their non-secret URLs while network access stays denied, or
     point them at private repositories inside the temporary directory and mark
-    the checks that read remote URLs unfaithful. Do not check out: copy the
-    user's working-tree bytes into the clone so no smudge filter or other
-    conversion helper runs, then recreate the index, unstaged changes, untracked
-    files, and the Git state the tests read separately: `HEAD` on the same
-    branch or the same detached commit, linked worktrees as private retargeted
-    worktrees, repository and worktree config (`git config --local` and
-    `--worktree`) with included files and other files the config makes Git read
-    snapshotted into the private directory (one outside the checkout only with
-    the user's approval, classified the same way, with secrets left out, and
-    compared again after the run, rerunning or marking the dependent checks
-    unfaithful if it changed), path-valued settings such as `core.worktree`,
-    include paths, and `includeIf` `gitdir:` and `gitdir/i:` conditions
-    retargeted to the copy, replacing credentials such as authenticated remote
-    URLs or `http.extraHeader` with sandbox or user-approved values, or mark the
-    checks that depend on any of it unfaithful. If a left-out secret is in any
-    of the clone's objects, reachable or not, or in a reproduced extension store
-    such as the Git LFS cache, purge those objects and the refs that carry them,
-    or treat the target as unable to run safely from a copy. Give each
-    initialized submodule and every other nested repository the same independent
-    metadata and state, or mark the checks that depend on it unfaithful. A bare
-    repository gets the same independent copy of its Git directory and Git
-    state, skipping worktree-only steps such as `git status`. A non-Git source
-    stays without Git.
+    the checks that read remote URLs unfaithful. A check that fetches from or
+    pushes to a remote needs a private remote holding the state it needs,
+    presented at the original URL or path; otherwise report it blocked. Do not
+    check out: copy the user's working-tree bytes into the clone so no smudge
+    filter or other conversion helper runs, then recreate the index, unstaged
+    changes, untracked files, and the Git state the tests read separately:
+    `HEAD` on the same branch or the same detached commit, linked worktrees as
+    private retargeted worktrees, repository and worktree config
+    (`git config --local` and `--worktree`) with included files and other files
+    the config makes Git read snapshotted into the private directory (one
+    outside the checkout only with the user's approval, classified the same way,
+    with secrets left out, and compared again after the run, rerunning or
+    marking the dependent checks unfaithful if it changed), path-valued settings
+    such as `core.worktree`, include paths, and `includeIf` `gitdir:` and
+    `gitdir/i:` conditions retargeted to the copy, replacing credentials such as
+    authenticated remote URLs or `http.extraHeader` with sandbox or
+    user-approved values, or mark the checks that depend on any of it
+    unfaithful. If a left-out secret is in any of the clone's objects, reachable
+    or not, or in a reproduced extension store such as the Git LFS cache, purge
+    those objects and the refs that carry them, or treat the target as unable to
+    run safely from a copy. Give each initialized submodule and every other
+    nested repository the same independent metadata and state, or mark the
+    checks that depend on it unfaithful. A bare repository gets the same
+    independent copy of its Git directory and Git state, skipping worktree-only
+    steps such as `git status`. A non-Git source stays without Git.
   - Reapply the file metadata the tests depend on. If the source state, Git or
     filesystem, cannot be reproduced faithfully, treat the target as unable to
     run from a copy. Before running checks, compare the completed copy with the
@@ -205,13 +207,14 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - When copying kept tests, snapshots, and requested fixes back, compare each
     destination with its baseline and its current state; if it changed since the
     copy was made, merge the change or report a conflict instead of overwriting
-    it. Write a destination only while the user pauses edits to that file,
-    covering the final check, the write, and any metadata fix-up, and keep its
-    file metadata unless the change was requested; never write through a hard
-    link to a file outside the tree without approval. Without a pause, or if the
-    file changed, report a conflict instead. For any conflict, save the proposed
-    file or patch in the private evidence directory before the copy is deleted,
-    and report where.
+    it. Write a destination only while the user pauses edits to that file and
+    its parent directories, through no-follow directory handles, covering the
+    final check, the write, and any metadata fix-up, and keep its file metadata
+    unless the change was requested; never write through a hard link to a file
+    outside the tree without approval. Without a pause, or if the file changed,
+    report a conflict instead. For any conflict, save the proposed file or patch
+    in the private evidence directory before the copy is deleted, and report
+    where.
   - If the suite cannot run from a copy, ask before running write-capable
     commands in place. When approved, use the same sandbox except that the tree,
     the Git directories it points to, and any external paths the user approves
