@@ -96,33 +96,32 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     (`rr-cache`), hooks in `.git/hooks`, the Git LFS object cache, repository
     and worktree config with the files it includes, and linked worktrees.
   - Record the starting state of the user's tree. Before the first Git command,
-    clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
+    clear every inherited `GIT_*` environment variable for every Git command in
+    this workflow, such as repository paths (`GIT_DIR`, `GIT_WORK_TREE`,
     `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`,
-    `GIT_ALTERNATE_OBJECT_DIRECTORIES`) and config overrides
-    (`GIT_CONFIG_PARAMETERS`, `GIT_CONFIG_COUNT` with its `GIT_CONFIG_KEY_*` and
-    `GIT_CONFIG_VALUE_*`, and `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` unless
-    they name approved files) and trace destinations (`GIT_TRACE` and the other
-    `GIT_TRACE*` variables) for every Git command in this workflow, and classify
-    every file Git's config makes it read (includes, `core.excludesFile`,
-    `core.attributesFile`, and similar) the same way, approved if outside the
-    checkout, or override that setting and report the state it affects as
-    unavailable. Use read-only Git commands (`GIT_OPTIONAL_LOCKS=0`,
-    `-c core.fsmonitor=false`, diffs with `--no-textconv --no-ext-diff`, every
-    configured `filter.<driver>.clean` and `.process` overridden with an empty
-    value and `.required` set to `false`, or direct file reads instead of Git;
-    where a filter is blanked, record checksums for its paths and report Git's
-    status and diff for them as unavailable rather than recording the altered
-    output), with network access denied so a partial clone cannot lazily fetch
-    missing objects (also set `GIT_NO_LAZY_FETCH=1` where the installed Git
-    supports it); if an object is missing, read the file directly or report that
-    state as unavailable. Record `git status`, the unstaged and staged diffs,
-    copies of untracked files (only checksums for secrets), and raw checksums of
-    every tracked and ignored file copied (Git can hide normalized,
-    assume-unchanged, or skip-worktree changes), or a checksum listing without
-    Git. Include the Git state the tests read and the file metadata they depend
-    on. Keep these in a private temporary directory outside the repository and
-    outside what isolated commands can read, and delete it on every exit once
-    the final audit is done.
+    `GIT_ALTERNATE_OBJECT_DIRECTORIES`, `GIT_SHALLOW_FILE`), config overrides
+    (`GIT_CONFIG_PARAMETERS`, `GIT_CONFIG_COUNT`, `GIT_CONFIG_GLOBAL`,
+    `GIT_CONFIG_SYSTEM`), and trace destinations (`GIT_TRACE*`), and set only
+    the ones these rules name, and classify every file Git's config makes it
+    read (includes, `core.excludesFile`, `core.attributesFile`, and similar) the
+    same way, approved if outside the checkout, or override that setting and
+    report the state it affects as unavailable. Use read-only Git commands
+    (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
+    `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean` and
+    `.process` overridden with an empty value and `.required` set to `false`, or
+    direct file reads instead of Git; where a filter is blanked, record
+    checksums for its paths and report Git's status and diff for them as
+    unavailable rather than recording the altered output), with network access
+    denied so a partial clone cannot lazily fetch missing objects (also set
+    `GIT_NO_LAZY_FETCH=1` where the installed Git supports it); if an object is
+    missing, read the file directly or report that state as unavailable. Record
+    `git status`, the unstaged and staged diffs, copies of untracked files (only
+    checksums for secrets), and raw checksums of every tracked and ignored file
+    copied (Git can hide normalized, assume-unchanged, or skip-worktree
+    changes), or a checksum listing without Git. Include the Git state the tests
+    read and the file metadata they depend on. Keep these in a private temporary
+    directory outside the repository and outside what isolated commands can
+    read, and delete it on every exit once the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit, on a
     filesystem with the same semantics as the source (case sensitivity, name
