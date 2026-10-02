@@ -77,9 +77,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     virtualized or the user approves, copy a mounted directory only from a
     user-approved snapshot of its intended contents, or mark the checks that
     depend on them unfaithful. Before that, check the size, file count, and
-    expected time of reading and copying the tree, its Git directories, and
-    their caches against a budget; if it would exceed it, ask first or report
-    the affected checks as blocked.
+    expected time of everything preparation reads or copies (the tree, its Git
+    directories and their caches, and snapshotted symlink targets) against a
+    budget; if it would exceed it, ask first or report the affected checks as
+    blocked.
   - In the rules below, file metadata means everything about a file beyond its
     bytes that the checks can observe, such as file modes, owners, timestamps,
     ACLs, extended attributes, named streams such as NTFS alternate data
