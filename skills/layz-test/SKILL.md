@@ -79,9 +79,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     user-approved snapshot of its intended contents, or mark the checks that
     depend on them unfaithful. Before that, check the size, file count, and
     expected time of everything preparation reads or copies (the tree, its Git
-    directories and their caches, and snapshotted symlink targets and Git
-    config includes) against a budget; if it would exceed it, ask first or
-    report the affected checks as blocked.
+    directories with their caches and alternate object stores, and snapshotted
+    symlink targets and Git config includes) against a budget; if it would
+    exceed it, ask first or report the affected checks as blocked.
   - In the rules below, file metadata means everything about a file beyond its
     bytes that the checks can observe, such as file modes, owners, timestamps,
     ACLs, extended attributes, named streams such as NTFS alternate data
@@ -133,9 +133,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - If the source is a Git worktree, give the copy independent Git metadata,
     never a `.git` file or `gitdir` that points back to the user's repository.
     Clone with `--no-hardlinks`, `--no-checkout`, and `--dissociate`, with no
-    shared or alternate object store, and run the clone and every Git command in
-    the copy with hooks disabled (`core.hooksPath` set to an empty private
-    directory) and the user's global and system config ignored
+    shared or alternate object store (an alternate the source uses outside its
+    Git directory is read only with the user's approval), and run the clone and
+    every Git command in the copy with hooks disabled (`core.hooksPath` set to
+    an empty private directory) and the user's global and system config ignored
     (`GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` set to an empty file), passing
     only the settings the tests need, such as an identity, with `-c`, or, when
     the tests observe config scope, as approved sanitized values in private
