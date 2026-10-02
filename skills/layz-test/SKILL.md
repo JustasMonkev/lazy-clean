@@ -23,9 +23,9 @@ tests. Keep this a one-shot testing workflow; do not change lazy mode or hooks.
 2. Read pinned and installed tool versions and test commands from the project.
    Reuse its runner, fixtures, assertions, and installed dependencies. Do not
    download tools or add a framework merely to measure this workflow. If the
-   lockfile declares a runner that is missing or whose runnable version differs
-   from the lockfile, run the repository's documented locked install in the
-   disposable copy before calling it blocked.
+   lockfile declares a runner that is missing, or the installed runner or its
+   dependency graph does not match the lockfile, run the repository's
+   documented locked install in the disposable copy before calling it blocked.
 3. Make a compact behavior → test → result table. Enumerate happy paths,
    boundaries (including false/zero/empty), invalid inputs, and failure modes.
    Trace retries, restore/replay, cancellation, concurrency, and cleanup where
@@ -74,7 +74,7 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     where the installed Git supports it); if an object is missing, read the file
     directly or report that state as unavailable. Record `git status`, the
     unstaged and staged diffs, copies of untracked files (only checksums for
-    secrets), and checksums of ignored files the tests read, or a checksum
+    secrets), and checksums of every ignored file copied, or a checksum
     listing without Git. Include `HEAD`, the refs, reflogs, in-progress
     operation state, and repository config the tests read, and the file modes,
     hard-link groups, owners, timestamps, ACLs, and extended attributes they
@@ -113,18 +113,21 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     (`MERGE_HEAD`, `CHERRY_PICK_HEAD`, the sequencer and rebase directories), or
     mark the checks that depend on it unfaithful. Replay the repository and
     worktree config settings the checks read (`git config --local` and
-    `--worktree`). If a left-out secret is in any of the clone's objects,
-    reachable or not, purge those objects and the refs that carry them, or treat
-    the target as unable to run safely from a copy. Give each initialized
-    submodule and every other nested repository the same independent metadata
-    and state, or mark the checks that depend on it unfaithful. A non-Git source
-    stays without Git.
+    `--worktree`), replacing credentials such as authenticated remote URLs or
+    `http.extraHeader` with sandbox or user-approved values, or mark the checks
+    that need them unfaithful. If a left-out secret is in any of the clone's
+    objects, reachable or not, purge those objects and the refs that carry them,
+    or treat the target as unable to run safely from a copy. Give each
+    initialized submodule and every other nested repository the same independent
+    metadata and state, or mark the checks that depend on it unfaithful. A
+    non-Git source stays without Git.
   - Reapply the file modes, owners, timestamps, ACLs, and extended attributes
     the tests depend on, and recreate hard-link groups among copied files. If
     the source state, Git or filesystem, cannot be reproduced faithfully, treat
     the target as unable to run from a copy.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
-    running write-capable commands through it. If the checks read its target,
+    running write-capable commands through it. Retarget an absolute link into
+    the repository to the same path in the copy. If the checks read its target,
     snapshot the target into the private directory and point the copy's link
     at the snapshot, or compare the target again before reporting and mark the
     run unfaithful if it changed.
@@ -144,11 +147,14 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     private evidence directory.
   - When copying kept tests and snapshots back, compare each destination with
     its baseline and its current state; if it changed since the copy was made,
-    merge the change or report a conflict instead of overwriting it.
+    merge the change or report a conflict instead of overwriting it. Recheck the
+    destination immediately before an atomic rename into place, and report a
+    conflict if it changed in between.
   - If the suite cannot run from a copy, ask before running write-capable
     commands in place. When approved, ask the user to pause other edits to the
     tree and to every Git directory it shares with other worktrees while each
-    such command runs, and back up the tree first: bytes, file modes, symlink
+    such command runs, and back up the tree first, classifying paths and
+    never reading special files as for the copy: bytes, file modes, symlink
     targets, which paths exist, hard-link groups, owners, timestamps, ACLs and
     extended attributes where the platform has them, and the Git directories the
     tree points to (`git rev-parse --absolute-git-dir` and `--git-common-dir`).
