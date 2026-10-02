@@ -72,15 +72,18 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     files privately where supported, copy a mounted directory only from a
     user-approved snapshot of its intended contents, or mark the checks that
     depend on them unfaithful.
-  - In the rules below, file metadata means file modes, owners, timestamps,
-    ACLs, extended attributes, sparse extents, and hard-link groups, including
-    links to the same file from outside the tree. Git state means `HEAD`, refs
-    (local branches, tags, custom refs, stashes) and their reflogs, pseudorefs
-    such as `ORIG_HEAD` and `FETCH_HEAD`, in-progress merge, rebase,
-    cherry-pick, revert, or bisect state (`MERGE_HEAD`, `CHERRY_PICK_HEAD`, the
-    sequencer and rebase directories), Git info files such as `info/exclude`,
-    the rerere cache (`rr-cache`), repository and worktree config, and linked
-    worktrees.
+  - In the rules below, file metadata means everything about a file beyond its
+    bytes that the checks can observe, such as file modes, owners, timestamps,
+    ACLs, extended attributes, named streams such as NTFS alternate data
+    streams, sparse extents, and hard-link groups, including links to the same
+    file from outside the tree. Git state means everything in the Git directory
+    that the checks read, such as `HEAD`, refs (local branches, tags, custom
+    refs, stashes) and their reflogs, pseudorefs such as `ORIG_HEAD` and
+    `FETCH_HEAD`, in-progress merge, rebase, cherry-pick, revert, or bisect
+    state (`MERGE_HEAD`, `CHERRY_PICK_HEAD`, the sequencer and rebase
+    directories), Git info files such as `info/exclude`, the rerere cache
+    (`rr-cache`), hooks in `.git/hooks`, the Git LFS object cache, repository
+    and worktree config with the files it includes, and linked worktrees.
   - Record the starting state of the user's tree, with read-only Git commands
     (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
     `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean` and
@@ -121,8 +124,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     into the clone so no smudge filter or other conversion helper runs, then
     recreate the index, unstaged changes, untracked files, and the Git state the
     tests read separately: `HEAD` on the same branch or the same detached
-    commit, linked worktrees as private retargeted worktrees, and repository and
-    worktree config (`git config --local` and `--worktree`), replacing
+    commit, linked worktrees as private retargeted worktrees, repository and
+    worktree config (`git config --local` and `--worktree`) with included files
+    snapshotted into the private directory and their paths rewritten, replacing
     credentials such as authenticated remote URLs or `http.extraHeader` with
     sandbox or user-approved values, or mark the checks that depend on any of it
     unfaithful. If a left-out secret is in any of the clone's objects, reachable
@@ -205,9 +209,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   unfaithful.
 - Prove a risky test can fail: reproduce a regression by running the same new
   test, unchanged, against the complete old non-test product state (code,
-  generated files, schemas, lockfiles, configuration, and dependencies freshly
-  installed from the old lockfile, or report the proof blocked if that graph
-  cannot be restored) in the disposable copy,
+  generated files, schemas, lockfiles, configuration, dependencies freshly
+  installed from the old lockfile, and the old pinned toolchain version, or
+  report the proof blocked if that cannot be restored) in the disposable copy,
   where its intended assertion fails, then passing against the fix; or, in the
   copy, leave a passing test unchanged, mutate a relevant production
   branch/boundary, and observe that test's intended assertion fail; revert and
