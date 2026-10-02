@@ -1591,6 +1591,12 @@ expectSuppression(
 
   for (const [id, explanation] of Object.entries(RULE_EXPLANATIONS)) {
     const options = id === "no-new-justification-comments" ? { addedLines: new Set([1]) } : undefined;
+    for (const snippet of [explanation.correct, ...(explanation.setup ? [explanation.setup.code] : [])]) {
+      if (/(?:^|\n)\s*\/\/|;\s*\/\/|\/\*/u.test(snippet)) {
+        failures += 1;
+        console.error(`FAIL --explain ${id}: replacement snippet adds comments`);
+      }
+    }
     for (const field of ["why", "slop", "correct", "exceptions"]) {
       if (typeof explanation[field] !== "string" || explanation[field].trim().length === 0) {
         failures += 1;
@@ -1649,9 +1655,9 @@ expectSuppression(
   const payloadWithMetadata = { id: "u1", metadata: { source: "webhook" } };
   assert.equal(validateUser(payloadWithMetadata), payloadWithMetadata);
   for (const payload of [null, {}, { id: 7 }]) assert.throws(() => validateUser(payload), TypeError);
-  const [production, test] = RULE_EXPLANATIONS["no-module-mocking"].correct.split("// user.test.mjs (separate file)");
-  const productionUrl = `data:text/javascript,${encodeURIComponent(production)}`;
-  const testCode = test.replace('"./user.mjs"', JSON.stringify(productionUrl));
+  const moduleExample = RULE_EXPLANATIONS["no-module-mocking"];
+  const productionUrl = `data:text/javascript,${encodeURIComponent(moduleExample.setup.code)}`;
+  const testCode = moduleExample.correct.replace('"./user.mjs"', JSON.stringify(productionUrl));
   await import(`data:text/javascript,${encodeURIComponent(testCode)}`);
   const readToken = new Function("process", `${RULE_EXPLANATIONS["no-env-secret-fallback"].correct}; return token;`);
   assert.equal(readToken({ env: { STRIPE_KEY: "" } }), "");

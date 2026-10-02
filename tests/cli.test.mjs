@@ -382,6 +382,7 @@ check("--since rejects new justification markers and preserves legacy evidence",
     assert.equal(result.status, 1, file);
     const findings = JSON.parse(result.stdout);
     assert.ok(findings.some(f => f.rule === "no-new-justification-comments"), file);
+    assert.equal(findings.find(f => f.rule === "no-new-justification-comments").severity, "fix", file);
     assert.ok(findings.some(f => f.rule === rule), file);
     assert.match(findings.find(f => f.rule === "no-new-justification-comments").message, /final response/u);
   }
@@ -395,8 +396,57 @@ check("--since rejects new justification markers and preserves legacy evidence",
   const marker = JSON.parse(editedBlock.stdout).find(f => f.rule === "no-new-justification-comments");
   assert.equal(marker.line, 1);
   assert.equal(marker.endLine, 3);
-  writeFileSync(join(repo, "metadata.ts"), "// SPDX-License-Identifier: MIT\n// @ts-expect-error vendor stub is missing the strict option\nconnect(options);\nconst text = '// SAFETY: only string data';\n");
+  writeFileSync(join(repo, "metadata.ts"), "// SPDX-License-Identifier: MIT\n// @ts-check\nconnect(options);\nconst text = '// SAFETY: only string data';\n");
   assert.equal(run(["--since=HEAD", "metadata.ts"], repo).status, 0);
+});
+
+check("--since reviews new compiler suppressions and new explanations for old directives", () => {
+  const repo = join(root, "compiler-suppressions");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const bare = "// @ts-ignore\nlegacyCall();\n";
+  const justified = "// @ts-expect-error vendor stub is missing the strict option\nconnect(options);\n";
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    writeFileSync(join(repo, "bare.ts"), bare);
+    writeFileSync(join(repo, "preceding.ts"), bare);
+    writeFileSync(join(repo, "legacy.ts"), justified);
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since compiler suppression provenance (git unavailable)");
+    return;
+  }
+  writeFileSync(join(repo, "legacy.ts"), `${justified}export const added = 1;\n`);
+  assert.equal(run(["--since=HEAD", "legacy.ts"], repo).status, 0);
+  const cases = [
+    ["new.ts", justified],
+    ["mock.test.ts", "// @ts-expect-error mock vendor stub is missing the strict option\nconnect(options);\n"],
+    ["ignore.ts", "// @ts-ignore -- vendor declaration has an incorrect parameter\nconnect(options);\n"],
+    ["nocheck.ts", "// @ts-nocheck -- vendor declarations are incorrect for this module\nconnect(options);\n"],
+    ["biome.js", "// biome-ignore lint/suspicious/noExplicitAny -- vendor declaration has an incorrect parameter\nconnect(options);\n"],
+    ["eslint.js", "// eslint-disable-next-line no-console -- required diagnostic output\nconsole.log(value);\n"],
+    ["format.js", "// prettier-ignore\nconst values = [1, 2];\n"],
+    ["coverage.js", "// c8 ignore next\nconnect(options);\n"],
+    ["bare.ts", bare.replace("@ts-ignore", "@ts-ignore -- vendor declaration has an incorrect parameter")],
+    ["preceding.ts", `// The vendor declaration has an incorrect parameter\n${bare}`],
+  ];
+  for (const [file, source] of cases) {
+    writeFileSync(join(repo, file), source);
+    const result = run(["--since=HEAD", "--json", file], repo);
+    assert.equal(result.status, 1, file);
+    const finding = JSON.parse(result.stdout).find(f => f.rule === "no-unjustified-suppression");
+    assert.ok(finding, file);
+    assert.equal(finding.severity, "review");
+    assert.match(finding.message, /required.*final response/u);
+    assert.equal(run(["--json", file], repo).status, 0, "unscoped legacy handling stays compatible");
+    if (file === "preceding.ts") {
+      assert.equal(finding.startLine, 1);
+      assert.equal(finding.line, 2);
+    }
+  }
 });
 
 // The tally is part of the same report `--since` scopes to the diff. Counting
@@ -904,9 +954,11 @@ for (const rule of ["require-safety-comment-for-type-assertion", "no-empty-catch
   });
 
 check("--explain reports a mechanical tier for a mechanical rule", () => {
-  const result = run(["--explain=no-double-negation-condition"]);
-  assert.equal(result.status, 0);
-  assert.match(result.stdout, /fix \(mechanical/u);
+  for (const rule of ["no-double-negation-condition", "no-new-justification-comments"]) {
+    const result = run([`--explain=${rule}`]);
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /fix \(mechanical/u);
+  }
 });
 
 check("--explain names a misspelled rule and exits 2", () => {

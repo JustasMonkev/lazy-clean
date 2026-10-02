@@ -2616,6 +2616,7 @@ function* iterateAssertionFindings(ctx) {
 // widely adopted, so the same rule over eslint-disable fired on 279 of 651
 // real-world files — it would drown the signal it is looking for.
 const SUPPRESSION_DIRECTIVE_PATTERN = /@ts-(?:ignore|expect-error|nocheck)\b|\bbiome-ignore\b/u;
+const DIFF_SUPPRESSION_DIRECTIVE_PATTERN = new RegExp(`${SUPPRESSION_DIRECTIVE_PATTERN.source}|\\b(?:eslint-disable(?:-next-line|-line)?|prettier-ignore|(?:istanbul|c8|v8)\\s+ignore)\\b`, "u");
 
 const OBVIOUS_DOC_COMMENT_PATTERN = new RegExp(
   [
@@ -2663,6 +2664,23 @@ function* iterateCommentFindings(ctx) {
       yield { ...position, rule: "no-new-justification-comments", message: "New justification marker. Remove it; verify the code's invariant and explain rationale and constraints in the final response." };
       continue;
     }
+    if (DIFF_SUPPRESSION_DIRECTIVE_PATTERN.test(body)) {
+      const previous = comments[index - 1];
+      const newExplanation = previous !== undefined && ctx.newComments.has(previous)
+        && previous.kind === "line"
+        && offsetToPosition(lineStarts, Math.max(previous.start, previous.end - 1)).line === start.line - 1
+        && !DIFF_SUPPRESSION_DIRECTIVE_PATTERN.test(previous.text)
+        && isJustification(previous) && !suppressionIsJustified(body);
+      if (ctx.newComments.has(comment) || newExplanation) {
+        yield {
+          ...position,
+          ...(newExplanation ? { startLine: offsetToPosition(lineStarts, previous.start).line } : {}),
+          rule: "no-unjustified-suppression",
+          message: "New or changed checker suppression. Fix the underlying diagnostic or verify that this functional directive is required; explain the evidence in the final response. Adding a reason comment is not verification.",
+        };
+        continue;
+      }
+    }
     if (inTestFile && /\bmock\b/iu.test(body) && !/\b(?:placeholder|not implemented|TODO)\b/iu.test(body)) {
       continue;
     }
@@ -2693,6 +2711,7 @@ function* iterateCommentFindings(ctx) {
 
     const previous = comments[index - 1];
     const explainedAbove = previous !== undefined
+      && !ctx.newComments.has(previous)
       && offsetToPosition(lineStarts, Math.max(previous.start, previous.end - 1)).line === start.line - 1
       && previous.kind === "line"
       && !SUPPRESSION_DIRECTIVE_PATTERN.test(previous.text)
@@ -2746,6 +2765,7 @@ function* iterateCommentFindings(ctx) {
 const MECHANICAL_RULES = new Set([
   "no-boolean-literal-ternary", "no-double-negation-condition",
   "no-useless-rethrow",
+  "no-new-justification-comments",
   "no-typed-jsdoc",
   "no-boolean-return-branches", "no-let-if-else-assign",
 ]);
@@ -2772,7 +2792,7 @@ const RULE_EXPLANATIONS = {
   "no-unsafe-dictionary-type": {
     why: "Record<string, any> disables checking of dictionary values. For an open-key bag, select the real value type or unknown at an unvalidated boundary. If keys are finite, use a specific shape or finite key union to catch key typos as well.",
     slop: "const headers: Record<string, any> = {};",
-    correct: "const headers: Record<string, string> = {};  // open header names, string values",
+    correct: "const headers: Record<string, string> = {};",
     exceptions: "Open dictionaries intentionally admit arbitrary string keys, so Record<string, string> does not catch misspelled keys. For a finite set, use a shape such as { authorization: string } or Record<\"accept\" | \"authorization\", string>. For truly arbitrary values use unknown and validate before use.",
   },
   "no-known-value-widening": {
@@ -2790,8 +2810,9 @@ const RULE_EXPLANATIONS = {
   "no-module-mocking": {
     why: "Module mocks can hide hard-coded dependencies. Exercise the production implementation, not a test-local copy. If a suitable seam exists or is warranted, pass the dependency into that production function and import it in the test.",
     slop: "vi.mock(\"./db\");",
-    correct: "// user.mjs\nexport function loadUser(db, id) { return db.findUser(id); }\n\n// user.test.mjs (separate file)\nimport assert from \"node:assert/strict\";\nimport { loadUser } from \"./user.mjs\";\nassert.deepEqual(loadUser({ findUser: id => ({ id }) }, 7), { id: 7 });",
-    exceptions: "Keep jest.unmock or vi.unmock when it restores the real module, especially under automocking; it is not a test-double substitution. Module mocking may also be necessary for legacy seams you cannot refactor. Preserve production coverage and justify the directive locally.",
+    setup: { path: "user.mjs", code: "export function loadUser(db, id) { return db.findUser(id); }" },
+    correct: "import assert from \"node:assert/strict\";\nimport { loadUser } from \"./user.mjs\";\nassert.deepEqual(loadUser({ findUser: id => ({ id }) }, 7), { id: 7 });",
+    exceptions: "The replacement is a separate test file importing the shown production module. Keep jest.unmock or vi.unmock when it restores the real module, especially under automocking; it is not a test-double substitution. Module mocking may also be necessary for legacy seams you cannot refactor. Preserve production coverage and explain necessary directives in the final response.",
   },
   "no-conditional-empty-object-spread": {
     why: "`...(cond ? {} : { a })` hides whether a field is present. The plain conditional spread says the same thing in the shape readers already know.",
@@ -2838,8 +2859,8 @@ const RULE_EXPLANATIONS = {
   "no-tautological-assertion": {
     why: "`expect(4).toBe(4)` passes no matter what the code under test does. It inflates coverage while catching nothing — worse than no test, because it reads like one.",
     slop: "expect(3).toBe(3);",
-    correct: "expect(config.retries).toBe(3);  // the value the code is supposed to produce",
-    exceptions: "None. A test that always fails (`expect(false).toBeTruthy()`) is a different defect and stays out of this rule.",
+    correct: "expect(config.retries).toBe(3);",
+    exceptions: "The example assumes retries must be 3; assert the value your actual contract requires. A test that always fails (`expect(false).toBeTruthy()`) is a different defect and stays out of this rule.",
   },
   "no-await-promise-resolve": {
     why: "For ordinary values, await Promise.resolve(x) can be written await x. Both suspend the continuation; removing await itself is a separate scheduling change.",
@@ -2880,13 +2901,13 @@ const RULE_EXPLANATIONS = {
   "no-empty-type-declaration": {
     why: "An empty interface or {} type accepts far more than a typical options object. Under strictNullChecks it means any non-nullish value, including primitives, not an unconstrained object shape. Add fields only if the actual API requires them.",
     slop: "interface ConfigOptions {}",
-    correct: "interface ConfigOptions { retries: number; baseUrl: string };  // or delete it",
+    correct: "interface ConfigOptions { retries: number; baseUrl: string };",
     exceptions: "Preserve deliberate non-nullish types such as type NonNullish = {} under strictNullChecks, including semantic/public aliases and primitive callers. Declaration-merging extension points may also intentionally start empty. Do not invent fields or remove a public name just to silence the heuristic.",
   },
   "no-useless-rethrow": {
     why: "`catch (e) { throw e; }` is a no-op with a stack: the error propagates exactly as it would without the try/catch, and readers hunt for the handling that is not there.",
     slop: "try { save(); } catch (e) { throw e; }",
-    correct: "save();  // or handle it — keep `finally` if there is one",
+    correct: "save();",
     exceptions: "None mechanical: delete the try/catch (keeping `finally`) or add real handling.",
   },
   "no-empty-catch": {
@@ -2904,20 +2925,20 @@ const RULE_EXPLANATIONS = {
   "no-log-and-rethrow": {
     why: "Logging then rethrowing reports the same failure at every layer. A boundary handler that logs once is the design; a chain of log-and-rethrow is a stack trace printed five times.",
     slop: "try { save(); } catch (e) { logger.error(e); throw e; }",
-    correct: "save();  // let the top boundary log once; preserve any existing finally",
-    exceptions: "Logging separate context before rethrowing (metrics, request ids) is deliberate; the rule only fires when the log call mentions the caught error itself.",
+    correct: "save();",
+    exceptions: "Let the top boundary log once and preserve any existing finally cleanup. Logging separate context before rethrowing (metrics, request ids) is deliberate; the rule only fires when the log call mentions the caught error itself.",
   },
   "no-message-only-rethrow": {
     why: "`throw new Error(e.message)` throws away the stack and the original type. The caller catches an error that starts its stack HERE, and `instanceof NetworkError` is false.",
     slop: "try { save(); } catch (e) { throw new Error(e.message); }",
-    correct: "save();  // preserve the original error; keep any existing finally",
-    exceptions: "Within the same trust boundary, remove a catch that adds nothing or wrap with genuine context and { cause: e }. Retain deliberate sanitization at public boundaries: map to an approved public error without exposing the internal cause, type, stack, payload, or metadata. Verify that the message itself is safe to disclose. Do not replace a redundant catch with a no-op rethrow.",
+    correct: "save();",
+    exceptions: "Preserve the original error and any existing finally cleanup. Within the same trust boundary, remove a catch that adds nothing or wrap with genuine context and { cause: e }. Retain deliberate sanitization at public boundaries: map to an approved public error without exposing the internal cause, type, stack, payload, or metadata. Verify that the message itself is safe to disclose. Do not replace a redundant catch with a no-op rethrow.",
   },
   "no-boolean-return-branches": {
     why: "Boolean-return branches can be expressed without the branch while preserving a boolean result: if (cond) return true; else return false becomes return Boolean(cond). The reversed form becomes return !cond. Return cond directly only when it is already boolean.",
     slop: "if (items.length) { return true; } else { return false; }",
-    correct: "return Boolean(items.length);  // return !items.length for the inverted branches",
-    exceptions: "None mechanical — that is why the finding names which branch it was.",
+    correct: "return Boolean(items.length);",
+    exceptions: "None mechanical — the finding names which branch it was. Use return !items.length for inverted branches.",
   },
   "no-let-if-else-assign": {
     why: "A `let` declared only to be assigned in both branches is a conditional expression written long, plus a mutable binding nothing else may reassign.",
@@ -3010,7 +3031,7 @@ const RULE_EXPLANATIONS = {
     exceptions: "This rule requires added-line provenance from --since or the lintSource addedLines option. Untouched legacy comments retain compatibility; full-file scans without provenance keep legacy handling. Preserve required licenses and functional tool directives. The example preserves the shown declaration's runtime value; validate actual required fields before using opaque input. Necessary assertions may remain as review findings after the marker is removed.",
   },
   "no-unjustified-suppression": {
-    why: "Bare TypeScript suppression directives and biome-ignore directives need a concrete justification for the diagnostic being suppressed. Fix the actual reported problem when possible. The example below addresses a TypeScript boundary error, not every possible lint or formatting diagnostic.",
+    why: "Bare TypeScript suppression directives and biome-ignore directives need verification of the diagnostic being suppressed. Diff scans also report newly added or edited compiler, lint, formatting, and coverage suppressions even when they carry a reason; a new preceding explanation cannot justify a bare directive. Fix the actual reported problem when possible. The example below addresses a TypeScript boundary error, not every possible lint or formatting diagnostic.",
     slop: "// @ts-expect-error\nconnect(options);",
     correct: "if (typeof options !== \"object\" || options === null || !(\"host\" in options) || typeof options.host !== \"string\") {\n  throw new TypeError(\"Expected a configuration with a string host\");\n}\nconnect(options);",
     exceptions: "A proven compiler or vendor-typing defect may require an existing functional TypeScript suppression. Verify the specific defect and explain the evidence in the final response; missing runtime validation is not a compiler defect. For biome-ignore, fix its named Biome lint/formatting diagnostic or verify why the existing directive is necessary, preserving the affected statement. Do not apply the JSON-validation example to an unrelated Biome rule. This connect example assumes the API needs only host.",
@@ -3056,6 +3077,7 @@ function explainRule(id) {
     "",
     "  Slop:",
     `    ${explanation.slop.replaceAll("\n", "\n    ")}`,
+    ...(explanation.setup ? ["", `  Setup in ${explanation.setup.path}:`, `    ${explanation.setup.code.replaceAll("\n", "\n    ")}`] : []),
     "",
     "  Instead:",
     `    ${explanation.correct.replaceAll("\n", "\n    ")}`,
