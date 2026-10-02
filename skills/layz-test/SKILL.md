@@ -56,17 +56,31 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   toolchains, or anything else outside a private temporary directory; where a
   rule below cannot guarantee that, ask first. A copy and redirected variables
   do not stop a command that writes to an absolute path or finds the original
-  checkout, so run these commands under an OS-level sandbox that allows
-  writes only inside the private directory, hides the original checkout (only
-  the preparation clone may read it, read-only), and
-  denies network access except to approved sandbox endpoints, and, as the
-  platform allows, keeps host processes, IPC sockets such as Docker or D-Bus,
-  devices, and the Windows registry out of reach; where none is available,
-  ask first, and mark a run that read the original checkout
-  unfaithful. The user's tree only gains the tests you keep, the snapshots they
-  need, and production fixes the user asked for.
+  checkout, so run these commands under an OS-level sandbox that allows writes
+  only inside the private directory, hides the original checkout (only the
+  preparation clone may read it, read-only), and denies network access except to
+  approved sandbox endpoints, and, as the platform allows, keeps host processes,
+  IPC sockets such as Docker or D-Bus, devices, and the Windows registry out of
+  reach; where none is available, ask first, and mark a run that read the
+  original checkout unfaithful. The user's tree only gains the tests you keep,
+  the snapshots they need, and production fixes the user asked for.
   - Read the source without changing access times (a read-only snapshot or a
     no-atime read); if that is not possible, ask first.
+  - Before any step reads the tree (the starting record, the copy, or an
+    in-place backup), classify each path without following it. Never read
+    FIFOs, sockets, or device nodes, and stop at mount points: recreate special
+    files privately where supported, copy a mounted directory only from a
+    user-approved snapshot of its intended contents, or mark the checks that
+    depend on them unfaithful.
+  - In the rules below, file metadata means file modes, owners, timestamps,
+    ACLs, extended attributes, sparse extents, and hard-link groups, including
+    links to the same file from outside the tree. Git state means `HEAD`, refs
+    (local branches, tags, custom refs, stashes) and their reflogs, pseudorefs
+    such as `ORIG_HEAD` and `FETCH_HEAD`, in-progress merge, rebase,
+    cherry-pick, revert, or bisect state (`MERGE_HEAD`, `CHERRY_PICK_HEAD`, the
+    sequencer and rebase directories), Git info files such as `info/exclude`,
+    the rerere cache (`rr-cache`), repository and worktree config, and linked
+    worktrees.
   - Record the starting state of the user's tree, with read-only Git commands
     (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
     `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean` and
@@ -77,12 +91,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     directly or report that state as unavailable. Record `git status`, the
     unstaged and staged diffs, copies of untracked files (only checksums for
     secrets), and checksums of every ignored file copied, or a checksum listing
-    without Git. Include `HEAD`, the refs, reflogs, pseudorefs, in-progress
-    operation state, Git info files, and repository config the tests read, and
-    the file modes, hard-link groups, owners, timestamps, ACLs, and extended
-    attributes they depend on. Keep these in a private temporary directory
-    outside the repository and outside what isolated commands can read, and
-    delete it on every exit once the final audit is done.
+    without Git. Include the Git state the tests read and the file metadata they
+    depend on. Keep these in a private temporary directory outside the
+    repository and outside what isolated commands can read, and delete it on
+    every exit once the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit, on a
     filesystem with the same semantics as the source (case sensitivity, name
@@ -91,12 +103,7 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     equivalent to the source checkout (length, characters, depth, drive), or
     mark the checks that depend on the checkout path unfaithful. Leave out
     secrets such as `.env` files, keys, and production configuration; supply
-    sandbox or user-approved replacements when the tests need them. Classify
-    each path without following it before reading it: never read FIFOs,
-    sockets, or device nodes; recreate them privately where supported, or mark
-    the checks that depend on them unfaithful. Stop at mount points inside the
-    tree: copy a mounted directory only from a user-approved snapshot of its
-    intended contents, or mark the checks that depend on it unfaithful.
+    sandbox or user-approved replacements when the tests need them.
   - If the source is a Git worktree, give the copy independent Git metadata,
     never a `.git` file or `gitdir` that points back to the user's repository.
     Clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
@@ -112,29 +119,22 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     Remove the clone's remotes, or point them at private repositories inside the
     temporary directory. Do not check out: copy the user's working-tree bytes
     into the clone so no smudge filter or other conversion helper runs, then
-    recreate the index, unstaged changes, untracked files, `HEAD` (the same
-    branch, or the same detached commit), and the refs the tests read (local
-    branches, tags, custom refs, stashes, and their reflogs), the pseudorefs
-    they read (such as `ORIG_HEAD` and `FETCH_HEAD`), Git info files such as
-    `info/exclude`, and the linked worktrees they inspect (as private
-    retargeted worktrees) separately, along
-    with any in-progress merge, rebase, cherry-pick, revert, or bisect state
-    (`MERGE_HEAD`, `CHERRY_PICK_HEAD`, the sequencer and rebase directories), or
-    mark the checks that depend on it unfaithful. Replay the repository and
-    worktree config settings the checks read (`git config --local` and
-    `--worktree`), replacing credentials such as authenticated remote URLs or
-    `http.extraHeader` with sandbox or user-approved values, or mark the checks
-    that need them unfaithful. If a left-out secret is in any of the clone's
-    objects, reachable or not, purge those objects and the refs that carry them,
-    or treat the target as unable to run safely from a copy. Give each
-    initialized submodule and every other nested repository the same independent
-    metadata and state, or mark the checks that depend on it unfaithful. A
-    non-Git source stays without Git.
-  - Reapply the file modes, owners, timestamps, ACLs, and extended attributes
-    the tests depend on, and recreate hard-link groups among copied files. If
-    the source state, Git or filesystem, cannot be reproduced faithfully, treat
-    the target as unable to run from a copy. Before running checks, compare the
-    completed copy with the baseline and refresh it if they differ.
+    recreate the index, unstaged changes, untracked files, and the Git state the
+    tests read separately: `HEAD` on the same branch or the same detached
+    commit, linked worktrees as private retargeted worktrees, and repository and
+    worktree config (`git config --local` and `--worktree`), replacing
+    credentials such as authenticated remote URLs or `http.extraHeader` with
+    sandbox or user-approved values, or mark the checks that depend on any of it
+    unfaithful. If a left-out secret is in any of the clone's objects, reachable
+    or not, purge those objects and the refs that carry them, or treat the
+    target as unable to run safely from a copy. Give each initialized submodule
+    and every other nested repository the same independent metadata and state,
+    or mark the checks that depend on it unfaithful. A non-Git source stays
+    without Git.
+  - Reapply the file metadata the tests depend on. If the source state, Git or
+    filesystem, cannot be reproduced faithfully, treat the target as unable to
+    run from a copy. Before running checks, compare the completed copy with the
+    baseline and refresh it if they differ.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
     running write-capable commands through it. Retarget an absolute link into
     the repository to the same path in the copy. If the checks read its target,
@@ -164,18 +164,16 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     commands in place. When approved, ask the user to pause other edits to the
     tree and to every Git directory it shares with other worktrees from before
     the backup until restoring is done, and back up the tree first, classifying
-    paths, never reading special files, and stopping at mount points as for the
-    copy, into a location the command cannot read or write: bytes, file modes,
-    symlink targets, which paths exist, hard-link groups, sparse extents,
-    owners, timestamps, ACLs and extended attributes where the platform has
-    them, and the Git directories the tree points to
+    paths as above, into a location the command cannot read or write: bytes,
+    symlink targets, which paths exist, file metadata where the platform has it,
+    and the Git directories the tree points to
     (`git rev-parse --absolute-git-dir` and `--git-common-dir`). Keep mounted
-    paths out of the command's reach unless the user approves them. Record what
-    the command changed, verify the backup, restore from it only paths that
-    still hold exactly that result, rechecked immediately before an atomic
-    replacement, and report any other change as a conflict. Delete those backups
-    on every exit once restoring is done; keep one only for an unresolved
-    conflict, and say where.
+    paths, and files with links from outside the tree, out of the command's
+    reach unless the user approves them. Record what the command changed, verify
+    the backup, restore from it only paths that still hold exactly that result,
+    rechecked immediately before an atomic replacement, and report any other
+    change as a conflict. Delete those backups on every exit once restoring is
+    done; keep one only for an unresolved conflict, and say where.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
