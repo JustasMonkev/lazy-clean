@@ -426,12 +426,16 @@ check("--since reviews new compiler suppressions and new explanations for old di
     writeFileSync(join(repo, "legacy.ts"), justified);
     writeFileSync(join(repo, "legacy-eslint.js"), "/* eslint no-console: off */\nconsole.log(value);\n");
     writeFileSync(join(repo, "edited-eslint.js"), "/* eslint no-console: error */\nconsole.log(value);\n");
+    writeFileSync(join(repo, "biome-range.js"), "// biome-ignore-start lint: generated payload\nconnect(options);\n");
     git("add", "-A");
     git("commit", "-qm", "base");
   } catch {
     console.log("skip --since compiler suppression provenance (git unavailable)");
     return;
   }
+  writeFileSync(join(repo, "biome-range.js"), "// biome-ignore-start lint: generated payload\nconnect(options);\n// biome-ignore-end lint: generated payload\n");
+  assert.equal(run(["--since=HEAD", "--json", "biome-range.js"], repo).status, 0);
+  assert.equal(run(["--json", "biome-range.js"], repo).status, 0);
   writeFileSync(join(repo, "legacy.ts"), `${justified}export const added = 1;\n`);
   assert.equal(run(["--since=HEAD", "legacy.ts"], repo).status, 0);
   writeFileSync(join(repo, "legacy-eslint.js"), "/* eslint no-console: off */\nconsole.log(value);\nexport const added = 1;\n");
@@ -442,6 +446,8 @@ check("--since reviews new compiler suppressions and new explanations for old di
     ["ignore.ts", "// @ts-ignore -- vendor declaration has an incorrect parameter\nconnect(options);\n"],
     ["nocheck.ts", "// @ts-nocheck -- vendor declarations are incorrect for this module\nconnect(options);\n"],
     ["biome.js", "// biome-ignore lint/suspicious/noExplicitAny -- vendor declaration has an incorrect parameter\nconnect(options);\n"],
+    ["biome-all.js", "// biome-ignore-all lint: generated payload\nconnect(options);\n"],
+    ["biome-start.js", "// biome-ignore-start lint: generated payload\nconnect(options);\n"],
     ["eslint.js", "// eslint-disable-next-line no-console -- required diagnostic output\nconsole.log(value);\n"],
     ["eslint-config.js", "/* eslint no-console: off */\nconsole.log(value);\n"],
     ["eslint-zero.js", "/* eslint no-console: 0 */\nconsole.log(value);\n"],
@@ -501,7 +507,11 @@ check("--since preserves unchanged comments beside code edits and rejects copied
   const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
   const leading = '/* eslint no-console: off */ console.log("old");\nexport const metadata = "stable unchanged content keeps Git rename detection above its threshold";\n';
   const trailing = "const value = oldPayload as User; // SAFETY: parsed by the schema above\n";
+  const split = "/* eslint no-console: off */ if (isDiffSuppression(previous.text)\n        && !isCommentMetadata(previous) && isJustification(previous)) run();\n";
+  const joined = "/* eslint no-console: off */ if (isDiffSuppression(previous.text) || isCommentMetadata(previous) || IGNORE_DIRECTIVE.test(previous.text)) run();\n";
   const cases = [
+    ["joined-lines.js", split, joined],
+    ["split-lines.js", joined, split],
     ["leading.js", leading, leading.replace('"old"', '"new"')],
     ["trailing.ts", trailing, trailing.replace("oldPayload", "nextPayload")],
     ["block.js", '/* eslint\n no-console: off\n*/ console.log("old");\n', '/* eslint\n no-console: off\n*/ console.log("new");\n'],
@@ -515,6 +525,10 @@ check("--since preserves unchanged comments beside code edits and rejects copied
     ["no-eof-newline.js", leading.trimEnd(), leading.replace('"old"', '"new"').trimEnd()],
   ];
   const lineEndings = ["\n", "\r\n", "\r"];
+  if (process.platform !== "win32") {
+    cases.push([":colon.ts", leading, leading.replace('"old"', '"new"')]);
+    cases.push([":(exclude)special.ts", leading, leading.replace('"old"', '"new"')]);
+  }
   const multiline = '/* eslint\n no-console: off\n*/ console.log("old");\n';
   for (const [oldIndex, oldEnding] of lineEndings.entries())
     for (const [newIndex, newEnding] of lineEndings.entries()) {
@@ -585,6 +599,8 @@ check("--since reviews new rationale for every suppression family and preserves 
     assert.ok(JSON.parse(result.stdout).some(f => f.rule === "no-unjustified-suppression" && f.startLine === 1 && f.line === 2), directive);
     for (const prefix of [
       "// SPDX-License-Identifier: MIT", "/** @param options Stable account identifier, never a display name. */",
+      "/** @throws {Error} When startup fails. */", "/** @exception {Error} When startup fails. */",
+      "/** @yields {string} The next account identifier. */", "/** @customTag Account metadata used by the documentation plugin. */",
       "initialize(); // Parse options before connecting",
       "initialize(); /* Parse options before connecting */",
       "/* Parse options before connecting */ initialize();",
@@ -593,6 +609,40 @@ check("--since reviews new rationale for every suppression family and preserves 
       const retained = run(["--since=HEAD", "--json", file], repo);
       assert.equal(retained.status, 0, `${prefix}: ${retained.stderr || retained.stdout}`);
     }
+  }
+});
+
+check("--since combines contiguous standalone rationale without crossing code, gaps, or metadata", () => {
+  const repo = join(root, "wrapped-rationale");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const bare = "// eslint-disable-next-line no-console\nconnect(options);\n";
+  const cases = [
+    ["new.js", bare, `// Vendor declaration is\n// incorrect.\n${bare}`, 1, 1, 3],
+    ["old-tail.js", `// incorrect.\n${bare}`, `// Vendor declaration is\n// incorrect.\n${bare}`, 1, 1, 3],
+    ["licensed.js", bare, `// SPDX-License-Identifier: MIT\n// Vendor declaration is\n// incorrect.\n${bare}`, 1, 2, 4],
+    ["gap.js", bare, `// Vendor declaration is\n\n// incorrect.\n${bare}`, 0],
+    ["code.js", bare, `// Vendor declaration is\ninitialize(); // incorrect.\n${bare}`, 0],
+    ["one-word.js", bare, `// incorrect.\n//\n${bare}`, 0],
+    ["metadata.js", bare, `/** @throws {Error} When startup fails. */\n// incorrect.\n${bare}`, 0],
+    ["email-prose.js", bare, `/** Vendor contact user@example.com requires this workaround. */\n${bare}`, 1, 1, 2],
+  ];
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    for (const [file, original] of cases) writeFileSync(join(repo, file), original);
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since wrapped rationale (git unavailable)");
+    return;
+  }
+  for (const [file, , source, status, startLine, line] of cases) {
+    writeFileSync(join(repo, file), source);
+    const result = run(["--since=HEAD", "--json", file], repo);
+    assert.equal(result.status, status, `${file}: ${result.stderr || result.stdout}`);
+    if (status === 1) assert.ok(JSON.parse(result.stdout).some(f => f.rule === "no-unjustified-suppression" && f.startLine === startLine && f.line === line), file);
   }
 });
 

@@ -710,21 +710,13 @@ const EMOJI_PATTERN = new RegExp(
 // matched, so a block comment DOCUMENTING the syntax silenced the rule it named.
 const IGNORE_DIRECTIVE = /^(?:\/\/|\/\*)[^\S\r\n]*slop-check-ignore(-file)?\b(.*)/u;
 
-// A comment that actually says something, as opposed to one that merely exists.
-// A bare `// TODO` is a marker, not a reason, so the leading marker is stripped
-// before the two-word test. Shared by the rules that accept a comment as
-// evidence -- a swallowed catch and a hard-coded sleep -- because "any comment
-// counts here, a real one counts there" is a difference nobody intended.
+function commentBody(text) {
+  return text.replace(/^\/\/+\s?|^\/\*+|\*+\/$/gu, "").replace(/^\s*\*\s?/gmu, "");
+}
+
 function isJustification(comment) {
-  // A directive names the rules it silences. Letting it also satisfy the rules
-  // that merely want SOME reason nearby made it silence rules it never named:
-  // `slop-check-ignore no-any -- ...` above a hard-coded sleep cleared
-  // `no-arbitrary-sleep`, and a MALFORMED directive -- one that suppresses
-  // nothing and is reported for it -- cleared them just the same.
   if (IGNORE_DIRECTIVE.test(comment.text)) return false;
-  const body = comment.text
-    .replace(/^\/\/+|^\/\*+|\*+\/$/gu, "")
-    .replace(/^\s*\*\s?/gmu, "")
+  const body = commentBody(comment.text)
     .replace(/^\s*(?:todo|fixme|xxx|hack|note|wip)\b[\s:!-]*/iu, "")
     .trim();
   return body.split(/\s+/u).filter(Boolean).length >= 2;
@@ -2619,12 +2611,14 @@ const SUPPRESSION_DIRECTIVE_PATTERN = /@ts-(?:ignore|expect-error|nocheck)\b|\bb
 const DIFF_SUPPRESSION_DIRECTIVE_PATTERN = new RegExp(`^\\s*(?:(?:\\/\\/+|\\/\\*+)\\s*)?(?:\\*\\s*)?(?:${SUPPRESSION_DIRECTIVE_PATTERN.source}|\\b(?:(?:eslint|oxlint)-disable(?:-next-line|-line)?|deno-(?:lint|fmt)-ignore(?:-file)?|prettier-ignore|(?:istanbul|c8|v8)\\s+ignore|node:coverage\\s+(?:ignore|disable)))\\b`, "u");
 
 function isCommentMetadata(comment) {
-  const body = comment.text.replace(/^\/\/+\s?|^\/\*+|\*+\/$/gu, "").replace(/^\s*\*\s?/gmu, "");
+  const body = commentBody(comment.text);
   return /^\s*(?:SPDX-License-Identifier:|Copyright\b|(?:MIT|Apache|BSD|MPL)\s+License\b|@(?:license|copyright)\b|@ts-check\b|(?:eslint|oxlint)-enable\b|biome-ignore-end\b|node:coverage\s+enable\b|globals?\s|eslint-env\b)/iu.test(body)
-    || (comment.text.startsWith("/**") && /@(?:param|returns?|type|template|typedef|property|extends|implements|deprecated|see|example|link)\b/u.test(body));
+    || (comment.text.startsWith("/**") && /(?:^|\s|\{)@[A-Za-z][\w-]*\b/u.test(body));
 }
 
 function isDiffSuppression(body) {
+  body = commentBody(body);
+  if (/^\s*biome-ignore-end\b/u.test(body)) return false;
   if (DIFF_SUPPRESSION_DIRECTIVE_PATTERN.test(body)) return true;
   const configuration = /^\s*(?:\/\*+\s*)?eslint\s+([\s\S]*?)(?:\*+\/)?\s*$/u.exec(body)?.[1];
   if (configuration === undefined) return false;
@@ -2684,24 +2678,32 @@ function* iterateCommentFindings(ctx) {
     const start = offsetToPosition(lineStarts, comment.start);
     const endLine = offsetToPosition(lineStarts, Math.max(comment.start, comment.end - 1)).line;
     const position = endLine > start.line ? { ...start, endLine } : start;
-    const body = comment.text.replace(/^\/\/+\s?|^\/\*+|\*+\/$/gu, "").replace(/^\s*\*\s?/gmu, "");
+    const body = commentBody(comment.text);
 
     if (ctx.newComments.has(comment) && (/^\s*(?:SAFETY|lazy)\s*:/u.test(body) || IGNORE_DIRECTIVE.test(comment.text))) {
       yield { ...position, rule: "no-new-justification-comments", message: "New justification marker. Remove it; verify the code's invariant and explain rationale and constraints in the final response." };
       continue;
     }
     if (isDiffSuppression(body)) {
-      const previous = comments[index - 1];
-      const newExplanation = previous !== undefined && ctx.newComments.has(previous)
-        && offsetToPosition(lineStarts, Math.max(previous.start, previous.end - 1)).line === start.line - 1
-        && !ctx.source.slice(lineStarts[offsetToPosition(lineStarts, previous.start).line - 1], previous.start).trim()
-        && !ctx.source.slice(previous.end, lineStarts[start.line - 1]).trim()
-        && !isDiffSuppression(previous.text)
-        && !isCommentMetadata(previous) && isJustification(previous);
+      let explanationLine = start.line;
+      let explanation = "";
+      let explanationAdded = false;
+      for (let from = index - 1; from >= 0; from -= 1) {
+        const previous = comments[from];
+        const previousStart = offsetToPosition(lineStarts, previous.start);
+        if (offsetToPosition(lineStarts, Math.max(previous.start, previous.end - 1)).line !== explanationLine - 1
+          || ctx.source.slice(lineStarts[previousStart.line - 1], previous.start).trim()
+          || ctx.source.slice(previous.end, lineStarts[explanationLine - 1]).trim()
+          || isDiffSuppression(previous.text) || isCommentMetadata(previous) || IGNORE_DIRECTIVE.test(previous.text)) break;
+        explanation = `${commentBody(previous.text)}\n${explanation}`;
+        explanationLine = previousStart.line;
+        explanationAdded ||= ctx.newComments.has(previous);
+      }
+      const newExplanation = explanationAdded && isJustification({ text: explanation });
       if (ctx.newComments.has(comment) || newExplanation) {
         yield {
           ...position,
-          ...(newExplanation ? { startLine: offsetToPosition(lineStarts, previous.start).line } : {}),
+          ...(newExplanation && { startLine: explanationLine }),
           rule: "no-unjustified-suppression",
           message: "New or changed checker suppression. Fix the underlying diagnostic or verify that this functional directive is required; explain the evidence in the final response. Adding a reason comment is not verification.",
         };
@@ -3415,7 +3417,7 @@ function addedLines(ref) {
 function unchangedCommentStarts(rawSource, file, change, ref) {
   const unchanged = new Set();
   if (change.basePath === null) return unchanged;
-  const git = args => execFileSync("git", ["-C", change.root, ...args], { encoding: "utf8", maxBuffer: 64e6 });
+  const git = args => execFileSync("git", ["--literal-pathspecs", "-C", change.root, ...args], { encoding: "utf8", maxBuffer: 64e6 });
   const base = git(["show", "--end-of-options", `${ref}:${change.basePath}`]).replaceAll("\r\n", "\n");
   const source = rawSource.replaceAll("\r\n", "\n");
   const baseLines = buildLineStarts(base);
@@ -3467,47 +3469,31 @@ function unchangedCommentStarts(rawSource, file, change, ref) {
       inHunk = true;
     } else if (active && inHunk) {
       const text = line.slice(1);
-      const canonicalText = (value, at) => {
-        let result = "";
-        for (let index = 0; index < text.length; index += 1) {
-          if (text[index] === "\r" && value[at + result.length] === "\n") {
-            if (index < text.length - 1) result += "\n";
-          } else result += text[index];
-        }
-        return result;
-      };
-      const seek = (value, at, end) => {
-        while (at < end && value[at] === "\n" && !value.startsWith(canonicalText(value, at), at)) at += 1;
+      const seek = (value, at, end, char) => {
+        while (at < end && value[at] === "\n" && char !== "\r" && char !== "\n") at += 1;
         return at;
       };
-      if (line[0] === " ") {
-        const oldNext = seek(base, oldAt, oldEnd);
-        const newNext = seek(source, newAt, newEnd);
-        preserve(Math.min(oldNext - oldAt, newNext - newAt));
-        oldAt = oldNext;
-        newAt = newNext;
-        const oldText = canonicalText(base, oldAt);
-        const newText = canonicalText(source, newAt);
-        if (!base.startsWith(oldText, oldAt) || !source.startsWith(newText, newAt)) throw new Error("source changed during comment comparison");
-        for (let index = 0; index < Math.max(oldText.length, newText.length); index += 1) {
-          const oldChar = oldText[index], newChar = newText[index];
-          if (oldChar === newChar) preserve(1);
-          else if ([oldChar, newChar].every(char => char === undefined || char === "\r" || char === "\n")) {
-            if (oldChar !== undefined) oldAt += 1;
-            if (newChar !== undefined) newAt += 1;
-          } else throw new Error("inconsistent comment provenance text");
+      if (line[0] === " " || line[0] === "+" || line[0] === "-") {
+        for (let index = 0; index < text.length; index += 1) {
+          const char = text[index];
+          const oldNext = line[0] === "+" ? oldAt : seek(base, oldAt, oldEnd, char);
+          const newNext = line[0] === "-" ? newAt : seek(source, newAt, newEnd, char);
+          if (line[0] === " ") preserve(Math.min(oldNext - oldAt, newNext - newAt));
+          oldAt = oldNext;
+          newAt = newNext;
+          const consumeLength = (value, at) => {
+            if (char === "\r" && value[at] === "\n") return index < text.length - 1 ? 1 : 0;
+            if (value[at] !== char) throw new Error("source changed during comment comparison");
+            return 1;
+          };
+          const oldLength = line[0] === "+" ? 0 : consumeLength(base, oldAt);
+          const newLength = line[0] === "-" ? 0 : consumeLength(source, newAt);
+          if (line[0] === " " && oldLength && newLength && base[oldAt] === source[newAt]) preserve(1);
+          else {
+            oldAt += oldLength;
+            newAt += newLength;
+          }
         }
-      }
-      else if (line[0] === "+") {
-        newAt = seek(source, newAt, newEnd);
-        const addedText = canonicalText(source, newAt);
-        if (!source.startsWith(addedText, newAt)) throw new Error("source changed during comment comparison");
-        newAt += addedText.length;
-      } else if (line[0] === "-") {
-        oldAt = seek(base, oldAt, oldEnd);
-        const removedText = canonicalText(base, oldAt);
-        if (!base.startsWith(removedText, oldAt)) throw new Error("base changed during comment comparison");
-        oldAt += removedText.length;
       } else if (line === "~") {
         const oldNewline = oldAt < oldEnd && base[oldAt] === "\n";
         const newNewline = newAt < newEnd && source[newAt] === "\n";
