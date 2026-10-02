@@ -60,12 +60,12 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   only inside the private directory, hides the original checkout (only the
   preparation clone may read it, read-only) and the user's real home and other
   sensitive host paths (exposing only user-approved state, read-only), and
-  denies network access except to approved sandbox endpoints, and keeps host
-  processes (their PIDs and signals), IPC sockets such as Docker or D-Bus,
-  devices, and the Windows registry out of reach; where such a sandbox is not
-  available, ask first, and mark a run that read the original checkout
-  unfaithful. The user's tree only gains the tests you keep, the snapshots they
-  need, and production fixes the user asked for.
+  denies network access except to approved sandbox endpoints or live endpoints
+  the user approved, and keeps host processes (their PIDs and signals), IPC
+  sockets such as Docker or D-Bus, devices, and the Windows registry out of
+  reach; where such a sandbox is not available, ask first, and mark a run that
+  read the original checkout unfaithful. The user's tree only gains the tests
+  you keep, the snapshots they need, and production fixes the user asked for.
   - Read the source without changing access times (a read-only snapshot or a
     no-atime read); if that is not possible, ask first.
   - Before any step reads the tree (the starting record, the copy, or an
@@ -101,27 +101,28 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     `GIT_ALTERNATE_OBJECT_DIRECTORIES`) and config overrides
     (`GIT_CONFIG_PARAMETERS`, `GIT_CONFIG_COUNT` with its `GIT_CONFIG_KEY_*` and
     `GIT_CONFIG_VALUE_*`, and `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` unless
-    they name approved files) for every Git command in this workflow, and
-    classify every file Git's config makes it read (includes,
-    `core.excludesFile`, `core.attributesFile`, and similar) the same way,
-    approved if outside the checkout, or override that setting and report the
-    state it affects as unavailable. Use read-only Git commands
-    (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
-    `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean` and
-    `.process` overridden with an empty value and `.required` set to `false`, or
-    direct file reads instead of Git; where a filter is blanked, record
-    checksums for its paths and report Git's status and diff for them as
-    unavailable rather than recording the altered output), with network access
-    denied so a partial clone cannot lazily fetch missing objects (also set
-    `GIT_NO_LAZY_FETCH=1` where the installed Git supports it); if an object is
-    missing, read the file directly or report that state as unavailable. Record
-    `git status`, the unstaged and staged diffs, copies of untracked files (only
-    checksums for secrets), and raw checksums of every tracked and ignored file
-    copied (Git can hide normalized, assume-unchanged, or skip-worktree
-    changes), or a checksum listing without Git. Include the Git state the tests
-    read and the file metadata they depend on. Keep these in a private temporary
-    directory outside the repository and outside what isolated commands can
-    read, and delete it on every exit once the final audit is done.
+    they name approved files) and trace destinations (`GIT_TRACE` and the other
+    `GIT_TRACE*` variables) for every Git command in this workflow, and classify
+    every file Git's config makes it read (includes, `core.excludesFile`,
+    `core.attributesFile`, and similar) the same way, approved if outside the
+    checkout, or override that setting and report the state it affects as
+    unavailable. Use read-only Git commands (`GIT_OPTIONAL_LOCKS=0`,
+    `-c core.fsmonitor=false`, diffs with `--no-textconv --no-ext-diff`, every
+    configured `filter.<driver>.clean` and `.process` overridden with an empty
+    value and `.required` set to `false`, or direct file reads instead of Git;
+    where a filter is blanked, record checksums for its paths and report Git's
+    status and diff for them as unavailable rather than recording the altered
+    output), with network access denied so a partial clone cannot lazily fetch
+    missing objects (also set `GIT_NO_LAZY_FETCH=1` where the installed Git
+    supports it); if an object is missing, read the file directly or report that
+    state as unavailable. Record `git status`, the unstaged and staged diffs,
+    copies of untracked files (only checksums for secrets), and raw checksums of
+    every tracked and ignored file copied (Git can hide normalized,
+    assume-unchanged, or skip-worktree changes), or a checksum listing without
+    Git. Include the Git state the tests read and the file metadata they depend
+    on. Keep these in a private temporary directory outside the repository and
+    outside what isolated commands can read, and delete it on every exit once
+    the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit, on a
     filesystem with the same semantics as the source (case sensitivity, name
@@ -283,11 +284,11 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
 - Before reporting, confirm the user's tree differs from its starting state only
   by the tests you added, the snapshots they need, and requested changes; name
   any other change instead of reverting it. If tested source, its metadata, or
-  the refs the tests read changed after the copy was made, refresh the copy and
-  rerun the affected checks within a retry and time limit, or report the newer
-  state as untested. If a command rewrote tested production files inside the
-  copy, such as a pretest code generator, report it and rerun from the intended
-  state, or report that state as untested.
+  the Git state the tests read changed after the copy was made, refresh the copy
+  and rerun the affected checks within a retry and time limit, or report the
+  newer state as untested. If a command rewrote tested production files inside
+  the copy, such as a pretest code generator, report it and rerun from the
+  intended state, or report that state as untested.
 - Rerun affected checks after test edits. Review TS/JS changes with the installed
   slop checker when available; its clean result is not behavioral evidence.
 
