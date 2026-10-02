@@ -398,6 +398,15 @@ check("--since rejects new justification markers and preserves legacy evidence",
   assert.equal(marker.endLine, 3);
   writeFileSync(join(repo, "metadata.ts"), "// SPDX-License-Identifier: MIT\n// @ts-check\nconnect(options);\nconst text = '// SAFETY: only string data';\n");
   assert.equal(run(["--since=HEAD", "metadata.ts"], repo).status, 0);
+  for (const [file, source] of [
+    ["safety-prose.js", "// The serializer rejects SAFETY: prefixes in user data.\nconnect(options);\n"],
+    ["lazy-prose.js", "/* The serializer rejects lazy: prefixes in user data. */\nconnect(options);\n"],
+    ["marker-jsdoc.js", "/** @param options Serialized data must not contain SAFETY: or lazy: prefixes. */\nfunction connect(options) { return options; }\n"],
+  ]) {
+    writeFileSync(join(repo, file), source);
+    const result = run(["--since=HEAD", "--json", file], repo);
+    assert.equal(result.status, 0, `${file}: ${result.stderr || result.stdout}`);
+  }
 });
 
 check("--since reviews new compiler suppressions and new explanations for old directives", () => {
@@ -574,10 +583,15 @@ check("--since reviews new rationale for every suppression family and preserves 
     const result = run(["--since=HEAD", "--json", file], repo);
     assert.equal(result.status, 1, `${directive}: ${result.stderr || result.stdout}`);
     assert.ok(JSON.parse(result.stdout).some(f => f.rule === "no-unjustified-suppression" && f.startLine === 1 && f.line === 2), directive);
-    for (const metadata of ["// SPDX-License-Identifier: MIT", "/** @param options Stable account identifier, never a display name. */"]) {
-      writeFileSync(join(repo, file), `${metadata}\n${body}`);
+    for (const prefix of [
+      "// SPDX-License-Identifier: MIT", "/** @param options Stable account identifier, never a display name. */",
+      "initialize(); // Parse options before connecting",
+      "initialize(); /* Parse options before connecting */",
+      "/* Parse options before connecting */ initialize();",
+    ]) {
+      writeFileSync(join(repo, file), `${prefix}\n${body}`);
       const retained = run(["--since=HEAD", "--json", file], repo);
-      assert.equal(retained.status, 0, `${metadata}: ${retained.stderr || retained.stdout}`);
+      assert.equal(retained.status, 0, `${prefix}: ${retained.stderr || retained.stdout}`);
     }
   }
 });

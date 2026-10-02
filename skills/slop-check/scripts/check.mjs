@@ -2686,7 +2686,7 @@ function* iterateCommentFindings(ctx) {
     const position = endLine > start.line ? { ...start, endLine } : start;
     const body = comment.text.replace(/^\/\/+\s?|^\/\*+|\*+\/$/gu, "").replace(/^\s*\*\s?/gmu, "");
 
-    if (ctx.newComments.has(comment) && (/\b(?:SAFETY|lazy)\s*:/u.test(body) || IGNORE_DIRECTIVE.test(comment.text))) {
+    if (ctx.newComments.has(comment) && (/^\s*(?:SAFETY|lazy)\s*:/u.test(body) || IGNORE_DIRECTIVE.test(comment.text))) {
       yield { ...position, rule: "no-new-justification-comments", message: "New justification marker. Remove it; verify the code's invariant and explain rationale and constraints in the final response." };
       continue;
     }
@@ -2694,6 +2694,8 @@ function* iterateCommentFindings(ctx) {
       const previous = comments[index - 1];
       const newExplanation = previous !== undefined && ctx.newComments.has(previous)
         && offsetToPosition(lineStarts, Math.max(previous.start, previous.end - 1)).line === start.line - 1
+        && !ctx.source.slice(lineStarts[offsetToPosition(lineStarts, previous.start).line - 1], previous.start).trim()
+        && !ctx.source.slice(previous.end, lineStarts[start.line - 1]).trim()
         && !isDiffSuppression(previous.text)
         && !isCommentMetadata(previous) && isJustification(previous);
       if (ctx.newComments.has(comment) || newExplanation) {
