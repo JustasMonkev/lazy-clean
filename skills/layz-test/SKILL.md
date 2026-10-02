@@ -105,12 +105,12 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     `GIT_NO_LAZY_FETCH=1` where the installed Git supports it); if an object is
     missing, read the file directly or report that state as unavailable. Record
     `git status`, the unstaged and staged diffs, copies of untracked files (only
-    checksums for secrets), and checksums of every ignored file copied and of
-    tracked files marked assume-unchanged or skip-worktree, or a checksum
-    listing without Git. Include the Git state the tests read and the file
-    metadata they depend on. Keep these in a private temporary directory outside
-    the repository and outside what isolated commands can read, and delete it on
-    every exit once the final audit is done.
+    checksums for secrets), and raw checksums of every tracked and ignored file
+    copied (Git can hide normalized, assume-unchanged, or skip-worktree
+    changes), or a checksum listing without Git. Include the Git state the tests
+    read and the file metadata they depend on. Keep these in a private temporary
+    directory outside the repository and outside what isolated commands can
+    read, and delete it on every exit once the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit, on a
     filesystem with the same semantics as the source (case sensitivity, name
