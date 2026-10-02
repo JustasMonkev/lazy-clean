@@ -137,7 +137,7 @@ Every subagent except the read-only Explore agents gets the ruleset (about 2,000
 
 The checker only looks at `.ts .tsx .mts .cts .js .jsx .mjs .cjs`; anything else is skipped silently. Files written through `Bash` — heredocs, `sed -i`, codemods — are not seen by the hook at all; run the checker on those yourself.
 
-Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. A failed checker run reports `check failed`; it does not claim the edit was clean. It reports findings on the lines attributed to that edit and counts findings elsewhere in the file whose origin is unknown. Those other findings may come from earlier edits in the same task; the final scan still covers them. Triage them per `skills/slop-check/SKILL.md`: fix real slop and report checked invariants for retained findings in the final response. Do not add code comments, including `SAFETY:`, `lazy:`, or suppression comments; remove nonessential comments from code you touch. Keep required license notices and functional tool directives.
+Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. A failed checker run reports `check failed`; it does not claim the edit was clean. It reports findings on the lines attributed to that edit and counts findings elsewhere in the file whose origin is unknown. Those other findings may come from earlier edits in the same task; the final scan still covers them. Triage them per `skills/slop-check/SKILL.md`: fix real slop and report checked invariants for retained findings in the final response. Do not add code comments; remove nonessential comments from code you touch. Keep required license notices and functional tool directives. Never add `SAFETY:` or `lazy:` markers. Verify necessary functional suppressions and explain the evidence in the final response.
 
 ## Running the checker yourself
 
@@ -162,7 +162,7 @@ Emoji, sequencing comments, change-note comments, and apparently obvious documen
 
 With `--since`, newly added or edited `SAFETY:`, `lazy:`, and `slop-check-ignore` comments are reported as `no-new-justification-comments`. New comments do not justify assertions, empty catches, or hard-coded sleeps, and new ignore directives do not suppress findings. Untouched legacy comments retain their exemptions. Full-file scans without added-line provenance retain legacy handling.
 
-Plugin justification markers are mechanical removals. New or edited compiler, lint, formatting, and coverage suppressions are review findings even with a reason. Verify required functional directives against the actual diagnostic and explain the evidence in the final response; adding a preceding explanation cannot justify a bare directive.
+Plugin justification markers are mechanical removals. New or edited suppressions for TypeScript, Biome, ESLint, Oxlint, Deno, Prettier, and Istanbul/c8/v8 coverage tools are review findings even with a reason. Verify required functional directives against the actual diagnostic and explain the evidence in the final response; adding a preceding explanation cannot justify a bare directive.
 
 `--explain=<rule-id>` prints one rule's reasoning — why it fires, a slop/instead pair, and when the rule is wrong — and runs no scan. Read it before rewriting code a finding landed on that you believe is correct:
 

@@ -2616,7 +2616,7 @@ function* iterateAssertionFindings(ctx) {
 // widely adopted, so the same rule over eslint-disable fired on 279 of 651
 // real-world files — it would drown the signal it is looking for.
 const SUPPRESSION_DIRECTIVE_PATTERN = /@ts-(?:ignore|expect-error|nocheck)\b|\bbiome-ignore\b/u;
-const DIFF_SUPPRESSION_DIRECTIVE_PATTERN = new RegExp(`${SUPPRESSION_DIRECTIVE_PATTERN.source}|\\b(?:eslint-disable(?:-next-line|-line)?|prettier-ignore|(?:istanbul|c8|v8)\\s+ignore)\\b`, "u");
+const DIFF_SUPPRESSION_DIRECTIVE_PATTERN = new RegExp(`${SUPPRESSION_DIRECTIVE_PATTERN.source}|\\b(?:(?:eslint|oxlint)-disable(?:-next-line|-line)?|deno-(?:lint|fmt)-ignore(?:-file)?|prettier-ignore|(?:istanbul|c8|v8)\\s+ignore)\\b`, "u");
 
 const OBVIOUS_DOC_COMMENT_PATTERN = new RegExp(
   [
@@ -2667,7 +2667,6 @@ function* iterateCommentFindings(ctx) {
     if (DIFF_SUPPRESSION_DIRECTIVE_PATTERN.test(body)) {
       const previous = comments[index - 1];
       const newExplanation = previous !== undefined && ctx.newComments.has(previous)
-        && previous.kind === "line"
         && offsetToPosition(lineStarts, Math.max(previous.start, previous.end - 1)).line === start.line - 1
         && !DIFF_SUPPRESSION_DIRECTIVE_PATTERN.test(previous.text)
         && isJustification(previous) && !suppressionIsJustified(body);
@@ -3031,10 +3030,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "This rule requires added-line provenance from --since or the lintSource addedLines option. Untouched legacy comments retain compatibility; full-file scans without provenance keep legacy handling. Preserve required licenses and functional tool directives. The example preserves the shown declaration's runtime value; validate actual required fields before using opaque input. Necessary assertions may remain as review findings after the marker is removed.",
   },
   "no-unjustified-suppression": {
-    why: "Bare TypeScript suppression directives and biome-ignore directives need verification of the diagnostic being suppressed. Diff scans also report newly added or edited compiler, lint, formatting, and coverage suppressions even when they carry a reason; a new preceding explanation cannot justify a bare directive. Fix the actual reported problem when possible. The example below addresses a TypeScript boundary error, not every possible lint or formatting diagnostic.",
+    why: "Bare TypeScript suppression directives and biome-ignore directives need verification of the diagnostic being suppressed. Diff scans also report newly added or edited TypeScript, Biome, ESLint, Oxlint, Deno, Prettier, and Istanbul/c8/v8 suppressions even when they carry a reason; a new preceding explanation cannot justify a bare directive. Fix the actual reported problem when possible. The example below addresses a TypeScript boundary error, not every possible lint or formatting diagnostic.",
     slop: "// @ts-expect-error\nconnect(options);",
     correct: "if (typeof options !== \"object\" || options === null || !(\"host\" in options) || typeof options.host !== \"string\") {\n  throw new TypeError(\"Expected a configuration with a string host\");\n}\nconnect(options);",
-    exceptions: "A proven compiler or vendor-typing defect may require an existing functional TypeScript suppression. Verify the specific defect and explain the evidence in the final response; missing runtime validation is not a compiler defect. For biome-ignore, fix its named Biome lint/formatting diagnostic or verify why the existing directive is necessary, preserving the affected statement. Do not apply the JSON-validation example to an unrelated Biome rule. This connect example assumes the API needs only host.",
+    exceptions: "A proven compiler or vendor-typing defect may require a functional TypeScript suppression. Verify the specific defect and explain the evidence in the final response; missing runtime validation is not a compiler defect. For biome-ignore, fix its named Biome lint/formatting diagnostic or verify why the directive is necessary, preserving the affected statement. Do not apply the JSON-validation example to an unrelated Biome rule. This connect example assumes the API needs only host.",
   },
 };
 

@@ -141,8 +141,11 @@ ok("README does not provide a new suppression-comment recipe", !/\/\/\s*slop-che
 ok("Python slop distinguishes existing directives from new suppressions",
   /Python slop[^\n]*existing[^\n]*functional[^\n]*final response/u.test(read("skills/slop-check/SKILL.md"))
   && !/`# type: ignore` \/ `# noqa` without a code and reason/u.test(read("skills/slop-check/SKILL.md")));
+for (const file of ["skills/slop-check/SKILL.md", "skills/lazy/references/python-checks.md"])
+  ok(`${file} verifies necessary new functional suppressions`, /necessary additions against the named diagnostic[^.]*final response/iu.test(flat(read(file))));
 const DELIVERY_CONTRACT = [
   ...COMMENT_CONTRACT,
+  ["bans plugin markers and verifies necessary functional suppressions", /never add[^.]*SAFETY:[^.]*lazy:[^.]*slop-check-ignore[^.]*verify necessary functional suppressions/iu],
   ["states material assumptions", /material assumptions/iu],
   ["defines a plan and verifiable finish", /step.*check plan/iu],
   ["uses task-owned surgical scope", /task-owned/iu],

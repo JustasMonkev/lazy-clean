@@ -40,7 +40,7 @@ No avoidable dependency or unrelated cleanup.
 Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
 Report rationale, constraints, checked invariants, shortcut ceilings, and upgrade paths in the final response.
-Never add `SAFETY:`, `lazy:`, or suppression comments.
+Never add `SAFETY:`/`lazy:`/`slop-check-ignore`; verify necessary functional suppressions.
 
 Match existing style. Reject speculative features/config, needless
 abstractions, and impossible-state guards. Offer simpler alternatives to unneeded

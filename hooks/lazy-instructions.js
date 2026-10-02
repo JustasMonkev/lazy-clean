@@ -95,7 +95,7 @@ and hardware calibration.
 Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
 Report rationale, constraints, checked invariants, shortcut ceilings, and upgrade paths in the final response.
-Never add SAFETY:, lazy:, or suppression comments.
+Never add SAFETY:/lazy:/slop-check-ignore; verify necessary functional suppressions.
 
 At changed boundaries: group behavior by reason to change; keep policy independent
 of external details through ordinary parameters; give callers only capabilities

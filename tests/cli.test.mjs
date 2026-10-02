@@ -412,6 +412,8 @@ check("--since reviews new compiler suppressions and new explanations for old di
     git("config", "user.name", "test");
     writeFileSync(join(repo, "bare.ts"), bare);
     writeFileSync(join(repo, "preceding.ts"), bare);
+    writeFileSync(join(repo, "preceding-block.ts"), bare);
+    writeFileSync(join(repo, "preceding-multiline.ts"), bare);
     writeFileSync(join(repo, "legacy.ts"), justified);
     git("add", "-A");
     git("commit", "-qm", "base");
@@ -430,10 +432,19 @@ check("--since reviews new compiler suppressions and new explanations for old di
     ["eslint.js", "// eslint-disable-next-line no-console -- required diagnostic output\nconsole.log(value);\n"],
     ["format.js", "// prettier-ignore\nconst values = [1, 2];\n"],
     ["coverage.js", "// c8 ignore next\nconnect(options);\n"],
+    ["deno-lint.ts", "// deno-lint-ignore no-console\nconsole.log(value);\n"],
+    ["deno-lint-file.ts", "// deno-lint-ignore-file no-console\nconsole.log(value);\n"],
+    ["deno-format.ts", "// deno-fmt-ignore\nconst values = [1, 2];\n"],
+    ["deno-format-file.ts", "// deno-fmt-ignore-file\nconst values = [1, 2];\n"],
+    ["oxlint.js", "// oxlint-disable-next-line no-console\nconsole.log(value);\n"],
+    ["oxlint-line.js", "console.log(value); // oxlint-disable-line no-console\n"],
+    ["oxlint-block.js", "/* oxlint-disable no-console */\nconsole.log(value);\n/* oxlint-enable no-console */\n"],
     ["bare.ts", bare.replace("@ts-ignore", "@ts-ignore -- vendor declaration has an incorrect parameter")],
-    ["preceding.ts", `// The vendor declaration has an incorrect parameter\n${bare}`],
+    ["preceding.ts", `// The vendor declaration has an incorrect parameter\n${bare}`, 0, 2],
+    ["preceding-block.ts", `/* The vendor declaration has an incorrect parameter */\n${bare}`, 1, 2],
+    ["preceding-multiline.ts", `/*\n * The vendor declaration has an incorrect parameter\n */\n${bare}`, 1, 4],
   ];
-  for (const [file, source] of cases) {
+  for (const [file, source, fullStatus = 0, directiveLine] of cases) {
     writeFileSync(join(repo, file), source);
     const result = run(["--since=HEAD", "--json", file], repo);
     assert.equal(result.status, 1, file);
@@ -441,10 +452,10 @@ check("--since reviews new compiler suppressions and new explanations for old di
     assert.ok(finding, file);
     assert.equal(finding.severity, "review");
     assert.match(finding.message, /required.*final response/u);
-    assert.equal(run(["--json", file], repo).status, 0, "unscoped legacy handling stays compatible");
-    if (file === "preceding.ts") {
+    assert.equal(run(["--json", file], repo).status, fullStatus, "unscoped legacy handling stays compatible");
+    if (directiveLine !== undefined) {
       assert.equal(finding.startLine, 1);
-      assert.equal(finding.line, 2);
+      assert.equal(finding.line, directiveLine);
     }
   }
 });

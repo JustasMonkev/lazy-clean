@@ -26,9 +26,9 @@ the oldest plausible version accepts.
 Run the formatter, linter, type checker, and test runner the project already
 configures (look in `pyproject.toml`, `setup.cfg`, `tox.ini`, `noxfile.py`, the
 Makefile, or CI). Do not add a tool, loosen its config, or add
-`# type: ignore` / `# noqa` to silence it. Verify the named diagnostic before
-retaining an existing `# type: ignore` or `# noqa` and explain the evidence in
-the final response. Do not add code comments; remove nonessential comments.
+`# type: ignore` / `# noqa` to silence it. Verify existing `# type: ignore` or
+`# noqa` directives and necessary additions against the named diagnostic;
+explain the evidence in the final response. Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
 
 ## Check module shape
