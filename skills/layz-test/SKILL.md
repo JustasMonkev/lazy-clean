@@ -58,12 +58,14 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   do not stop a command that writes to an absolute path or finds the original
   checkout, so run these commands under an OS-level sandbox that allows writes
   only inside the private directory, hides the original checkout (only the
-  preparation clone may read it, read-only), and denies network access except to
-  approved sandbox endpoints, and, as the platform allows, keeps host processes,
-  IPC sockets such as Docker or D-Bus, devices, and the Windows registry out of
-  reach; where none is available, ask first, and mark a run that read the
-  original checkout unfaithful. The user's tree only gains the tests you keep,
-  the snapshots they need, and production fixes the user asked for.
+  preparation clone may read it, read-only) and the user's real home and other
+  sensitive host paths (exposing only user-approved state, read-only), and
+  denies network access except to approved sandbox endpoints, and, as the
+  platform allows, keeps host processes, IPC sockets such as Docker or D-Bus,
+  devices, and the Windows registry out of reach; where none is available, ask
+  first, and mark a run that read the original checkout unfaithful. The user's
+  tree only gains the tests you keep, the snapshots they need, and production
+  fixes the user asked for.
   - Read the source without changing access times (a read-only snapshot or a
     no-atime read); if that is not possible, ask first.
   - Before any step reads the tree (the starting record, the copy, or an
