@@ -415,6 +415,8 @@ check("--since reviews new compiler suppressions and new explanations for old di
     writeFileSync(join(repo, "preceding-block.ts"), bare);
     writeFileSync(join(repo, "preceding-multiline.ts"), bare);
     writeFileSync(join(repo, "legacy.ts"), justified);
+    writeFileSync(join(repo, "legacy-eslint.js"), "/* eslint no-console: off */\nconsole.log(value);\n");
+    writeFileSync(join(repo, "edited-eslint.js"), "/* eslint no-console: error */\nconsole.log(value);\n");
     git("add", "-A");
     git("commit", "-qm", "base");
   } catch {
@@ -423,6 +425,8 @@ check("--since reviews new compiler suppressions and new explanations for old di
   }
   writeFileSync(join(repo, "legacy.ts"), `${justified}export const added = 1;\n`);
   assert.equal(run(["--since=HEAD", "legacy.ts"], repo).status, 0);
+  writeFileSync(join(repo, "legacy-eslint.js"), "/* eslint no-console: off */\nconsole.log(value);\nexport const added = 1;\n");
+  assert.equal(run(["--since=HEAD", "legacy-eslint.js"], repo).status, 0);
   const cases = [
     ["new.ts", justified],
     ["mock.test.ts", "// @ts-expect-error mock vendor stub is missing the strict option\nconnect(options);\n"],
@@ -430,6 +434,12 @@ check("--since reviews new compiler suppressions and new explanations for old di
     ["nocheck.ts", "// @ts-nocheck -- vendor declarations are incorrect for this module\nconnect(options);\n"],
     ["biome.js", "// biome-ignore lint/suspicious/noExplicitAny -- vendor declaration has an incorrect parameter\nconnect(options);\n"],
     ["eslint.js", "// eslint-disable-next-line no-console -- required diagnostic output\nconsole.log(value);\n"],
+    ["eslint-config.js", "/* eslint no-console: off */\nconsole.log(value);\n"],
+    ["eslint-zero.js", "/* eslint no-console: 0 */\nconsole.log(value);\n"],
+    ["eslint-array.js", '/* eslint curly: 2, "no-console": ["off", { allow: ["warn"] }] */\nconsole.log(value);\n'],
+    ["eslint-zero-array.js", "/* eslint no-console: [0, { allow: ['warn'] }] */\nconsole.log(value);\n"],
+    ["eslint-reason.js", "/* eslint no-console: off -- required diagnostic output (vendor {\n */\nconsole.log(value);\n"],
+    ["edited-eslint.js", "/* eslint\n no-console: off\n*/\nconsole.log(value);\n"],
     ["format.js", "// prettier-ignore\nconst values = [1, 2];\n"],
     ["coverage.js", "// c8 ignore next\nconnect(options);\n"],
     ["deno-lint.ts", "// deno-lint-ignore no-console\nconsole.log(value);\n"],
@@ -457,6 +467,14 @@ check("--since reviews new compiler suppressions and new explanations for old di
       assert.equal(finding.startLine, 1);
       assert.equal(finding.line, directiveLine);
     }
+  }
+  for (const [file, source] of [
+    ["eslint-enabled.js", '/* eslint no-console: ["error", { level: "off", limit: 0 }] */\nconsole.log(value);\n'],
+    ["eslint-enabled-reason.js", "/* eslint no-console: error -- reason mentioning no-alert: off */\nconsole.log(value);\n"],
+    ["eslint-string.js", 'const value = "/* eslint no-console: off */";\n'],
+  ]) {
+    writeFileSync(join(repo, file), source);
+    assert.equal(run(["--since=HEAD", "--json", file], repo).status, 0, file);
   }
 });
 
