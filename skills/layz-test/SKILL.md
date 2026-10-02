@@ -148,15 +148,19 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - Reapply the file metadata the tests depend on. If the source state, Git or
     filesystem, cannot be reproduced faithfully, treat the target as unable to
     run from a copy. Before running checks, compare the completed copy with the
-    baseline and refresh it if they differ.
+    baseline, allowing only the recorded omissions and rewrites (left-out
+    secrets, retargeted paths, sanitized config); refresh it if anything else
+    differs.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
     running write-capable commands through it. Keep an absolute link into the
     repository pointing at its literal target by presenting the copy at the
     original absolute path inside the sandbox; otherwise retarget it to the copy
     and mark the checks that read link targets unfaithful. If the checks read
-    its target, snapshot the target into the private directory and point the
-    copy's link at the snapshot, or compare the target again before reporting
-    and mark the run unfaithful if it changed.
+    its target, snapshot the target into the private directory and present the
+    snapshot at the link's original literal target inside the sandbox, or point
+    the link at the snapshot and mark the checks that read link targets
+    unfaithful, or compare the target again before reporting and mark the run
+    unfaithful if it changed.
   - Point temp and cache locations inside the private directory (`TMPDIR`,
     `TMP`, `TEMP`, and the tools' cache variables). If the behavior under test
     depends on those locations, keep them equivalent in the private directory
@@ -171,16 +175,18 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - Before deleting the copy, move every redacted artifact the report cites,
     from passing or failing runs (logs, traces, screenshots, coverage), to a
     private evidence directory.
-  - When copying kept tests and snapshots back, compare each destination with
-    its baseline and its current state; if it changed since the copy was made,
-    merge the change or report a conflict instead of overwriting it. Recheck the
-    destination immediately before an atomic rename into place, and report a
-    conflict if it changed in between. Keep the destination's file metadata,
-    including hard-link groups, unless the change was requested; where an atomic
-    rename cannot, write in place only while the user pauses edits to that file,
-    or report a conflict and leave the proposed file in the evidence directory.
-    For any conflict, save the proposed file or patch in the private evidence
-    directory before the copy is deleted, and report where.
+  - When copying kept tests, snapshots, and requested fixes back, compare each
+    destination with its baseline and its current state; if it changed since the
+    copy was made, merge the change or report a conflict instead of overwriting
+    it. Make the final check and the replacement one step: hold the user's pause
+    on that file across both, or use an atomic exchange whose displaced file is
+    verified as unchanged before committing, and report a conflict if it
+    changed. Keep the destination's file metadata, including hard-link groups,
+    unless the change was requested; where an atomic rename cannot, write in
+    place only while the user pauses edits to that file, or report a conflict
+    and leave the proposed file in the evidence directory. For any conflict,
+    save the proposed file or patch in the private evidence directory before the
+    copy is deleted, and report where.
   - If the suite cannot run from a copy, ask before running write-capable
     commands in place. When approved, use the same sandbox except that the tree
     and the Git directories it points to are visible and writable along with the
@@ -194,9 +200,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     paths, and files with links from outside the tree, out of the command's
     reach unless the user approves them. Record what the command changed, verify
     the backup, restore from it only paths that still hold exactly that result,
-    rechecked immediately before an atomic replacement, and report any other
-    change as a conflict. Delete those backups on every exit once restoring is
-    done; keep one only for an unresolved conflict, and say where.
+    with the check and the replacement made one step as for copy-back, and
+    report any other change as a conflict. Delete those backups on every exit
+    once restoring is done; keep one only for an unresolved conflict, and say
+    where.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
@@ -215,19 +222,20 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   timeout and a bounded workload. Keep a service a setup command starts alive
   until the tests that depend on it finish, then tear down the scenario as a
   unit: run it in a lifecycle container such as a cgroup, PID namespace, or
-  Windows Job so daemons that leave the process tree stop too, or report the
-  check as blocked where none is available; clean up listeners, timers,
-  temporary data, and mutations on success, failure, cancellation, and partial
-  setup. Use isolated test data. Run destructive or costly external checks only
-  within authorization; report missing prerequisites instead of inventing
-  credentials. Never call a live payment, email, SMS, or other third-party
-  account unless it is an isolated sandbox or the user approves; otherwise
-  report it as blocked automation that needs a sandbox or approval. Run isolated
-  commands with an allowlisted environment: drop inherited credentials, tokens,
-  and agent sockets such as `SSH_AUTH_SOCK`, and add back only sandbox or
-  user-approved credentials. Keep the non-secret variables the behavior depends
-  on, such as locale, `TZ`, `CI`, and feature flags, or report the affected
-  checks as unfaithful.
+  Windows Job, with limits on processes, memory, CPU, and storage, so daemons
+  that leave the process tree stop too, or report the check as blocked where no
+  such container is available; clean up listeners, timers, temporary data, and
+  mutations on success, failure, cancellation, and partial setup. Use isolated
+  test data. Run destructive or costly external checks only within
+  authorization; report missing prerequisites instead of inventing credentials.
+  Never call a live payment, email, SMS, or other third-party account unless it
+  is an isolated sandbox or the user approves; otherwise report it as blocked
+  automation that needs a sandbox or approval. Run isolated commands with an
+  allowlisted environment: drop inherited credentials, tokens, and agent sockets
+  such as `SSH_AUTH_SOCK`, and add back only sandbox or user-approved
+  credentials. Keep the non-secret variables the behavior depends on, such as
+  locale, `TZ`, `CI`, and feature flags, or report the affected checks as
+  unfaithful.
 - Prove a risky test can fail: reproduce a regression by running the same new
   test, unchanged, against the complete old non-test product state (code,
   generated files, schemas, lockfiles, configuration, dependencies freshly
