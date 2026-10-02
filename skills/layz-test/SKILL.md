@@ -76,13 +76,13 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     where the installed Git supports it); if an object is missing, read the file
     directly or report that state as unavailable. Record `git status`, the
     unstaged and staged diffs, copies of untracked files (only checksums for
-    secrets), and checksums of every ignored file copied, or a checksum
-    listing without Git. Include `HEAD`, the refs, reflogs, in-progress
-    operation state, and repository config the tests read, and the file modes,
-    hard-link groups, owners, timestamps, ACLs, and extended attributes they
-    depend on. Keep these in a private temporary directory outside the
-    repository and outside what isolated commands can read, and delete it on
-    every exit once the final audit is done.
+    secrets), and checksums of every ignored file copied, or a checksum listing
+    without Git. Include `HEAD`, the refs, reflogs, pseudorefs, in-progress
+    operation state, Git info files, and repository config the tests read, and
+    the file modes, hard-link groups, owners, timestamps, ACLs, and extended
+    attributes they depend on. Keep these in a private temporary directory
+    outside the repository and outside what isolated commands can read, and
+    delete it on every exit once the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit, on a
     filesystem with the same semantics as the source (case sensitivity, name
@@ -114,7 +114,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     into the clone so no smudge filter or other conversion helper runs, then
     recreate the index, unstaged changes, untracked files, `HEAD` (the same
     branch, or the same detached commit), and the refs the tests read (local
-    branches, tags, custom refs, stashes, and their reflogs) separately, along
+    branches, tags, custom refs, stashes, and their reflogs), the pseudorefs
+    they read (such as `ORIG_HEAD` and `FETCH_HEAD`), Git info files such as
+    `info/exclude`, and the linked worktrees they inspect (as private
+    retargeted worktrees) separately, along
     with any in-progress merge, rebase, cherry-pick, revert, or bisect state
     (`MERGE_HEAD`, `CHERRY_PICK_HEAD`, the sequencer and rebase directories), or
     mark the checks that depend on it unfaithful. Replay the repository and
@@ -163,15 +166,16 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     the backup until restoring is done, and back up the tree first, classifying
     paths, never reading special files, and stopping at mount points as for the
     copy, into a location the command cannot read or write: bytes, file modes,
-    symlink targets, which paths exist, hard-link groups, owners, timestamps,
-    ACLs and extended attributes where the platform has them, and the Git
-    directories the tree points to (`git rev-parse --absolute-git-dir` and
-    `--git-common-dir`). Keep mounted paths out of the command's reach unless
-    the user approves them. Record what the command changed, verify the backup,
-    restore from it only paths that still hold exactly that result, rechecked
-    immediately before an atomic replacement, and report any other change as a
-    conflict. Delete those backups on every exit once restoring is done; keep
-    one only for an unresolved conflict, and say where.
+    symlink targets, which paths exist, hard-link groups, sparse extents,
+    owners, timestamps, ACLs and extended attributes where the platform has
+    them, and the Git directories the tree points to
+    (`git rev-parse --absolute-git-dir` and `--git-common-dir`). Keep mounted
+    paths out of the command's reach unless the user approves them. Record what
+    the command changed, verify the backup, restore from it only paths that
+    still hold exactly that result, rechecked immediately before an atomic
+    replacement, and report any other change as a conflict. Delete those backups
+    on every exit once restoring is done; keep one only for an unresolved
+    conflict, and say where.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
