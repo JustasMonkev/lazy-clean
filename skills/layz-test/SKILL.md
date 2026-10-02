@@ -97,8 +97,11 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - Record the starting state of the user's tree. Before the first Git command,
     clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
     `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`,
-    `GIT_ALTERNATE_OBJECT_DIRECTORIES`) for every Git command in this workflow,
-    and classify every file the repository's config makes Git read (includes,
+    `GIT_ALTERNATE_OBJECT_DIRECTORIES`) and config overrides
+    (`GIT_CONFIG_PARAMETERS`, `GIT_CONFIG_COUNT` with its `GIT_CONFIG_KEY_*` and
+    `GIT_CONFIG_VALUE_*`, and `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` unless
+    they name approved files) for every Git command in this workflow, and
+    classify every file Git's config makes it read (includes,
     `core.excludesFile`, `core.attributesFile`, and similar) the same way,
     approved if outside the checkout, or override that setting and report the
     state it affects as unavailable. Use read-only Git commands
@@ -137,29 +140,32 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     only the settings the tests need, such as an identity, with `-c`, or, when
     the tests observe config scope, as approved sanitized values in private
     files at their original scopes. When a repository hook is under test, point
-    `core.hooksPath` at the copy's own hooks, never the user's. Remove the
-    clone's remotes, or point them at private repositories inside the temporary
-    directory. Do not check out: copy the user's working-tree bytes into the
-    clone so no smudge filter or other conversion helper runs, then recreate the
-    index, unstaged changes, untracked files, and the Git state the tests read
-    separately: `HEAD` on the same branch or the same detached commit, linked
-    worktrees as private retargeted worktrees, repository and worktree config
-    (`git config --local` and `--worktree`) with included files snapshotted into
-    the private directory (an include outside the checkout only with the user's
-    approval, classified the same way, with secrets left out, and compared again
-    after the run, rerunning or marking the dependent checks unfaithful if it
-    changed), path-valued settings such as `core.worktree`, include paths, and
-    `includeIf` `gitdir:` conditions retargeted to the copy, replacing
-    credentials such as authenticated remote URLs or `http.extraHeader` with
-    sandbox or user-approved values, or mark the checks that depend on any of it
-    unfaithful. If a left-out secret is in any of the clone's objects, reachable
-    or not, or in a reproduced extension store such as the Git LFS cache, purge
-    those objects and the refs that carry them, or treat the target as unable to
-    run safely from a copy. Give each initialized submodule and every other
-    nested repository the same independent metadata and state, or mark the
-    checks that depend on it unfaithful. A bare repository gets the same
-    independent copy of its Git directory and Git state, skipping worktree-only
-    steps such as `git status`. A non-Git source stays without Git.
+    `core.hooksPath` at the copy's own hooks, never the user's. Keep the clone's
+    remotes with their non-secret URLs while network access stays denied, or
+    point them at private repositories inside the temporary directory and mark
+    the checks that read remote URLs unfaithful. Do not check out: copy the
+    user's working-tree bytes into the clone so no smudge filter or other
+    conversion helper runs, then recreate the index, unstaged changes, untracked
+    files, and the Git state the tests read separately: `HEAD` on the same
+    branch or the same detached commit, linked worktrees as private retargeted
+    worktrees, repository and worktree config (`git config --local` and
+    `--worktree`) with included files and other files the config makes Git read
+    snapshotted into the private directory (one outside the checkout only with
+    the user's approval, classified the same way, with secrets left out, and
+    compared again after the run, rerunning or marking the dependent checks
+    unfaithful if it changed), path-valued settings such as `core.worktree`,
+    include paths, and `includeIf` `gitdir:` conditions retargeted to the copy,
+    replacing credentials such as authenticated remote URLs or
+    `http.extraHeader` with sandbox or user-approved values, or mark the checks
+    that depend on any of it unfaithful. If a left-out secret is in any of the
+    clone's objects, reachable or not, or in a reproduced extension store such
+    as the Git LFS cache, purge those objects and the refs that carry them, or
+    treat the target as unable to run safely from a copy. Give each initialized
+    submodule and every other nested repository the same independent metadata
+    and state, or mark the checks that depend on it unfaithful. A bare
+    repository gets the same independent copy of its Git directory and Git
+    state, skipping worktree-only steps such as `git status`. A non-Git source
+    stays without Git.
   - Reapply the file metadata the tests depend on. If the source state, Git or
     filesystem, cannot be reproduced faithfully, treat the target as unable to
     run from a copy. Before running checks, compare the completed copy with the
@@ -257,11 +263,12 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   test, unchanged, against the complete old non-test product state (code,
   generated files, schemas, lockfiles, configuration, dependencies freshly
   installed from the old lockfile, the old pinned toolchain version, and the old
-  Git state the product reads such as `HEAD`, tags, and the index, or report the
-  proof blocked if that cannot be restored) in the disposable copy, where its
-  intended assertion fails, then passing against the fix; or, in the copy, leave
-  a passing test unchanged, mutate a relevant production branch/boundary, and
-  observe that test's intended assertion fail; revert and rerun green. A
+  Git state the product reads such as `HEAD`, tags, and the index, running the
+  test from outside the observed worktree when the product reads Git status, or
+  report the proof blocked if that cannot be done) in the disposable copy, where
+  its intended assertion fails, then passing against the fix; or, in the copy,
+  leave a passing test unchanged, mutate a relevant production branch/boundary,
+  and observe that test's intended assertion fail; revert and rerun green. A
   mutation of the test itself or a setup/import failure is not proof.
 - Do not weaken assertions, skip failing cases, or change production behavior
   just to get green. Fix product defects only when the user has requested fixes
