@@ -436,12 +436,17 @@ check("--since reviews new compiler suppressions and new explanations for old di
     ["eslint.js", "// eslint-disable-next-line no-console -- required diagnostic output\nconsole.log(value);\n"],
     ["eslint-config.js", "/* eslint no-console: off */\nconsole.log(value);\n"],
     ["eslint-zero.js", "/* eslint no-console: 0 */\nconsole.log(value);\n"],
+    ["eslint-commaless.js", "/* eslint no-alert: 2 no-console: 0 */\nconsole.log(value);\n"],
+    ["eslint-commaless-array.js", '/* eslint no-alert: [2, { mode: "off" }] no-console: ["off"] */\nconsole.log(value);\n'],
     ["eslint-array.js", '/* eslint curly: 2, "no-console": ["off", { allow: ["warn"] }] */\nconsole.log(value);\n'],
     ["eslint-zero-array.js", "/* eslint no-console: [0, { allow: ['warn'] }] */\nconsole.log(value);\n"],
     ["eslint-reason.js", "/* eslint no-console: off -- required diagnostic output (vendor {\n */\nconsole.log(value);\n"],
     ["edited-eslint.js", "/* eslint\n no-console: off\n*/\nconsole.log(value);\n"],
     ["format.js", "// prettier-ignore\nconst values = [1, 2];\n"],
     ["coverage.js", "// c8 ignore next\nconnect(options);\n"],
+    ["node-coverage.js", "/* node:coverage ignore next */\nconnect(options);\n"],
+    ["node-coverage-lines.js", "/* node:coverage ignore next 3 */\nconnect(options);\n"],
+    ["node-coverage-block.js", "/* node:coverage disable */\nconnect(options);\n/* node:coverage enable */\n"],
     ["deno-lint.ts", "// deno-lint-ignore no-console\nconsole.log(value);\n"],
     ["deno-lint-file.ts", "// deno-lint-ignore-file no-console\nconsole.log(value);\n"],
     ["deno-format.ts", "// deno-fmt-ignore\nconst values = [1, 2];\n"],
@@ -476,6 +481,56 @@ check("--since reviews new compiler suppressions and new explanations for old di
     writeFileSync(join(repo, file), source);
     assert.equal(run(["--since=HEAD", "--json", file], repo).status, 0, file);
   }
+});
+
+check("--since preserves unchanged comments beside code edits and rejects copied or edited markers", () => {
+  const repo = join(root, "comment-spans");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const leading = '/* eslint no-console: off */ console.log("old");\nexport const metadata = "stable unchanged content keeps Git rename detection above its threshold";\n';
+  const trailing = "const value = oldPayload as User; // SAFETY: parsed by the schema above\n";
+  const cases = [
+    ["leading.js", leading, leading.replace('"old"', '"new"')],
+    ["trailing.ts", trailing, trailing.replace("oldPayload", "nextPayload")],
+    ["block.js", '/* eslint\n no-console: off\n*/ console.log("old");\n', '/* eslint\n no-console: off\n*/ console.log("new");\n'],
+    ["prefix.js", `doWork(); ${leading}`, leading],
+    ["suffix.js", leading, "/* eslint no-console: off */\n"],
+    ["shifted.js", `const first = 1;\n\n${leading}`, `const first = 1;\n\n\n${leading.replace('"old"', '"new"')}`],
+    ["crlf.js", leading.replaceAll("\n", "\r\n"), leading.replace('"old"', '"new"').replaceAll("\n", "\r\n")],
+    ["bom.ts", `\ufeff${trailing}`, `\ufeff${trailing.replace("oldPayload", "nextPayload")}`],
+    ["unicode.ts", trailing.replace("above", "above ✓"), trailing.replace("oldPayload", "nextPayload").replace("above", "above ✓")],
+    ["no-eof-newline.js", leading.trimEnd(), leading.replace('"old"', '"new"').trimEnd()],
+  ];
+  const marker = "// SAFETY: parsed by the schema above\n";
+  const copies = `${marker}const first = payload as User;\nconst second = payload as User;\n`;
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    for (const [file, original] of cases) writeFileSync(join(repo, file), original);
+    writeFileSync(join(repo, "copies.ts"), copies);
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since comment spans (git unavailable)");
+    return;
+  }
+  for (const [file, , source] of cases) {
+    writeFileSync(join(repo, file), source);
+    const result = run(["--since=HEAD", "--json", file], repo);
+    assert.equal(result.status, 0, `${file}: ${result.stderr || result.stdout}`);
+  }
+  git("mv", "leading.js", "renamed.js");
+  const renamed = run(["--since=HEAD", "--json", "renamed.js"], repo);
+  assert.equal(renamed.status, 0, `rename: ${renamed.stderr || renamed.stdout}`);
+  writeFileSync(join(repo, "trailing.ts"), trailing.replace("the schema", "schema"));
+  const edited = run(["--since=HEAD", "--json", "trailing.ts"], repo);
+  assert.equal(edited.status, 1, `edited: ${edited.stderr || edited.stdout}`);
+  assert.ok(JSON.parse(edited.stdout).some(f => f.rule === "no-new-justification-comments"));
+  writeFileSync(join(repo, "copies.ts"), copies.replace("const second", `${marker}const second`));
+  const copied = run(["--since=HEAD", "--json", "copies.ts"], repo);
+  assert.equal(copied.status, 1, `copied: ${copied.stderr || copied.stdout}`);
+  assert.equal(JSON.parse(copied.stdout).filter(f => f.rule === "no-new-justification-comments").length, 1);
 });
 
 // The tally is part of the same report `--since` scopes to the diff. Counting

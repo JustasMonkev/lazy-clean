@@ -162,7 +162,9 @@ Emoji, sequencing comments, change-note comments, and apparently obvious documen
 
 With `--since`, newly added or edited `SAFETY:`, `lazy:`, and `slop-check-ignore` comments are reported as `no-new-justification-comments`. New comments do not justify assertions, empty catches, or hard-coded sleeps, and new ignore directives do not suppress findings. Untouched legacy comments retain their exemptions. Full-file scans without added-line provenance retain legacy handling.
 
-Plugin justification markers are mechanical removals. New or edited suppressions for TypeScript, Biome, ESLint, Oxlint, Deno, Prettier, and Istanbul/c8/v8 coverage tools are review findings even with a reason. Verify required functional directives against the actual diagnostic and explain the evidence in the final response; adding a preceding explanation cannot justify a bare directive.
+The CLI compares comment spans against the Git base, so editing code beside an unchanged comment retains compatibility. API callers using `lintSource` can supply baseline-proven `unchangedCommentStarts` as a set of offsets in the raw source; `addedLines` alone provides conservative line-level provenance.
+
+Plugin justification markers are mechanical removals. New or edited suppressions for TypeScript, Biome, ESLint, Oxlint, Deno, Prettier, and Istanbul/c8/v8/Node coverage tools are review findings even with a reason. Verify required functional directives against the actual diagnostic and explain the evidence in the final response; adding a preceding explanation cannot justify a bare directive.
 
 `--explain=<rule-id>` prints one rule's reasoning — why it fires, a slop/instead pair, and when the rule is wrong — and runs no scan. Read it before rewriting code a finding landed on that you believe is correct:
 

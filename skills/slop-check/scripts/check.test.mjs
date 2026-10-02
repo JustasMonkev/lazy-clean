@@ -1591,8 +1591,9 @@ expectSuppression(
 
   for (const [id, explanation] of Object.entries(RULE_EXPLANATIONS)) {
     const options = id === "no-new-justification-comments" ? { addedLines: new Set([1]) } : undefined;
+    if (id === "no-typed-jsdoc") assert.equal(explanation.correct, explanation.slop.replace("{string} ", ""), "retain existing JSDoc metadata while removing its redundant type");
     for (const snippet of [explanation.correct, ...(explanation.setup ? [explanation.setup.code] : [])]) {
-      if (/(?:^|\n)\s*\/\/|;\s*\/\/|\/\*/u.test(snippet)) {
+      if (id !== "no-typed-jsdoc" && /(?:^|\n)\s*\/\/|;\s*\/\/|\/\*/u.test(snippet)) {
         failures += 1;
         console.error(`FAIL --explain ${id}: replacement snippet adds comments`);
       }

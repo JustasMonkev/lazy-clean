@@ -2616,7 +2616,7 @@ function* iterateAssertionFindings(ctx) {
 // widely adopted, so the same rule over eslint-disable fired on 279 of 651
 // real-world files — it would drown the signal it is looking for.
 const SUPPRESSION_DIRECTIVE_PATTERN = /@ts-(?:ignore|expect-error|nocheck)\b|\bbiome-ignore\b/u;
-const DIFF_SUPPRESSION_DIRECTIVE_PATTERN = new RegExp(`${SUPPRESSION_DIRECTIVE_PATTERN.source}|\\b(?:(?:eslint|oxlint)-disable(?:-next-line|-line)?|deno-(?:lint|fmt)-ignore(?:-file)?|prettier-ignore|(?:istanbul|c8|v8)\\s+ignore)\\b`, "u");
+const DIFF_SUPPRESSION_DIRECTIVE_PATTERN = new RegExp(`${SUPPRESSION_DIRECTIVE_PATTERN.source}|\\b(?:(?:eslint|oxlint)-disable(?:-next-line|-line)?|deno-(?:lint|fmt)-ignore(?:-file)?|prettier-ignore|(?:istanbul|c8|v8)\\s+ignore|node:coverage\\s+(?:ignore|disable))\\b`, "u");
 
 function isDiffSuppression(body) {
   if (DIFF_SUPPRESSION_DIRECTIVE_PATTERN.test(body)) return true;
@@ -2624,15 +2624,18 @@ function isDiffSuppression(body) {
   if (configuration === undefined) return false;
   const masked = maskSource(configuration).masked;
   const description = masked.search(/\s--+(?=\s)/u);
-  let cursor = 0;
-  return arrayArguments(description < 0 ? masked : masked.slice(0, description)).some(part => {
-    const start = masked.indexOf(part, cursor);
-    cursor = start + part.length;
-    const colon = part.indexOf(":");
-    if (colon < 0) return false;
-    const severity = /^\s*(?:\[\s*)?([^,\]\s]+)/u.exec(configuration.slice(start + colon + 1))?.[1];
-    return /^(?:off|"off"|'off')$/u.test(severity ?? "") || (severity !== undefined && Number(severity) === 0);
-  });
+  const rules = description < 0 ? masked : masked.slice(0, description);
+  for (let at = 0; at < rules.length; at += 1) {
+    if ('([{'.includes(rules[at])) {
+      const end = balancedEnd(rules, at);
+      if (end === -1) return false;
+      at = end - 1;
+    } else if (rules[at] === ":") {
+      const severity = /^\s*(?:\[\s*)?([^,\]\s]+)/u.exec(configuration.slice(at + 1))?.[1];
+      if (/^(?:off|"off"|'off')$/u.test(severity ?? "") || (severity !== undefined && Number(severity) === 0)) return true;
+    }
+  }
+  return false;
 }
 
 const OBVIOUS_DOC_COMMENT_PATTERN = new RegExp(
@@ -3019,8 +3022,8 @@ const RULE_EXPLANATIONS = {
   "no-typed-jsdoc": {
     why: "`@param {string} name` restates the TypeScript signature and drifts from it silently — the signature is checked, the JSDoc is not.",
     slop: "/** @param {string} id Stable account identifier, never a display name. */\nfunction findUser(id: string) { return users.get(id); }",
-    correct: "function findUser(id: string) { return users.get(id); }",
-    exceptions: "Preserve functional type or tool metadata. JavaScript JSDoc may supply the actual types; this rule is TS-only. Explain relevant parameter constraints in the final response instead of adding code comments.",
+    correct: "/** @param id Stable account identifier, never a display name. */\nfunction findUser(id: string) { return users.get(id); }",
+    exceptions: "Remove only redundant type annotations from existing JSDoc; preserve useful descriptions and tags consumed by IDEs or documentation generators. JavaScript JSDoc may supply the actual types; this rule is TS-only. The replacement retains existing functional metadata, not newly added documentation. Explain other relevant constraints in the final response.",
   },
   "no-obvious-doc-comments": {
     why: "\"This function takes a user and returns a token\" restates the declaration below it. Verify relevant contracts, remove nonessential documentation, and explain useful constraints in the final response.",
@@ -3047,7 +3050,7 @@ const RULE_EXPLANATIONS = {
     exceptions: "This rule requires added-line provenance from --since or the lintSource addedLines option. Untouched legacy comments retain compatibility; full-file scans without provenance keep legacy handling. Preserve required licenses and functional tool directives. The example preserves the shown declaration's runtime value; validate actual required fields before using opaque input. Necessary assertions may remain as review findings after the marker is removed.",
   },
   "no-unjustified-suppression": {
-    why: "Bare TypeScript suppression directives and biome-ignore directives need verification of the diagnostic being suppressed. Diff scans also report newly added or edited TypeScript, Biome, ESLint, Oxlint, Deno, Prettier, and Istanbul/c8/v8 suppressions even when they carry a reason; a new preceding explanation cannot justify a bare directive. Fix the actual reported problem when possible. The example below addresses a TypeScript boundary error, not every possible lint or formatting diagnostic.",
+    why: "Bare TypeScript suppression directives and biome-ignore directives need verification of the diagnostic being suppressed. Diff scans also report newly added or edited TypeScript, Biome, ESLint, Oxlint, Deno, Prettier, and Istanbul/c8/v8/Node suppressions even when they carry a reason; a new preceding explanation cannot justify a bare directive. Fix the actual reported problem when possible. The example below addresses a TypeScript boundary error, not every possible lint or formatting diagnostic.",
     slop: "// @ts-expect-error\nconnect(options);",
     correct: "if (typeof options !== \"object\" || options === null || !(\"host\" in options) || typeof options.host !== \"string\") {\n  throw new TypeError(\"Expected a configuration with a string host\");\n}\nconnect(options);",
     exceptions: "A proven compiler or vendor-typing defect may require a functional TypeScript suppression. Verify the specific defect and explain the evidence in the final response; missing runtime validation is not a compiler defect. For biome-ignore, fix its named Biome lint/formatting diagnostic or verify why the directive is necessary, preserving the affected statement. Do not apply the JSON-validation example to an unrelated Biome rule. This connect example assumes the API needs only host.",
@@ -3158,7 +3161,7 @@ function collectSuppressions(comments, lineStarts) {
   return { forLine, forFile, findings };
 }
 
-export function lintSource(rawSource, filePath, { disabled, addedLines } = {}) {
+export function lintSource(rawSource, filePath, { disabled, addedLines, unchangedCommentStarts } = {}) {
   const extension = extname(filePath).toLowerCase();
   const source = rawSource.charCodeAt(0) === 0xfeff ? rawSource.slice(1) : rawSource;
   const { masked, comments } = maskSource(source, { jsx: JSX_EXTENSIONS.has(extension) });
@@ -3166,6 +3169,7 @@ export function lintSource(rawSource, filePath, { disabled, addedLines } = {}) {
   const newComments = new Set();
   if (addedLines) {
     for (const comment of comments) {
+      if (unchangedCommentStarts?.has(comment.start + (rawSource.charCodeAt(0) === 0xfeff ? 1 : 0))) continue;
       const first = offsetToPosition(lineStarts, comment.start).line;
       const last = offsetToPosition(lineStarts, Math.max(comment.start, comment.end - 1)).line;
       for (let line = first; line <= last; line += 1) {
@@ -3326,7 +3330,7 @@ function diffTargetPath(target) {
     ? raw.slice(1, -1).replace(/\\([0-7]{3}|[\s\S])/gu, (_, escape) =>
       escape.length === 3 ? String.fromCharCode(parseInt(escape, 8)) : QUOTED_PATH_ESCAPES[escape] ?? escape)
     : raw;
-  return unquoted.replace(/^b\//u, "");
+  return unquoted.replace(/^[ab]\//u, "");
 }
 
 // Stands in for the line set of a wholly new file: every line is an added line.
@@ -3356,14 +3360,14 @@ function addedLines(ref) {
     // drops what .gitignore lists, but a repo that never ignored node_modules or
     // dist would otherwise hand --since its whole vendor tree.
     if (name.split("/").slice(0, -1).some((part) => SKIPPED_DIRECTORIES.has(part))) continue;
-    byFile.set(resolve(root, name), ALL_LINES);
+    byFile.set(resolve(root, name), { lines: ALL_LINES, basePath: null, root });
   }
 
   let lines = null;
   // The prefixes are pinned because diff.mnemonicprefix renames `b/` to `w/`,
   // and quotepath is off so a non-ASCII name arrives verbatim, not C-quoted.
   const diff = git([
-    "-c", "core.quotepath=false", "diff", "-U0", "--no-color",
+    "-C", root, "-c", "core.quotepath=false", "diff", "-U0", "--no-color", "--no-ext-diff", "--no-textconv",
     "--src-prefix=a/", "--dst-prefix=b/", "--end-of-options", ref, "--",
   ]);
   // A `+++ ` line is a header only where a header can appear: directly after the
@@ -3379,13 +3383,15 @@ function addedLines(ref) {
     line.startsWith(sigil + ' "' + prefix) ||
     line === sigil + " /dev/null";
   let afterSourceHeader = false;
+  let sourcePath = null;
   for (const line of diff.split("\n")) {
     const wasHeader = afterSourceHeader;
     afterSourceHeader = isHeader(line, "---", "a/");
+    if (afterSourceHeader) sourcePath = line.slice(4);
     if (wasHeader && isHeader(line, "+++", "b/")) {
       const target = line.slice(4);
       lines = target === "/dev/null" ? null : new Set();
-      if (lines) byFile.set(resolve(root, diffTargetPath(target)), lines);
+      if (lines) byFile.set(resolve(root, diffTargetPath(target)), { lines, basePath: sourcePath === "/dev/null" ? null : diffTargetPath(sourcePath), root });
       continue;
     }
     const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/u.exec(line);
@@ -3395,6 +3401,96 @@ function addedLines(ref) {
     for (let k = 0; k < count; k += 1) lines.add(start + k);
   }
   return byFile;
+}
+
+function unchangedCommentStarts(rawSource, file, change, ref) {
+  const unchanged = new Set();
+  if (change.basePath === null) return unchanged;
+  const git = args => execFileSync("git", ["-C", change.root, ...args], { encoding: "utf8", maxBuffer: 64e6 });
+  const base = git(["show", "--end-of-options", `${ref}:${change.basePath}`]).replaceAll("\r\n", "\n");
+  const source = rawSource.replaceAll("\r\n", "\n");
+  const baseLines = buildLineStarts(base);
+  const sourceLines = buildLineStarts(source);
+  const rawLines = buildLineStarts(rawSource);
+  const diff = git([
+    "-c", "core.quotepath=false", "diff", "--word-diff=porcelain", "--word-diff-regex=.", "-U0",
+    "--no-color", "--no-ext-diff", "--no-textconv", "--src-prefix=a/", "--dst-prefix=b/",
+    "--end-of-options", ref, "--", change.basePath, relative(change.root, file),
+  ]);
+  const spans = [];
+  let oldAt = 0;
+  let newAt = 0;
+  let oldEnd = 0;
+  let newEnd = 0;
+  let active = false;
+  let inHunk = false;
+  const checkHunk = () => {
+    if (inHunk && (oldAt !== oldEnd || newAt !== newEnd)) throw new Error("incomplete comment provenance");
+    inHunk = false;
+  };
+  const preserve = length => {
+    if (length < 0 || base.slice(oldAt, oldAt + length) !== source.slice(newAt, newAt + length)) throw new Error("source changed during comment comparison");
+    const previous = spans.at(-1);
+    if (previous && previous.end === newAt && previous.baseStart + previous.end - previous.start === oldAt) previous.end += length;
+    else if (length) spans.push({ start: newAt, end: newAt + length, baseStart: oldAt });
+    oldAt += length;
+    newAt += length;
+  };
+  for (const line of diff.split("\n")) {
+    if (line.startsWith("diff --git ")) {
+      checkHunk();
+      active = false;
+    } else if (!inHunk && line.startsWith("+++ ")) {
+      const target = line.slice(4);
+      active = target !== "/dev/null" && resolve(change.root, diffTargetPath(target)) === file;
+    } else if (active && line.startsWith("@@ ")) {
+      checkHunk();
+      const hunk = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/u.exec(line);
+      if (!hunk) throw new Error("invalid comment provenance hunk");
+      const oldLine = Number(hunk[1]), oldCount = hunk[2] === undefined ? 1 : Number(hunk[2]);
+      const newLine = Number(hunk[3]), newCount = hunk[4] === undefined ? 1 : Number(hunk[4]);
+      const oldStart = baseLines[oldCount ? oldLine - 1 : oldLine] ?? base.length;
+      const newStart = sourceLines[newCount ? newLine - 1 : newLine] ?? source.length;
+      if (oldStart - oldAt !== newStart - newAt) throw new Error("inconsistent comment provenance gap");
+      preserve(newStart - newAt);
+      oldEnd = baseLines[oldCount ? oldLine - 1 + oldCount : oldLine] ?? base.length;
+      newEnd = sourceLines[newCount ? newLine - 1 + newCount : newLine] ?? source.length;
+      inHunk = true;
+    } else if (active && inHunk) {
+      const text = line.slice(1).replace(/\r$/u, "");
+      if (line[0] === " ") preserve(text.length);
+      else if (line[0] === "+") {
+        if (!source.startsWith(text, newAt)) throw new Error("source changed during comment comparison");
+        newAt += text.length;
+      } else if (line[0] === "-") {
+        if (!base.startsWith(text, oldAt)) throw new Error("base changed during comment comparison");
+        oldAt += text.length;
+      } else if (line === "~") {
+        const oldNewline = oldAt < oldEnd && base[oldAt] === "\n";
+        const newNewline = newAt < newEnd && source[newAt] === "\n";
+        if (oldNewline && newNewline) preserve(1);
+        else {
+          if (oldNewline) oldAt += 1;
+          if (newNewline) newAt += 1;
+        }
+      }
+    }
+  }
+  checkHunk();
+  if (base.length - oldAt !== source.length - newAt) throw new Error("inconsistent comment provenance suffix");
+  preserve(source.length - newAt);
+  const baseComments = new Map(maskSource(base, { jsx: JSX_EXTENSIONS.has(extname(change.basePath).toLowerCase()) }).comments.map(comment => [`${comment.start}:${comment.end}`, comment.text]));
+  let spanAt = 0;
+  for (const comment of maskSource(source, { jsx: JSX_EXTENSIONS.has(extname(file).toLowerCase()) }).comments) {
+    while (spanAt < spans.length && spans[spanAt].end <= comment.start) spanAt += 1;
+    const span = spans[spanAt];
+    if (!span || span.start > comment.start || span.end < comment.end) continue;
+    const oldStart = span.baseStart + comment.start - span.start;
+    if (baseComments.get(`${oldStart}:${oldStart + comment.end - comment.start}`) !== comment.text) continue;
+    const position = offsetToPosition(sourceLines, comment.start);
+    unchanged.add(rawLines[position.line - 1] + position.column - 1);
+  }
+  return unchanged;
 }
 
 function renderTally(findings) {
@@ -3519,7 +3615,8 @@ function main() {
     // directory looked up `alias/a.ts` and found nothing -- `--since=HEAD alias`
     // reported "clean (0 files checked)" while the same scan of `real` reported
     // the finding. A supported input spelling must not silently skip changes.
-    const changed = added?.get(realPath(file));
+    const change = added?.get(realPath(file));
+    const changed = change?.lines;
     if (added && !changed) continue;
     let source;
     try {
@@ -3532,8 +3629,18 @@ function main() {
       scan.unreadable += 1;
       continue;
     }
+    let unchanged;
+    if (change) {
+      try {
+        unchanged = unchangedCommentStarts(source, realPath(file), change, since);
+      } catch (error) {
+        console.error(`slop-check: cannot compare comments in ${file} (${error.message.trim().split("\n")[0]})`);
+        scan.unreadable += 1;
+        continue;
+      }
+    }
     linted += 1;
-    const fileFindings = lintSource(source, displayPath(file), { disabled, addedLines: changed });
+    const fileFindings = lintSource(source, displayPath(file), { disabled, addedLines: changed, unchangedCommentStarts: unchanged });
     // Evidence can precede the diagnostic anchor (a receiver) or follow it
     // (a reducer seed). Match the same evidence span as the PostToolUse hook.
     const touched = (finding) => {
