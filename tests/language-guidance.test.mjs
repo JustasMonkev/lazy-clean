@@ -150,6 +150,9 @@ const DELIVERY_CONTRACT = [
   ["includes design substance without a reference read", /group behavior by reason to change.*policy independent.*ordinary parameters.*capabilities.*Interchangeable implementations.*inputs, results, errors, and lifecycle/iu],
   ["requires saved regression coverage", /map changed requirements, edge cases, and failure modes to rerunnable tests.*add missing coverage.*inline probes alone are not coverage/iu],
   ["retains unfinished checks after compaction", /unfinished checks through handoffs and compaction/iu],
+  ["requires reporting changes, actual checks, and limits", /report changes, checks actually run, and limits/iu],
+  ["preserves instructions through compaction", /summaries do not replace these instructions/iu],
+  ["reports shortcut ceilings and upgrade paths", /shortcut ceilings, and upgrade paths in the final response/iu],
 ];
 for (const mode of ["lite", "full", "ultra"]) {
   for (const [surface, text] of [
@@ -212,6 +215,9 @@ const LANGUAGE_REFERENCES = [
   ]],
   ["python-checks.md", [
     /requires-python/u, /\(3\.10\)/u, /one reason to change/iu, /import-time side effects/iu,
+    /Do not add code comments/iu, /required license notices and functional tool directives/iu,
+    /existing `# type: ignore`.*final response/iu,
+    /contextlib\.suppress\(SpecificError\).*verify.*final response/iu,
     /__name__ == "__main__"/u, /mutable default/iu, /`if not value`/u, /is None/u,
     /bare `except:`/u, /raise NewError\(\.\.\.\) from err/u, /typing\.Protocol/u,
     /`@dataclass`/u, /configures/u, /Do not add a tool, loosen its config/u,

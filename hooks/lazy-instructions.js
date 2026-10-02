@@ -72,29 +72,29 @@ Use this level until /lazy off, "stop lazy", or "normal mode". Do not announce i
 ## Think, then act
 
 Before coding, state material assumptions, interpretations, and tradeoffs. Ask
-only when a missing answer blocks the result. For multi-step work, write a brief
+only when missing information blocks the result. For multi-step work, write a brief
 step → check plan. Define a verifiable finish: bugs go red → green, refactors get
 before/after checks; loop until verified. Carry unfinished checks through
-handoffs and compaction.
+handoffs and compaction; summaries do not replace these instructions.
 
 ## The ladder
 
-Complete every requested need with the clearest small solution. Read affected code and trace callers, callbacks, retries,
+Complete every requested need. Trace affected code, callers, callbacks, retries,
 restore/replay, and concurrent paths. Fix the shared cause. Reuse existing code,
-stdlib, native features, or installed dependencies before writing new code.
+stdlib, native features, or installed dependencies before writing code.
 Skip only unasked extras. Match existing style. Do not add speculative
 features/config, needless single-use abstractions, or impossible-state guards;
-offer a simpler alternative to unneeded scope. Review the task-owned diff: remove
+offer simpler alternatives to unneeded scope. Review the task-owned diff: remove
 only orphans created by this task, mention unrelated dead code, and cut additions
 that do not support the request. Simplify structure, not formatting; preserve
 behavior and do not force a net-negative diff. Preserve unrelated edits. One
-caller does not justify deleting domain helpers, tricky logic, side-effect
-boundaries, test seams, or framework contracts. Keep security, accessibility,
+caller is not waste: keep domain helpers, tricky logic, side-effect
+boundaries, test seams, and framework contracts. Keep security, accessibility,
 and hardware calibration.
 
 Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
-Report checked invariants and shortcuts in the final response.
+Report checked invariants, shortcut ceilings, and upgrade paths in the final response.
 Never add SAFETY:, lazy:, or suppression comments.
 
 At changed boundaries: group behavior by reason to change; keep policy independent
@@ -106,13 +106,13 @@ the same contract against each. Do not add interfaces just to satisfy SOLID.
 For boundary changes, read [design checks](${markdownLinkTarget(path.join(__dirname, "../skills/lazy/references/design-checks.md"))}).
 One implementation alone is not waste; judge behavior and design separately.
 
-Before finishing, simplify the changed code: infer obvious local types without
+Before finishing, simplify changed code: infer obvious local types without
 any or unchecked casts; normalize overloaded arguments once; handle returned
 errors directly instead of throwing only to catch them locally. Remove guards
 and helpers only with evidence from callers and lifetimes. Match error and
-cancellation semantics when replacing code with native APIs. Preserve encoding
+cancellation semantics when using native APIs. Preserve encoding
 and buffer ownership; prove risky removals with regression or mutation checks.
-Keep modules to one reason to change and I/O out of import time. Model exclusive
+Keep modules to one reason to change; no I/O at import time. Model exclusive
 states as unions. On TypeScript 7 (native tsc) do not add baseUrl,
 moduleResolution node/node10, target es5, or outFile; keep a TypeScript 6 alias
 API tools need.
@@ -126,9 +126,9 @@ Revalidate at trust boundaries; bound external work; clean up tasks, timers, and
 listeners after success, failure, cancellation, and partial setup. Use existing tests
 and map changed requirements, edge cases, and failure modes to rerunnable tests;
 add missing coverage. Inline probes alone are not coverage. Trivial edits need
-no new tests. If existing red-green checks prove the risky regression, mutation
-work is optional; otherwise a small meaningful mutation can provide evidence.
-Never add a dependency just for it. If writing tests is the task, cover the full
+no new tests. If red-green checks prove the risky regression, mutation
+work is optional; otherwise a meaningful mutation can provide evidence.
+Never add a dependency for it. If writing tests is the task, cover the full
 case list.
 
 For TS/JS changes, finish with the bundled checker from the repo root:
@@ -144,7 +144,8 @@ versions only when asked.
 Before you report, check the diff, not memory: every requested need is done and
 nothing unasked was added; each changed line traces to the request or its
 verification; changed behavior has tests that ran; language checks were applied
-and checker findings triaged. Never claim an unrun check.
+and checker findings triaged. Report changes, checks actually run, and limits.
+Never claim an unrun check.
 `;
 }
 

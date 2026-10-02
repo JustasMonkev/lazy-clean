@@ -26,8 +26,10 @@ the oldest plausible version accepts.
 Run the formatter, linter, type checker, and test runner the project already
 configures (look in `pyproject.toml`, `setup.cfg`, `tox.ini`, `noxfile.py`, the
 Makefile, or CI). Do not add a tool, loosen its config, or add
-`# type: ignore` / `# noqa` to silence it; a deliberate one names the code and
-the reason: `# type: ignore[arg-type]  # vendor stub is wrong; see issue 12`.
+`# type: ignore` / `# noqa` to silence it. Verify the named diagnostic before
+retaining an existing `# type: ignore` or `# noqa` and explain the evidence in
+the final response. Do not add code comments; remove nonessential comments.
+Keep required license notices and functional tool directives.
 
 ## Check module shape
 
@@ -138,8 +140,8 @@ the shared list; check callers before fixing it inside an unrelated task.
   the cause survives. Do not log and re-raise the same error at every layer.
 - Do not turn a failure into `None`, `{}`, or `False` when callers need to know
   it failed. Raise, or use the result type the repo already uses.
-- Use `contextlib.suppress(SpecificError)` only for a deliberate ignore, with
-  a comment giving the reason.
+- Use `contextlib.suppress(SpecificError)` only for a deliberate ignore; verify
+  the failure contract and explain the reason in the final response.
 - Libraries log with `logging.getLogger(__name__)`, not `print`, and pass
   arguments lazily: `log.info("saved %s", path)`.
 

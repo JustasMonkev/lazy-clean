@@ -156,6 +156,8 @@ node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
 
 Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. A message shared by several findings is printed once, on the first. `--summary` replaces the finding list with the per-rule tally, which is the number that tells you whether a codebase is worth a full pass. The run summary line still prints; `--json` is the machine-readable form.
 
+Assertion tallies display `type assertion review`. The legacy rule ID `require-safety-comment-for-type-assertion` remains accepted by `--explain`, `--disable`, and existing directives, and remains the ID in JSON output.
+
 Emoji, sequencing comments, change-note comments, and apparently obvious documentation comments are review findings. Retain symbols required by a specification; put useful contracts and rationale in the final response. Existing `SAFETY:` and `slop-check-ignore` directives remain supported for compatibility, but new ones are not a remedy for findings.
 
 `--explain=<rule-id>` prints one rule's reasoning — why it fires, a slop/instead pair, and when the rule is wrong — and runs no scan. Read it before rewriting code a finding landed on that you believe is correct:

@@ -3344,7 +3344,7 @@ function renderTally(findings) {
   const counts = new Map();
   for (const finding of findings) counts.set(finding.rule, (counts.get(finding.rule) ?? 0) + 1);
   return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([rule, count]) => `  ${count} ${rule}`).join("\n");
+    .map(([rule, count]) => `  ${count} ${rule === "require-safety-comment-for-type-assertion" ? "type assertion review" : rule}`).join("\n");
 }
 
 function printUsage() {

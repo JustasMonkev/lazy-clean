@@ -215,6 +215,18 @@ check("--summary replaces findings with the per-rule tally", () => {
   assert.equal(result.status, 1);
 });
 
+check("assertion tallies use a neutral display name while retaining the legacy ID", () => {
+  const summary = run(["slop.ts", "--summary"]);
+  assert.equal(summary.status, 1);
+  assert.match(summary.stdout, /1 type assertion review/u);
+  assert.doesNotMatch(summary.stdout, /safety-comment/u);
+  const json = run(["slop.ts", "--summary", "--json"]);
+  assert.equal(JSON.parse(json.stdout)[0].rule, "require-safety-comment-for-type-assertion");
+  const disabled = run(["slop.ts", "--summary", "--disable=require-safety-comment-for-type-assertion"]);
+  assert.equal(disabled.status, 0);
+  assert.match(disabled.stdout, /1 suppressed/u);
+});
+
 check("--json on a clean file is an empty array", () => {
   const result = run(["clean.ts", "--json"]);
   assert.deepEqual(JSON.parse(result.stdout), []);
