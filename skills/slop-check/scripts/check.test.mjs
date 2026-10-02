@@ -1592,6 +1592,7 @@ expectSuppression(
   for (const [id, explanation] of Object.entries(RULE_EXPLANATIONS)) {
     const options = id === "no-new-justification-comments" ? { addedLines: new Set([1]) } : undefined;
     if (id === "no-typed-jsdoc") assert.equal(explanation.correct, explanation.slop.replace("{string} ", ""), "retain existing JSDoc metadata while removing its redundant type");
+    if (id === "no-new-justification-comments") assert.equal(explanation.correct, explanation.slop.split("\n").slice(1).join("\n"), "remove only the marker and preserve the assertion for separate review");
     for (const snippet of [explanation.correct, ...(explanation.setup ? [explanation.setup.code] : [])]) {
       if (id !== "no-typed-jsdoc" && /(?:^|\n)\s*\/\/|;\s*\/\/|\/\*/u.test(snippet)) {
         failures += 1;
@@ -1609,13 +1610,15 @@ expectSuppression(
       console.error(`FAIL --explain ${id}: slop example no longer triggers the rule`);
     }
     const kept = lintSource(explanation.correct, "sample.ts", options);
-    if (kept.length > 0) {
+    const remainingRules = explanation.remainingRules ?? [];
+    assert.ok(!remainingRules.includes(id), `${id} replacement removes its own finding`);
+    if (kept.length !== remainingRules.length || kept.some((finding, index) => finding.rule !== remainingRules[index])) {
       failures += 1;
       console.error(`FAIL --explain ${id}: correct example still has findings [${kept.map((f) => f.rule).join(", ")}]`);
     }
   }
   console.log("ok   every explanation carries why/slop/correct/exceptions");
-  console.log("ok   every slop example triggers its rule and every correct example is clean");
+  console.log("ok   every slop example triggers its rule and replacements leave only declared separate findings");
 }
 
 {

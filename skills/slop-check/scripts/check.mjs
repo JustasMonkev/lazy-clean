@@ -2616,7 +2616,13 @@ function* iterateAssertionFindings(ctx) {
 // widely adopted, so the same rule over eslint-disable fired on 279 of 651
 // real-world files — it would drown the signal it is looking for.
 const SUPPRESSION_DIRECTIVE_PATTERN = /@ts-(?:ignore|expect-error|nocheck)\b|\bbiome-ignore\b/u;
-const DIFF_SUPPRESSION_DIRECTIVE_PATTERN = new RegExp(`${SUPPRESSION_DIRECTIVE_PATTERN.source}|\\b(?:(?:eslint|oxlint)-disable(?:-next-line|-line)?|deno-(?:lint|fmt)-ignore(?:-file)?|prettier-ignore|(?:istanbul|c8|v8)\\s+ignore|node:coverage\\s+(?:ignore|disable))\\b`, "u");
+const DIFF_SUPPRESSION_DIRECTIVE_PATTERN = new RegExp(`^\\s*(?:(?:\\/\\/+|\\/\\*+)\\s*)?(?:\\*\\s*)?(?:${SUPPRESSION_DIRECTIVE_PATTERN.source}|\\b(?:(?:eslint|oxlint)-disable(?:-next-line|-line)?|deno-(?:lint|fmt)-ignore(?:-file)?|prettier-ignore|(?:istanbul|c8|v8)\\s+ignore|node:coverage\\s+(?:ignore|disable)))\\b`, "u");
+
+function isCommentMetadata(comment) {
+  const body = comment.text.replace(/^\/\/+\s?|^\/\*+|\*+\/$/gu, "").replace(/^\s*\*\s?/gmu, "");
+  return /^\s*(?:SPDX-License-Identifier:|Copyright\b|(?:MIT|Apache|BSD|MPL)\s+License\b|@(?:license|copyright)\b|@ts-check\b|(?:eslint|oxlint)-enable\b|biome-ignore-end\b|node:coverage\s+enable\b|globals?\s|eslint-env\b)/iu.test(body)
+    || (comment.text.startsWith("/**") && /@(?:param|returns?|type|template|typedef|property|extends|implements|deprecated|see|example|link)\b/u.test(body));
+}
 
 function isDiffSuppression(body) {
   if (DIFF_SUPPRESSION_DIRECTIVE_PATTERN.test(body)) return true;
@@ -2689,7 +2695,7 @@ function* iterateCommentFindings(ctx) {
       const newExplanation = previous !== undefined && ctx.newComments.has(previous)
         && offsetToPosition(lineStarts, Math.max(previous.start, previous.end - 1)).line === start.line - 1
         && !isDiffSuppression(previous.text)
-        && isJustification(previous) && !suppressionIsJustified(body);
+        && !isCommentMetadata(previous) && isJustification(previous);
       if (ctx.newComments.has(comment) || newExplanation) {
         yield {
           ...position,
@@ -2735,7 +2741,7 @@ function* iterateCommentFindings(ctx) {
       && previous.kind === "line"
       && !SUPPRESSION_DIRECTIVE_PATTERN.test(previous.text)
       && isJustification(previous);
-    if (SUPPRESSION_DIRECTIVE_PATTERN.test(body) && !suppressionIsJustified(body) && !explainedAbove) {
+    if (isDiffSuppression(body) && SUPPRESSION_DIRECTIVE_PATTERN.test(body) && !suppressionIsJustified(body) && !explainedAbove) {
       yield { ...position, rule: "no-unjustified-suppression", message: "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response." };
       continue;
     }
@@ -3044,9 +3050,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "Existing justified ignores remain supported. Do not add an ignore to silence a finding; fix the code or report the checked invariant in the final response.",
   },
   "no-new-justification-comments": {
-    why: "A newly added SAFETY, lazy, or slop-check-ignore marker cannot serve as verification. Check the code's invariant and explain rationale and constraints in the final response.",
+    why: "A newly added SAFETY, lazy, or slop-check-ignore marker cannot serve as verification. Remove only the marker; type assertions receive separate review. Check the code's invariant and explain rationale and constraints in the final response.",
     slop: "// SAFETY: parsed by the schema above\nconst user = payload as User;",
-    correct: "const user = payload;",
+    correct: "const user = payload as User;",
+    remainingRules: ["require-safety-comment-for-type-assertion"],
     exceptions: "This rule requires added-line provenance from --since or the lintSource addedLines option. Untouched legacy comments retain compatibility; full-file scans without provenance keep legacy handling. Preserve required licenses and functional tool directives. The example preserves the shown declaration's runtime value; validate actual required fields before using opaque input. Necessary assertions may remain as review findings after the marker is removed.",
   },
   "no-unjustified-suppression": {
@@ -3457,14 +3464,48 @@ function unchangedCommentStarts(rawSource, file, change, ref) {
       newEnd = sourceLines[newCount ? newLine - 1 + newCount : newLine] ?? source.length;
       inHunk = true;
     } else if (active && inHunk) {
-      const text = line.slice(1).replace(/\r$/u, "");
-      if (line[0] === " ") preserve(text.length);
+      const text = line.slice(1);
+      const canonicalText = (value, at) => {
+        let result = "";
+        for (let index = 0; index < text.length; index += 1) {
+          if (text[index] === "\r" && value[at + result.length] === "\n") {
+            if (index < text.length - 1) result += "\n";
+          } else result += text[index];
+        }
+        return result;
+      };
+      const seek = (value, at, end) => {
+        while (at < end && value[at] === "\n" && !value.startsWith(canonicalText(value, at), at)) at += 1;
+        return at;
+      };
+      if (line[0] === " ") {
+        const oldNext = seek(base, oldAt, oldEnd);
+        const newNext = seek(source, newAt, newEnd);
+        preserve(Math.min(oldNext - oldAt, newNext - newAt));
+        oldAt = oldNext;
+        newAt = newNext;
+        const oldText = canonicalText(base, oldAt);
+        const newText = canonicalText(source, newAt);
+        if (!base.startsWith(oldText, oldAt) || !source.startsWith(newText, newAt)) throw new Error("source changed during comment comparison");
+        for (let index = 0; index < Math.max(oldText.length, newText.length); index += 1) {
+          const oldChar = oldText[index], newChar = newText[index];
+          if (oldChar === newChar) preserve(1);
+          else if ([oldChar, newChar].every(char => char === undefined || char === "\r" || char === "\n")) {
+            if (oldChar !== undefined) oldAt += 1;
+            if (newChar !== undefined) newAt += 1;
+          } else throw new Error("inconsistent comment provenance text");
+        }
+      }
       else if (line[0] === "+") {
-        if (!source.startsWith(text, newAt)) throw new Error("source changed during comment comparison");
-        newAt += text.length;
+        newAt = seek(source, newAt, newEnd);
+        const addedText = canonicalText(source, newAt);
+        if (!source.startsWith(addedText, newAt)) throw new Error("source changed during comment comparison");
+        newAt += addedText.length;
       } else if (line[0] === "-") {
-        if (!base.startsWith(text, oldAt)) throw new Error("base changed during comment comparison");
-        oldAt += text.length;
+        oldAt = seek(base, oldAt, oldEnd);
+        const removedText = canonicalText(base, oldAt);
+        if (!base.startsWith(removedText, oldAt)) throw new Error("base changed during comment comparison");
+        oldAt += removedText.length;
       } else if (line === "~") {
         const oldNewline = oldAt < oldEnd && base[oldAt] === "\n";
         const newNewline = newAt < newEnd && source[newAt] === "\n";

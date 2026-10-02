@@ -477,6 +477,9 @@ check("--since reviews new compiler suppressions and new explanations for old di
     ["eslint-enabled.js", '/* eslint no-console: ["error", { level: "off", limit: 0 }] */\nconsole.log(value);\n'],
     ["eslint-enabled-reason.js", "/* eslint no-console: error -- reason mentioning no-alert: off */\nconsole.log(value);\n"],
     ["eslint-string.js", 'const value = "/* eslint no-console: off */";\n'],
+    ["eslint-prose.js", "// The serialized output must not contain eslint-disable because downstream rejects it.\nconnect(options);\n"],
+    ["jsdoc-prose.ts", "/** @param options Serialized output must not contain prettier-ignore or biome-ignore. */\nfunction connect(options: string) { return options; }\n"],
+    ["coverage-prose.js", "// The serialized output must not contain node:coverage ignore next because downstream rejects it.\nconnect(options);\n"],
   ]) {
     writeFileSync(join(repo, file), source);
     assert.equal(run(["--since=HEAD", "--json", file], repo).status, 0, file);
@@ -497,10 +500,18 @@ check("--since preserves unchanged comments beside code edits and rejects copied
     ["suffix.js", leading, "/* eslint no-console: off */\n"],
     ["shifted.js", `const first = 1;\n\n${leading}`, `const first = 1;\n\n\n${leading.replace('"old"', '"new"')}`],
     ["crlf.js", leading.replaceAll("\n", "\r\n"), leading.replace('"old"', '"new"').replaceAll("\n", "\r\n")],
+    ["lone-cr.js", leading.replaceAll("\n", "\r"), leading.replace('"old"', '"new"').replaceAll("\n", "\r")],
     ["bom.ts", `\ufeff${trailing}`, `\ufeff${trailing.replace("oldPayload", "nextPayload")}`],
     ["unicode.ts", trailing.replace("above", "above ✓"), trailing.replace("oldPayload", "nextPayload").replace("above", "above ✓")],
     ["no-eof-newline.js", leading.trimEnd(), leading.replace('"old"', '"new"').trimEnd()],
   ];
+  const lineEndings = ["\n", "\r\n", "\r"];
+  const multiline = '/* eslint\n no-console: off\n*/ console.log("old");\n';
+  for (const [oldIndex, oldEnding] of lineEndings.entries())
+    for (const [newIndex, newEnding] of lineEndings.entries()) {
+      cases.push([`format-${oldIndex}-${newIndex}.js`, leading.replaceAll("\n", oldEnding), leading.replace('"old"', '"new"').replaceAll("\n", newEnding)]);
+      cases.push([`multiline-${oldIndex}-${newIndex}.js`, multiline.replaceAll("\n", oldEnding), multiline.replace('"old"', '"new"').replaceAll("\n", newEnding), (oldEnding === "\r") !== (newEnding === "\r") ? 1 : 0]);
+    }
   const marker = "// SAFETY: parsed by the schema above\n";
   const copies = `${marker}const first = payload as User;\nconst second = payload as User;\n`;
   try {
@@ -515,10 +526,11 @@ check("--since preserves unchanged comments beside code edits and rejects copied
     console.log("skip --since comment spans (git unavailable)");
     return;
   }
-  for (const [file, , source] of cases) {
+  for (const [file, , source, expected = 0] of cases) {
     writeFileSync(join(repo, file), source);
     const result = run(["--since=HEAD", "--json", file], repo);
-    assert.equal(result.status, 0, `${file}: ${result.stderr || result.stdout}`);
+    assert.equal(result.status, expected, `${file}: ${result.stderr || result.stdout}`);
+    if (expected === 1) assert.ok(JSON.parse(result.stdout).some(f => f.rule === "no-unjustified-suppression"), file);
   }
   git("mv", "leading.js", "renamed.js");
   const renamed = run(["--since=HEAD", "--json", "renamed.js"], repo);
@@ -531,6 +543,43 @@ check("--since preserves unchanged comments beside code edits and rejects copied
   const copied = run(["--since=HEAD", "--json", "copies.ts"], repo);
   assert.equal(copied.status, 1, `copied: ${copied.stderr || copied.stdout}`);
   assert.equal(JSON.parse(copied.stdout).filter(f => f.rule === "no-new-justification-comments").length, 1);
+});
+
+check("--since reviews new rationale for every suppression family and preserves required metadata", () => {
+  const repo = join(root, "all-suppression-rationale");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const directives = [
+    "// @ts-ignore", "// biome-ignore lint/suspicious/noExplicitAny",
+    "// eslint-disable-next-line no-console", "// oxlint-disable-next-line no-console",
+    "// deno-lint-ignore no-console", "// deno-fmt-ignore", "// prettier-ignore",
+    "/* istanbul ignore next */", "/* c8 ignore next */", "/* v8 ignore next */",
+    "/* node:coverage ignore next */",
+  ];
+  try {
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    for (const [index, directive] of directives.entries()) writeFileSync(join(repo, `${index}.ts`), `${directive}\nfunction connect(options: string) { return options; }\n`);
+    git("add", "-A");
+    git("commit", "-qm", "base");
+  } catch {
+    console.log("skip --since all suppression rationale (git unavailable)");
+    return;
+  }
+  for (const [index, directive] of directives.entries()) {
+    const file = `${index}.ts`;
+    const body = `${directive}\nfunction connect(options: string) { return options; }\n`;
+    writeFileSync(join(repo, file), `// Vendor tooling requires this diagnostic output\n${body}`);
+    const result = run(["--since=HEAD", "--json", file], repo);
+    assert.equal(result.status, 1, `${directive}: ${result.stderr || result.stdout}`);
+    assert.ok(JSON.parse(result.stdout).some(f => f.rule === "no-unjustified-suppression" && f.startLine === 1 && f.line === 2), directive);
+    for (const metadata of ["// SPDX-License-Identifier: MIT", "/** @param options Stable account identifier, never a display name. */"]) {
+      writeFileSync(join(repo, file), `${metadata}\n${body}`);
+      const retained = run(["--since=HEAD", "--json", file], repo);
+      assert.equal(retained.status, 0, `${metadata}: ${retained.stderr || retained.stdout}`);
+    }
+  }
 });
 
 // The tally is part of the same report `--since` scopes to the diff. Counting
