@@ -69,12 +69,16 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - Read the source without changing access times (a read-only snapshot or a
     no-atime read); if that is not possible, ask first.
   - Before any step reads the tree (the starting record, the copy, or an
-    in-place backup), classify each path without following it. Never read FIFOs,
+    in-place backup), classify each path without following it, at the moment of
+    each read (no-follow, descriptor-relative opens that check the type and
+    mount), or ask the user to pause edits while preparing. Never read FIFOs,
     sockets, or device nodes, and stop at mount points: recreate FIFOs and
     sockets privately, recreate a device node only when its device is
     virtualized or the user approves, copy a mounted directory only from a
     user-approved snapshot of its intended contents, or mark the checks that
-    depend on them unfaithful.
+    depend on them unfaithful. Before that, check the size, file count, and
+    expected time of reading and copying the tree against a budget; if it would
+    exceed it, ask first or report the affected checks as blocked.
   - In the rules below, file metadata means everything about a file beyond its
     bytes that the checks can observe, such as file modes, owners, timestamps,
     ACLs, extended attributes, named streams such as NTFS alternate data
@@ -91,16 +95,18 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
     `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean` and
     `.process` overridden with an empty value and `.required` set to `false`, or
-    direct file reads instead of Git), with network access denied so a partial
-    clone cannot lazily fetch missing objects (also set `GIT_NO_LAZY_FETCH=1`
-    where the installed Git supports it); if an object is missing, read the file
-    directly or report that state as unavailable. Record `git status`, the
-    unstaged and staged diffs, copies of untracked files (only checksums for
-    secrets), and checksums of every ignored file copied, or a checksum listing
-    without Git. Include the Git state the tests read and the file metadata they
-    depend on. Keep these in a private temporary directory outside the
-    repository and outside what isolated commands can read, and delete it on
-    every exit once the final audit is done.
+    direct file reads instead of Git; where a filter is blanked, record
+    checksums for its paths and report Git's status and diff for them as
+    unavailable rather than recording the altered output), with network access
+    denied so a partial clone cannot lazily fetch missing objects (also set
+    `GIT_NO_LAZY_FETCH=1` where the installed Git supports it); if an object is
+    missing, read the file directly or report that state as unavailable. Record
+    `git status`, the unstaged and staged diffs, copies of untracked files (only
+    checksums for secrets), and checksums of every ignored file copied, or a
+    checksum listing without Git. Include the Git state the tests read and the
+    file metadata they depend on. Keep these in a private temporary directory
+    outside the repository and outside what isolated commands can read, and
+    delete it on every exit once the final audit is done.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit, on a
     filesystem with the same semantics as the source (case sensitivity, name
@@ -109,9 +115,7 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     to the source checkout (length, characters, depth, drive), or mark the
     checks that depend on the checkout path unfaithful. Leave out secrets such
     as `.env` files, keys, and production configuration; supply sandbox or
-    user-approved replacements when the tests need them. Before copying, check
-    the copy's size, file count, and expected time against a budget; if it would
-    exceed it, ask first or report the affected checks as blocked.
+    user-approved replacements when the tests need them.
   - If the source is a Git worktree, give the copy independent Git metadata,
     never a `.git` file or `gitdir` that points back to the user's repository.
     Clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
@@ -168,16 +172,20 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     its baseline and its current state; if it changed since the copy was made,
     merge the change or report a conflict instead of overwriting it. Recheck the
     destination immediately before an atomic rename into place, and report a
-    conflict if it changed in between. For any conflict, save the proposed file
-    or patch in the private evidence directory before the copy is deleted, and
-    report where.
+    conflict if it changed in between. Keep the destination's file metadata,
+    including hard-link groups, unless the change was requested; where an atomic
+    rename cannot, write in place after the recheck. For any conflict, save the
+    proposed file or patch in the private evidence directory before the copy is
+    deleted, and report where.
   - If the suite cannot run from a copy, ask before running write-capable
-    commands in place. When approved, ask the user to pause other edits to the
-    tree and to every Git directory it shares with other worktrees from before
-    the backup until restoring is done, and back up the tree first, classifying
-    paths as above, into a location the command cannot read or write: bytes,
-    symlink targets, which paths exist, file metadata where the platform has it,
-    and the Git directories the tree points to
+    commands in place. When approved, use the same sandbox except that the tree
+    and the Git directories it points to are visible and writable along with the
+    private directory, keeping every other restriction; ask the user to pause
+    other edits to the tree and to every Git directory it shares with other
+    worktrees from before the backup until restoring is done, and back up the
+    tree first, classifying paths as above, into a location the command cannot
+    read or write: bytes, symlink targets, which paths exist, file metadata
+    where the platform has it, and the Git directories the tree points to
     (`git rev-parse --absolute-git-dir` and `--git-common-dir`). Keep mounted
     paths, and files with links from outside the tree, out of the command's
     reach unless the user approves them. Record what the command changed, verify
