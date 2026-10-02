@@ -87,7 +87,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     included, in a private temporary directory deleted on every exit, on a
     filesystem with the same semantics as the source (case sensitivity, name
     limits, rename and locking behavior, file watching), or mark the checks
-    that depend on those semantics unfaithful. Leave out
+    that depend on those semantics unfaithful. Present the copy at a path
+    equivalent to the source checkout (length, characters, depth, drive), or
+    mark the checks that depend on the checkout path unfaithful. Leave out
     secrets such as `.env` files, keys, and production configuration; supply
     sandbox or user-approved replacements when the tests need them. Classify
     each path without following it before reading it: never read FIFOs,
@@ -157,17 +159,19 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     conflict if it changed in between.
   - If the suite cannot run from a copy, ask before running write-capable
     commands in place. When approved, ask the user to pause other edits to the
-    tree and to every Git directory it shares with other worktrees while each
-    such command runs, and back up the tree first, classifying paths and
-    never reading special files as for the copy: bytes, file modes, symlink
-    targets, which paths exist, hard-link groups, owners, timestamps, ACLs and
-    extended attributes where the platform has them, and the Git directories the
-    tree points to (`git rev-parse --absolute-git-dir` and `--git-common-dir`).
-    Record what the command changed, restore from the backup only paths that
-    still hold exactly that result, rechecked immediately before an atomic
-    replacement, and report any other change as a conflict.
-    Delete those backups on every exit once restoring is done; keep one only for
-    an unresolved conflict, and say where.
+    tree and to every Git directory it shares with other worktrees from before
+    the backup until restoring is done, and back up the tree first, classifying
+    paths, never reading special files, and stopping at mount points as for the
+    copy, into a location the command cannot read or write: bytes, file modes,
+    symlink targets, which paths exist, hard-link groups, owners, timestamps,
+    ACLs and extended attributes where the platform has them, and the Git
+    directories the tree points to (`git rev-parse --absolute-git-dir` and
+    `--git-common-dir`). Keep mounted paths out of the command's reach unless
+    the user approves them. Record what the command changed, verify the backup,
+    restore from it only paths that still hold exactly that result, rechecked
+    immediately before an atomic replacement, and report any other change as a
+    conflict. Delete those backups on every exit once restoring is done; keep
+    one only for an unresolved conflict, and say where.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
