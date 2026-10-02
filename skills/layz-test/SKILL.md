@@ -60,12 +60,12 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   only inside the private directory, hides the original checkout (only the
   preparation clone may read it, read-only) and the user's real home and other
   sensitive host paths (exposing only user-approved state, read-only), and
-  denies network access except to approved sandbox endpoints, and, as the
-  platform allows, keeps host processes, IPC sockets such as Docker or D-Bus,
-  devices, and the Windows registry out of reach; where none is available, ask
-  first, and mark a run that read the original checkout unfaithful. The user's
-  tree only gains the tests you keep, the snapshots they need, and production
-  fixes the user asked for.
+  denies network access except to approved sandbox endpoints, and keeps host
+  processes (their PIDs and signals), IPC sockets such as Docker or D-Bus,
+  devices, and the Windows registry out of reach; where such a sandbox is not
+  available, ask first, and mark a run that read the original checkout
+  unfaithful. The user's tree only gains the tests you keep, the snapshots they
+  need, and production fixes the user asked for.
   - Read the source without changing access times (a read-only snapshot or a
     no-atime read); if that is not possible, ask first.
   - Before any step reads the tree (the starting record, the copy, or an
@@ -135,7 +135,8 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     tests read separately: `HEAD` on the same branch or the same detached
     commit, linked worktrees as private retargeted worktrees, repository and
     worktree config (`git config --local` and `--worktree`) with included files
-    snapshotted into the private directory and their paths rewritten, replacing
+    snapshotted into the private directory, path-valued settings such as
+    `core.worktree` and include paths retargeted to the copy, replacing
     credentials such as authenticated remote URLs or `http.extraHeader` with
     sandbox or user-approved values, or mark the checks that depend on any of it
     unfaithful. If a left-out secret is in any of the clone's objects, reachable
@@ -149,11 +150,13 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     run from a copy. Before running checks, compare the completed copy with the
     baseline and refresh it if they differ.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
-    running write-capable commands through it. Retarget an absolute link into
-    the repository to the same path in the copy. If the checks read its target,
-    snapshot the target into the private directory and point the copy's link
-    at the snapshot, or compare the target again before reporting and mark the
-    run unfaithful if it changed.
+    running write-capable commands through it. Keep an absolute link into the
+    repository pointing at its literal target by presenting the copy at the
+    original absolute path inside the sandbox; otherwise retarget it to the copy
+    and mark the checks that read link targets unfaithful. If the checks read
+    its target, snapshot the target into the private directory and point the
+    copy's link at the snapshot, or compare the target again before reporting
+    and mark the run unfaithful if it changed.
   - Point temp and cache locations inside the private directory (`TMPDIR`,
     `TMP`, `TEMP`, and the tools' cache variables). If the behavior under test
     depends on those locations, keep them equivalent in the private directory
@@ -174,9 +177,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     destination immediately before an atomic rename into place, and report a
     conflict if it changed in between. Keep the destination's file metadata,
     including hard-link groups, unless the change was requested; where an atomic
-    rename cannot, write in place after the recheck. For any conflict, save the
-    proposed file or patch in the private evidence directory before the copy is
-    deleted, and report where.
+    rename cannot, write in place only while the user pauses edits to that file,
+    or report a conflict and leave the proposed file in the evidence directory.
+    For any conflict, save the proposed file or patch in the private evidence
+    directory before the copy is deleted, and report where.
   - If the suite cannot run from a copy, ask before running write-capable
     commands in place. When approved, use the same sandbox except that the tree
     and the Git directories it points to are visible and writable along with the
