@@ -79,9 +79,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     user-approved snapshot of its intended contents, or mark the checks that
     depend on them unfaithful. Before that, check the size, file count, and
     expected time of everything preparation reads or copies (the tree, its Git
-    directories and their caches, and snapshotted symlink targets) against a
-    budget; if it would exceed it, ask first or report the affected checks as
-    blocked.
+    directories and their caches, and snapshotted symlink targets and Git
+    config includes) against a budget; if it would exceed it, ask first or
+    report the affected checks as blocked.
   - In the rules below, file metadata means everything about a file beyond its
     bytes that the checks can observe, such as file modes, owners, timestamps,
     ACLs, extended attributes, named streams such as NTFS alternate data
@@ -139,7 +139,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     tests read separately: `HEAD` on the same branch or the same detached
     commit, linked worktrees as private retargeted worktrees, repository and
     worktree config (`git config --local` and `--worktree`) with included files
-    snapshotted into the private directory, path-valued settings such as
+    snapshotted into the private directory (an include outside the checkout
+    only with the user's approval, classified the same way, with secrets left
+    out, and compared again after the run), path-valued settings such as
     `core.worktree` and include paths retargeted to the copy, replacing
     credentials such as authenticated remote URLs or `http.extraHeader` with
     sandbox or user-approved values, or mark the checks that depend on any of it
