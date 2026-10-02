@@ -1037,6 +1037,9 @@ expectNoRule("allows asserting a number", "expect(totalItems(state)).toBe(4);", 
     ["/** @description Vendor runtime requires this suppression. @see issue */", true],
     ["/** @see issue */", false],
     ["/** incorrect. @see issue */", false],
+    ["/*! @license MIT */", false],
+    ["/**\n * @see vendor-issue\n * Vendor runtime requires this suppression.\n */", true],
+    ["/**\n * @see vendor-issue\n * @param options\n */", false],
   ]) {
     const findings = lintSource(`${comment}\n${directive}`, "sample.js", { addedLines: new Set([1]) });
     assert.equal(findings.some(f => f.rule === "no-unjustified-suppression"), expected, comment);

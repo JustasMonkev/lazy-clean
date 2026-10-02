@@ -573,8 +573,14 @@ check("--since preserves unchanged comments beside code edits and rejects copied
     if (expected === 1) assert.ok(JSON.parse(result.stdout).some(f => f.rule === "no-unjustified-suppression"), file);
   }
   git("mv", "leading.js", "renamed.js");
+  git("config", "diff.renames", "false");
   const renamed = run(["--since=HEAD", "--json", "renamed.js"], repo);
   assert.equal(renamed.status, 0, `rename: ${renamed.stderr || renamed.stdout}`);
+  git("mv", "trailing.ts", "renamed.ts");
+  writeFileSync(join(repo, "renamed.ts"), trailing);
+  const renamedSafety = run(["--since=HEAD", "--json", "renamed.ts"], repo);
+  assert.equal(renamedSafety.status, 0, `safety rename: ${renamedSafety.stderr || renamedSafety.stdout}`);
+  git("mv", "renamed.ts", "trailing.ts");
   writeFileSync(join(repo, "trailing.ts"), trailing.replace("the schema", "schema"));
   const edited = run(["--since=HEAD", "--json", "trailing.ts"], repo);
   assert.equal(edited.status, 1, `edited: ${edited.stderr || edited.stdout}`);
@@ -660,7 +666,8 @@ check("--since reviews new rationale for every suppression family and preserves 
     assert.equal(result.status, 1, `${directive}: ${result.stderr || result.stdout}`);
     assert.ok(JSON.parse(result.stdout).some(f => f.rule === "no-unjustified-suppression" && f.startLine === 1 && f.line === 2), directive);
     for (const prefix of [
-      "// SPDX-License-Identifier: MIT", "/** @param options Stable account identifier, never a display name. */",
+      "// SPDX-License-Identifier: MIT", "/*! @license MIT */", "/*! SPDX-License-Identifier: MIT */", "/*! Copyright Vendor */",
+      "/** @param options Stable account identifier, never a display name. */",
       "/** @throws {Error} When startup fails. */", "/** @exception {Error} When startup fails. */",
       "/** @yields {string} The next account identifier. */", "/** @customTag Account metadata used by the documentation plugin. */",
       "/* c8 ignore stop */", "/* v8 ignore stop */",
@@ -700,6 +707,10 @@ check("--since combines contiguous standalone rationale without crossing code, g
     ["description-tag.js", bare, `/** @description Vendor runtime requires this suppression. @see issue */\n${bare}`, 1, 1, 2],
     ["one-word-tag.js", bare, `/** incorrect. @see issue */\n${bare}`, 0],
     ["exported-prose.js", bare, `// exported foo, bar\n${bare}`, 1, 1, 2],
+    ["after-tag.js", bare, `/**\n * @see vendor-issue\n * Vendor runtime requires this suppression.\n */\n${bare}`, 1, 1, 5],
+    ["after-tags.js", bare, `/**\n * @see vendor-issue\n * Vendor runtime requires this suppression.\n * @param options\n */\n${bare}`, 1, 1, 6],
+    ["after-description.js", bare, `/**\n * @description Vendor runtime requires\n * this suppression.\n * @see issue\n */\n${bare}`, 1, 1, 6],
+    ["tags-only.js", bare, `/**\n * @see vendor-issue\n * @param options\n */\n${bare}`, 0],
   ];
   try {
     git("init", "-q");

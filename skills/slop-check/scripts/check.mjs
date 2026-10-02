@@ -712,7 +712,7 @@ const EMOJI_PATTERN = new RegExp(
 const IGNORE_DIRECTIVE = /^(?:\/\/|\/\*)[^\S\r\n]*slop-check-ignore(-file)?\b(.*)/u;
 
 function commentBody(text) {
-  return text.replace(/^\/\/+\s?|^\/\*+|\*+\/$/gu, "").replace(/^\s*\*\s?/gmu, "");
+  return text.replace(/^\/\/+\s?|^\/\*+!?|\*+\/$/gu, "").replace(/^\s*\*\s?/gmu, "");
 }
 
 function isJustification(comment) {
@@ -2616,12 +2616,14 @@ function suppressionExplanation(comment) {
   let body = commentBody(comment.text);
   if (!comment.text.startsWith("/**")) return body;
   body = body.replace(/\{@[A-Za-z][\w-]*\b[^}]*\}/gu, " ");
-  const tags = [...body.matchAll(/(?:^|\s)@([A-Za-z][\w-]*)\b/gu)];
-  let prose = body.slice(0, tags[0]?.index ?? body.length);
-  for (const [index, tag] of tags.entries()) {
-    if (/^(?:description|desc)$/u.test(tag[1])) prose += ` ${body.slice(tag.index + tag[0].length, tags[index + 1]?.index ?? body.length)}`;
-  }
-  return prose;
+  return body.split(/\r\n|[\n\r]/u).map(line => {
+    const tags = [...line.matchAll(/(?:^|\s)@([A-Za-z][\w-]*)\b/gu)];
+    let prose = line.slice(0, tags[0]?.index ?? line.length);
+    for (const [index, tag] of tags.entries()) {
+      if (/^(?:description|desc)$/u.test(tag[1])) prose += ` ${line.slice(tag.index + tag[0].length, tags[index + 1]?.index ?? line.length)}`;
+    }
+    return prose;
+  }).join("\n");
 }
 
 function isCommentMetadata(comment, masked) {
@@ -3400,7 +3402,7 @@ function addedLines(ref) {
   // The prefixes are pinned because diff.mnemonicprefix renames `b/` to `w/`,
   // and quotepath is off so a non-ASCII name arrives verbatim, not C-quoted.
   const diff = git([
-    "-C", root, "-c", "core.quotepath=false", "diff", "-U0", "--no-color", "--no-ext-diff", "--no-textconv",
+    "-C", root, "-c", "core.quotepath=false", "diff", "-M", "-U0", "--no-color", "--no-ext-diff", "--no-textconv",
     "--src-prefix=a/", "--dst-prefix=b/", "--end-of-options", ref, "--",
   ]);
   // A `+++ ` line is a header only where a header can appear: directly after the
