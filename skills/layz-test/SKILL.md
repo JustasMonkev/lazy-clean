@@ -78,7 +78,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   - Run in a disposable copy of the working tree, uncommitted and ignored files
     included, in a private temporary directory deleted on every exit. Leave out
     secrets such as `.env` files, keys, and production configuration; supply
-    sandbox or user-approved replacements when the tests need them.
+    sandbox or user-approved replacements when the tests need them. Classify
+    each path without following it before reading it: never read FIFOs,
+    sockets, or device nodes; recreate them privately where supported, or mark
+    the checks that depend on them unfaithful.
   - If the source is a Git worktree, give the copy independent Git metadata,
     never a `.git` file or `gitdir` that points back to the user's repository.
     Clear inherited Git path variables (`GIT_DIR`, `GIT_WORK_TREE`,
@@ -106,8 +109,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     and state, or mark the checks that depend on it unfaithful. A non-Git
     source stays without Git.
   - Reapply the file modes, owners, timestamps, ACLs, and extended attributes
-    the tests depend on. If the source state, Git or filesystem, cannot be
-    reproduced faithfully, treat the target as unable to run from a copy.
+    the tests depend on, and recreate hard-link groups among copied files. If
+    the source state, Git or filesystem, cannot be reproduced faithfully, treat
+    the target as unable to run from a copy.
   - Keep symlinks as symlinks; if one points outside the repository, ask before
     running write-capable commands through it. If the checks read its target,
     snapshot the target into the private directory and point the copy's link
@@ -134,13 +138,13 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     commands in place. When approved, ask the user to pause other edits to the
     tree and to every Git directory it shares with other worktrees while each
     such command runs, and back up the tree first: bytes, file modes, symlink
-    targets, which paths exist, timestamps, ACLs and extended attributes where
-    the platform has them, and the Git directories the tree points to
-    (`git rev-parse --absolute-git-dir` and `--git-common-dir`). Record what
-    the command changed, restore from the backup only paths that still hold
-    exactly that result, and report any other change as a conflict. Delete
-    those backups on every exit once restoring is done; keep one only for an
-    unresolved conflict, and say where.
+    targets, which paths exist, owners, timestamps, ACLs and extended
+    attributes where the platform has them, and the Git directories the tree
+    points to (`git rev-parse --absolute-git-dir` and `--git-common-dir`).
+    Record what the command changed, restore from the backup only paths that
+    still hold exactly that result, and report any other change as a conflict.
+    Delete those backups on every exit once restoring is done; keep one only
+    for an unresolved conflict, and say where.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
@@ -156,9 +160,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   environment failures, and synthetic mutations. If none is confirmed, say so
   and list the hypotheses tested; never invent a finding to meet a bug quota.
 - Run commands non-interactively, never in watch mode. Give external work a
-  timeout and a bounded workload; stop the process tree each command starts and
-  clean up listeners, timers, temporary data, and mutations on success,
-  failure, cancellation, and partial setup.
+  timeout and a bounded workload. Keep a service a setup command starts alive
+  until the tests that depend on it finish, then stop every process tree the
+  scenario started and clean up listeners, timers, temporary data, and
+  mutations on success, failure, cancellation, and partial setup.
   Use isolated test data. Run destructive or costly external checks only within
   authorization; report missing prerequisites instead of inventing credentials.
   Never call a live payment, email, SMS, or other third-party account unless it
