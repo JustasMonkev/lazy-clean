@@ -22,10 +22,10 @@ tests. Keep this a one-shot testing workflow; do not change lazy mode or hooks.
    silently replace a whole-repository request with a sample.
 2. Read pinned and installed tool versions and test commands from the project.
    Reuse its runner, fixtures, assertions, and installed dependencies. Do not
-   download tools or add a framework merely to measure this workflow. If the
-   lockfile declares a runner that is missing, or the installed runner or its
-   dependency graph does not match the lockfile, run the repository's
-   documented locked install in the disposable copy before calling it blocked.
+   download tools or add a framework merely to measure this workflow. If a
+   repository-declared runner is missing or its version does not match the
+   lockfile, use the documented locked install in a disposable copy when
+   permitted; otherwise report it as blocked.
 3. Make a compact behavior → test → result table. Enumerate happy paths,
    boundaries (including false/zero/empty), invalid inputs, and failure modes.
    Trace retries, restore/replay, cancellation, concurrency, and cleanup where
@@ -39,7 +39,7 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
 
 | Layer | What to check when applicable |
 | --- | --- |
-| Static/build | Lint, types, compilation, packaging, public API compatibility; formatters in check or dry-run mode, or write mode in the disposable copy when formatter output is under test. |
+| Static/build | Lint, types, compilation, packaging, public API compatibility; formatters in check or dry-run mode. |
 | Unit/property | Branches, boundaries, malformed input, invariants, generated cases. |
 | Integration/contract | Real dependency boundaries, serialization, persistence, error semantics. |
 | E2E/UI | Critical user flows, navigation, keyboard use, browser/device variants. |
@@ -50,207 +50,22 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
 
 ## Execute and challenge
 
-- Isolate every command that can write files, such as installs, builds, test
-  runs, snapshot updates, mutation probes, and old-code reproductions. Nothing
-  they do may change the user's tree, Git directories or refs, home, installed
-  toolchains, or anything else outside a private temporary directory; where a
-  rule below cannot guarantee that, ask first. A copy and redirected variables
-  do not stop a command that writes to an absolute path or finds the original
-  checkout, so run these commands under an OS-level sandbox that allows writes
-  only inside the private directory, hides the original checkout (only the
-  preparation clone may read it, read-only) and the user's real home and other
-  sensitive host paths (exposing only user-approved state, read-only), and
-  denies network access except to approved sandbox endpoints or live endpoints
-  the user approved, and keeps host processes (their PIDs and signals), IPC
-  sockets such as Docker or D-Bus, devices, and the Windows registry out of
-  reach; where such a sandbox is not available, ask first, and mark a run that
-  read the original checkout unfaithful. The user's tree only gains the tests
-  you keep, the snapshots they need, and production fixes the user asked for.
-  - Read the source without changing access times (a read-only snapshot or a
-    no-atime read); if that is not possible, ask first.
-  - Before any step reads the tree (the starting record, the copy, or an
-    in-place backup), classify each path without following it, at the moment of
-    each read (no-follow, descriptor-relative opens that check the type and
-    mount), or ask the user to pause edits while preparing. Never read FIFOs,
-    sockets, or device nodes, and stop at mount points: recreate a FIFO or
-    socket privately only for checks that read the node itself and mark checks
-    that talk through it unfaithful, recreate a device node only when its device
-    is virtualized or the user approves, copy a mounted directory only from a
-    user-approved snapshot of its intended contents, or mark the checks that
-    depend on them unfaithful. Before that, check the size, file count, and
-    expected time of everything preparation reads or copies (such as the tree,
-    its Git directories with their caches and alternate object stores,
-    snapshotted symlink targets and files Git config makes Git read, approved
-    external paths an in-place backup copies, and privately copied toolchains)
-    against a budget; if it would exceed it, ask first or report the affected
-    checks as blocked.
-  - In the rules below, file metadata means everything about a file beyond its
-    bytes that the checks can observe, such as file modes, owners, timestamps,
-    ACLs, extended attributes, named streams such as NTFS alternate data
-    streams, sparse extents, and hard-link groups, including links to the same
-    file from outside the tree. Git state means everything in the Git directory
-    that the checks read, such as `HEAD`, refs (local branches, tags, custom
-    refs, stashes) and their reflogs, pseudorefs such as `ORIG_HEAD` and
-    `FETCH_HEAD`, in-progress merge, rebase, cherry-pick, revert, or bisect
-    state (`MERGE_HEAD`, `CHERRY_PICK_HEAD`, the sequencer and rebase
-    directories), Git info files such as `info/exclude`, the rerere cache
-    (`rr-cache`), hooks in `.git/hooks`, the Git LFS object cache, repository
-    and worktree config with the files it includes, and linked worktrees.
-  - For every baseline Git invocation, including the final audit, pass the global
-    `--no-pager` option before the Git subcommand. After restoring approved
-    environment values, unset both `PAGER` and `GIT_PAGER` before each baseline
-    invocation.
-  - Before recording any diff or file copy, identify secret-bearing paths in
-    both the index and working tree. Exclude those paths from all staged and
-    unstaged diffs; record only status and checksums for secrets, whether
-    tracked, untracked, or ignored. Never save their bytes or patch text, and
-    report reconstruction needing omitted secret bytes as unavailable.
-  - Record the starting state of the user's tree. Before the first Git command,
-    clear every inherited `GIT_*` environment variable for every Git command in
-    this workflow, such as repository paths (`GIT_DIR`, `GIT_WORK_TREE`,
-    `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY`,
-    `GIT_ALTERNATE_OBJECT_DIRECTORIES`, `GIT_SHALLOW_FILE`), config overrides
-    (`GIT_CONFIG_PARAMETERS`, `GIT_CONFIG_COUNT`, `GIT_CONFIG_GLOBAL`,
-    `GIT_CONFIG_SYSTEM`), and trace destinations (`GIT_TRACE*`), and set only
-    the ones these rules name plus approved non-secret ones the behavior depends
-    on, such as `GIT_AUTHOR_NAME`, and classify every file Git's config makes it
-    read (includes, `core.excludesFile`, `core.attributesFile`, and similar) the
-    same way, approved if outside the checkout, or override that setting and
-    report the state it affects as unavailable. Use read-only Git commands
-    (`GIT_OPTIONAL_LOCKS=0`, `-c core.fsmonitor=false`, diffs with
-    `--no-textconv --no-ext-diff`, every configured `filter.<driver>.clean` and
-    `.process` overridden with an empty value and `.required` set to `false`, or
-    direct file reads instead of Git; where a filter is blanked, record
-    checksums for its paths and report Git's status and diff for them as
-    unavailable rather than recording the altered output), with network access
-    denied so a partial clone cannot lazily fetch missing objects (also set
-    `GIT_NO_LAZY_FETCH=1` where the installed Git supports it); if an object is
-    missing, read the file directly or report that state as unavailable. Record
-    `git status`, the unstaged and staged diffs, copies of untracked files (only
-    checksums for secrets), and raw checksums of every tracked and ignored file
-    copied (Git can hide normalized, assume-unchanged, or skip-worktree
-    changes), or a checksum listing without Git. Include the Git state the tests
-    read and the file metadata they depend on. Keep these in a private temporary
-    directory outside the repository and outside what isolated commands can
-    read, and delete it on every exit once the final audit is done.
-  - Run in a disposable copy of the working tree, uncommitted and ignored files
-    included, in a private temporary directory deleted on every exit, on a
-    filesystem with the same semantics as the source (case sensitivity, name
-    limits, rename and locking behavior, file watching), or mark the checks that
-    depend on those semantics unfaithful. Present the copy at a path equivalent
-    to the source checkout (length, characters, depth, drive), or mark the
-    checks that depend on the checkout path unfaithful. Leave out secrets such
-    as `.env` files, keys, and production configuration; supply sandbox or
-    user-approved replacements when the tests need them.
-  - If the source is a Git worktree, give the copy independent Git metadata,
-    never a `.git` file or `gitdir` that points back to the user's repository.
-    Clone with `--no-hardlinks`, `--no-checkout`, and `--dissociate`, with no
-    shared or alternate object store (an alternate the source uses outside its
-    Git directory is read only with the user's approval), and run the clone and
-    every Git command in the copy with hooks disabled (`core.hooksPath` set to
-    an empty private directory) and the user's global and system config ignored
-    (`GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` set to an empty file), passing
-    only the settings the tests need, such as an identity, with `-c`, or, when
-    the tests observe config scope, as approved sanitized values in private
-    files at their original scopes. When a repository hook is under test, point
-    `core.hooksPath` at the copy's own hooks, never the user's. Keep the clone's
-    remotes with their non-secret URLs while network access stays denied, or
-    point them at private repositories inside the temporary directory and mark
-    the checks that read remote URLs unfaithful. A check that fetches from or
-    pushes to a remote needs a private remote holding the state it needs,
-    presented at the original URL or path; otherwise report it blocked. Do not
-    check out: copy the user's working-tree bytes into the clone so no smudge
-    filter or other conversion helper runs, then recreate the index, unstaged
-    changes, untracked files, and the Git state the tests read separately:
-    `HEAD` on the same branch or the same detached commit, linked worktrees as
-    private retargeted worktrees, repository and worktree config
-    (`git config --local` and `--worktree`) with included files and other files
-    the config makes Git read snapshotted into the private directory (one
-    outside the checkout only with the user's approval, classified the same way,
-    with secrets left out, and compared again after the run, rerunning or
-    marking the dependent checks unfaithful if it changed), path-valued settings
-    such as `core.worktree`, include paths, and `includeIf` `gitdir:` and
-    `gitdir/i:` conditions retargeted to the copy, replacing credentials such as
-    authenticated remote URLs or `http.extraHeader` with sandbox or
-    user-approved values, or mark the checks that depend on any of it
-    unfaithful. If a left-out secret is in any of the clone's objects, reachable
-    or not, or in a reproduced extension store such as the Git LFS cache, purge
-    those objects and the refs that carry them, or treat the target as unable to
-    run safely from a copy. Give each initialized submodule and every other
-    nested repository the same independent metadata and state, or mark the
-    checks that depend on it unfaithful. A bare repository gets the same
-    independent copy of its Git directory and Git state, skipping worktree-only
-    steps such as `git status`. A non-Git source stays without Git.
-  - Reapply the file metadata the tests depend on. If the source state, Git or
-    filesystem, cannot be reproduced faithfully, treat the target as unable to
-    run from a copy. Before running checks, compare the completed copy with the
-    baseline, allowing only the recorded omissions and rewrites (left-out
-    secrets, retargeted paths, sanitized config); refresh it if anything else
-    differs, within a retry and time limit; if the source keeps changing, ask
-    first or report the affected checks as untested.
-  - Keep symlinks as symlinks; if one points outside the repository, ask before
-    running write-capable commands through it. Keep an absolute link into the
-    repository pointing at its literal target by presenting the copy at the
-    original absolute path inside the sandbox; otherwise retarget it to the copy
-    and mark the checks that read link targets unfaithful. If the checks read
-    its target, snapshot the target into the private directory and present the
-    snapshot at the link's original literal target inside the sandbox, or point
-    the link at the snapshot and mark the checks that read link targets
-    unfaithful. Either way, or with no snapshot, compare the original target
-    again after the run and rerun or mark the run unfaithful if it changed.
-  - Point temp and cache locations inside the private directory (`TMPDIR`,
-    `TMP`, `TEMP`, and the tools' cache variables). If the behavior under test
-    depends on those locations, keep them equivalent in the private directory
-    or treat the target as unable to run faithfully from a copy. Give every
-    isolated command a private home (`HOME`, `USERPROFILE`, app-data
-    variables), so files such as `.npmrc`, `.netrc`, or cloud credentials stay
-    out of reach; expose only required, user-approved home state read-only, and
-    keep installed toolchains reachable read-only or as a private copy, never
-    through a writable path into the user's toolchain state such as
-    `RUSTUP_HOME`. Ask before a command writes to any other path or shared
-    service outside the private directory.
-  - Before deleting the copy, move every redacted artifact the report cites,
-    from passing or failing runs (logs, traces, screenshots, coverage), to a
-    private evidence directory outside the disposable temporary directory, kept
-    after the report for the user to review and delete. Classify each artifact
-    without following it and export only bounded regular files and directories;
-    record links and special nodes instead of exporting them.
-  - Before copy-back, classify every kept source at each read using the same
-    no-follow, descriptor-relative opens and preparation budget. Copy back only
-    bounded regular files and directories; report symlinks, FIFOs, sockets,
-    devices, and other node types instead of reading or installing them.
-  - When copying kept tests, snapshots, and requested fixes back, compare each
-    destination with its baseline and its current state; if it changed since the
-    copy was made, merge the change or report a conflict instead of overwriting
-    it. Write a destination only while the user pauses edits to that file and
-    its parent directories, through no-follow directory handles, covering the
-    final check, the write, and any metadata fix-up, and keep its file metadata
-    unless the change was requested; never write through a hard link to a file
-    outside the tree without approval. Without a pause, or if the file changed,
-    report a conflict instead. Stage each complete replacement and apply
-    required metadata before installing it atomically; never stream into a live
-    destination. Clean up staging on every exit. If atomic installation cannot
-    preserve required metadata or hard-link relationships, leave the destination
-    untouched and report a conflict. For any conflict, save the proposed file
-    or patch in the private evidence directory before the copy is deleted,
-    and report where.
-  - If the suite cannot run from a copy, ask before running write-capable
-    commands in place. When approved, use the same sandbox except that the tree,
-    the Git directories it points to, and any external paths the user approves
-    are visible and writable along with the private directory, keeping every
-    other restriction; ask the user to pause other edits to the tree and to
-    every Git directory it shares with other worktrees from before the backup
-    until restoring is done, and back up the tree first, classifying paths as
-    above, into a location the command cannot read or write: bytes, symlink
-    targets, which paths exist, file metadata where the platform has it, the Git
-    directories the tree points to (`git rev-parse --absolute-git-dir` and
-    `--git-common-dir`), and every approved writable external path. Keep mounted
-    paths, and files with links from outside the tree, out of the command's
-    reach unless the user approves them. Record what the command changed, verify
-    the backup, restore from it only paths that still hold exactly that result,
-    under the same pause as copy-back, and report any other change as a
-    conflict. Delete those backups on every exit once restoring is done; keep
-    one only for an unresolved conflict, and say where.
+- Use the host's existing execution sandbox and permissions. Do not build or
+  claim a new isolation boundary; a disposable copy is not a security sandbox.
+- Use disposable copies for installs, mutation probes, old-code reproductions,
+  and other checks that would rewrite non-test product state. Use independent
+  source files, not hard links or Git metadata shared with the user's checkout.
+  Do not copy production credentials, user home state, or Git history and
+  configuration into a probe. Use fixtures or sandbox credentials when needed.
+  Record the tested revision and relevant uncommitted inputs or omissions. If
+  required inputs or isolation are unavailable, report the check as blocked.
+  Do not reconstruct user Git, home, or filesystem state or run destructive
+  probes in place.
+- Do not automatically copy generated files back. Apply test and snapshot
+  changes through ordinary scoped edits after reviewing their contents,
+  preserving existing user changes. If they cannot be applied safely, save a
+  redacted patch and report the conflict. Keep redacted evidence the report
+  cites outside disposable copies before deleting them, and report its path.
 - Run existing relevant tests first. Add small, rerunnable tests for uncovered
   behaviors, including negative cases; use real code, not a copied algorithm.
   For a whole-repository request, work through the inventory and report every
@@ -266,48 +81,30 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   environment failures, and synthetic mutations. If none is confirmed, say so
   and list the hypotheses tested; never invent a finding to meet a bug quota.
 - Run commands non-interactively, never in watch mode. Give external work a
-  timeout and a bounded workload. Keep a service a setup command starts alive
-  until the tests that depend on it finish, then tear down the scenario as a
-  unit: run it in a lifecycle container such as a cgroup, PID namespace, or
-  Windows Job, with limits on processes, memory, CPU, and storage, so daemons
-  that leave the process tree stop too, or report the check as blocked where no
-  such container is available; clean up listeners, timers, temporary data, and
-  mutations on success, failure, cancellation, and partial setup. Use isolated
-  test data. Run destructive or costly external checks only within
-  authorization; report missing prerequisites instead of inventing credentials.
-  Never call a live payment, email, SMS, or other third-party account unless it
-  is an isolated sandbox or the user approves; otherwise report it as blocked
-  automation that needs a sandbox or approval. Run isolated commands with an
-  allowlisted environment: drop inherited credentials, tokens, and agent sockets
-  such as `SSH_AUTH_SOCK`, and add back only sandbox or user-approved
-  credentials. Keep the non-secret variables the behavior depends on, such as
-  locale, `TZ`, `CI`, and feature flags, or report the affected checks as
-  unfaithful.
-- Prove a risky test can fail: reproduce a regression by running the same new
-  test, unchanged, against the complete old non-test product state (code,
-  generated files, schemas, lockfiles, configuration, dependencies freshly
-  installed from the old lockfile, the old pinned toolchain version, and the old
-  Git state the product reads such as `HEAD`, tags, and the index, running the
-  test from outside the observed worktree when the product reads Git status, or
-  report the proof blocked if that cannot be done) in the disposable copy, where
-  its intended assertion fails, then passing against the fix; or, in the copy,
-  leave a passing test unchanged, mutate a relevant production branch/boundary,
-  and observe that test's intended assertion fail; revert and rerun green. A
+  timeout and a bounded workload. Keep setup services alive until their
+  dependent checks finish, then stop the processes you started. Clean up
+  listeners, timers, temporary copies, and mutations on success, failure,
+  cancellation, and partial setup; report cleanup failures. Use isolated test
+  data. Run destructive or costly external checks only within authorization;
+  report missing prerequisites instead of inventing credentials. Never call a
+  live payment, email, SMS, or other third-party account unless it is an isolated
+  sandbox or the user approves; otherwise report it as blocked automation.
+- Prove a risky test can fail: run the same new test, unchanged, in a disposable
+  copy against the pre-fix product state needed for that behavior, including
+  relevant dependency and configuration versions. Its intended assertion fails
+  there and passes against the fix; if that state cannot be supplied, report
+  regression proof as blocked. Alternatively, in a disposable copy, leave a
+  passing test unchanged, mutate a relevant production branch/boundary, and
+  observe that test's intended assertion fail; revert and rerun green. A
   mutation of the test itself or a setup/import failure is not proof.
 - Do not weaken assertions, skip failing cases, or change production behavior
   just to get green. Fix product defects only when the user has requested fixes
   for this task; a supplied file or diff is testing scope, not authorization to
   change production behavior. Otherwise retain the failing reproducer and report
   the defect. Separate pre-existing failures from new ones.
-- Before reporting, confirm the user's tree differs from its starting state only
-  by the tests you added, the snapshots they need, and requested changes; name
-  any other change instead of reverting it. If tested source, its metadata, the
-  Git state the tests read, or another input they read from outside the copy,
-  such as approved home state or a toolchain, changed after the copy was made,
-  refresh the copy and rerun the affected checks within a retry and time limit,
-  or report the newer state as untested. If a command rewrote tested production
-  files inside the copy, such as a pretest code generator, report it and rerun
-  from the intended state, or report that state as untested.
+- Compare the task-owned diff before reporting; preserve pre-existing edits and
+  report other changes instead of reverting them. If source changed after
+  testing, rerun affected checks or report the newer state as untested.
 - Rerun affected checks after test edits. Review TS/JS changes with the installed
   slop checker when available; its clean result is not behavioral evidence.
 
@@ -315,9 +112,11 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
 
 Report the tested revision/worktree and environment, changed tests, the behavior
 table, exact commands, exit status, assertion results, and evidence/log paths.
-Before saving or sharing commands, results, logs, or evidence, redact credentials
-and sensitive data. Use rerunnable placeholders and explicitly note each
-redaction without exposing its original value.
+Before saving, applying, or sharing commands, results, logs, evidence, patches,
+tests, or snapshots, redact credentials and sensitive data. Use rerunnable
+placeholders and explicitly note each redaction without exposing its original
+value. If redaction cannot produce usable content, report the affected output
+as blocked.
 Use **pass**, **fail**, **blocked**, **not run**, and **not applicable** explicitly.
 Record skips and retries; a flaky pass does not erase an earlier failure. Never
 describe a planned, empty, or blocked run as tested. State remaining coverage
