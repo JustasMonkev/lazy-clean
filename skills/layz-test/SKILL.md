@@ -100,6 +100,11 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     `--no-pager` option before the Git subcommand. After restoring approved
     environment values, unset both `PAGER` and `GIT_PAGER` before each baseline
     invocation.
+  - Before recording any diff or file copy, identify secret-bearing paths in
+    both the index and working tree. Exclude those paths from all staged and
+    unstaged diffs; record only status and checksums for secrets, whether
+    tracked, untracked, or ignored. Never save their bytes or patch text, and
+    report reconstruction needing omitted secret bytes as unavailable.
   - Record the starting state of the user's tree. Before the first Git command,
     clear every inherited `GIT_*` environment variable for every Git command in
     this workflow, such as repository paths (`GIT_DIR`, `GIT_WORK_TREE`,
@@ -210,6 +215,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     after the report for the user to review and delete. Classify each artifact
     without following it and export only bounded regular files and directories;
     record links and special nodes instead of exporting them.
+  - Before copy-back, classify every kept source at each read using the same
+    no-follow, descriptor-relative opens and preparation budget. Copy back only
+    bounded regular files and directories; report symlinks, FIFOs, sockets,
+    devices, and other node types instead of reading or installing them.
   - When copying kept tests, snapshots, and requested fixes back, compare each
     destination with its baseline and its current state; if it changed since the
     copy was made, merge the change or report a conflict instead of overwriting
@@ -218,9 +227,13 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     final check, the write, and any metadata fix-up, and keep its file metadata
     unless the change was requested; never write through a hard link to a file
     outside the tree without approval. Without a pause, or if the file changed,
-    report a conflict instead. For any conflict, save the proposed file or patch
-    in the private evidence directory before the copy is deleted, and report
-    where.
+    report a conflict instead. Stage each complete replacement and apply
+    required metadata before installing it atomically; never stream into a live
+    destination. Clean up staging on every exit. If atomic installation cannot
+    preserve required metadata or hard-link relationships, leave the destination
+    untouched and report a conflict. For any conflict, save the proposed file
+    or patch in the private evidence directory before the copy is deleted,
+    and report where.
   - If the suite cannot run from a copy, ask before running write-capable
     commands in place. When approved, use the same sandbox except that the tree,
     the Git directories it points to, and any external paths the user approves

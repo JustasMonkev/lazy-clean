@@ -266,10 +266,13 @@ for (const [surface, raw] of finishSurfaces) {
 ok("skills/lazy/SKILL.md limits the no-announcement rule to ordinary work",
   /Do not announce the mode during ordinary work/u.test(flat(read("skills/lazy/SKILL.md"))));
 
-// layz-test promises every applicable layer, isolation from the user's tree, and
-// an honest manual-testing tail; losing any turns it back into "ran the suite".
 const layzTest = flat(read("skills/layz-test/SKILL.md"));
 for (const [description, pattern] of [
+  ["identifies index and worktree secrets before recording", /Before recording any diff or file copy, identify secret-bearing paths in both the index and working tree/u],
+  ["excludes secrets from both diffs regardless of tracking", /Exclude those paths from all staged and unstaged diffs; record only status and checksums for secrets, whether tracked, untracked, or ignored\. Never save their bytes or patch text, and report reconstruction needing omitted secret bytes as unavailable/u],
+  ["validates kept sources at each read before copy-back", /Before copy-back, classify every kept source at each read using the same no-follow, descriptor-relative opens and preparation budget\. Copy back only bounded regular files and directories; report symlinks, FIFOs, sockets, devices, and other node types instead of reading or installing them/u],
+  ["stages metadata before atomic copy-back and cleans staging", /Stage each complete replacement and apply required metadata before installing it atomically; never stream into a live destination\. Clean up staging on every exit/u],
+  ["leaves destinations untouched when atomic installation cannot preserve them", /If atomic installation cannot preserve required metadata or hard-link relationships, leave the destination untouched and report a conflict/u],
   ["covers every test layer", /Static\/build.*Unit\/property.*Integration\/contract.*E2E\/UI.*Resilience.*Security.*Accessibility\/visual.*Performance/u],
   ["runs formatters without rewriting files", /formatters in check or dry-run mode, or write mode in the disposable copy when formatter output is under test/u],
   ["disables configured pagers for every baseline and audit command", /For every baseline Git invocation, including the final audit, pass the global `--no-pager` option before the Git subcommand/u],
