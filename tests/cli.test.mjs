@@ -618,6 +618,14 @@ check("--since retains comment provenance for low-similarity renames", () => {
   assert.ok(similarity && Number(similarity[1]) > 0 && Number(similarity[1]) < 50);
   const result = run(["--since=HEAD", "--json", "next.ts"], repo);
   assert.equal(result.status, 0, result.stderr || result.stdout);
+  writeFileSync(join(repo, "next.ts"), `${retained}const unrelated = "${"replacement".repeat(200)}";\n`);
+  git("add", "-A");
+  assert.match(git("diff", "-M1%", "--name-status", "HEAD"), /^R00[1-9]\s/u);
+  const replacement = run(["--since=HEAD", "--json", "next.ts"], repo);
+  assert.equal(replacement.status, 1, replacement.stderr || replacement.stdout);
+  const findings = JSON.parse(replacement.stdout);
+  assert.ok(findings.some(f => f.rule === "no-new-justification-comments"));
+  assert.ok(findings.some(f => f.rule === "require-safety-comment-for-type-assertion"));
 });
 
 check("--since cleans comparison snapshots after success and Git failure", () => {
@@ -647,7 +655,7 @@ check("--since cleans comparison snapshots after success and Git failure", () =>
   writeFileSync(join(shim, "git"), `#!/usr/bin/env node
 const args = process.argv.slice(2);
 if (args.includes("--no-index")) {
-  require("node:fs").writeFileSync(${JSON.stringify(record)}, args[args.indexOf("-C") + 1]);
+  require("node:fs").writeFileSync(${JSON.stringify(record)}, require("node:path").dirname(args.at(-1)));
   if (process.env.SLOP_TEST_DIFF_FAIL === "1") process.exit(2);
 }
 const result = require("node:child_process").spawnSync(${JSON.stringify(realGit)}, args, { stdio: "inherit" });
@@ -697,11 +705,16 @@ check("--since reviews new rationale for every suppression family and preserves 
     for (const prefix of [
       "// SPDX-License-Identifier: MIT", "/*! @license MIT */", "/*! SPDX-License-Identifier: MIT */", "/*! Copyright Vendor */",
       "/*! ISC License */", "/*! For license information please see app.LICENSE.txt */",
+      "/* ISC License */", "// ISC License", "/* GNU General Public License */",
+      "/* ISC License (ISC) */", "/* Mozilla Public License Version 2.0 */", "/* MIT License https://opensource.org/licenses/MIT */",
+      "/* For license information please see app.LICENSE.txt */",
       "/** @param options Stable account identifier, never a display name. */",
       "/** @throws {Error} When startup fails. */", "/** @exception {Error} When startup fails. */",
       "/** @yields {string} The next account identifier. */", "/** @customTag Account metadata used by the documentation plugin. */",
       "/**\n * @param options\n *   Stable options passed to the vendor API.\n */",
       "/**\n * @throws {Error}\n *   When the connection fails.\n */",
+      "/**\n * @param options Stable options passed to the\n * vendor API.\n */",
+      "/**\n * @returns Stable account identifier for the\n * vendor API.\n */",
       "/* c8 ignore stop */", "/* v8 ignore stop */",
       "/* exported foo, bar */",
       '/// <reference types="node" />', '/// <reference path="dependency.d.ts" />', '/// <reference lib="es2020" />',
@@ -744,6 +757,8 @@ check("--since combines contiguous standalone rationale without crossing code, g
     ["after-description.js", bare, `/**\n * @description Vendor runtime requires\n * this suppression.\n * @see issue\n */\n${bare}`, 1, 1, 6],
     ["tags-only.js", bare, `/**\n * @see vendor-issue\n * @param options\n */\n${bare}`, 0],
     ["after-continuation.js", bare, `/**\n * @param options\n *   Stable options passed to the vendor API.\n *\n * Vendor runtime requires this suppression.\n */\n${bare}`, 1, 1, 7],
+    ["after-wrapped.js", bare, `/**\n * @param options Stable options passed to the\n * vendor API.\n *\n * Vendor runtime requires this suppression.\n */\n${bare}`, 1, 1, 7],
+    ["license-prose.js", bare, `// Vendor license requires this suppression.\n${bare}`, 1, 1, 2],
   ];
   try {
     git("init", "-q");
@@ -784,6 +799,14 @@ check("--since keeps legacy safety evidence attached to its baseline assertion",
     ["property.ts", `${marker}const user = payload.user as User;\n`, `${marker}const user = payload.admin as User;\n`],
     ["multiline-type.ts", `${marker}const user = payload as {\n id: string;\n};\n`, `${marker}const user = payload as {\n id: number;\n};\n`],
     ["untouched.ts", oldAssertion, `${oldAssertion}export const added = 1;\n`, 0],
+    ["prefix.ts", `${marker}const before = 1, user = payload as User;\n`, `${marker}const before = 2, user = payload as User;\n`, 0],
+    ["property-prefix.ts", `${marker}const before = 1, user = payload.user as User;\n`, `${marker}const before = 2, user = payload.user as User;\n`, 0],
+    ["call-prefix.ts", `${marker}const before = 1, user = parse(payload) as User;\n`, `${marker}const before = 2, user = parse(payload) as User;\n`, 0],
+    ["angle-prefix.ts", `${marker}const before = 1, user = <User>payload;\n`, `${marker}const before = 2, user = <User>payload;\n`, 0],
+    ["angle-suffix.ts", `${marker}const user = <User>payload; doWork(1);\n`, `${marker}const user = <User>payload; doWork(2);\n`, 0],
+    ["generic-call.ts", `${marker}const user = parse<User, Input>(payload) as User;\n`, `${marker}const user = unsafe<User, Input>(payload) as User;\n`],
+    ["generic-type.ts", `${marker}const user = parse<User, Input>(payload) as User;\n`, `${marker}const user = parse<Admin, Input>(payload) as User;\n`],
+    ["generic-prefix.ts", `${marker}const before = 1, user = parse<User, Input>(payload) as User;\n`, `${marker}const before = 2, user = parse<User, Input>(payload) as User;\n`, 0],
   ];
   try {
     git("init", "-q");
@@ -836,6 +859,152 @@ check("--since reports deletion-only edits inside surviving justification commen
     const findings = JSON.parse(result.stdout);
     assert.ok(findings.some(f => f.rule === rule && (f.startLine ?? f.line) === 1), file);
     assert.ok(!findings.some(f => f.rule === "require-safety-comment-for-type-assertion" || f.rule === "no-arbitrary-sleep"), "unchanged code stays out of scope");
+  }
+});
+
+check("--since reviews assertions whose complete legacy safety evidence was removed", () => {
+  const repo = join(root, "removed-safety");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const cases = [
+    ["line.ts", "// SAFETY: validated by the schema\n", "const user = payload as User;\n"],
+    ["block.ts", "/* SAFETY:\n * validated by the schema\n */\n", "const user = payload as User;\n"],
+    ["multiline.ts", "// SAFETY: validated by the schema\n", "const user = payload as {\n id: string;\n};\n"],
+    ["angle.ts", "// SAFETY: validated by the schema\n", "const user = <User>payload;\n"],
+  ];
+  git("init", "-q");
+  git("config", "user.email", "test@example.com");
+  git("config", "user.name", "test");
+  for (const [file, marker, code] of cases) writeFileSync(join(repo, file), `${marker}${code}const unrelated = other as Other;\n`);
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  for (const [file, , code] of cases) {
+    writeFileSync(join(repo, file), `${code}const unrelated = other as Other;\n`);
+    const result = run(["--since=HEAD", "--json", file], repo);
+    assert.equal(result.status, 1, `${file}: ${result.stderr || result.stdout}`);
+    const findings = JSON.parse(result.stdout);
+    assert.equal(findings.length, 1, "unchanged unrelated assertions remain out of scope");
+    assert.equal(findings[0].rule, "require-safety-comment-for-type-assertion");
+    assert.equal(findings[0].line, 1);
+  }
+});
+
+check("--since scans tracked source files containing NUL bytes", () => {
+  const repo = join(root, "nul-source");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  git("init", "-q");
+  git("config", "user.email", "test@example.com");
+  git("config", "user.name", "test");
+  for (const file of ["app.ts", "new-nul.ts", "marker.ts"]) writeFileSync(join(repo, file), file === "new-nul.ts" ? "export const stable = 1;\n" : "// embedded \0 byte\nexport const stable = 1;\n");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  for (const file of ["app.ts", "new-nul.ts", "marker.ts"]) {
+    const code = file === "marker.ts" ? "// SAFETY: verified by the schema\nconst user = payload as User;\n" : "const value: any = 1;\n";
+    writeFileSync(join(repo, file), `// embedded \0 byte\nexport const stable = 1;\n${code}`);
+    const result = run(["--since=HEAD", "--json", file], repo);
+    assert.equal(result.status, 1, `${file}: ${result.stderr || result.stdout}`);
+    assert.ok(JSON.parse(result.stdout).some(f => f.rule === (file === "marker.ts" ? "no-new-justification-comments" : "no-any")), file);
+  }
+});
+
+check("--since preserves repository checkout normalization in snapshot line scope", () => {
+  const repo = join(root, "checkout-normalization");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  git("init", "-q");
+  git("config", "user.email", "test@example.com");
+  git("config", "user.name", "test");
+  git("config", "core.autocrlf", "true");
+  writeFileSync(join(repo, "app.ts"), "const legacy: any = 1;\nexport const stable = 1;\n");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  writeFileSync(join(repo, "app.ts"), "const legacy: any = 1;\r\nexport const stable = 2;\r\n");
+  const result = spawnSync(process.execPath, [CHECKER, "--since=HEAD", "--json", "app.ts"], {
+    cwd: repo, encoding: "utf8", env: { ...process.env, GIT_CONFIG_GLOBAL: process.platform === "win32" ? "NUL" : "/dev/null", GIT_CONFIG_NOSYSTEM: "1" },
+  });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.deepEqual(JSON.parse(result.stdout), []);
+  writeFileSync(join(repo, "app.ts"), "const legacy: any = 1;\r\nconst added: any = 2;\r\n");
+  const added = run(["--since=HEAD", "--json", "app.ts"], repo);
+  assert.equal(added.status, 1, added.stderr || added.stdout);
+  assert.deepEqual(JSON.parse(added.stdout).map(f => [f.rule, f.line]), [["no-any", 2]]);
+});
+
+check("suppression syntax is normalized once and nocheck must precede code", () => {
+  const repo = join(root, "directive-syntax");
+  mkdirSync(repo, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  git("init", "-q");
+  git("config", "user.email", "test@example.com");
+  git("config", "user.name", "test");
+  writeFileSync(join(repo, "base.js"), "export const stable = 1;\n");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  const cases = [
+    ["quoted-eslint.js", "/* // eslint-disable-next-line no-console */\nconnect();\n", 0],
+    ["quoted-config.js", "/* /* eslint no-console: off */\nconnect();\n", 0],
+    ["quoted-ts.ts", "/* // @ts-ignore */\nconnect();\n", 0],
+    ["late.ts", "initialize();\n// @ts-nocheck -- generated compatibility file\nconnect();\n", 0],
+    ["late-bare.ts", "initialize();\n// @ts-nocheck\nconnect();\n", 0],
+    ["leading.ts", "// @ts-nocheck -- generated compatibility file\nconnect();\n", 1],
+    ["header.ts", "/* ISC License */\n// @ts-nocheck -- generated compatibility file\nconnect();\n", 1],
+    ["shebang.ts", "#!/usr/bin/env node\n// @ts-nocheck -- generated compatibility file\nconnect();\n", 1],
+    ["bom.ts", "\ufeff// @ts-nocheck -- generated compatibility file\nconnect();\n", 1],
+    ["late-ignore.ts", "initialize();\n// @ts-ignore -- generated compatibility file\nconnect();\n", 1],
+    ["late-expect.ts", "initialize();\n// @ts-expect-error -- generated compatibility file\nconnect();\n", 1],
+  ];
+  for (const [file, source, status] of cases) {
+    writeFileSync(join(repo, file), source);
+    const result = run(["--since=HEAD", "--json", file], repo);
+    assert.equal(result.status, status, `${file}: ${result.stderr || result.stdout}`);
+    assert.equal(JSON.parse(result.stdout).filter(f => f.rule === "no-unjustified-suppression").length, status, file);
+    if (status === 0) assert.equal(run(["--json", file], repo).status, 0, file);
+  }
+});
+
+check("--since does not report clean when source changes during comparison", () => {
+  if (process.platform === "win32") {
+    console.log("skip concurrent edit shim (POSIX executable)");
+    return;
+  }
+  const repo = join(root, "concurrent-source");
+  const shim = join(root, "concurrent-git");
+  mkdirSync(repo, { recursive: true });
+  mkdirSync(shim, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const realGit = execFileSync("which", ["git"], { encoding: "utf8" }).trim();
+  const file = join(repo, "app.ts");
+  git("init", "-q");
+  git("config", "user.email", "test@example.com");
+  git("config", "user.name", "test");
+  writeFileSync(file, "export const stable = 1;\n");
+  git("add", "-A");
+  git("commit", "-qm", "base");
+  writeFileSync(join(shim, "git"), `#!/usr/bin/env node
+const args = process.argv.slice(2);
+const result = require("node:child_process").spawnSync(${JSON.stringify(realGit)}, args, { stdio: "inherit" });
+const snapshot = args.includes("--no-index");
+const initialDiff = args.includes("-U0") && !snapshot;
+if ((process.env.SLOP_TEST_EDIT === "after-snapshot" && snapshot) || (process.env.SLOP_TEST_EDIT === "before-snapshot" && initialDiff)) {
+  require("node:fs").writeFileSync(${JSON.stringify(file)}, "export const stable = 2;\\nconst value: any = 1;\\n");
+}
+process.exit(result.status ?? 2);
+`);
+  chmodSync(join(shim, "git"), 0o755);
+  for (const timing of ["before-snapshot", "after-snapshot"]) {
+    writeFileSync(file, "export const stable = 2;\n");
+    const result = spawnSync(process.execPath, [CHECKER, "--since=HEAD", "--json", "app.ts"], {
+      cwd: repo, encoding: "utf8", env: { ...process.env, PATH: `${shim}:${process.env.PATH}`, SLOP_TEST_EDIT: timing },
+    });
+    if (timing === "before-snapshot") {
+      assert.equal(result.status, 1, result.stderr || result.stdout);
+      assert.ok(JSON.parse(result.stdout).some(f => f.rule === "no-any" && f.line === 2));
+    } else {
+      assert.equal(result.status, 2, result.stderr || result.stdout);
+      assert.match(result.stderr, /source changed/u);
+      assert.doesNotMatch(result.stdout, /clean|^\[\]$/u);
+    }
   }
 });
 

@@ -164,6 +164,10 @@ With `--since`, newly added or edited `SAFETY:`, `lazy:`, and `slop-check-ignore
 
 The CLI compares comment spans against the Git base, so editing code beside an unchanged comment retains compatibility. API callers using `lintSource` can supply baseline-proven `unchangedCommentStarts` as a set of offsets in the raw source; `addedLines` alone provides conservative line-level provenance.
 
+Rename provenance uses Git's normal similarity threshold. Lower-similarity moves retain exemptions only when the staged file exactly matches its baseline, before worktree edits; otherwise their comments require review. Diff line scope and comment provenance use the same source snapshot, including source files Git considers binary, and a concurrent edit fails the scan instead of reporting clean. Removing legacy assertion evidence also brings the affected assertion back into review.
+
+For files containing NUL bytes, provenance conservatively preserves exemptions only on unchanged whole lines.
+
 Plugin justification markers are mechanical removals. New or edited suppressions for TypeScript, Biome, ESLint, Oxlint, Deno, Prettier, and Istanbul/c8/v8/Node coverage tools are review findings even with a reason. Verify required functional directives against the actual diagnostic and explain the evidence in the final response; adding a preceding explanation cannot justify a bare directive.
 
 `--explain=<rule-id>` prints one rule's reasoning — why it fires, a slop/instead pair, and when the rule is wrong — and runs no scan. Read it before rewriting code a finding landed on that you believe is correct:
