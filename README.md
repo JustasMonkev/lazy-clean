@@ -96,9 +96,46 @@ missing dependencies or browsers are listed as blocked automation. Passing
 checks apply only to the stated scope. This instruction-only skill adds no
 runner or dependencies and does not change lazy mode.
 
-## Install — zero-install, skills only
+## Install — skills only
 
-No packages, no npm, no plugin needed. Copy the skills into your global skills folder:
+No npm packages or plugin needed. Install with GitHub CLI to keep source metadata
+for future updates:
+
+```sh
+gh skill install JustasMonkev/lazy-clean --all --agent claude-code --scope user
+```
+
+For Codex, use `--agent codex` instead. Omit `--scope user` for a project-local
+installation. GitHub CLI selects the latest tagged release, or the default
+branch when there are no releases.
+
+Check and apply updates to that installation:
+
+```sh
+gh skill update --dir ~/.claude/skills --dry-run \
+  layz-test lazy lazy-audit lazy-clean lazy-debt lazy-gain lazy-help \
+  lazy-review lazy-verify slop-check
+gh skill update --dir ~/.claude/skills \
+  layz-test lazy lazy-audit lazy-clean lazy-debt lazy-gain lazy-help \
+  lazy-review lazy-verify slop-check
+```
+
+For user-scope Codex skills, use `--dir ~/.agents/skills`. For project-scope
+Claude Code use `--dir .claude/skills`; for project-scope Codex use
+`--dir .agents/skills`. These explicit directories also avoid scanning this
+checkout's source `skills/` directory, which has no installation metadata.
+
+If you previously copied these skills manually, back up any local edits, then
+reinstall once with metadata:
+
+```sh
+gh skill install JustasMonkev/lazy-clean --all --agent claude-code --scope user --force
+```
+
+These commands install and update this repository's skills only.
+
+Without GitHub CLI, manual copying still works, but does not enable
+`gh skill update`:
 
 ```
 cp -R /path/to/lazy-clean/skills/* ~/.claude/skills/
