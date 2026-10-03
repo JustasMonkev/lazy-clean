@@ -27,6 +27,11 @@ function ok(description, condition, detail) {
   console.error(`FAIL ${description}${detail ? `: ${detail}` : ""}`);
 }
 
+const starterPrompts = JSON.parse(read(".codex-plugin/plugin.json")).interface.defaultPrompt;
+ok("Codex plugin keeps at most three starter prompts", Array.isArray(starterPrompts) && starterPrompts.length <= 3);
+ok("Codex starter prompts fit the 128-character limit", starterPrompts.every((prompt) => typeof prompt === "string" && [...prompt].length <= 128));
+ok("Codex starter prompts are unique", new Set(starterPrompts).size === starterPrompts.length);
+
 const LANGUAGES = ["TypeScript", "JavaScript", "Java", "Python", "Ruby", "Rust", "Go"];
 const RULES_FILES = ["AGENTS.md", ".cursor/rules/lazy-clean.mdc", ".github/copilot-instructions.md"];
 // Verification delegates execution to its skill; it does not give coding advice.

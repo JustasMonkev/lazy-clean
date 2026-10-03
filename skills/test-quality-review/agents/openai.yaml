@@ -1,0 +1,4 @@
+interface:
+  display_name: "Test Quality Review"
+  short_description: "Audit test value; hand off tests-only fixes to a fresh agent"
+  default_prompt: "Use $test-quality-review to audit this test suite and report evidence for a separate fresh-context, tests-only fixer."

@@ -43,6 +43,12 @@ slash-command forms above. OpenCode ships the seven `/lazy*` commands, `/layz-te
 commands; `lazy-clean` and `slop-check` are skills, invoked by name or
 description.
 
+For test-quality-review, Codex CLI also supports `$test-quality-review`; select
+Test Quality Review in Codex's skill picker. Claude plugin installs use
+`/lazy-clean:test-quality-review`; skills-only installs use `/test-quality-review`.
+All hosts share the same instructions. Without clean-context delegation, pass
+the report and fixer instructions to a new session instead of editing as reviewer.
+
 Test-quality findings explain the defect a check can miss and recommend keeping,
 strengthening, replacing, or removing it. Mocks, snapshots, and shape assertions
 can be useful when they verify a real contract; they are not blanket findings.
