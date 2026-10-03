@@ -128,7 +128,24 @@ for (const file of BUILD_SURFACES) {
 // it: SKILL.md is filtered per level, and subagents get the condensed fallback.
 // Both paths must still carry the guidance.
 const instructions = require(path.join(ROOT, "hooks", "lazy-instructions.js"));
+const COMMENT_CONTRACT = [
+  ["forbids added code comments", /do not add code comments/iu],
+  ["removes nonessential comments", /remove nonessential comments/iu],
+  ["preserves licenses and tool directives", /required license notices and functional tool directives/iu],
+  ["reports rationale outside code", /(?:rationale|constraints)[^.]*final response/iu],
+];
+for (const file of [...BUILD_SURFACES, "skills/slop-check/SKILL.md"])
+  for (const [description, pattern] of COMMENT_CONTRACT)
+    ok(`${file} ${description}`, pattern.test(flat(read(file))));
+ok("README does not provide a new suppression-comment recipe", !/\/\/\s*slop-check-ignore/u.test(read("README.md")));
+ok("Python slop distinguishes existing directives from new suppressions",
+  /Python slop[^\n]*existing[^\n]*functional[^\n]*final response/u.test(read("skills/slop-check/SKILL.md"))
+  && !/`# type: ignore` \/ `# noqa` without a code and reason/u.test(read("skills/slop-check/SKILL.md")));
+for (const file of ["skills/slop-check/SKILL.md", "skills/lazy/references/python-checks.md"])
+  ok(`${file} verifies necessary new functional suppressions`, /necessary additions against the named diagnostic[^.]*final response/iu.test(flat(read(file))));
 const DELIVERY_CONTRACT = [
+  ...COMMENT_CONTRACT,
+  ["bans plugin markers and verifies necessary functional suppressions", /never add[^.]*SAFETY:[^.]*lazy:[^.]*slop-check-ignore[^.]*verify necessary functional suppressions/iu],
   ["states material assumptions", /material assumptions/iu],
   ["defines a plan and verifiable finish", /step.*check plan/iu],
   ["uses task-owned surgical scope", /task-owned/iu],
@@ -139,6 +156,9 @@ const DELIVERY_CONTRACT = [
   ["includes design substance without a reference read", /group behavior by reason to change.*policy independent.*ordinary parameters.*capabilities.*Interchangeable implementations.*inputs, results, errors, and lifecycle/iu],
   ["requires saved regression coverage", /map changed requirements, edge cases, and failure modes to rerunnable tests.*add missing coverage.*inline probes alone are not coverage/iu],
   ["retains unfinished checks after compaction", /unfinished checks through handoffs and compaction/iu],
+  ["requires reporting changes, actual checks, and limits", /report changes, checks actually run, and limits/iu],
+  ["preserves instructions through compaction", /summaries do not replace these instructions/iu],
+  ["reports shortcut ceilings and upgrade paths", /shortcut ceilings, and upgrade paths in the final response/iu],
 ];
 for (const mode of ["lite", "full", "ultra"]) {
   for (const [surface, text] of [
@@ -201,6 +221,9 @@ const LANGUAGE_REFERENCES = [
   ]],
   ["python-checks.md", [
     /requires-python/u, /\(3\.10\)/u, /one reason to change/iu, /import-time side effects/iu,
+    /Do not add code comments/iu, /required license notices and functional tool directives/iu,
+    /existing `# type: ignore`.*final response/iu,
+    /contextlib\.suppress\(SpecificError\).*verify.*final response/iu,
     /__name__ == "__main__"/u, /mutable default/iu, /`if not value`/u, /is None/u,
     /bare `except:`/u, /raise NewError\(\.\.\.\) from err/u, /typing\.Protocol/u,
     /`@dataclass`/u, /configures/u, /Do not add a tool, loosen its config/u,

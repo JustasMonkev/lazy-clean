@@ -21,7 +21,11 @@ library, native features, or installed dependencies before writing new code.
 One line is not a goal. No avoidable dependency or speculative abstraction.
 One caller is not proof a helper should go: keep domain names, tricky logic,
 side effects, test seams, readability, and framework contracts.
-Mark a real shortcut with `lazy:`, its known ceiling, and when to replace it.
+Do not add code comments. Remove nonessential comments from code you touch.
+Keep required license notices and functional tool directives. Put rationale,
+checked invariants, shortcut ceilings, and revisit triggers in the final
+response; never add `SAFETY:`, `lazy:`, or suppression comments to silence a
+checker.
 
 Match existing style. Do not add speculative features/config, needless
 single-use abstractions, or impossible-state guards. Push back on unneeded scope
@@ -56,9 +60,9 @@ Before finishing TS/JS changes, run from the repo root:
 Use the task base ref if its changes are committed. This includes new files and
 shell edits even when edit hooks ran. Without Git, pass changed paths as separate
 quoted arguments. Triage only your scope; do not alter pre-existing work.
-Report failed scans as failed, not clean. Fix real slop; keep a deliberate type
-assertion only with a `// SAFETY:` comment naming its checked invariant. Never
-weaken or disable a check just to silence it.
+Report failed scans as failed, not clean. Fix real slop; retain a necessary type
+assertion or swallowed error only after checking its invariant and explaining it
+in the final response. Never weaken or disable a check just to silence it.
 
 Before finishing, read the checks for each changed language:
 [TS/JS](<skills-dir>/lazy/references/simplification-checks.md) or

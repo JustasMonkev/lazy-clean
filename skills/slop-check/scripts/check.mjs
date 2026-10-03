@@ -1048,7 +1048,7 @@ function* iterateBlockFindings(ctx) {
     yield {
       ...matchSpan(lineStarts, match),
       rule: "no-empty-catch",
-      message: "An empty catch silently swallows failures. Handle the error, rethrow, or justify the swallow in a comment.",
+      message: "An empty catch silently swallows failures. Handle the error, rethrow, or verify the failure contract and justify the swallow in the final response.",
     };
   }
 
@@ -2556,7 +2556,7 @@ function* iterateAssertionFindings(ctx) {
         // for `foo.bar as Baz`, where the operand is not captured.
         column: asAt + 1,
         rule: "require-safety-comment-for-type-assertion",
-        message: "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion, or remove it.",
+        message: "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
       };
     }
   }
@@ -2566,11 +2566,12 @@ function* iterateAssertionFindings(ctx) {
   // its last line and a `/** SAFETY: ... */` block still counts. The old
   // three-line window was a blanket: one comment exempted every assertion
   // within three lines of it, including ones it says nothing about.
-  const unjustified = (offset) => {
+  const unjustified = (offset, end) => {
     const { line, column } = offsetToPosition(lineStarts, offset);
     if (skippedLines.has(line)) return null;
     if (commentLines.has(line) || commentLines.has(line - 1)) return null;
-    return { line, column };
+    const endLine = offsetToPosition(lineStarts, Math.max(offset, end - 1)).line;
+    return { line, column, ...(endLine > line && { endLine }) };
   };
 
   // An assertion whose TYPE spans lines — `payload as {\n  id: string;\n}` is
@@ -2586,12 +2587,12 @@ function* iterateAssertionFindings(ctx) {
     if (candidate[1] && inCatchBlock(candidate[1], candidate.index)) continue;
     const lineStart = lineStarts[offsetToPosition(lineStarts, asAt).line - 1];
     if (/\[[^\]]*\bin\b[^\]]*$/u.test(masked.slice(lineStart, asAt))) continue;
-    const at = unjustified(asAt);
+    const at = unjustified(asAt, candidate.index + candidate[0].trimEnd().length);
     if (!at) continue;
     yield {
       ...at,
       rule: "require-safety-comment-for-type-assertion",
-      message: "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion, or remove it.",
+      message: "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
     };
   }
 
@@ -2601,12 +2602,12 @@ function* iterateAssertionFindings(ctx) {
   // even though it is TypeScript.
   if (ctx.angleAssertions) {
     for (const candidate of matchAngleAssertions(masked)) {
-      const at = unjustified(candidate.open);
+      const at = unjustified(candidate.open, candidate.index + candidate[0].trimEnd().length);
       if (!at) continue;
       yield {
         ...at,
         rule: "require-safety-comment-for-type-assertion",
-        message: "This type assertion has no `SAFETY:` justification. State the checked invariant immediately before the assertion, or remove it.",
+        message: "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
       };
     }
   }
@@ -2670,11 +2671,11 @@ function* iterateCommentFindings(ctx) {
       continue;
     }
     if (NARRATION_COMMENT_PATTERN.test(body)) {
-      yield { ...position, rule: "no-narration-comments", message: "Possible narration comment (\"now we...\", \"first, ...\"). Remove only repeated steps; retain reasons for ordering or other constraints the code cannot show." };
+      yield { ...position, rule: "no-narration-comments", message: "Possible narration comment (\"now we...\", \"first, ...\"). Verify ordering and other constraints before removing nonessential comments; explain relevant rationale in the final response." };
       continue;
     }
     if (CHANGE_NOTE_COMMENT_PATTERN.test(body)) {
-      yield { ...position, rule: "no-change-note-comments", message: "Possible edit narration. Remove only obsolete change notes; retain enduring design rationale, decision references, and constraints the code cannot show." };
+      yield { ...position, rule: "no-change-note-comments", message: "Possible edit narration. Verify lasting design decisions and constraints before removing nonessential comments; explain relevant rationale in the final response." };
       continue;
     }
     if (BACKCOMPAT_COMMENT_PATTERN.test(body) && !/@deprecated/u.test(comment.text)) {
@@ -2708,11 +2709,11 @@ function* iterateCommentFindings(ctx) {
       && !SUPPRESSION_DIRECTIVE_PATTERN.test(previous.text)
       && isJustification(previous);
     if (SUPPRESSION_DIRECTIVE_PATTERN.test(body) && !suppressionIsJustified(body) && !explainedAbove) {
-      yield { ...position, rule: "no-unjustified-suppression", message: "A type-checker suppression with no stated reason hides the problem instead of the noise. State why the checker is wrong on the same line, or fix what it reported." };
+      yield { ...position, rule: "no-unjustified-suppression", message: "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response." };
       continue;
     }
     if (OBVIOUS_DOC_COMMENT_PATTERN.test(body) || accessorDocOnlyRestates(body)) {
-      yield { ...position, rule: "no-obvious-doc-comments", message: "This doc comment restates the declaration below it. Say why the code exists, or delete the comment." };
+      yield { ...position, rule: "no-obvious-doc-comments", message: "This doc comment restates the declaration below it. Verify relevant contracts before removing nonessential documentation; explain useful constraints in the final response." };
       continue;
     }
 
@@ -2782,7 +2783,7 @@ const RULE_EXPLANATIONS = {
   "no-unsafe-dictionary-type": {
     why: "Record<string, any> disables checking of dictionary values. For an open-key bag, select the real value type or unknown at an unvalidated boundary. If keys are finite, use a specific shape or finite key union to catch key typos as well.",
     slop: "const headers: Record<string, any> = {};",
-    correct: "const headers: Record<string, string> = {};  // open header names, string values",
+    correct: "const headers: Record<string, string> = {};",
     exceptions: "Open dictionaries intentionally admit arbitrary string keys, so Record<string, string> does not catch misspelled keys. For a finite set, use a shape such as { authorization: string } or Record<\"accept\" | \"authorization\", string>. For truly arbitrary values use unknown and validate before use.",
   },
   "no-known-value-widening": {
@@ -2800,8 +2801,9 @@ const RULE_EXPLANATIONS = {
   "no-module-mocking": {
     why: "Module mocks can hide hard-coded dependencies. Exercise the production implementation, not a test-local copy. If a suitable seam exists or is warranted, pass the dependency into that production function and import it in the test.",
     slop: "vi.mock(\"./db\");",
-    correct: "// user.mjs\nexport function loadUser(db, id) { return db.findUser(id); }\n\n// user.test.mjs (separate file)\nimport assert from \"node:assert/strict\";\nimport { loadUser } from \"./user.mjs\";\nassert.deepEqual(loadUser({ findUser: id => ({ id }) }, 7), { id: 7 });",
-    exceptions: "Keep jest.unmock or vi.unmock when it restores the real module, especially under automocking; it is not a test-double substitution. Module mocking may also be necessary for legacy seams you cannot refactor. Preserve production coverage and justify the directive locally.",
+    setup: { path: "user.mjs", code: "export function loadUser(db, id) { return db.findUser(id); }" },
+    correct: "import assert from \"node:assert/strict\";\nimport { loadUser } from \"./user.mjs\";\nassert.deepEqual(loadUser({ findUser: id => ({ id }) }, 7), { id: 7 });",
+    exceptions: "The replacement is a separate test file importing the shown production module. Keep jest.unmock or vi.unmock when it restores the real module, especially under automocking; it is not a test-double substitution. Module mocking may also be necessary for legacy seams you cannot refactor. Preserve production coverage and explain necessary directives in the final response.",
   },
   "no-conditional-empty-object-spread": {
     why: "`...(cond ? {} : { a })` hides whether a field is present. The plain conditional spread says the same thing in the shape readers already know.",
@@ -2848,8 +2850,8 @@ const RULE_EXPLANATIONS = {
   "no-tautological-assertion": {
     why: "`expect(4).toBe(4)` passes no matter what the code under test does. It inflates coverage while catching nothing — worse than no test, because it reads like one.",
     slop: "expect(3).toBe(3);",
-    correct: "expect(config.retries).toBe(3);  // the value the code is supposed to produce",
-    exceptions: "None. A test that always fails (`expect(false).toBeTruthy()`) is a different defect and stays out of this rule.",
+    correct: "expect(config.retries).toBe(3);",
+    exceptions: "The example assumes retries must be 3; assert the value your actual contract requires. A test that always fails (`expect(false).toBeTruthy()`) is a different defect and stays out of this rule.",
   },
   "no-await-promise-resolve": {
     why: "For ordinary values, await Promise.resolve(x) can be written await x. Both suspend the continuation; removing await itself is a separate scheduling change.",
@@ -2876,10 +2878,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "Preserve established exports such as UserShape: renaming can break consumer imports. Rename only locally controlled symbols with all consumers updated, or follow an authorized deprecation process. Geometry, canvas, and tensor code may also use shape as a genuine domain term; scanner context detection is only a heuristic.",
   },
   "require-safety-comment-for-type-assertion": {
-    why: "An `as` assertion is a claim the compiler cannot check. Hand-written narrowing asserts invariants the author knows; AI-generated assertions assert whatever makes the error go away. The comment is the difference.",
+    why: "An `as` assertion is a claim the compiler cannot check. Verify its runtime evidence rather than adding a justification comment to silence the checker.",
     slop: "const user = payload as User;",
     correct: "if (typeof payload !== \"object\" || payload === null || !(\"id\" in payload) || typeof payload.id !== \"string\") {\n  throw new TypeError(\"Expected a user with a string id\");\n}\nconst user = payload;",
-    exceptions: "This example assumes User needs only a string id; validate every field your actual contract requires. Prefer a parser or narrowing that eliminates the assertion. A SAFETY comment is valid only when code demonstrably establishes its named invariant; never add a claim of validation to silence the checker. Catch bindings can contain any thrown value; narrow before using Error properties.",
+    exceptions: "This example assumes User needs only a string id; validate every field your actual contract requires. Prefer a parser or narrowing that eliminates the assertion. If an assertion is necessary, verify its checked invariant and explain it in the final response; do not add a comment. Existing SAFETY directives and this rule id remain supported for compatibility. Catch bindings can contain any thrown value; narrow before using Error properties.",
   },
   "no-unknown-alias": {
     why: "A bare unknown alias may add no useful meaning in a private implementation. Review its domain role and consumers before replacing it; a name alone is not evidence for a more specific type.",
@@ -2890,20 +2892,20 @@ const RULE_EXPLANATIONS = {
   "no-empty-type-declaration": {
     why: "An empty interface or {} type accepts far more than a typical options object. Under strictNullChecks it means any non-nullish value, including primitives, not an unconstrained object shape. Add fields only if the actual API requires them.",
     slop: "interface ConfigOptions {}",
-    correct: "interface ConfigOptions { retries: number; baseUrl: string };  // or delete it",
+    correct: "interface ConfigOptions { retries: number; baseUrl: string };",
     exceptions: "Preserve deliberate non-nullish types such as type NonNullish = {} under strictNullChecks, including semantic/public aliases and primitive callers. Declaration-merging extension points may also intentionally start empty. Do not invent fields or remove a public name just to silence the heuristic.",
   },
   "no-useless-rethrow": {
     why: "`catch (e) { throw e; }` is a no-op with a stack: the error propagates exactly as it would without the try/catch, and readers hunt for the handling that is not there.",
     slop: "try { save(); } catch (e) { throw e; }",
-    correct: "save();  // or handle it — keep `finally` if there is one",
+    correct: "save();",
     exceptions: "None mechanical: delete the try/catch (keeping `finally`) or add real handling.",
   },
   "no-empty-catch": {
     why: "An empty catch swallows every failure — including the typo and the network outage. Six months later nothing was saved and nothing said so.",
     slop: "try { save(); } catch {} finally { release(); }",
     correct: "try { save(); } finally { release(); }",
-    exceptions: "A deliberate swallow needs a comment in the block saying why (best-effort cache warm); the rule accepts that justification. Otherwise remove only the catch and preserve any finally cleanup. Without finally, call the operation directly.",
+    exceptions: "If a deliberate swallow is required, verify the failure contract and explain it in the final response; do not add a comment. Existing justification comments remain supported. Otherwise remove only the catch and preserve any finally cleanup. Without finally, call the operation directly.",
   },
   "no-catch-fake-success": {
     why: "Returning null or [] from a catch can hide a failure when callers treat it as success. Establish the API failure contract before removing the catch: a documented sentinel may be an intentional, distinguishable result.",
@@ -2914,20 +2916,20 @@ const RULE_EXPLANATIONS = {
   "no-log-and-rethrow": {
     why: "Logging then rethrowing reports the same failure at every layer. A boundary handler that logs once is the design; a chain of log-and-rethrow is a stack trace printed five times.",
     slop: "try { save(); } catch (e) { logger.error(e); throw e; }",
-    correct: "save();  // let the top boundary log once; preserve any existing finally",
-    exceptions: "Logging separate context before rethrowing (metrics, request ids) is deliberate; the rule only fires when the log call mentions the caught error itself.",
+    correct: "save();",
+    exceptions: "Let the top boundary log once and preserve any existing finally cleanup. Logging separate context before rethrowing (metrics, request ids) is deliberate; the rule only fires when the log call mentions the caught error itself.",
   },
   "no-message-only-rethrow": {
     why: "`throw new Error(e.message)` throws away the stack and the original type. The caller catches an error that starts its stack HERE, and `instanceof NetworkError` is false.",
     slop: "try { save(); } catch (e) { throw new Error(e.message); }",
-    correct: "save();  // preserve the original error; keep any existing finally",
-    exceptions: "Within the same trust boundary, remove a catch that adds nothing or wrap with genuine context and { cause: e }. Retain deliberate sanitization at public boundaries: map to an approved public error without exposing the internal cause, type, stack, payload, or metadata. Verify that the message itself is safe to disclose. Do not replace a redundant catch with a no-op rethrow.",
+    correct: "save();",
+    exceptions: "Preserve the original error and any existing finally cleanup. Within the same trust boundary, remove a catch that adds nothing or wrap with genuine context and { cause: e }. Retain deliberate sanitization at public boundaries: map to an approved public error without exposing the internal cause, type, stack, payload, or metadata. Verify that the message itself is safe to disclose. Do not replace a redundant catch with a no-op rethrow.",
   },
   "no-boolean-return-branches": {
     why: "Boolean-return branches can be expressed without the branch while preserving a boolean result: if (cond) return true; else return false becomes return Boolean(cond). The reversed form becomes return !cond. Return cond directly only when it is already boolean.",
     slop: "if (items.length) { return true; } else { return false; }",
-    correct: "return Boolean(items.length);  // return !items.length for the inverted branches",
-    exceptions: "None mechanical — that is why the finding names which branch it was.",
+    correct: "return Boolean(items.length);",
+    exceptions: "None mechanical — the finding names which branch it was. Use return !items.length for inverted branches.",
   },
   "no-let-if-else-assign": {
     why: "A `let` declared only to be assigned in both branches is a conditional expression written long, plus a mutable binding nothing else may reassign.",
@@ -2938,13 +2940,13 @@ const RULE_EXPLANATIONS = {
   "no-promise-constructor-wrapper": {
     why: "`new Promise(r => r(value))` is `Promise.resolve(value)` with a constructor. The wrapper allocates, and it invites the classic executor mistake on the way.",
     slop: "return new Promise(resolve => resolve(parsed));",
-    correct: "return Promise.resolve(parsed);  // or return parsed from an async function",
+    correct: "return Promise.resolve(parsed);",
     exceptions: "`Promise.resolve(p)` IS `p` when p is already a promise, while the wrapper makes a distinct one — so they are not always equivalent (that is why this is review). And when the expression can THROW, the wrapper rejects where `Promise.resolve(expr)` throws synchronously — pick on purpose.",
   },
   "no-foreach-push": {
     why: "A `forEach` whose whole body pushes is `map` written the long way: the accumulator adds a mutable variable the pipeline would carry for you.",
     slop: "const names = []; users.forEach(u => { names.push(u.name); });",
-    correct: "const names = users.map(u => u.name);  // flatMap when one item yields several",
+    correct: "const names = users.map(u => u.name);",
     exceptions: "The map rewrite requires an array receiver. Set, Map, NodeList, and custom forEach collections may lack map; retain their loop or choose a conversion that preserves their callback contract. For arrays, map preserves sparse holes while push compacts them. Preserve existing accumulator contents, shared array identity, callback side effects, and mutation order.",
   },
   "no-reduce-accumulator-copy": {
@@ -2968,38 +2970,38 @@ const RULE_EXPLANATIONS = {
   "no-narration-comments": {
     why: "\"Now we fetch the data...\" narrates what the next line does. The code already shows it; the comment is a second voice reading the source aloud.",
     slop: "// first, we validate the input\nvalidate(input);",
-    correct: "validate(input);  // or a comment stating a constraint the code cannot show",
-    exceptions: "The prefix matcher can flag useful constraints too: retain comments such as 'First, write the journal so crash recovery can replay an interrupted update.' Remove only repetition; preserve explanations of why ordering matters, even when they begin with First, Next, or Finally.",
+    correct: "validate(input);",
+    exceptions: "The prefix matcher can flag useful constraints too. Verify ordering requirements before removing a comment and explain them in the final response; do not add a replacement comment.",
   },
   "no-change-note-comments": {
     why: "\"As requested\", \"NEW:\", \"to make the linter happy\" often describe the edit rather than the code. The phrase matcher cannot distinguish obsolete change notes from enduring design rationale.",
     slop: "// UPDATED: retry count\nconst retries = 3;",
     correct: "const retries = 3;",
-    exceptions: "Retain lasting rationale and constraints, including ADR references such as 'As discussed in ADR-17, retry only idempotent requests'. Version history does not replace a design decision the code cannot express. Remove only obsolete edit narration.",
+    exceptions: "Verify lasting rationale and constraints before removing a comment. Retain relevant ADR decisions in the final response rather than adding code comments.",
   },
   "no-backcompat-comments": {
     why: "A shim \"kept for backwards compatibility\" can be unnecessary when every caller is controlled and no existing data or protocol needs it. The comment alone does not establish that the shim is removable.",
     slop: "// kept for backwards compat\nexport const fetchData = fetchUser;\nfetchData(id);",
-    correct: "fetchUser(id);  // update callers and remove the unneeded alias",
+    correct: "fetchUser(id);",
     exceptions: "Retain adapters required by published APIs, persisted settings or user data, and older protocol or wire formats. Removing them can make existing state unreadable even without a public symbol. Document supported versions and migration requirements; use @deprecated only for an actually deprecated API, not as a replacement for data compatibility.",
   },
   "no-emoji": {
     why: "Decorative emoji can distract from the information in source comments. Prefer words when the symbol adds no meaning.",
-    slop: "// \u{1F525} IMPORTANT: check this",
-    correct: "// IMPORTANT: check this",
+    slop: "// \u{1F525} IMPORTANT: check this\nvalidate(input);",
+    correct: "validate(input);",
     exceptions: "Preserve symbols required by a specification or an explicit user request. The scanner targets comments, not string data, and exempts several text-presentation symbols.",
   },
   "no-typed-jsdoc": {
     why: "`@param {string} name` restates the TypeScript signature and drifts from it silently — the signature is checked, the JSDoc is not.",
     slop: "/** @param {string} id Stable account identifier, never a display name. */\nfunction findUser(id: string) { return users.get(id); }",
     correct: "/** @param id Stable account identifier, never a display name. */\nfunction findUser(id: string) { return users.get(id); }",
-    exceptions: "Remove only redundant type syntax in TS. Retain useful prose, parameter descriptions, tags, and metadata. JavaScript JSDoc may supply the actual types; this rule is TS-only.",
+    exceptions: "Remove only redundant type annotations from existing JSDoc; preserve useful descriptions and tags consumed by IDEs or documentation generators. JavaScript JSDoc may supply the actual types; this rule is TS-only. The replacement retains existing functional metadata, not newly added documentation. Explain other relevant constraints in the final response.",
   },
   "no-obvious-doc-comments": {
-    why: "\"This function takes a user and returns a token\" restates the declaration below it. A doc comment earns its place by saying WHY the code exists, not WHAT it is.",
+    why: "\"This function takes a user and returns a token\" restates the declaration below it. Verify relevant contracts, remove nonessential documentation, and explain useful constraints in the final response.",
     slop: "// Getter for the cached value.\nconst cached = { get value() { return cache; } };",
     correct: "const cached = { get value() { return cache; } };",
-    exceptions: "Keep comments that explain invalidation, ownership, or other contracts. A heuristic match is not a reason to discard useful documentation.",
+    exceptions: "Verify invalidation, ownership, and other contracts before removing documentation. Explain relevant constraints in the final response; preserve required licenses and functional type or tool metadata.",
   },
   "no-restating-comments": {
     why: "A comment made of the next line's own identifiers (\"// get user by id\" over `getUserById(id)`) adds zero information.",
@@ -3010,14 +3012,14 @@ const RULE_EXPLANATIONS = {
   "no-unjustified-ignore": {
     why: "An ignore directive that suppresses nothing (no reason, unknown rule id, file-level too far down) reads exactly like a working one. The author stopped looking; the slop stayed.",
     slop: "// slop-check-ignore no-any\nconst raw: any = input;  // suppresses nothing: no reason given",
-    correct: "// slop-check-ignore no-any -- vendor values are narrowed before use\nconst raw: any = input;\nif (typeof raw !== \"string\") throw new TypeError(\"Expected a string\");",
-    exceptions: "None — this rule exists to keep the other ignores honest.",
+    correct: "const raw: unknown = input;\nif (typeof raw !== \"string\") throw new TypeError(\"Expected a string\");",
+    exceptions: "Existing justified ignores remain supported. Do not add an ignore to silence a finding; fix the code or report the checked invariant in the final response.",
   },
   "no-unjustified-suppression": {
-    why: "Bare TypeScript suppression directives and biome-ignore directives need a concrete justification for the diagnostic being suppressed. Fix the actual reported problem when possible. The example below addresses a TypeScript boundary error, not every possible lint or formatting diagnostic.",
+    why: "Bare TypeScript suppression directives and biome-ignore directives need verification of the diagnostic being suppressed. Fix the actual reported problem when possible. The example below addresses a TypeScript boundary error, not every possible lint or formatting diagnostic.",
     slop: "// @ts-expect-error\nconnect(options);",
     correct: "if (typeof options !== \"object\" || options === null || !(\"host\" in options) || typeof options.host !== \"string\") {\n  throw new TypeError(\"Expected a configuration with a string host\");\n}\nconnect(options);",
-    exceptions: "A proven compiler or vendor-typing defect may need a TypeScript suppression with a concrete reason; missing runtime validation is not that reason. For biome-ignore, fix its named Biome lint/formatting diagnostic or state why that specific suppression is necessary, preserving the affected statement. Do not apply the JSON-validation example to an unrelated Biome rule. This connect example assumes the API needs only host.",
+    exceptions: "A proven compiler or vendor-typing defect may require a functional TypeScript suppression. Verify the specific defect and explain the evidence in the final response; missing runtime validation is not a compiler defect. For biome-ignore, fix its named Biome lint/formatting diagnostic or verify why the directive is necessary, preserving the affected statement. Do not apply the JSON-validation example to an unrelated Biome rule. This connect example assumes the API needs only host.",
   },
 };
 
@@ -3060,6 +3062,7 @@ function explainRule(id) {
     "",
     "  Slop:",
     `    ${explanation.slop.replaceAll("\n", "\n    ")}`,
+    ...(explanation.setup ? ["", `  Setup in ${explanation.setup.path}:`, `    ${explanation.setup.code.replaceAll("\n", "\n    ")}`] : []),
     "",
     "  Instead:",
     `    ${explanation.correct.replaceAll("\n", "\n    ")}`,
@@ -3117,7 +3120,7 @@ function collectSuppressions(comments, lineStarts) {
       findings.push({
         ...position,
         rule: "no-unjustified-ignore",
-        message: `This ignore ${fault}, so it suppresses nothing. Write \`slop-check-ignore <rule-id> -- <why the rule is wrong here>\`, or delete it.`,
+        message: `This ignore ${fault}, so it suppresses nothing. Remove the ineffective directive; fix the reported code or explain the checked invariant for a false positive in the final response.`,
       });
       continue;
     }
@@ -3327,7 +3330,8 @@ function addedLines(ref) {
   // The prefixes are pinned because diff.mnemonicprefix renames `b/` to `w/`,
   // and quotepath is off so a non-ASCII name arrives verbatim, not C-quoted.
   const diff = git([
-    "-c", "core.quotepath=false", "diff", "-U0", "--no-color",
+    "-C", root, "-c", "core.quotepath=false", "diff", "-U0", "--no-color",
+    "--text", "--no-ext-diff", "--no-textconv",
     "--src-prefix=a/", "--dst-prefix=b/", "--end-of-options", ref, "--",
   ]);
   // A `+++ ` line is a header only where a header can appear: directly after the
@@ -3365,7 +3369,7 @@ function renderTally(findings) {
   const counts = new Map();
   for (const finding of findings) counts.set(finding.rule, (counts.get(finding.rule) ?? 0) + 1);
   return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([rule, count]) => `  ${count} ${rule}`).join("\n");
+    .map(([rule, count]) => `  ${count} ${rule === "require-safety-comment-for-type-assertion" ? "type assertion review" : rule}`).join("\n");
 }
 
 function printUsage() {
@@ -3477,6 +3481,7 @@ function main() {
   // Reported because the density is the signal: a tree whose findings all went
   // away under ignores has not been cleaned, and the summary is where that shows.
   let suppressed = 0;
+  const scannedSources = new Map();
   for (const file of files) {
     // realpath, not resolve: addedLines() keys every change by its path under
     // the repository root, so an explicit target that is a SYMLINK to a tracked
@@ -3496,6 +3501,7 @@ function main() {
       scan.unreadable += 1;
       continue;
     }
+    if (added) scannedSources.set(file, source);
     linted += 1;
     const fileFindings = lintSource(source, displayPath(file), { disabled });
     // Evidence can precede the diagnostic anchor (a receiver) or follow it
@@ -3512,6 +3518,23 @@ function main() {
     // change having silenced something.
     suppressed += (changed ? fileFindings.suppressed.filter(touched) : fileFindings.suppressed).length;
     findings.push(...(changed ? fileFindings.filter(touched) : fileFindings));
+  }
+
+  if (added) {
+    try {
+      const current = addedLines(since);
+      if (current.size !== added.size || [...added].some(([file, lines]) => {
+        const now = current.get(file);
+        return lines === ALL_LINES ? now !== ALL_LINES
+          : !(now instanceof Set) || lines.size !== now.size || [...lines].some(line => !now.has(line));
+      })) throw new Error("changed-line scope changed during scan");
+      for (const [file, source] of scannedSources) {
+        if (readFileSync(file, "utf8") !== source) throw new Error(`source changed during scan: ${file}`);
+      }
+    } catch (error) {
+      console.error(`slop-check: cannot verify scan (${error.message.trim().split("\n")[0]})`);
+      scan.unreadable += 1;
+    }
   }
 
   const scanned = linted;

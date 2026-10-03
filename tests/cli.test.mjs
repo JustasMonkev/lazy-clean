@@ -215,6 +215,18 @@ check("--summary replaces findings with the per-rule tally", () => {
   assert.equal(result.status, 1);
 });
 
+check("assertion tallies use a neutral display name while retaining the legacy ID", () => {
+  const summary = run(["slop.ts", "--summary"]);
+  assert.equal(summary.status, 1);
+  assert.match(summary.stdout, /1 type assertion review/u);
+  assert.doesNotMatch(summary.stdout, /safety-comment/u);
+  const json = run(["slop.ts", "--summary", "--json"]);
+  assert.equal(JSON.parse(json.stdout)[0].rule, "require-safety-comment-for-type-assertion");
+  const disabled = run(["slop.ts", "--summary", "--disable=require-safety-comment-for-type-assertion"]);
+  assert.equal(disabled.status, 0);
+  assert.match(disabled.stdout, /1 suppressed/u);
+});
+
 check("--json on a clean file is an empty array", () => {
   const result = run(["clean.ts", "--json"]);
   assert.deepEqual(JSON.parse(result.stdout), []);
@@ -330,6 +342,76 @@ check("--since keeps only findings on lines the diff added", () => {
   assert.equal(since.status, 1);
   assert.match(since.stdout, /no-json-clone/u);
   assert.doesNotMatch(since.stdout, /require-safety-comment/u, "pre-existing findings stay out of scope");
+});
+
+check("--since preserves source coverage across Git presentation settings", () => {
+  for (const mode of ["nul", "external", "textconv", "relative", "assertion", "angle"]) {
+    const repo = join(root, `source-coverage-${mode}`);
+    mkdirSync(join(repo, "src"), { recursive: true });
+    const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+    git("init", "-q");
+    git("config", "user.email", "test@example.com");
+    git("config", "user.name", "test");
+    const file = join(repo, "src", "app.ts");
+    const assertion = mode === "assertion" || mode === "angle";
+    const before = assertion ? (mode === "angle" ? "const value = <{\n id: string;\n}>payload;\n" : "const value = payload as {\n id: string;\n};\n") : `${mode === "nul" ? "// embedded \0 byte\n" : ""}export const stable = 1;\n`;
+    writeFileSync(file, before);
+    if (mode === "textconv") writeFileSync(join(repo, ".gitattributes"), "*.ts diff=hide\n");
+    git("add", "-A");
+    git("commit", "-qm", "base");
+    if (mode === "external" || mode === "textconv") {
+      const driver = join(repo, "hide.cjs");
+      writeFileSync(driver, 'process.stdout.write("identical\\n");\n');
+      git("config", mode === "external" ? "diff.external" : "diff.hide.textconv", `"${process.execPath}" "${driver}"`);
+    }
+    if (mode === "relative") git("config", "diff.relative", "true");
+    writeFileSync(file, assertion ? before.replace("string", "number") : `${before}const added: any = 2;\n`);
+    const result = run(["--since=HEAD", "--json", "app.ts"], join(repo, "src"));
+    assert.equal(result.status, 1, `${mode}: ${result.stderr || result.stdout}`);
+    const findings = JSON.parse(result.stdout);
+    assert.equal(findings.length, 1, mode);
+    assert.equal(findings[0].rule, assertion ? "require-safety-comment-for-type-assertion" : "no-any", mode);
+    if (assertion) assert.equal(findings[0].endLine, 3);
+  }
+});
+
+check("--since fails if source or changed-line scope changes during scanning", () => {
+  if (process.platform === "win32") return;
+  const repo = join(root, "concurrent-scope");
+  const shim = join(repo, "shim");
+  mkdirSync(shim, { recursive: true });
+  const git = (...args) => execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  git("init", "-q");
+  git("config", "user.email", "test@example.com");
+  git("config", "user.name", "test");
+  const file = join(repo, "app.ts");
+  writeFileSync(file, "export const stable = 1;\n");
+  git("add", "app.ts");
+  git("commit", "-qm", "base");
+  const realGit = execFileSync("which", ["git"], { encoding: "utf8" }).trim();
+  const counter = join(repo, ".git", "diff-count");
+  writeFileSync(join(shim, "git"), `#!/usr/bin/env node
+const args = process.argv.slice(2);
+const result = require("node:child_process").spawnSync(${JSON.stringify(realGit)}, args, { stdio: "inherit" });
+if (args.includes("-U0")) {
+  const fs = require("node:fs");
+  const count = Number(fs.readFileSync(${JSON.stringify(counter)}, "utf8")) + 1;
+  fs.writeFileSync(${JSON.stringify(counter)}, String(count));
+  if (count === Number(process.env.SLOP_TEST_DIFF)) fs.writeFileSync(${JSON.stringify(file)}, count === 1 ? "export const stable = 2;\\nconst added: any = 2;\\n" : "export const stable = 3;\\n");
+}
+process.exit(result.status ?? 2);
+`);
+  chmodSync(join(shim, "git"), 0o755);
+  for (const timing of [1, 2]) {
+    writeFileSync(counter, "0");
+    writeFileSync(file, "export const stable = 2;\n");
+    const result = spawnSync(process.execPath, [CHECKER, "--since=HEAD", "app.ts"], {
+      cwd: repo, encoding: "utf8", env: { ...process.env, PATH: `${shim}:${process.env.PATH}`, SLOP_TEST_DIFF: String(timing) },
+    });
+    assert.equal(result.status, 2, result.stderr || result.stdout);
+    assert.match(result.stderr, timing === 1 ? /changed-line scope changed during scan/u : /source changed during scan/u);
+    assert.doesNotMatch(result.stdout, /clean/u);
+  }
 });
 
 // The tally is part of the same report `--since` scopes to the diff. Counting
@@ -773,6 +855,68 @@ check("--explain prints one rule's explanation and exits 0", () => {
   assert.match(result.stdout, /THROWS on functions/u, "names where the replacement diverges");
   assert.doesNotMatch(result.stdout, /clean|finding/u, "no scan runs");
 });
+
+check("assertion findings request evidence without adding comments", () => {
+  write("assertions.ts", "const a = input as User;\nconst b = input as {\n  id: string;\n};\nconst c = <User>input;\n");
+  const result = run(["--json", "assertions.ts"]);
+  assert.equal(result.status, 1);
+  const findings = JSON.parse(result.stdout).filter(f => f.rule === "require-safety-comment-for-type-assertion");
+  assert.equal(findings.length, 3);
+  for (const finding of findings) {
+    assert.match(finding.message, /checked invariant.*final response/u);
+    assert.doesNotMatch(finding.message, /immediately before|SAFETY:/u);
+  }
+});
+
+check("empty-catch findings put justification in the response", () => {
+  write("swallow.ts", "try { save(); } catch {}\n");
+  const result = run(["--json", "swallow.ts"]);
+  assert.equal(result.status, 1);
+  assert.match(JSON.parse(result.stdout).find(f => f.rule === "no-empty-catch").message, /final response/u);
+});
+
+check("malformed-ignore findings never recommend replacement comments", () => {
+  for (const [name, source] of [
+    ["missing-reason", "// slop-check-ignore no-any\nconst parsed: any = input;\n"],
+    ["missing-rule", "// slop-check-ignore -- parsed at the boundary\n"],
+    ["unknown-rule", "// slop-check-ignore no-such-rule -- parsed at the boundary\n"],
+    ["late-file-ignore", `${"\n".repeat(10)}// slop-check-ignore-file no-any -- parsed at the boundary\nconst parsed: any = input;\n`],
+  ]) {
+    const file = write(`${name}.ts`, source);
+    for (const args of [[file], ["--json", file]]) {
+      const result = run(args);
+      assert.equal(result.status, 1);
+      const message = args.length === 1 ? result.stdout : JSON.parse(result.stdout).find(f => f.rule === "no-unjustified-ignore").message;
+      assert.match(message, /suppresses nothing/u);
+      assert.match(message, /final response/u);
+      assert.doesNotMatch(message, /Write `slop-check-ignore|<why the rule is wrong here>/u);
+    }
+  }
+});
+
+check("comment findings move useful rationale to the response", () => {
+  for (const [rule, source] of [
+    ["no-narration-comments", "// First, write the journal so crash recovery can replay an interrupted update.\nwriteJournal();\napplyUpdate();\n"],
+    ["no-change-note-comments", "// As discussed in ADR-17, retry only idempotent requests\nretry(request);\n"],
+    ["no-obvious-doc-comments", "/** Constructor */\nclass AuthClient {}\n"],
+    ["no-unjustified-suppression", "// @ts-expect-error\nconnect(options);\n"],
+  ]) {
+    const file = write(`${rule}.ts`, source);
+    const result = run(["--json", file]);
+    assert.equal(result.status, 1);
+    const finding = JSON.parse(result.stdout).find(f => f.rule === rule);
+    assert.match(finding.message, /final response/u);
+    assert.doesNotMatch(finding.message, /retain reasons|retain enduring design rationale|Say why the code exists|on the same line/u);
+  }
+});
+
+for (const rule of ["require-safety-comment-for-type-assertion", "no-empty-catch", "no-unjustified-ignore", "no-unjustified-suppression"])
+  check(`${rule} explanation never asks for a new justification comment`, () => {
+    const result = run([`--explain=${rule}`]);
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /final response/u);
+    assert.doesNotMatch(result.stdout, /needs a comment|comment is the difference|SAFETY comment is valid|slop-check-ignore no-any --/u);
+  });
 
 check("--explain reports a mechanical tier for a mechanical rule", () => {
   const result = run(["--explain=no-double-negation-condition"]);

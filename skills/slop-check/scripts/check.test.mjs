@@ -1590,6 +1590,10 @@ expectSuppression(
   assert.deepEqual(unknown, [], "explanations for rules the checker does not emit");
 
   for (const [id, explanation] of Object.entries(RULE_EXPLANATIONS)) {
+    if (id === "no-typed-jsdoc") assert.equal(explanation.correct, explanation.slop.replace("{string} ", ""), "retain existing JSDoc metadata while removing its redundant type");
+    for (const snippet of [explanation.correct, ...(explanation.setup ? [explanation.setup.code] : [])]) {
+      if (id !== "no-typed-jsdoc") assert.doesNotMatch(snippet, /(?:^|\n)\s*\/\/|;\s*\/\/|\/\*/u, `${id} replacement adds no comments`);
+    }
     for (const field of ["why", "slop", "correct", "exceptions"]) {
       if (typeof explanation[field] !== "string" || explanation[field].trim().length === 0) {
         failures += 1;
@@ -1636,7 +1640,7 @@ expectSuppression(
   assert.deepEqual(ternary([1]), [true, false]);
   const ignored = lintSource(RULE_EXPLANATIONS["no-unjustified-ignore"].correct, "sample.ts");
   assert.equal(ignored.length, 0);
-  assert.equal(ignored.suppressed.length, 1);
+  assert.equal(ignored.suppressed.length, 0);
   const booleanReturn = new Function("items", RULE_EXPLANATIONS["no-boolean-return-branches"].correct);
   assert.equal(booleanReturn([]), false);
   assert.equal(booleanReturn([1, 2]), true);
@@ -1648,9 +1652,9 @@ expectSuppression(
   const payloadWithMetadata = { id: "u1", metadata: { source: "webhook" } };
   assert.equal(validateUser(payloadWithMetadata), payloadWithMetadata);
   for (const payload of [null, {}, { id: 7 }]) assert.throws(() => validateUser(payload), TypeError);
-  const [production, test] = RULE_EXPLANATIONS["no-module-mocking"].correct.split("// user.test.mjs (separate file)");
-  const productionUrl = `data:text/javascript,${encodeURIComponent(production)}`;
-  const testCode = test.replace('"./user.mjs"', JSON.stringify(productionUrl));
+  const moduleExample = RULE_EXPLANATIONS["no-module-mocking"];
+  const productionUrl = `data:text/javascript,${encodeURIComponent(moduleExample.setup.code)}`;
+  const testCode = moduleExample.correct.replace('"./user.mjs"', JSON.stringify(productionUrl));
   await import(`data:text/javascript,${encodeURIComponent(testCode)}`);
   const readToken = new Function("process", `${RULE_EXPLANATIONS["no-env-secret-fallback"].correct}; return token;`);
   assert.equal(readToken({ env: { STRIPE_KEY: "" } }), "");

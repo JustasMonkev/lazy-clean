@@ -137,7 +137,7 @@ Every subagent except the read-only Explore agents gets the ruleset (about 2,000
 
 The checker only looks at `.ts .tsx .mts .cts .js .jsx .mjs .cjs`; anything else is skipped silently. Files written through `Bash` — heredocs, `sed -i`, codemods — are not seen by the hook at all; run the checker on those yourself.
 
-Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. A failed checker run reports `check failed`; it does not claim the edit was clean. It reports findings on the lines attributed to that edit and counts findings elsewhere in the file whose origin is unknown. Those other findings may come from earlier edits in the same task; the final scan still covers them. Triage them per `skills/slop-check/SKILL.md`: fix real slop, justify false positives, keep deliberate assertions with a `// SAFETY:` comment.
+Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. A failed checker run reports `check failed`; it does not claim the edit was clean. It reports findings on the lines attributed to that edit and counts findings elsewhere in the file whose origin is unknown. Those other findings may come from earlier edits in the same task; the final scan still covers them. Triage them per `skills/slop-check/SKILL.md`: fix real slop and report checked invariants for retained findings in the final response. Do not add code comments; remove nonessential comments from code you touch. Keep required license notices and functional tool directives. Never add `SAFETY:` or `lazy:` markers. Verify necessary functional suppressions and explain the evidence in the final response.
 
 ## Running the checker yourself
 
@@ -156,7 +156,9 @@ node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
 
 Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. A message shared by several findings is printed once, on the first. `--summary` replaces the finding list with the per-rule tally, which is the number that tells you whether a codebase is worth a full pass. The run summary line still prints; `--json` is the machine-readable form.
 
-Emoji, sequencing comments, change-note comments, and apparently obvious documentation comments are review findings: retain symbols required by a specification and comments that carry useful contracts, enduring design rationale, or reasons for ordering.
+Assertion tallies display `type assertion review`. The legacy rule ID `require-safety-comment-for-type-assertion` remains accepted by `--explain`, `--disable`, and existing directives, and remains the ID in JSON output.
+
+Emoji, sequencing comments, change-note comments, and apparently obvious documentation comments are review findings. Retain symbols required by a specification; put useful contracts and rationale in the final response. Existing `SAFETY:` and `slop-check-ignore` directives remain supported for compatibility, but new ones are not a remedy for findings.
 
 `--explain=<rule-id>` prints one rule's reasoning — why it fires, a slop/instead pair, and when the rule is wrong — and runs no scan. Read it before rewriting code a finding landed on that you believe is correct:
 
@@ -196,18 +198,13 @@ and size for paired passing runs. This fork makes no measured improvement
 claim without real comparable runs. `npm test` checks the benchmark machinery
 without calling an AI service.
 
-## Silencing a rule
+## Review findings and existing suppressions
 
-Every rule can be turned off, because a heuristic you cannot turn off is one you end up ignoring entirely. To record a false positive where it happened, name the rule and say why:
+For a genuine false positive, verify the invariant and explain the evidence in the final response. Do not add suppression comments to make the scan clean. Remove ineffective existing ignores and address the underlying findings.
 
-```ts
-// slop-check-ignore no-any -- the vendor typing is `any`; narrowed at the call site below
-const parsed = raw as any;
-```
+Existing justified `slop-check-ignore` directives remain supported for compatibility. They cover their line and the next and accept several rule IDs separated by commas. Existing `slop-check-ignore-file` directives in a file's first 10 lines cover the whole file. `--disable=<rule-id>,...` turns rules off for one run; it does not verify that a finding is harmless.
 
-It covers that line and the next, takes several ids separated by commas, and `slop-check-ignore-file` in a file's first 10 lines covers the whole file. `--disable=<rule-id>,...` turns rules off for one run.
-
-The `-- <reason>` is not decoration. An ignore with no reason, with an id that is not a rule, or a file-level one written too far down suppresses nothing and is reported as `no-unjustified-ignore` — the same standard the checker already holds `@ts-expect-error` to, because an ignore that silently does nothing is worse than no ignore. The run summary counts what was suppressed: clean under forty ignores is not clean.
+An existing ignore with no reason after `--`, an unknown rule ID, or a file-level directive below line 10 suppresses nothing and is reported as `no-unjustified-ignore`. The run summary counts suppressions; a clean result with suppressions is not evidence that the ignored code was checked.
 
 Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `slop-check`, `lazy-clean` (the main workflow), `lazy-verify`, `layz-test`.
 

@@ -48,7 +48,7 @@ old value explicitly only if the installed compiler still accepts it; a removed
 value, such as the old `es5` target default, needs a code change or moves to
 the bundler. Do not rely on the new default silently.
 `"ignoreDeprecations": "6.0"` is a temporary migration step, never a fix;
-mark it with `lazy:` and the version it has to go before.
+report the version it has to go before in the final response.
 
 TypeScript 7.0 has no stable programmatic API yet. Tools that import
 `typescript` (typescript-eslint, ts-morph, ts-jest, language service plugins,
