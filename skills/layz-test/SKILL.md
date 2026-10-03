@@ -96,6 +96,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
     directories), Git info files such as `info/exclude`, the rerere cache
     (`rr-cache`), hooks in `.git/hooks`, the Git LFS object cache, repository
     and worktree config with the files it includes, and linked worktrees.
+  - For every baseline Git invocation, including the final audit, pass the global
+    `--no-pager` option before the Git subcommand. After restoring approved
+    environment values, unset both `PAGER` and `GIT_PAGER` before each baseline
+    invocation.
   - Record the starting state of the user's tree. Before the first Git command,
     clear every inherited `GIT_*` environment variable for every Git command in
     this workflow, such as repository paths (`GIT_DIR`, `GIT_WORK_TREE`,
