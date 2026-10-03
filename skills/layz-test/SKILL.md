@@ -53,8 +53,13 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
 - Use the host's existing execution sandbox and permissions. Do not build or
   claim a new isolation boundary; a disposable copy is not a security sandbox.
 - Use disposable copies for installs, mutation probes, old-code reproductions,
-  and other checks that would rewrite non-test product state. Use independent
-  regular source files, not links or Git metadata shared with the user's
+  and any command expected to write repository state, including snapshots,
+  fixtures, and coverage. Prepare copies from a stable source revision or
+  snapshot containing the requested inputs, including relevant uncommitted
+  edits. Verify source bytes and behavior-relevant metadata, such as executable
+  modes, against that captured state before execution; block checks whose
+  required state cannot be captured or reproduced. Use independent regular
+  source files, not links or Git metadata shared with the user's
   checkout. Do not follow links when preparing a probe; report checks requiring
   linked or special-file source inputs as blocked.
   Do not copy production credentials, user home state, or Git history and
