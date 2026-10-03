@@ -22,10 +22,10 @@ tests. Keep this a one-shot testing workflow; do not change lazy mode or hooks.
    silently replace a whole-repository request with a sample.
 2. Read pinned and installed tool versions and test commands from the project.
    Reuse its runner, fixtures, assertions, and installed dependencies. Do not
-   download tools or add a framework merely to measure this workflow. If a
-   repository-declared runner is missing or its version does not match the
-   lockfile, use the documented locked install in a disposable copy when
-   permitted; otherwise report it as blocked.
+   download tools or add a framework merely to measure this workflow. For
+   checks that rely on locked dependencies, use the repository's documented
+   locked install in a disposable copy when permitted; otherwise report those
+   checks as blocked.
 3. Make a compact behavior → test → result table. Enumerate happy paths,
    boundaries (including false/zero/empty), invalid inputs, and failure modes.
    Trace retries, restore/replay, cancellation, concurrency, and cleanup where
@@ -54,7 +54,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   claim a new isolation boundary; a disposable copy is not a security sandbox.
 - Use disposable copies for installs, mutation probes, old-code reproductions,
   and other checks that would rewrite non-test product state. Use independent
-  source files, not hard links or Git metadata shared with the user's checkout.
+  regular source files, not links or Git metadata shared with the user's
+  checkout. Do not follow links when preparing a probe; report checks requiring
+  linked or special-file source inputs as blocked.
   Do not copy production credentials, user home state, or Git history and
   configuration into a probe. Use fixtures or sandbox credentials when needed.
   Record the tested revision and relevant uncommitted inputs or omissions. If
@@ -82,13 +84,15 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   and list the hypotheses tested; never invent a finding to meet a bug quota.
 - Run commands non-interactively, never in watch mode. Give external work a
   timeout and a bounded workload. Keep setup services alive until their
-  dependent checks finish, then stop the processes you started. Clean up
-  listeners, timers, temporary copies, and mutations on success, failure,
-  cancellation, and partial setup; report cleanup failures. Use isolated test
-  data. Run destructive or costly external checks only within authorization;
-  report missing prerequisites instead of inventing credentials. Never call a
-  live payment, email, SMS, or other third-party account unless it is an isolated
-  sandbox or the user approves; otherwise report it as blocked automation.
+  dependent checks finish. Run each command only where the host can manage its
+  spawned process tree; otherwise report the check as blocked. Terminate that
+  tree on success, failure, timeout, cancellation, and partial setup. Clean up
+  listeners, timers, temporary copies, and mutations on those exits; report
+  cleanup failures. Use isolated test data. Run destructive or costly external
+  checks only within authorization; report missing prerequisites instead of
+  inventing credentials. Never call a live payment, email, SMS, or other
+  third-party account unless it is an isolated sandbox or the user approves;
+  otherwise report it as blocked automation.
 - Prove a risky test can fail: run the same new test, unchanged, in a disposable
   copy against the pre-fix product state needed for that behavior, including
   relevant dependency and configuration versions. Its intended assertion fails
