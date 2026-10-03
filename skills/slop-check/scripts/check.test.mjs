@@ -1016,44 +1016,6 @@ expectRule("flags tautological equality", "expect(false).toEqual(false);", "no-t
 expectNoRule("allows asserting a computed boolean", "expect(isPaid(invoice)).toBe(true);", "no-tautological-assertion");
 expectNoRule("allows asserting a number", "expect(totalItems(state)).toBe(4);", "no-tautological-assertion");
 
-{
-  const directive = "// eslint-disable-next-line no-console\nconnect(options);\n";
-  for (const metadata of [
-    '/// <reference types="node" />', '/// <reference path="dependency.d.ts" />', '/// <reference lib="es2020" />',
-    '/// <reference no-default-lib="true" />', '/// <amd-module name="legacy" />', '/// <amd-dependency path="legacy" />',
-  ]) {
-    const findings = lintSource(`${metadata}\n${directive}`, "sample.ts", { addedLines: new Set([1]) });
-    assert.ok(!findings.some(f => f.rule === "no-unjustified-suppression"), metadata);
-  }
-  console.log("ok   compiler metadata does not become new suppression rationale through the API");
-}
-
-{
-  const directive = "// eslint-disable-next-line no-console\nconnect(options);\n";
-  for (const [comment, expected] of [
-    ["/* exported foo, bar */", false],
-    ["// exported foo, bar", true],
-    ["/** Vendor runtime requires this suppression. @see issue */", true],
-    ["/** @description Vendor runtime requires this suppression. @see issue */", true],
-    ["/** @see issue */", false],
-    ["/** incorrect. @see issue */", false],
-    ["/*! @license MIT */", false],
-    ["/**\n * @see vendor-issue\n * Vendor runtime requires this suppression.\n */", true],
-    ["/**\n * @see vendor-issue\n * @param options\n */", false],
-    ["/**\n * @param options\n *   Stable options passed to the vendor API.\n */", false],
-    ["/*! ISC License */", false],
-    ["/*! For license information please see app.LICENSE.txt */", false],
-  ]) {
-    const findings = lintSource(`${comment}\n${directive}`, "sample.js", { addedLines: new Set([1]) });
-    assert.equal(findings.some(f => f.rule === "no-unjustified-suppression"), expected, comment);
-  }
-  const source = "// SAFETY: parsed by the schema above\nconst user = payload as User;\n";
-  const findings = lintSource(source, "sample.ts", { addedLines: new Set([2]) });
-  assert.ok(findings.some(f => f.rule === "require-safety-comment-for-type-assertion"));
-  assert.ok(!lintSource(source, "sample.ts").some(f => f.rule === "require-safety-comment-for-type-assertion"));
-  console.log("ok   changed assertions require review and JSDoc prose remains separate from tag metadata");
-}
-
 // --- suppression and doc slop ------------------------------------------------
 
 expectRule("flags bare ts-ignore", "// @ts-ignore\nconst parsed = legacyParse(input);", "no-unjustified-suppression");
@@ -1628,14 +1590,9 @@ expectSuppression(
   assert.deepEqual(unknown, [], "explanations for rules the checker does not emit");
 
   for (const [id, explanation] of Object.entries(RULE_EXPLANATIONS)) {
-    const options = id === "no-new-justification-comments" ? { addedLines: new Set([1]) } : undefined;
     if (id === "no-typed-jsdoc") assert.equal(explanation.correct, explanation.slop.replace("{string} ", ""), "retain existing JSDoc metadata while removing its redundant type");
-    if (id === "no-new-justification-comments") assert.equal(explanation.correct, explanation.slop.split("\n").slice(1).join("\n"), "remove only the marker and preserve the assertion for separate review");
     for (const snippet of [explanation.correct, ...(explanation.setup ? [explanation.setup.code] : [])]) {
-      if (id !== "no-typed-jsdoc" && /(?:^|\n)\s*\/\/|;\s*\/\/|\/\*/u.test(snippet)) {
-        failures += 1;
-        console.error(`FAIL --explain ${id}: replacement snippet adds comments`);
-      }
+      if (id !== "no-typed-jsdoc") assert.doesNotMatch(snippet, /(?:^|\n)\s*\/\/|;\s*\/\/|\/\*/u, `${id} replacement adds no comments`);
     }
     for (const field of ["why", "slop", "correct", "exceptions"]) {
       if (typeof explanation[field] !== "string" || explanation[field].trim().length === 0) {
@@ -1643,20 +1600,18 @@ expectSuppression(
         console.error(`FAIL --explain ${id}: ${field} is missing or too short`);
       }
     }
-    if (!lintSource(explanation.slop, "sample.ts", options).some((finding) => finding.rule === id)) {
+    if (!lintSource(explanation.slop, "sample.ts").some((finding) => finding.rule === id)) {
       failures += 1;
       console.error(`FAIL --explain ${id}: slop example no longer triggers the rule`);
     }
-    const kept = lintSource(explanation.correct, "sample.ts", options);
-    const remainingRules = explanation.remainingRules ?? [];
-    assert.ok(!remainingRules.includes(id), `${id} replacement removes its own finding`);
-    if (kept.length !== remainingRules.length || kept.some((finding, index) => finding.rule !== remainingRules[index])) {
+    const kept = lintSource(explanation.correct, "sample.ts");
+    if (kept.length > 0) {
       failures += 1;
       console.error(`FAIL --explain ${id}: correct example still has findings [${kept.map((f) => f.rule).join(", ")}]`);
     }
   }
   console.log("ok   every explanation carries why/slop/correct/exceptions");
-  console.log("ok   every slop example triggers its rule and replacements leave only declared separate findings");
+  console.log("ok   every slop example triggers its rule and every correct example is clean");
 }
 
 {
