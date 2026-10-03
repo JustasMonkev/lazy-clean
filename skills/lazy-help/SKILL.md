@@ -36,11 +36,18 @@ Level sticks until changed or session end.
 | **slop-check** | `/slop-check` | Delete AI slop in TS/JS: bundled checker plus a manual checklist. |
 | **lazy-verify** | `/lazy-verify` | Experimental opt-in fix/preserve evidence; needs a reviewed local engine and policy. Independent of lazy mode. |
 | **layz-test** | `/layz-test` | Run applicable tests, fill behavioral gaps, and explain remaining manual checks. |
+| **test-quality-review** | `/test-quality-review` | Whole-suite test-value audit by default; report-only handoff to a fresh-context, tests-only fixer when requested. Independent of lazy mode. |
 
-Codex uses `@lazy`, `@lazy-review`, `@lazy-help`, and `@layz-test`; Claude Code uses the
-slash-command forms above. OpenCode ships the seven `/lazy*` commands and `/layz-test` as slash
+Codex uses `@lazy`, `@lazy-review`, `@lazy-help`, `@layz-test`, and `@test-quality-review`; Claude Code uses the
+slash-command forms above. OpenCode ships the seven `/lazy*` commands, `/layz-test`, and `/test-quality-review` as slash
 commands; `lazy-clean` and `slop-check` are skills, invoked by name or
 description.
+
+Test-quality findings explain the defect a check can miss and recommend keeping,
+strengthening, replacing, or removing it. Mocks, snapshots, and shape assertions
+can be useful when they verify a real contract; they are not blanket findings.
+Explicit recent-test scopes can narrow the audit. The fixer may delete genuinely
+pointless tests and must explain every deletion; production code stays unchanged.
 
 ## Deactivate
 
