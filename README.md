@@ -98,7 +98,7 @@ runner or dependencies and does not change lazy mode.
 
 ## Reviewing tests with test-quality-review
 
-Invoke `/test-quality-review <tests or change>` (Codex: `@test-quality-review`)
+Use the shared `test-quality-review` skill in OpenCode, Codex, or Claude Code
 to review pointless tests or assertions, implementation coupling, and weak
 oracles that can pass despite broken behavior. Findings need concrete evidence
 and a recommendation to keep, strengthen, replace, or remove the check; mocks,
@@ -108,6 +108,17 @@ is one-shot and independent of lazy mode. With no narrower scope it reviews the
 entire suite, records reviewed and unfinished scope, and can prioritize recent
 additions without silently excluding older tests. An explicit recent-tests audit
 uses an established base revision or date.
+
+| Platform | Invocation | Discovery |
+| --- | --- | --- |
+| OpenCode | `/test-quality-review <scope>` | Existing OpenCode plugin registers the command and shared skills directory. |
+| Codex | Select Test Quality Review in the skill picker; CLI: `$test-quality-review <scope>` | `.codex-plugin/plugin.json` registers `./skills/`; the skill includes Codex UI metadata. |
+| Claude Code plugin | `/lazy-clean:test-quality-review <scope>` | `.claude-plugin/plugin.json` explicitly registers `./skills/`. |
+| Claude Code skills-only | `/test-quality-review <scope>` | Install the skill in `.claude/skills` or `~/.claude/skills`. |
+
+All entry points load the same review and fixer instructions. If the host cannot
+start a separate agent without reviewer history, use the self-contained report
+and bundled fixer instructions in a new session; do not edit in reviewer context.
 
 The reviewer reports only. When findings are applied, a separate fresh-context
 agent receives the self-contained report and makes tests-only changes. It may
