@@ -292,6 +292,39 @@ for (const [surface, raw] of finishSurfaces) {
 ok("skills/lazy/SKILL.md limits the no-announcement rule to ordinary work",
   /Do not announce the mode during ordinary work/u.test(flat(read("skills/lazy/SKILL.md"))));
 
+const layzTest = flat(read("skills/layz-test/SKILL.md"));
+for (const [description, pattern] of [
+  ["covers every test layer", /Static\/build.*Unit\/property.*Integration\/contract.*E2E\/UI.*Resilience.*Security.*Accessibility\/visual.*Performance/u],
+  ["uses non-mutating formatter checks", /formatters in check or dry-run mode/u],
+  ["uses existing host isolation without claiming a new sandbox", /host's existing execution sandbox and permissions.*disposable copy is not a security sandbox/iu],
+  ["runs repository-state writes in disposable copies", /disposable copies for installs, mutation probes, old-code reproductions.*command expected to write repository state, including snapshots, fixtures, and coverage/iu],
+  ["captures requested source state before preparing probes", /stable source revision or snapshot containing the requested inputs, including relevant uncommitted edits/u],
+  ["verifies probe bytes and relevant metadata before running", /Verify source bytes and behavior-relevant metadata, such as executable modes, against that captured state before execution; block checks whose required state cannot be captured or reproduced/u],
+  ["does not reconstruct user state or fall back to destructive in-place probes", /report the check as blocked.*Do not reconstruct user Git, home, or filesystem state or run destructive probes in place/u],
+  ["keeps user credentials and Git history out of probes", /Do not copy production credentials, user home state, or Git history and configuration into a probe/u],
+  ["uses repository locked setup rather than runner-version evidence", /checks that rely on locked dependencies, use the repository's documented locked install in a disposable copy when permitted; otherwise report those checks as blocked/u],
+  ["keeps linked and special source inputs out of probes", /independent regular source files, not links or Git metadata shared.*Do not follow links when preparing a probe; report checks requiring linked or special-file source inputs as blocked/u],
+  ["requires host-managed process trees or blocks the check", /Run each command only where the host can manage its spawned process tree; otherwise report the check as blocked/u],
+  ["terminates spawned trees on every ordinary exit path", /Terminate that tree on success, failure, timeout, cancellation, and partial setup/u],
+  ["does not automatically copy generated files back", /Do not automatically copy generated files back/u],
+  ["applies scoped test edits or preserves a proposed patch", /Apply test and snapshot changes through ordinary scoped edits.*preserving existing user changes.*save a redacted patch and report the conflict/u],
+  ["retains cited evidence before cleaning temporary copies", /Keep redacted evidence the report cites outside disposable copies before deleting them/u],
+  ["bounds work and cleans up on the same exit paths", /non-interactively, never in watch mode.*timeout and a bounded workload.*Clean up listeners, timers, temporary copies, and mutations on those exits/u],
+  ["keeps setup services alive for dependent checks", /Keep setup services alive until their dependent checks finish/u],
+  ["never calls live third-party accounts unapproved", /Never call a live payment, email, SMS, or other third-party account unless it is an isolated sandbox or the user approves/u],
+  ["requires the same test and relevant pre-fix product state", /same new test, unchanged.*pre-fix product state needed for that behavior.*intended assertion fails.*passes against the fix.*report regression proof as blocked/u],
+  ["mutates production code in a copy with an unchanged passing test", /in a disposable copy, leave a passing test unchanged, mutate a relevant production branch\/boundary.*intended assertion fail; revert and rerun green.*mutation of the test itself or a setup\/import failure is not proof/u],
+  ["reports changed source as untested rather than claiming current results", /source changed after testing, rerun affected checks or report the newer state as untested/u],
+  ["redacts saved patches and kept tests and snapshots", /Before saving, applying, or sharing.*patches, tests, or snapshots, redact credentials and sensitive data.*report the affected output as blocked/u],
+  ["confirms bugs on unmodified code", /Confirm each bug with a minimal failing assertion on the unmodified code/u],
+  ["never invents findings", /never invent a finding/u],
+  ["keeps a flaky pass from erasing a failure", /a flaky pass does not erase an earlier failure/u],
+  ["ends with manual testing and why", /Manual testing still needed.*Why automation cannot settle it here/u],
+  ["adds no benchmark framework", /no benchmark framework/u],
+]) ok(`layz-test ${description}`, pattern.test(layzTest));
+ok("layz-test is listed in the help card", read("skills/lazy-help/SKILL.md").includes("**layz-test**"));
+ok("layz-test is listed in the OpenCode help card", read(".opencode/command/lazy-help.md").includes("/layz-test"));
+
 // A relative link in a shipped skill that points nowhere sends the agent to a
 // file that is not there; skills-only installs copy skills/ as a whole, so
 // ../lazy/references links resolve there too.
