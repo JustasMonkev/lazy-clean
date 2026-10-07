@@ -1,0 +1,12 @@
+{
+  "checks": {
+    "zeroPreserved": true,
+    "fullMeasuredReduction": true,
+    "noPairsNull": true,
+    "qualityFailureUnqualified": true,
+    "missingUsageNotZero": true,
+    "absentMetricsNull": true
+  },
+  "allPassed": true,
+  "scope": "Synthetic zero/missing/partial/no-pairs/quality-failure cases against actual generator functions"
+}

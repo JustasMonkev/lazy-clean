@@ -1,0 +1,13 @@
+{
+  "captured": "2026-10-07T03:38:51.363Z",
+  "checks": {
+    "all44Rows": true,
+    "all15Groups": true,
+    "allDerivedFieldsMatch": true,
+    "matchingCapture": true,
+    "gridFlagsMatch": true,
+    "armsMatch": true
+  },
+  "allPassed": true,
+  "scope": "Every comparison row and derived count, sum, completeness flag, reduction and matched passing pair independently recomputed from snapshot statuses and canonical grades"
+}

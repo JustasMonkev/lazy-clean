@@ -1,0 +1,12 @@
+{
+  "checks": {
+    "jsonCredentialRedacted": true,
+    "keyShapeRedacted": true,
+    "privatePathNormalized": true,
+    "numericMetricsAndZeroPreserved": true,
+    "nestedJsonCredentialRedacted": true,
+    "binaryRejected": true
+  },
+  "allPassed": true,
+  "scope": "Synthetic credential/path/zero-metric/binary behavior; no real credentials used or printed"
+}

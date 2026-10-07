@@ -1,0 +1,738 @@
+{
+  "revision2--lazy-debt--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "All five supplied source/test files searched; zero actual comment markers, generic TODOs excluded; accurate empty ledger and no writes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-debt--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/revision2--lazy-debt--train--gpt-6.1-sol--1/diff.patch",
+      "runs/revision2--lazy-debt--train--gpt-6.1-sol--1/untracked.txt"
+    ]
+  },
+  "revision2--lazy-help--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Displays all 10 commands, levels, bare-live-level behavior, off/resume, env/config/full precedence and host distinctions; no changes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-help--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/revision2--lazy-help--train--gpt-6.1-sol--1/diff.patch",
+      "runs/revision2--lazy-help--train--gpt-6.1-sol--1/untracked.txt"
+    ]
+  },
+  "revision2--lazy-review--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Reviews seeded diff; identifies actual stringUtils.ts:144–145 boolean alias/false comparison, direct startsWith condition preserves behavior; correct one-line net saving; seeded diff unchanged."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-review--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/revision2--lazy-review--train--gpt-6.1-sol--1/diff.patch",
+      "runs/revision2--lazy-review--train--gpt-6.1-sol--1/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "revision2--slop-check--train--gpt-6.1-sol--1": {
+    "pass": false,
+    "reasons": [
+      "Actually scans timeoutRunner.ts: two no-any findings, one file, exit 1; reads full module/test/time context, checks narrowing and timer/interval ownership; retained findings not called clean, no writes.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "runs/revision2--slop-check--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/revision2--slop-check--train--gpt-6.1-sol--1/diff.patch",
+      "runs/revision2--slop-check--train--gpt-6.1-sol--1/workspace/packages/isomorphic/timeoutRunner.ts"
+    ]
+  },
+  "revision2--lazy-audit--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Inventories and reads every one of the three source and two test files; bounded snapshot/exclusions disclosed; justified two ranked shrink findings with exact paths and verified real four-line reduction, no dependency deletion. Read-only."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-audit--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/revision2--lazy-audit--train--gpt-6.1-sol--1/diff.patch",
+      "runs/revision2--lazy-audit--train--gpt-6.1-sol--1/untracked.txt"
+    ]
+  },
+  "revision2--test-quality-review--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Complete scoped one-test suite and production/time context read; independent timeout literal and warning oracle traced; concrete whole-test passing zero-delay/result/rejection counterexamples, labeled reasoned not executed, coverage complete and execution blocked. No writes or mutations."
+    ],
+    "evidence": [
+      "runs/revision2--test-quality-review--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/revision2--test-quality-review--train--gpt-6.1-sol--1/diff.patch",
+      "runs/revision2--test-quality-review--train--gpt-6.1-sol--1/workspace/tests/library/unit/timeout-runner.spec.ts"
+    ]
+  },
+  "revision2--lazy-debt--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "All five supplied source/test files searched; zero actual comment markers, generic TODOs excluded; accurate empty ledger and no writes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-debt--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/revision2--lazy-debt--train--gpt-6-luna--1/diff.patch",
+      "runs/revision2--lazy-debt--train--gpt-6-luna--1/untracked.txt"
+    ]
+  },
+  "revision2--lazy-help--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Displays all 10 commands, levels, bare-live-level behavior, off/resume, env/config/full precedence and host distinctions; no changes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-help--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/revision2--lazy-help--train--gpt-6-luna--1/diff.patch",
+      "runs/revision2--lazy-help--train--gpt-6-luna--1/untracked.txt"
+    ]
+  },
+  "revision2--lazy-review--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Reviews seeded diff; identifies actual stringUtils.ts:144–145 boolean alias/false comparison, direct startsWith condition preserves behavior; correct one-line net saving; seeded diff unchanged."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-review--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/revision2--lazy-review--train--gpt-6-luna--1/diff.patch",
+      "runs/revision2--lazy-review--train--gpt-6-luna--1/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "revision2--slop-check--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Actually scans timeoutRunner.ts: two no-any findings, one file, exit 1; reads full module/test/time context, checks narrowing and timer/interval ownership; retained findings not called clean, no writes.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "runs/revision2--slop-check--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/revision2--slop-check--train--gpt-6-luna--1/diff.patch",
+      "runs/revision2--slop-check--train--gpt-6-luna--1/workspace/packages/isomorphic/timeoutRunner.ts"
+    ]
+  },
+  "revision2--lazy-audit--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Inventories and reads every one of the three source and two test files; bounded snapshot/exclusions disclosed; no unjustified cut and permitted clean-audit verdict, preserves domain/test/lifecycle helpers. Read-only."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-audit--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/revision2--lazy-audit--train--gpt-6-luna--1/diff.patch",
+      "runs/revision2--lazy-audit--train--gpt-6-luna--1/untracked.txt"
+    ]
+  },
+  "revision2--test-quality-review--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Complete scoped one-test suite and production/time context read; independent timeout literal and warning oracle traced; no finding quota: useful warning regression retained, full reading/execution-blocked coverage record, no unsupported product defect claim. No writes or mutations."
+    ],
+    "evidence": [
+      "runs/revision2--test-quality-review--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/revision2--test-quality-review--train--gpt-6-luna--1/diff.patch",
+      "runs/revision2--test-quality-review--train--gpt-6-luna--1/workspace/tests/library/unit/timeout-runner.spec.ts"
+    ]
+  },
+  "revision2--lazy-gain--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "All four upstream percentages/source/setup including Ponytail apps not run and four timed-out cells accurately attributed; guidance pilot lacks matched efficiency data; Playwright savings unknown, read-only."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-gain--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/revision2--lazy-gain--train--gpt-6.1-sol--1/diff.patch",
+      "runs/revision2--lazy-gain--train--gpt-6.1-sol--1/untracked.txt"
+    ]
+  },
+  "revision2--lazy-gain--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Ponytail row omits required feature-app-not-run limitation and pinned upstream source; apps-not-run statement appears only in Playwright row tied incorrectly to unavailable timeout test dependency. Revision2 skill explicitly requires all setup/limitations with attribution, not links alone. Other percentages/local unknown/read-only correct."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-gain--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/revision2--lazy-gain--train--gpt-6-luna--1/workspace/skill-files/lazy-gain/SKILL.md"
+    ]
+  },
+  "revision2--lazy-verify--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Reads prerequisite contract sections, reviewed policy/config/profile contract; reports REQUIRED preserve gate unsatisfied, not_run, behavior unverified with pass-on-both definition; no engine installation/policy edits/self-approval or invented exits. Supplied absence accepted without inspecting outside-workspace path."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-verify--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/revision2--lazy-verify--train--gpt-6.1-sol--1/diff.patch",
+      "runs/revision2--lazy-verify--train--gpt-6.1-sol--1/untracked.txt"
+    ]
+  },
+  "revision2--lazy-verify--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Never reads installed verification contract/reference or target profile contract, despite explicit request to inspect the installed contract. Approved-engine existence probe and honest unsatisfied/not_run gate are valid, but do not complete required contract inspection."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-verify--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/revision2--lazy-verify--train--gpt-6-luna--1/workspace/skill-files/lazy-verify/SKILL.md"
+    ]
+  },
+  "revision2--lazy--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Scoped implementation passes read-only 28-case behavior oracle; saved Unicode, suffix exactly cap/oversized, explicit zero/empty and ASCII/unchanged coverage; same saved tests intended assertions red then all 19 green; final scanner exit 0 two files, no unrelated source edits."
+    ],
+    "evidence": [
+      "runs/revision2--lazy--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/revision2--lazy--train--gpt-6.1-sol--1/diff.patch",
+      "runs/revision2--lazy--train--gpt-6.1-sol--1/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--lazy-clean--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Scoped implementation passes read-only 28-case behavior oracle; saved Unicode, suffix exactly cap/oversized, explicit zero/empty and ASCII/unchanged coverage; intended assertions red then all 12 green; required final scanner actually exits 0 two files; scoped diff."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-clean--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/revision2--lazy-clean--train--gpt-6.1-sol--1/diff.patch",
+      "runs/revision2--lazy-clean--train--gpt-6.1-sol--1/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--lazy--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Implementation passes read-only 28-case behavior oracle and meaningful pre-fix suffix/zero assertions red then 10 tests green; final scanner ran. Saved suite omits empty-input and suffix-exact-cap boundary despite revision2 instruction to save applicable zero/empty and boundary cases. Oversized suffix regression case was edited after initial red run, but other unchanged regressions prove main risk."
+    ],
+    "evidence": [
+      "runs/revision2--lazy--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/revision2--lazy--train--gpt-6-luna--1/diff.patch",
+      "runs/revision2--lazy--train--gpt-6-luna--1/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--lazy-clean--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Implementation passes read-only 28-case behavior oracle and suffix-budget assertion red then six tests green, scanner actually ran. Saved tests omit zero cap, empty input, and strictly oversized suffix; tested suffix 😀x is exactly cap 2, not exceeds-cap branch. Required full boundary regression coverage missing."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-clean--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/revision2--lazy-clean--train--gpt-6-luna--1/diff.patch",
+      "runs/revision2--lazy-clean--train--gpt-6-luna--1/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--layz-test--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Existing five tests pass in captured regular-file copy; added 35 rerunnable tests cover both exports, zero/empty/Unicode/suffix/generation/large boundaries with two honestly retained reproducer failures. Unchanged passing generated test killed suffix-budget and UTF16 production mutations in independent captured copy, restored green. Production unchanged; full evidence report provides exact exits/layers/unclear contracts/manual-vs-blocked/cleanup."
+    ],
+    "evidence": [
+      "runs/revision2--layz-test--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--1/diff.patch",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--1/workspace/tests/string-utils.test.mjs",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--1/workspace/evidence/string-utils/report.md",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--1/workspace/evidence/string-utils/mutation-suffix-budget.log",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--1/workspace/evidence/string-utils/mutation-utf16-split.log"
+    ]
+  },
+  "revision2--layz-test--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Existing five tests ran and scoped test-only diff honestly retains zero-cap bug (7 pass/2 fail), but no feasible paired effectiveness proof or unchanged-passing-test production mutation performed; discovery reproducer alone explicitly insufficient in revision2. Added suite also does not cover explicit trimString suffix budget/oversized cases; available syntax/static checks labeled not_run."
+    ],
+    "evidence": [
+      "runs/revision2--layz-test--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/revision2--layz-test--train--gpt-6-luna--1/diff.patch",
+      "runs/revision2--layz-test--train--gpt-6-luna--1/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--lazy-debt--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Actual source/test marker search returns zero, generic TODOs and skill metadata excluded; empty ledger accurate, no writes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-debt--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/revision2--lazy-debt--train--gpt-6.1-sol--2/diff.patch",
+      "runs/revision2--lazy-debt--train--gpt-6.1-sol--2/untracked.txt"
+    ]
+  },
+  "revision2--lazy-help--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "All 10 command rows, levels, bare live-level, deactivation/resume, default env/config/full precedence and host distinctions retained; no state changes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-help--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/revision2--lazy-help--train--gpt-6.1-sol--2/diff.patch",
+      "runs/revision2--lazy-help--train--gpt-6.1-sol--2/untracked.txt"
+    ]
+  },
+  "revision2--lazy-review--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Seeded actual diff reviewed; correct stringUtils.ts:144–145 alias/false-comparison simplification to direct startsWith guard; behavior/domain helper preserved, one real line saved, no edits."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-review--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/revision2--lazy-review--train--gpt-6.1-sol--2/diff.patch"
+    ]
+  },
+  "revision2--lazy-verify--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Required prerequisite contract sections plus policy/config/profile contract read; approved engine absent, preserve gate honestly unsatisfied/not_run, no actual assertion or static-proof conflation; no install or self-approval/writes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-verify--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/revision2--lazy-verify--train--gpt-6.1-sol--2/diff.patch",
+      "runs/revision2--lazy-verify--train--gpt-6.1-sol--2/untracked.txt"
+    ]
+  },
+  "revision2--slop-check--train--gpt-6.1-sol--2": {
+    "pass": false,
+    "reasons": [
+      "Actual named module scanner exit 1, two no-any findings in one file; complete module/test/time context manually read, discriminant narrowing and timer/callback/interval lifecycle checked. Findings retained as findings not clean; read-only.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "runs/revision2--slop-check--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/revision2--slop-check--train--gpt-6.1-sol--2/diff.patch",
+      "runs/revision2--slop-check--train--gpt-6.1-sol--2/workspace/packages/isomorphic/timeoutRunner.ts"
+    ]
+  },
+  "revision2--lazy-gain--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "All upstream 54/22/20/27 percentages with Ponytail setup, feature apps not run, timed-out cells and attribution; separate guidance pilot/no matched metrics and local snapshot unknown; no edits/new benchmark."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-gain--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/revision2--lazy-gain--train--gpt-6.1-sol--2/diff.patch",
+      "runs/revision2--lazy-gain--train--gpt-6.1-sol--2/untracked.txt"
+    ]
+  },
+  "revision2--lazy-audit--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Full three source/two test file inventory read, metadata/evidence excluded from audited scope; two verified stringUtils quote-branch/map simplifications with correct locations and six actual removable lines, useful domain/lifecycle/test boundaries retained. No writes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-audit--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/revision2--lazy-audit--train--gpt-6.1-sol--2/diff.patch",
+      "runs/revision2--lazy-audit--train--gpt-6.1-sol--2/untracked.txt"
+    ]
+  },
+  "revision2--test-quality-review--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Entire one-test scoped suite and production/time context read, actual async warning/result oracle traced; concrete whole-test winning-value/rejection/zero-delay/disabled-deadline/cleanup faults labeled reasoned, conditional latency finding explicitly limited by missing runner configuration. Runtime negative-timeout probe really run, not misclaimed suite execution. Coverage complete, upstream run blocked, no fixes/mutations."
+    ],
+    "evidence": [
+      "runs/revision2--test-quality-review--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/revision2--test-quality-review--train--gpt-6.1-sol--2/diff.patch",
+      "runs/revision2--test-quality-review--train--gpt-6.1-sol--2/workspace/tests/library/unit/timeout-runner.spec.ts"
+    ]
+  },
+  "revision2--lazy-debt--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Actual source/test marker search returns zero, generic TODOs and skill metadata excluded; empty ledger accurate, no writes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-debt--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/revision2--lazy-debt--train--gpt-6-luna--2/diff.patch",
+      "runs/revision2--lazy-debt--train--gpt-6-luna--2/untracked.txt"
+    ]
+  },
+  "revision2--lazy-help--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "All 10 command rows, levels, bare live-level, deactivation/resume, default env/config/full precedence and host distinctions retained; no state changes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-help--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/revision2--lazy-help--train--gpt-6-luna--2/diff.patch",
+      "runs/revision2--lazy-help--train--gpt-6-luna--2/untracked.txt"
+    ]
+  },
+  "revision2--lazy-review--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Seeded actual diff reviewed; correct stringUtils.ts:144–145 alias/false-comparison simplification to direct startsWith guard; behavior/domain helper preserved, one real line saved, no edits."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-review--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/revision2--lazy-review--train--gpt-6-luna--2/diff.patch"
+    ]
+  },
+  "revision2--lazy-verify--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Required prerequisite contract sections plus policy/config/profile contract read; approved engine absent, preserve gate honestly unsatisfied/not_run, no actual assertion or static-proof conflation; no install or self-approval/writes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-verify--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/revision2--lazy-verify--train--gpt-6-luna--2/diff.patch",
+      "runs/revision2--lazy-verify--train--gpt-6-luna--2/untracked.txt"
+    ]
+  },
+  "revision2--slop-check--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Actual named module scanner exit 1, two no-any findings in one file; complete module/test/time context manually read, discriminant narrowing and timer/callback/interval lifecycle checked. Findings retained as findings not clean; read-only.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "runs/revision2--slop-check--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/revision2--slop-check--train--gpt-6-luna--2/diff.patch",
+      "runs/revision2--slop-check--train--gpt-6-luna--2/workspace/packages/isomorphic/timeoutRunner.ts"
+    ]
+  },
+  "revision2--lazy-gain--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "All upstream 54/22/20/27 percentages with Ponytail setup, feature apps not run, timed-out cells and attribution; separate guidance pilot/no matched metrics and local snapshot unknown; no edits/new benchmark."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-gain--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/revision2--lazy-gain--train--gpt-6-luna--2/diff.patch",
+      "runs/revision2--lazy-gain--train--gpt-6-luna--2/untracked.txt"
+    ]
+  },
+  "revision2--lazy-audit--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Full three source/two test file inventory read, metadata/evidence excluded from audited scope; typed union access removes casts at timeoutRunner.ts:53–54 without changing line count, correctly reports zero lines/deps and preserves useful helpers/tests. No writes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-audit--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/revision2--lazy-audit--train--gpt-6-luna--2/diff.patch",
+      "runs/revision2--lazy-audit--train--gpt-6-luna--2/untracked.txt"
+    ]
+  },
+  "revision2--test-quality-review--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Entire one-test scoped suite and production/time context read, actual async warning/result oracle traced; always-timedOut counterexample passes both assertions while breaking success contract; useful warning regression retained and process-wide-warning isolation concern qualified conditional, not demonstrated. Coverage complete, upstream run blocked, no fixes/mutations."
+    ],
+    "evidence": [
+      "runs/revision2--test-quality-review--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/revision2--test-quality-review--train--gpt-6-luna--2/diff.patch",
+      "runs/revision2--test-quality-review--train--gpt-6-luna--2/workspace/tests/library/unit/timeout-runner.spec.ts"
+    ]
+  },
+  "revision2--lazy--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Scoped implementation 28/28 read-only behavior oracle; saved explicit zero/empty, Unicode, exactly-cap and oversized suffix plus ASCII/unchanged coverage. Same tests show seven intended pre-fix failures then all 20 green; actual final scanner clean two files, no unrelated source changes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/revision2--lazy--train--gpt-6.1-sol--2/diff.patch",
+      "runs/revision2--lazy--train--gpt-6.1-sol--2/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--lazy--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Implementation 28/28 read-only behavior oracle; meaningful pre-fix assertions fail, final 10 tests green, required scanner actually clean two files. Saved suite omits empty-input and suffix-exact-cap boundary cases required by revision2 applicable zero/empty/boundary coverage contract."
+    ],
+    "evidence": [
+      "runs/revision2--lazy--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/revision2--lazy--train--gpt-6-luna--2/diff.patch",
+      "runs/revision2--lazy--train--gpt-6-luna--2/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--lazy-clean--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Scoped implementation 28/28 read-only behavior oracle; saved explicit zero/empty, Unicode, exactly-cap and oversized suffix plus ASCII/unchanged coverage. Same tests show seven intended pre-fix failures then all 20 green; actual final scanner clean two files, no unrelated source changes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-clean--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/revision2--lazy-clean--train--gpt-6.1-sol--2/diff.patch",
+      "runs/revision2--lazy-clean--train--gpt-6.1-sol--2/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--lazy-clean--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Implementation 28/28 read-only behavior oracle; meaningful pre-fix assertions fail, final 9 tests green, required scanner actually clean two files. Saved suite omits empty-input and suffix-exact-cap boundary cases required by revision2 applicable zero/empty/boundary coverage contract."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-clean--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/revision2--lazy-clean--train--gpt-6-luna--2/diff.patch",
+      "runs/revision2--lazy-clean--train--gpt-6-luna--2/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--layz-test--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Baseline five tests ran; focused test-only diff retains two suffix-over-cap failures (11 pass/2 fail) and production unchanged, but no feasible paired effectiveness proof or unchanged-passing-test production mutation. Discovery reproducers explicitly insufficient. Zero-cap/overlong-suffix output contract inferred as retaining full suffix, honestly qualified but not independently confirmed; full layer map missing."
+    ],
+    "evidence": [
+      "runs/revision2--layz-test--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/revision2--layz-test--train--gpt-6-luna--2/diff.patch",
+      "runs/revision2--layz-test--train--gpt-6-luna--2/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--layz-test--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Baseline five tests run in verified regular-file copy; ten added rerunnable tests cover both exports/boundaries/generated/large/invalid observations and three honestly retained reproducers. Unchanged passing custom-suffix test kills relevant copied production mutation with assertion abcd.. versus ab.., then restored green; source unchanged. Full report maps inferred contracts, layer statuses/commands/exits/manual-vs-blocked and preserved evidence.",
+      "Report says no test child descendants launch, which is too broad for Node --test default isolation. Observed commands completed normally and copies removed under host-managed execution; timeout/cancel process-tree behavior was not independently established. This fidelity limitation is not observed leak evidence."
+    ],
+    "evidence": [
+      "runs/revision2--layz-test--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--2/diff.patch",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--2/workspace/tests/string-utils.test.mjs",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--2/workspace/evidence/trim-string/REPORT.md",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--2/workspace/evidence/trim-string/run-checks.mjs",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--2/workspace/evidence/trim-string/mutation.log",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--2/workspace/evidence/trim-string/restored.log"
+    ]
+  },
+  "revision2--lazy-debt--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Search covers actual five source/test files; no lazy comment markers, generic TODOs/prose/metadata excluded, accurate empty ledger; read-only."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-debt--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/revision2--lazy-debt--train--gpt-6.1-sol--3/diff.patch",
+      "runs/revision2--lazy-debt--train--gpt-6.1-sol--3/untracked.txt"
+    ]
+  },
+  "revision2--lazy-help--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "All 10 commands plus levels, bare current-level, off/resume, env/config/full precedence, host distinctions retained; display-only no state writes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-help--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/revision2--lazy-help--train--gpt-6.1-sol--3/diff.patch",
+      "runs/revision2--lazy-help--train--gpt-6.1-sol--3/untracked.txt"
+    ]
+  },
+  "revision2--lazy-review--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Actual seeded diff read; precise stringUtils.ts:144–145 single-use alias/false guard simplified to direct negated startsWith, behavior and domain helper retained; correct one actual removable line, no edits."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-review--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/revision2--lazy-review--train--gpt-6.1-sol--3/diff.patch"
+    ]
+  },
+  "revision2--lazy-verify--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Installed contract read, policy/config selection inspected; REQUIRED preservation gate honestly unsatisfied, no engine/install/policy edits or fabricated behavioral evidence. Prerequisite-only inspection correctly reports not_run and preserve needs passing both snapshots; no self-approval or static substitute."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-verify--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/revision2--lazy-verify--train--gpt-6.1-sol--3/diff.patch",
+      "runs/revision2--lazy-verify--train--gpt-6.1-sol--3/untracked.txt"
+    ]
+  },
+  "revision2--slop-check--train--gpt-6.1-sol--3": {
+    "pass": false,
+    "reasons": [
+      "Actual named-module scan exit 1 with two no-any findings in one file; manual complete module/test context establishes narrowed union, timer cleanup and polling intervals. 13 actual in-memory behavior assertions pass, source/time read; redundant nonnull finding also grounded. Retained findings not clean, no writes.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "runs/revision2--slop-check--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/revision2--slop-check--train--gpt-6.1-sol--3/diff.patch",
+      "runs/revision2--slop-check--train--gpt-6.1-sol--3/workspace/packages/isomorphic/timeoutRunner.ts"
+    ]
+  },
+  "revision2--lazy-gain--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Upstream Ponytail percentages 54/22/20/27 accurately attributed with task/model/repetition setup, feature apps not run, timeouts and limitations; separate guidance pilot lacks matched efficiency, snapshot unknown, no edits/benchmark."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-gain--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/revision2--lazy-gain--train--gpt-6.1-sol--3/diff.patch"
+    ]
+  },
+  "revision2--lazy-audit--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Every three source/two test file in bounded inventory read; excludes evidence/metadata/instructions from audit targets; three ranked real simplifications (selector reuse, map, return-only callback) correct locations/preservation, 0+2+2=4 actual net lines, useful boundary/test helpers retained. Read-only."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-audit--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/revision2--lazy-audit--train--gpt-6.1-sol--3/diff.patch",
+      "runs/revision2--lazy-audit--train--gpt-6.1-sol--3/untracked.txt"
+    ]
+  },
+  "revision2--test-quality-review--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Whole scoped one-test suite and production/time source read; independent literals, expired deadline, warning timing/listener cleanup traced; concrete whole-test passing result/rejection/arithmetic inversion/cleanup faults reasoned not executed, zero contract separately qualified; self-contained locations/actions/complete coverage. No fixes/mutations."
+    ],
+    "evidence": [
+      "runs/revision2--test-quality-review--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/revision2--test-quality-review--train--gpt-6.1-sol--3/diff.patch",
+      "runs/revision2--test-quality-review--train--gpt-6.1-sol--3/workspace/tests/library/unit/timeout-runner.spec.ts"
+    ]
+  },
+  "revision2--lazy-debt--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Search covers actual five source/test files; no lazy comment markers, generic TODOs/prose/metadata excluded, accurate empty ledger; read-only."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-debt--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/revision2--lazy-debt--train--gpt-6-luna--3/diff.patch",
+      "runs/revision2--lazy-debt--train--gpt-6-luna--3/untracked.txt"
+    ]
+  },
+  "revision2--lazy-help--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "All 10 commands plus levels, bare current-level, off/resume, env/config/full precedence, host distinctions retained; display-only no state writes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-help--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/revision2--lazy-help--train--gpt-6-luna--3/diff.patch",
+      "runs/revision2--lazy-help--train--gpt-6-luna--3/untracked.txt"
+    ]
+  },
+  "revision2--lazy-review--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Actual seeded diff read; precise stringUtils.ts:144–145 single-use alias/false guard simplified to direct negated startsWith, behavior and domain helper retained; correct one actual removable line, no edits."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-review--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/revision2--lazy-review--train--gpt-6-luna--3/diff.patch"
+    ]
+  },
+  "revision2--lazy-verify--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Installed contract read, policy/config selection inspected; REQUIRED preservation gate honestly unsatisfied, no engine/install/policy edits or fabricated behavioral evidence. Actual verifier prerequisite execution exits 2 ENGINE_UNAVAILABLE, engine/check execution not_run, gate not_evaluated; distinguishes wrapper run from absent engine run."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-verify--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/revision2--lazy-verify--train--gpt-6-luna--3/diff.patch",
+      "runs/revision2--lazy-verify--train--gpt-6-luna--3/untracked.txt"
+    ]
+  },
+  "revision2--slop-check--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Actual named-module scan exit 1 with two no-any findings in one file; manual complete module/test context establishes narrowed union, timer cleanup and polling intervals. No unsupported compiler or upstream execution claim. Retained findings not clean, no writes.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "runs/revision2--slop-check--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/revision2--slop-check--train--gpt-6-luna--3/diff.patch",
+      "runs/revision2--slop-check--train--gpt-6-luna--3/workspace/packages/isomorphic/timeoutRunner.ts"
+    ]
+  },
+  "revision2--lazy-gain--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Upstream Ponytail percentages 54/22/20/27 accurately attributed with task/model/repetition setup, feature apps not run, timeouts and limitations; separate guidance pilot lacks matched efficiency, snapshot unknown, no edits/benchmark."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-gain--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/revision2--lazy-gain--train--gpt-6-luna--3/diff.patch"
+    ]
+  },
+  "revision2--lazy-audit--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Every three source/two test file in bounded inventory read; excludes evidence/metadata/instructions from audit targets; justified typed callback result/no-nonnull simplification at timeoutRunner.ts:51–56 with zero real line/dependency reduction; no cast-count-as-line tally. Read-only."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-audit--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/revision2--lazy-audit--train--gpt-6-luna--3/diff.patch",
+      "runs/revision2--lazy-audit--train--gpt-6-luna--3/untracked.txt"
+    ]
+  },
+  "revision2--test-quality-review--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Whole scoped one-test suite and production/time source read; independent literals, expired deadline, warning timing/listener cleanup traced; valid no-actionable-finding verdict retains meaningful warning regression, no quota/refactor invention, full requested coverage and unavailable execution disclosed. No fixes/mutations."
+    ],
+    "evidence": [
+      "runs/revision2--test-quality-review--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/revision2--test-quality-review--train--gpt-6-luna--3/diff.patch",
+      "runs/revision2--test-quality-review--train--gpt-6-luna--3/workspace/tests/library/unit/timeout-runner.spec.ts"
+    ]
+  },
+  "revision2--lazy--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Scoped requested contract passes read-only 28-case oracle; saved explicit zero/empty, Unicode, exactly-cap/oversized suffix, unchanged and ASCII coverage. Meaningful pre-fix intended assertions fail then all 20 tests green; final scanner actually clean two files, no unrelated source changes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/revision2--lazy--train--gpt-6.1-sol--3/diff.patch",
+      "runs/revision2--lazy--train--gpt-6.1-sol--3/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--lazy-clean--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Scoped requested contract passes read-only 28-case oracle; saved explicit zero/empty, Unicode, exactly-cap/oversized suffix, unchanged and ASCII coverage. Meaningful pre-fix intended assertions fail then all 13 tests green; final scanner actually clean two files, no unrelated source changes."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-clean--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/revision2--lazy-clean--train--gpt-6.1-sol--3/diff.patch",
+      "runs/revision2--lazy-clean--train--gpt-6.1-sol--3/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--lazy--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Requested implementation passes all 28 oracle checks, meaningful same saved assertions red then 11 tests green and actual final scanner clean. Saved tests still omit empty-input behavior required by revision2 zero/empty/boundary regression coverage; exact-cap suffix is covered in this repetition."
+    ],
+    "evidence": [
+      "runs/revision2--lazy--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/revision2--lazy--train--gpt-6-luna--3/diff.patch",
+      "runs/revision2--lazy--train--gpt-6-luna--3/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--lazy-clean--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Requested implementation passes all 28 oracle checks, meaningful suffix pre-fix assertion red then six tests green and actual final scanner clean. Saved test suite omits explicit zero cap and empty-input boundaries; Unicode exact-cap/oversized suffix covered but insufficient requested complete boundary regression coverage."
+    ],
+    "evidence": [
+      "runs/revision2--lazy-clean--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/revision2--lazy-clean--train--gpt-6-luna--3/diff.patch",
+      "runs/revision2--lazy-clean--train--gpt-6-luna--3/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--layz-test--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Baseline existing tests run; scoped test-only additions retain honest zero-ellipsis reproducer (8 pass/1 fail), production unchanged. No feasible paired effectiveness proof or unchanged-passing-test production mutation; discovery reproducer alone insufficient. Missing explicit oversized/custom suffix/Unicode suffix boundary coverage and feasible static checks not run."
+    ],
+    "evidence": [
+      "runs/revision2--layz-test--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/revision2--layz-test--train--gpt-6-luna--3/diff.patch",
+      "runs/revision2--layz-test--train--gpt-6-luna--3/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "revision2--layz-test--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Existing five tests executed in verified regular-file copy; 15 added rerunnable tests cover both exports, Unicode/default/empty/zero/suffix/generated/large/runtime boundaries, two retained inferred-contract reproducers (18 pass/2 fail). Unchanged passing custom suffix test intended assertion fails on copied source mutation and restores green; independent capture hashes/modes/process groups cleanup preserved. Full report exact commands/exits/layers/manual-vs-blocked/unclear contracts; no product edits."
+    ],
+    "evidence": [
+      "runs/revision2--layz-test--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--3/diff.patch",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--3/workspace/tests/string-utils.test.mjs",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--3/workspace/evidence/trim-string/REPORT.md",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--3/workspace/evidence/trim-string/mutation-before.log",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--3/workspace/evidence/trim-string/mutation-failure.log",
+      "runs/revision2--layz-test--train--gpt-6.1-sol--3/workspace/evidence/trim-string/mutation-restored.log"
+    ]
+  }
+}

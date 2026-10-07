@@ -7,41 +7,34 @@ description: >
 disable-model-invocation: true
 ---
 
-# Lazy Help
+Display only; no mode, flag files, persistence, or config/update execution.
 
-Display this reference card when invoked. One-shot, do NOT change mode,
-write flag files, or persist anything.
+| Level | Trigger | Behavior |
+| --- | --- | --- |
+| Lite | `/lazy lite` | Requested work + one-line lazier alternative. |
+| Full | `/lazy full` | YAGNI → reuse → stdlib → native → clear minimum. |
+| Ultra | `/lazy ultra` | Cut extras, not requested behavior/checks. |
 
-## Levels
+Persists until changed/session end. "Stop lazy", "normal mode", `/lazy off`: off.
+`/lazy full`: resume. Bare `/lazy`: live level only.
 
-| Level | Trigger | What changes |
-|-------|---------|-------------|
-| **Lite** | `/lazy lite` | Build what's asked, name the lazier alternative in one line. |
-| **Full** | `/lazy full` | The ladder enforced: YAGNI → reuse → stdlib → native → clear minimum. Default. |
-| **Ultra** | `/lazy ultra` | Cut unasked extras, never requested behavior or checks. |
+| Skill | Trigger | Purpose |
+| --- | --- | --- |
+| lazy | `/lazy` | Simplest working solution. |
+| lazy-review | `/lazy-review` | Diff over-engineering report. |
+| lazy-audit | `/lazy-audit` | Ranked repo complexity report. |
+| lazy-debt | `/lazy-debt` | `lazy:` comments → debt ledger. |
+| lazy-gain | `/lazy-gain` | Recorded evidence, not project savings. |
+| lazy-help | `/lazy-help` | This card. |
+| lazy-clean | `/lazy-clean` | Write with ladder, then check. |
+| slop-check | `/slop-check` | TS/JS checker + manual checklist. |
+| lazy-verify | `/lazy-verify` | Experimental opt-in fix/preserve evidence; requires reviewed local engine/policy; mode-independent. |
+| **layz-test** | `/layz-test` | Run tests, fill gaps, explain manual checks. |
+| test-quality-review | `/test-quality-review` | Whole-suite test-value audit; report-only, fresh-context tests-only fixer when requested; mode-independent. |
 
-Level sticks until changed or session end.
-
-## Skills
-
-| Skill | Trigger | What it does |
-|-------|---------|--------------|
-| **lazy** | `/lazy` | Lazy mode itself. Simplest solution that works. |
-| **lazy-review** | `/lazy-review` | Over-engineering review: `L42: yagni: factory, one product. Inline.` |
-| **lazy-audit** | `/lazy-audit` | Whole-repo over-engineering audit: ranked list of what to delete. |
-| **lazy-debt** | `/lazy-debt` | Harvest `lazy:` shortcut comments into a tracked ledger. |
-| **lazy-gain** | `/lazy-gain` | Measured-impact scoreboard: less code, less cost, more speed. |
-| **lazy-help** | `/lazy-help` | This card. |
-| **lazy-clean** | `/lazy-clean` | Both passes on one change: the ladder while writing, the checker after. |
-| **slop-check** | `/slop-check` | Delete AI slop in TS/JS: bundled checker plus a manual checklist. |
-| **lazy-verify** | `/lazy-verify` | Experimental opt-in fix/preserve evidence; needs a reviewed local engine and policy. Independent of lazy mode. |
-| **layz-test** | `/layz-test` | Run applicable tests, fill behavioral gaps, and explain remaining manual checks. |
-| **test-quality-review** | `/test-quality-review` | Whole-suite test-value audit by default; report-only handoff to a fresh-context, tests-only fixer when requested. Independent of lazy mode. |
-
-Codex uses `@lazy`, `@lazy-review`, `@lazy-help`, `@layz-test`, and `@test-quality-review`; Claude Code uses the
-slash-command forms above. OpenCode ships the seven `/lazy*` commands, `/layz-test`, and `/test-quality-review` as slash
-commands; `lazy-clean` and `slop-check` are skills, invoked by name or
-description.
+Codex: `@lazy`, `@lazy-review`, `@lazy-help`, `@layz-test`, `@test-quality-review`. Claude Code: slash
+forms. OpenCode: seven `/lazy*` commands + `/layz-test` + `/test-quality-review`; `lazy-clean`/`slop-check`
+are name/description-invoked skills.
 
 For test-quality-review, Codex CLI also supports `$test-quality-review`; select
 Test Quality Review in Codex's skill picker. Claude plugin installs use
@@ -55,36 +48,16 @@ can be useful when they verify a real contract; they are not blanket findings.
 Explicit recent-test scopes can narrow the audit. The fixer may delete genuinely
 pointless tests and must explain every deletion; production code stays unchanged.
 
-## Deactivate
+## Defaults/updates
 
-Say "stop lazy" or "normal mode". Resume anytime with `/lazy full`.
-`/lazy off` also works. Bare `/lazy` only reports the live level.
+Session default: auto-active `full`. Priority: env > config > `full`.
+Env: `export LAZY_DEFAULT_MODE=ultra`. Config: `{ "defaultMode": "lite" }` in
+`~/.config/lazy/config.json` (Windows `%APPDATA%\lazy\config.json`). `off` disables
+auto-activation; enable with `/lazy lite|full|ultra`.
 
-## Configure Default Mode
+Checkout (`claude --plugin-dir`/`claude plugin marketplace add`): `git pull`,
+`/reload-plugins`. Skills-only: re-copy `skills/*` to `~/.claude/skills/`.
+Unknown `/plugin`: update Claude Code (`npm install -g @anthropic-ai/claude-code@latest`
+or `brew upgrade claude-code`), restart. Other hosts: own updates.
 
-Default mode = `full`, auto-active every session. Change it:
-
-**Environment variable** (highest priority):
-```bash
-export LAZY_DEFAULT_MODE=ultra
-```
-
-**Config file** (`~/.config/lazy/config.json`, Windows: `%APPDATA%\lazy\config.json`):
-```json
-{ "defaultMode": "lite" }
-```
-
-Set `"off"` to disable auto-activation on session start, activate manually
-with `/lazy lite|full|ultra` when wanted.
-
-Resolution: env var > config file > `full`.
-
-## Update
-
-Installed from a checkout (`claude --plugin-dir` or `claude plugin marketplace add`): `git pull` in that checkout, then `/reload-plugins`. Installed skills-only: re-copy `skills/*` into `~/.claude/skills/`.
-
-If `/plugin` is not recognized, your Claude Code is out of date. Update it (`npm install -g @anthropic-ai/claude-code@latest`, or `brew upgrade claude-code`) and restart. Other hosts use their own update flow.
-
-## More
-
-Full docs: https://github.com/JustasMonkev/lazy-clean
+https://github.com/JustasMonkev/lazy-clean

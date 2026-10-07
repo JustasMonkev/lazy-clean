@@ -1,0 +1,13 @@
+{
+  "nodeVersion": "v26.5.0",
+  "nodeSyntax": {
+    "command": "node --check publication/prepare.mjs",
+    "exitCode": 0
+  },
+  "authoredJavaScriptScanner": {
+    "command": "node baseline/skills/slop-check/scripts/check.mjs publication/prepare.mjs --json",
+    "exitCode": 0,
+    "findings": []
+  },
+  "limits": "Scoped helper check is not the required final repository-root scan. That scan remains a failure with twelve retained upstream-control findings."
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "name": "original-train",
+    "exitCode": 1,
+    "status": "behavior-fail",
+    "passed": 21,
+    "failed": 7
+  },
+  {
+    "name": "original-heldout",
+    "exitCode": 1,
+    "status": "behavior-fail",
+    "passed": 20,
+    "failed": 7
+  },
+  {
+    "name": "good-train",
+    "exitCode": 0,
+    "status": "pass",
+    "passed": 28,
+    "failed": 0
+  },
+  {
+    "name": "good-heldout",
+    "exitCode": 0,
+    "status": "pass",
+    "passed": 27,
+    "failed": 0
+  },
+  {
+    "name": "missing-module",
+    "exitCode": 2,
+    "status": "tooling-failure",
+    "passed": null,
+    "failed": null
+  }
+]

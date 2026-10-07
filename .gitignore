@@ -10,3 +10,4 @@
 /dataSources.local.xml
 .idea
 /.lazy-verify/runs/
+/benchmarks/results/skill-tokens-20261006/*.tar.gz

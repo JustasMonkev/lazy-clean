@@ -1,0 +1,5440 @@
+{
+  "publicationDecision": {
+    "declared": "2026-10-07T03:29:51.246Z",
+    "measuredArm": "final-recovery",
+    "retained": [
+      "lazy-help"
+    ],
+    "rejected": {
+      "lazy-debt": {
+        "reason": "Counterproductive observed token use despite all12quality passes",
+        "reductionPct": {
+          "solTrain": 0.9839752600506044,
+          "solHeldout": -0.49625973019803277,
+          "lunaTrain": -11.454905992949472,
+          "lunaHeldout": -23.18935652686666
+        }
+      },
+      "slop-check": {
+        "reason": "Original mandatory root scan compliance regressed in Luna TRAIN; all6Luna runs omit it",
+        "baselineQualityPass": {
+          "solTrain": 3,
+          "solHeldout": 3,
+          "lunaTrain": 2,
+          "lunaHeldout": 0
+        },
+        "recoveryQualityPass": {
+          "solTrain": 3,
+          "solHeldout": 3,
+          "lunaTrain": 0,
+          "lunaHeldout": 0
+        }
+      },
+      "test-quality-review": {
+        "reason": "Earlier assessment rejection retained; pre-existing untracked draft remains outside PR",
+        "evidence": "final-assessment-rejection.json"
+      }
+    },
+    "help": {
+      "qualityPass": 12,
+      "baselineQualityPass": 11,
+      "beforeTotal": 375267,
+      "afterTotal": 372173,
+      "reductionPct": 0.8244796371650052,
+      "bytesBefore": 3263,
+      "bytesAfter": 2362
+    },
+    "target": "20% not achieved",
+    "scopeLimit": "All132 final-recovery calls measure a three-entrypoint candidate closure containing debt and slop, not the restored shipped closure. No additional132 run after these rejections; retained help measurements use exactly the shipped body within that rejected closure. No inferred full-suite result, causal attribution or future savings guarantee.",
+    "preservedFrozenInputs": true,
+    "shippedEntryPointHashes": {
+      "lazy": "9cdc2642ab08fc407416021e0a0c1aaef7c4dd9fc23616e8181ee99625bb6bd6",
+      "lazy-clean": "e24cbc9aa07e752dbecb69410a9a0bba9ab397c351b745098bb10e6bace96eb4",
+      "slop-check": "95454339d93aabea082df33aafb8453acbf6fde091da40c659cf281454163176",
+      "lazy-review": "e89db569b113a77aba154e57f2ad85566ba8e7010e74ef4e49f01422fa9f0b30",
+      "lazy-audit": "d61afb09797d92eeab474c165fc0aba1d502fb5e7491803b7c2b8f41e866eb13",
+      "lazy-debt": "ae39f3b0ad869ab8b75ff9bf9fc044a7a978a9d71dda708afe71269821dcabae",
+      "lazy-help": "2531aafa5f916064e923d84b0f21284f775bcedbab8f404cbcf97ad261320713",
+      "lazy-gain": "9968b161844030fbd57916843b4a0de4e8c475bf9f5a2f63e57e724020ba1f64",
+      "lazy-verify": "33c72889d6c56cdde95363e0772b0ee940ab6123a3cfdfff9ccb1a6a6169ed6b",
+      "layz-test": "536f5c37660b7c034dbeaf959341d6fda682a94b595b71c84338f13477395c52",
+      "test-quality-review": "ed0a8d043ed50c1f0cd42d1d1266d5da671d369e4b716464128ceccca6a53296"
+    },
+    "sourceFeatureOutsidePR": [
+      "skills/test-quality-review/",
+      ".opencode/command/test-quality-review.md"
+    ]
+  },
+  "captured": "2026-10-07T03:38:51.363Z",
+  "baselineArm": "baseline",
+  "comparatorArm": "final-recovery",
+  "finalInfrastructureArm": {
+    "terminal": 132,
+    "completed": 0,
+    "failed": 132,
+    "unknownUsage": 132,
+    "qualityPass": 0,
+    "qualityFail": 0,
+    "ungraded": 0,
+    "modelQualityNotApplicable": 132
+  },
+  "completeMeasuredGrid": true,
+  "completelyGradedGrid": true,
+  "caveats": [
+    "Known sums include only available numeric metrics; partial known sums are not full rows and missing values never become zero.",
+    "Full-row reductions describe all valid attempt usage; quality failures prevent efficiency qualification.",
+    "Changed-three versus unchanged-eight entrypoints are descriptive groups, not independent controls; shared skill closure/reference reads can affect every entrypoint.",
+    "The final arm failed before model turns with null usage; it is infrastructure evidence, not measured model quality.",
+    "Frozen measured closure is not automatically validated shipped source; rejection or later scope changes require an explicit final source decision."
+  ],
+  "perSkill": [
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "layz-test"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 1153982
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 1042432
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 111550
+          },
+          "output": {
+            "records": 3,
+            "sum": 27443
+          },
+          "total": {
+            "records": 3,
+            "sum": 1181425
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 2,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 963743
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 839936
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 123807
+          },
+          "output": {
+            "records": 3,
+            "sum": 29039
+          },
+          "total": {
+            "records": 3,
+            "sum": 992782
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.1596741223522441,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 2,
+        "baselineTotal": 688330,
+        "comparatorTotal": 727213,
+        "reduction": -0.05648889340868468
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 415536
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 343168
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 72368
+          },
+          "output": {
+            "records": 3,
+            "sum": 5350
+          },
+          "total": {
+            "records": 3,
+            "sum": 420886
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 416881
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 362240
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 54641
+          },
+          "output": {
+            "records": 3,
+            "sum": 5130
+          },
+          "total": {
+            "records": 3,
+            "sum": 422011
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.002672932813160722,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 420886,
+        "comparatorTotal": 422011,
+        "reduction": -0.002672932813160722
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-audit"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 431159
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 344704
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 86455
+          },
+          "output": {
+            "records": 3,
+            "sum": 8396
+          },
+          "total": {
+            "records": 3,
+            "sum": 439555
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 407951
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 332416
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 75535
+          },
+          "output": {
+            "records": 3,
+            "sum": 7248
+          },
+          "total": {
+            "records": 3,
+            "sum": 415199
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.055410585705998106,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 439555,
+        "comparatorTotal": 415199,
+        "reduction": 0.055410585705998106
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-clean"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 411396
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 326784
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 84612
+          },
+          "output": {
+            "records": 3,
+            "sum": 4610
+          },
+          "total": {
+            "records": 3,
+            "sum": 416006
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 453955
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 379776
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 74179
+          },
+          "output": {
+            "records": 3,
+            "sum": 4788
+          },
+          "total": {
+            "records": 3,
+            "sum": 458743
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.10273169136983595,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 416006,
+        "comparatorTotal": 458743,
+        "reduction": -0.10273169136983595
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-debt"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 194652
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 171392
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 23260
+          },
+          "output": {
+            "records": 3,
+            "sum": 983
+          },
+          "total": {
+            "records": 3,
+            "sum": 195635
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 192679
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 178048
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 14631
+          },
+          "output": {
+            "records": 3,
+            "sum": 1031
+          },
+          "total": {
+            "records": 3,
+            "sum": 193710
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.009839752600506069,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 195635,
+        "comparatorTotal": 193710,
+        "reduction": 0.009839752600506069
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-gain"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 224784
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 173440
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 51344
+          },
+          "output": {
+            "records": 3,
+            "sum": 2448
+          },
+          "total": {
+            "records": 3,
+            "sum": 227232
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 203615
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 169728
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 33887
+          },
+          "output": {
+            "records": 3,
+            "sum": 2173
+          },
+          "total": {
+            "records": 3,
+            "sum": 205788
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.09437051119560624,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 227232,
+        "comparatorTotal": 205788,
+        "reduction": 0.09437051119560624
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-help"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 93919
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 79104
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 14815
+          },
+          "output": {
+            "records": 3,
+            "sum": 2103
+          },
+          "total": {
+            "records": 3,
+            "sum": 96022
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 93305
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 81792
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 11513
+          },
+          "output": {
+            "records": 3,
+            "sum": 1921
+          },
+          "total": {
+            "records": 3,
+            "sum": 95226
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.008289766928412212,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 96022,
+        "comparatorTotal": 95226,
+        "reduction": 0.008289766928412212
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-review"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 231699
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 187904
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 43795
+          },
+          "output": {
+            "records": 3,
+            "sum": 1466
+          },
+          "total": {
+            "records": 3,
+            "sum": 233165
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 242384
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 203904
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 38480
+          },
+          "output": {
+            "records": 3,
+            "sum": 1515
+          },
+          "total": {
+            "records": 3,
+            "sum": 243899
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.04603606887826217,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 233165,
+        "comparatorTotal": 243899,
+        "reduction": -0.04603606887826217
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-verify"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 365153
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 315520
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 49633
+          },
+          "output": {
+            "records": 3,
+            "sum": 3505
+          },
+          "total": {
+            "records": 3,
+            "sum": 368658
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 366954
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 320512
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 46442
+          },
+          "output": {
+            "records": 3,
+            "sum": 3500
+          },
+          "total": {
+            "records": 3,
+            "sum": 370454
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.004871723928410621,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 368658,
+        "comparatorTotal": 370454,
+        "reduction": -0.004871723928410621
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "slop-check"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 361045
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 300544
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 60501
+          },
+          "output": {
+            "records": 3,
+            "sum": 4498
+          },
+          "total": {
+            "records": 3,
+            "sum": 365543
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 354201
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 303360
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 50841
+          },
+          "output": {
+            "records": 3,
+            "sum": 3528
+          },
+          "total": {
+            "records": 3,
+            "sum": 357729
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.02137641809581914,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 365543,
+        "comparatorTotal": 357729,
+        "reduction": 0.02137641809581914
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "test-quality-review"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 322759
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 267008
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 55751
+          },
+          "output": {
+            "records": 3,
+            "sum": 6310
+          },
+          "total": {
+            "records": 3,
+            "sum": 329069
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 338981
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 295680
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 43301
+          },
+          "output": {
+            "records": 3,
+            "sum": 6286
+          },
+          "total": {
+            "records": 3,
+            "sum": 345267
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.04922371903764855,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 329069,
+        "comparatorTotal": 345267,
+        "reduction": -0.04922371903764855
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "layz-test"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 1528805
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 1358464
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 170341
+          },
+          "output": {
+            "records": 3,
+            "sum": 32700
+          },
+          "total": {
+            "records": 3,
+            "sum": 1561505
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 2,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 1274800
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 1164416
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 110384
+          },
+          "output": {
+            "records": 3,
+            "sum": 34419
+          },
+          "total": {
+            "records": 3,
+            "sum": 1309219
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.1615659251811553,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 2,
+        "baselineTotal": 1008356,
+        "comparatorTotal": 918299,
+        "reduction": 0.08931071962679848
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 355013
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 307200
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 47813
+          },
+          "output": {
+            "records": 3,
+            "sum": 3388
+          },
+          "total": {
+            "records": 3,
+            "sum": 358401
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 383771
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 344704
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 39067
+          },
+          "output": {
+            "records": 3,
+            "sum": 3424
+          },
+          "total": {
+            "records": 3,
+            "sum": 387195
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.0803401776222723,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 358401,
+        "comparatorTotal": 387195,
+        "reduction": -0.0803401776222723
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-audit"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 442433
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 362240
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 80193
+          },
+          "output": {
+            "records": 3,
+            "sum": 7996
+          },
+          "total": {
+            "records": 3,
+            "sum": 450429
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 416907
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 326528
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 90379
+          },
+          "output": {
+            "records": 3,
+            "sum": 6842
+          },
+          "total": {
+            "records": 3,
+            "sum": 423749
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.059232420647871264,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 450429,
+        "comparatorTotal": 423749,
+        "reduction": 0.059232420647871264
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-clean"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 427388
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 372864
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 54524
+          },
+          "output": {
+            "records": 3,
+            "sum": 3556
+          },
+          "total": {
+            "records": 3,
+            "sum": 430944
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 394660
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 344320
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 50340
+          },
+          "output": {
+            "records": 3,
+            "sum": 3721
+          },
+          "total": {
+            "records": 3,
+            "sum": 398381
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.075562021979654,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 430944,
+        "comparatorTotal": 398381,
+        "reduction": 0.075562021979654
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-debt"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 190032
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 166272
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 23760
+          },
+          "output": {
+            "records": 3,
+            "sum": 997
+          },
+          "total": {
+            "records": 3,
+            "sum": 191029
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 190959
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 170624
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 20335
+          },
+          "output": {
+            "records": 3,
+            "sum": 1018
+          },
+          "total": {
+            "records": 3,
+            "sum": 191977
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.004962597301980232,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 191029,
+        "comparatorTotal": 191977,
+        "reduction": -0.004962597301980232
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-gain"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 240288
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 205312
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 34976
+          },
+          "output": {
+            "records": 3,
+            "sum": 2781
+          },
+          "total": {
+            "records": 3,
+            "sum": 243069
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 226670
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 192256
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 34414
+          },
+          "output": {
+            "records": 3,
+            "sum": 2230
+          },
+          "total": {
+            "records": 3,
+            "sum": 228900
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.05829208990039869,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 243069,
+        "comparatorTotal": 228900,
+        "reduction": 0.05829208990039869
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-help"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 94011
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 79104
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 14907
+          },
+          "output": {
+            "records": 3,
+            "sum": 2094
+          },
+          "total": {
+            "records": 3,
+            "sum": 96105
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 93392
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 79104
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 14288
+          },
+          "output": {
+            "records": 3,
+            "sum": 1616
+          },
+          "total": {
+            "records": 3,
+            "sum": 95008
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.01141459861609695,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 96105,
+        "comparatorTotal": 95008,
+        "reduction": 0.01141459861609695
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-review"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 220350
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 183296
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 37054
+          },
+          "output": {
+            "records": 3,
+            "sum": 1588
+          },
+          "total": {
+            "records": 3,
+            "sum": 221938
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 246423
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 214656
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 31767
+          },
+          "output": {
+            "records": 3,
+            "sum": 1563
+          },
+          "total": {
+            "records": 3,
+            "sum": 247986
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.1173661112562967,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 221938,
+        "comparatorTotal": 247986,
+        "reduction": -0.1173661112562967
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-verify"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 359331
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 318464
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 40867
+          },
+          "output": {
+            "records": 3,
+            "sum": 3298
+          },
+          "total": {
+            "records": 3,
+            "sum": 362629
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 396880
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 356096
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 40784
+          },
+          "output": {
+            "records": 3,
+            "sum": 3192
+          },
+          "total": {
+            "records": 3,
+            "sum": 400072
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.10325429019741938,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 362629,
+        "comparatorTotal": 400072,
+        "reduction": -0.10325429019741938
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "slop-check"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 370947
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 307840
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 63107
+          },
+          "output": {
+            "records": 3,
+            "sum": 6504
+          },
+          "total": {
+            "records": 3,
+            "sum": 377451
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 395536
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 328832
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 66704
+          },
+          "output": {
+            "records": 3,
+            "sum": 6705
+          },
+          "total": {
+            "records": 3,
+            "sum": 402241
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.06567739918558968,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 377451,
+        "comparatorTotal": 402241,
+        "reduction": -0.06567739918558968
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "test-quality-review"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 2,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 347094
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 292096
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 54998
+          },
+          "output": {
+            "records": 3,
+            "sum": 6642
+          },
+          "total": {
+            "records": 3,
+            "sum": 353736
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 392768
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 328064
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 64704
+          },
+          "output": {
+            "records": 3,
+            "sum": 6511
+          },
+          "total": {
+            "records": 3,
+            "sum": 399279
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.12874855824682818,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 2,
+        "baselineTotal": 233616,
+        "comparatorTotal": 269415,
+        "reduction": -0.15323864803780562
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "layz-test"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 461337
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 403968
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 57369
+          },
+          "output": {
+            "records": 3,
+            "sum": 7036
+          },
+          "total": {
+            "records": 3,
+            "sum": 468373
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 476097
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 420352
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 55745
+          },
+          "output": {
+            "records": 3,
+            "sum": 7890
+          },
+          "total": {
+            "records": 3,
+            "sum": 483987
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.033336678245757145,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 0,
+        "baselineTotal": null,
+        "comparatorTotal": null,
+        "reduction": null
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 1,
+        "qualityFail": 2,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 477879
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 417280
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 60599
+          },
+          "output": {
+            "records": 3,
+            "sum": 4887
+          },
+          "total": {
+            "records": 3,
+            "sum": 482766
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 615093
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 540928
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 74165
+          },
+          "output": {
+            "records": 3,
+            "sum": 6220
+          },
+          "total": {
+            "records": 3,
+            "sum": 621313
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.28698582750235113,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 0,
+        "baselineTotal": null,
+        "comparatorTotal": null,
+        "reduction": null
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-audit"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 2,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 259274
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 204288
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 54986
+          },
+          "output": {
+            "records": 3,
+            "sum": 3316
+          },
+          "total": {
+            "records": 3,
+            "sum": 262590
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 2,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 296546
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 230912
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 65634
+          },
+          "output": {
+            "records": 3,
+            "sum": 5307
+          },
+          "total": {
+            "records": 3,
+            "sum": 301853
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.1495220686240908,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 2,
+        "baselineTotal": 162145,
+        "comparatorTotal": 221292,
+        "reduction": -0.36477843905146634
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-clean"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 577160
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 513792
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 63368
+          },
+          "output": {
+            "records": 3,
+            "sum": 4348
+          },
+          "total": {
+            "records": 3,
+            "sum": 581508
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 487262
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 412160
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 75102
+          },
+          "output": {
+            "records": 3,
+            "sum": 4662
+          },
+          "total": {
+            "records": 3,
+            "sum": 491924
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.1540546303748186,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 0,
+        "baselineTotal": null,
+        "comparatorTotal": null,
+        "reduction": null
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-debt"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 135179
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 109312
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 25867
+          },
+          "output": {
+            "records": 3,
+            "sum": 981
+          },
+          "total": {
+            "records": 3,
+            "sum": 136160
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 150872
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 134656
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 16216
+          },
+          "output": {
+            "records": 3,
+            "sum": 885
+          },
+          "total": {
+            "records": 3,
+            "sum": 151757
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.11454905992949471,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 136160,
+        "comparatorTotal": 151757,
+        "reduction": -0.11454905992949471
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-gain"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 181750
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 150784
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 30966
+          },
+          "output": {
+            "records": 3,
+            "sum": 2100
+          },
+          "total": {
+            "records": 3,
+            "sum": 183850
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 147744
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 112384
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 35360
+          },
+          "output": {
+            "records": 3,
+            "sum": 2163
+          },
+          "total": {
+            "records": 3,
+            "sum": 149907
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.18462333423986943,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 183850,
+        "comparatorTotal": 149907,
+        "reduction": 0.18462333423986943
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-help"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 89519
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 72192
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 17327
+          },
+          "output": {
+            "records": 3,
+            "sum": 2303
+          },
+          "total": {
+            "records": 3,
+            "sum": 91822
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 88943
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 75264
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 13679
+          },
+          "output": {
+            "records": 3,
+            "sum": 2013
+          },
+          "total": {
+            "records": 3,
+            "sum": 90956
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.009431290976018802,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 91822,
+        "comparatorTotal": 90956,
+        "reduction": 0.009431290976018802
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-review"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 169316
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 128512
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 40804
+          },
+          "output": {
+            "records": 3,
+            "sum": 1255
+          },
+          "total": {
+            "records": 3,
+            "sum": 170571
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 213731
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 177152
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 36579
+          },
+          "output": {
+            "records": 3,
+            "sum": 1456
+          },
+          "total": {
+            "records": 3,
+            "sum": 215187
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.2615684964032572,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 170571,
+        "comparatorTotal": 215187,
+        "reduction": -0.2615684964032572
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-verify"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 338589
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 256768
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 81821
+          },
+          "output": {
+            "records": 3,
+            "sum": 3491
+          },
+          "total": {
+            "records": 3,
+            "sum": 342080
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 326579
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 283392
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 43187
+          },
+          "output": {
+            "records": 3,
+            "sum": 3696
+          },
+          "total": {
+            "records": 3,
+            "sum": 330275
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.034509471468662345,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 342080,
+        "comparatorTotal": 330275,
+        "reduction": 0.034509471468662345
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "slop-check"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 2,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 284596
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 204032
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 80564
+          },
+          "output": {
+            "records": 3,
+            "sum": 3307
+          },
+          "total": {
+            "records": 3,
+            "sum": 287903
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 308591
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 262144
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 46447
+          },
+          "output": {
+            "records": 3,
+            "sum": 2641
+          },
+          "total": {
+            "records": 3,
+            "sum": 311232
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.08103076383365226,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 0,
+        "baselineTotal": null,
+        "comparatorTotal": null,
+        "reduction": null
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "test-quality-review"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 295877
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 248832
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 47045
+          },
+          "output": {
+            "records": 3,
+            "sum": 5147
+          },
+          "total": {
+            "records": 3,
+            "sum": 301024
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 297169
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 259840
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 37329
+          },
+          "output": {
+            "records": 3,
+            "sum": 4717
+          },
+          "total": {
+            "records": 3,
+            "sum": 301886
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.002863559051770048,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 301024,
+        "comparatorTotal": 301886,
+        "reduction": -0.002863559051770048
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "layz-test"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 611415
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 547072
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 64343
+          },
+          "output": {
+            "records": 3,
+            "sum": 9660
+          },
+          "total": {
+            "records": 3,
+            "sum": 621075
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 708789
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 638208
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 70581
+          },
+          "output": {
+            "records": 3,
+            "sum": 11672
+          },
+          "total": {
+            "records": 3,
+            "sum": 720461
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.16002254156100304,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 0,
+        "baselineTotal": null,
+        "comparatorTotal": null,
+        "reduction": null
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 381187
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 329984
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 51203
+          },
+          "output": {
+            "records": 3,
+            "sum": 3776
+          },
+          "total": {
+            "records": 3,
+            "sum": 384963
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 499798
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 445440
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 54358
+          },
+          "output": {
+            "records": 3,
+            "sum": 3612
+          },
+          "total": {
+            "records": 3,
+            "sum": 503410
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.3076841150967755,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 0,
+        "baselineTotal": null,
+        "comparatorTotal": null,
+        "reduction": null
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-audit"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 2,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 304092
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 238848
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 65244
+          },
+          "output": {
+            "records": 3,
+            "sum": 3736
+          },
+          "total": {
+            "records": 3,
+            "sum": 307828
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 1,
+        "qualityFail": 2,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 373654
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 307456
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 66198
+          },
+          "output": {
+            "records": 3,
+            "sum": 4884
+          },
+          "total": {
+            "records": 3,
+            "sum": 378538
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.22970619956599148,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 0,
+        "baselineTotal": null,
+        "comparatorTotal": null,
+        "reduction": null
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-clean"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 444345
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 369664
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 74681
+          },
+          "output": {
+            "records": 3,
+            "sum": 3816
+          },
+          "total": {
+            "records": 3,
+            "sum": 448161
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 467714
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 408064
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 59650
+          },
+          "output": {
+            "records": 3,
+            "sum": 3550
+          },
+          "total": {
+            "records": 3,
+            "sum": 471264
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.05155067040639416,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 0,
+        "baselineTotal": null,
+        "comparatorTotal": null,
+        "reduction": null
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-debt"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 134748
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 108288
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 26460
+          },
+          "output": {
+            "records": 3,
+            "sum": 922
+          },
+          "total": {
+            "records": 3,
+            "sum": 135670
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 166060
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 147712
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 18348
+          },
+          "output": {
+            "records": 3,
+            "sum": 1071
+          },
+          "total": {
+            "records": 3,
+            "sum": 167131
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.23189356526866667,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 135670,
+        "comparatorTotal": 167131,
+        "reduction": -0.23189356526866667
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-gain"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 1,
+        "qualityFail": 2,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 146951
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 118528
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 28423
+          },
+          "output": {
+            "records": 3,
+            "sum": 1494
+          },
+          "total": {
+            "records": 3,
+            "sum": 148445
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 264122
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 228608
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 35514
+          },
+          "output": {
+            "records": 3,
+            "sum": 2918
+          },
+          "total": {
+            "records": 3,
+            "sum": 267040
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.7989154232207214,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 1,
+        "baselineTotal": 49400,
+        "comparatorTotal": 68379,
+        "reduction": -0.38419028340080974
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-help"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 2,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 89578
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 75264
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 14314
+          },
+          "output": {
+            "records": 3,
+            "sum": 1740
+          },
+          "total": {
+            "records": 3,
+            "sum": 91318
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 89024
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 75264
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 13760
+          },
+          "output": {
+            "records": 3,
+            "sum": 1959
+          },
+          "total": {
+            "records": 3,
+            "sum": 90983
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.00366849909108824,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 2,
+        "baselineTotal": 61241,
+        "comparatorTotal": 60682,
+        "reduction": 0.009127871850557634
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-review"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 167174
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 131584
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 35590
+          },
+          "output": {
+            "records": 3,
+            "sum": 1297
+          },
+          "total": {
+            "records": 3,
+            "sum": 168471
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 2,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 185924
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 148736
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 37188
+          },
+          "output": {
+            "records": 3,
+            "sum": 1411
+          },
+          "total": {
+            "records": 3,
+            "sum": 187335
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.11197179336503016,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 2,
+        "baselineTotal": 101134,
+        "comparatorTotal": 121095,
+        "reduction": -0.19737180374552565
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "lazy-verify"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 266042
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 221440
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 44602
+          },
+          "output": {
+            "records": 3,
+            "sum": 2369
+          },
+          "total": {
+            "records": 3,
+            "sum": 268411
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 266005
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 229632
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 36373
+          },
+          "output": {
+            "records": 3,
+            "sum": 2322
+          },
+          "total": {
+            "records": 3,
+            "sum": 268327
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.00031295289686339434,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 268411,
+        "comparatorTotal": 268327,
+        "reduction": 0.00031295289686339434
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "slop-check"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 346229
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 277248
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 68981
+          },
+          "output": {
+            "records": 3,
+            "sum": 3361
+          },
+          "total": {
+            "records": 3,
+            "sum": 349590
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 0,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 299744
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 246016
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 53728
+          },
+          "output": {
+            "records": 3,
+            "sum": 5678
+          },
+          "total": {
+            "records": 3,
+            "sum": 305422
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.12634228667868075,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 0,
+        "baselineTotal": null,
+        "comparatorTotal": null,
+        "reduction": null
+      }
+    },
+    {
+      "group": "single-entrypoint",
+      "skills": [
+        "test-quality-review"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 285946
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 226560
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 59386
+          },
+          "output": {
+            "records": 3,
+            "sum": 4122
+          },
+          "total": {
+            "records": 3,
+            "sum": 290068
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 3,
+        "attempts": 3,
+        "absentOrNotYetTerminal": 0,
+        "completions": 3,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 3,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 3,
+            "sum": 244218
+          },
+          "cachedInput": {
+            "records": 3,
+            "sum": 199424
+          },
+          "uncachedInput": {
+            "records": 3,
+            "sum": 44794
+          },
+          "output": {
+            "records": 3,
+            "sum": 4253
+          },
+          "total": {
+            "records": 3,
+            "sum": 248471
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.143404305197402,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 3,
+        "baselineTotal": 290068,
+        "comparatorTotal": 248471,
+        "reduction": 0.143404305197402
+      }
+    }
+  ],
+  "grouped": [
+    {
+      "group": "all-entrypoints",
+      "skills": [
+        "layz-test",
+        "lazy",
+        "lazy-audit",
+        "lazy-clean",
+        "lazy-debt",
+        "lazy-gain",
+        "lazy-help",
+        "lazy-review",
+        "lazy-verify",
+        "slop-check",
+        "test-quality-review"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 33,
+        "attempts": 33,
+        "absentOrNotYetTerminal": 0,
+        "completions": 33,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 33,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 33,
+            "sum": 4206084
+          },
+          "cachedInput": {
+            "records": 33,
+            "sum": 3552000
+          },
+          "uncachedInput": {
+            "records": 33,
+            "sum": 654084
+          },
+          "output": {
+            "records": 33,
+            "sum": 67112
+          },
+          "total": {
+            "records": 33,
+            "sum": 4273196
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 33,
+        "attempts": 33,
+        "absentOrNotYetTerminal": 0,
+        "completions": 33,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 32,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 33,
+            "sum": 4034649
+          },
+          "cachedInput": {
+            "records": 33,
+            "sum": 3467392
+          },
+          "uncachedInput": {
+            "records": 33,
+            "sum": 567257
+          },
+          "output": {
+            "records": 33,
+            "sum": 66159
+          },
+          "total": {
+            "records": 33,
+            "sum": 4100808
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.04034170208902188,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 32,
+        "baselineTotal": 3780101,
+        "comparatorTotal": 3835239,
+        "reduction": -0.01458638274479962
+      }
+    },
+    {
+      "group": "changed-three-entrypoints",
+      "skills": [
+        "lazy-help",
+        "lazy-debt",
+        "slop-check"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 9,
+        "attempts": 9,
+        "absentOrNotYetTerminal": 0,
+        "completions": 9,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 9,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 9,
+            "sum": 649616
+          },
+          "cachedInput": {
+            "records": 9,
+            "sum": 551040
+          },
+          "uncachedInput": {
+            "records": 9,
+            "sum": 98576
+          },
+          "output": {
+            "records": 9,
+            "sum": 7584
+          },
+          "total": {
+            "records": 9,
+            "sum": 657200
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 9,
+        "attempts": 9,
+        "absentOrNotYetTerminal": 0,
+        "completions": 9,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 9,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 9,
+            "sum": 640185
+          },
+          "cachedInput": {
+            "records": 9,
+            "sum": 563200
+          },
+          "uncachedInput": {
+            "records": 9,
+            "sum": 76985
+          },
+          "output": {
+            "records": 9,
+            "sum": 6480
+          },
+          "total": {
+            "records": 9,
+            "sum": 646665
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.016030127814972595,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 9,
+        "baselineTotal": 657200,
+        "comparatorTotal": 646665,
+        "reduction": 0.016030127814972595
+      }
+    },
+    {
+      "group": "unchanged-eight-entrypoints",
+      "skills": [
+        "layz-test",
+        "lazy",
+        "lazy-audit",
+        "lazy-clean",
+        "lazy-gain",
+        "lazy-review",
+        "lazy-verify",
+        "test-quality-review"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 24,
+        "attempts": 24,
+        "absentOrNotYetTerminal": 0,
+        "completions": 24,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 24,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 24,
+            "sum": 3556468
+          },
+          "cachedInput": {
+            "records": 24,
+            "sum": 3000960
+          },
+          "uncachedInput": {
+            "records": 24,
+            "sum": 555508
+          },
+          "output": {
+            "records": 24,
+            "sum": 59528
+          },
+          "total": {
+            "records": 24,
+            "sum": 3615996
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 24,
+        "attempts": 24,
+        "absentOrNotYetTerminal": 0,
+        "completions": 24,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 23,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 24,
+            "sum": 3394464
+          },
+          "cachedInput": {
+            "records": 24,
+            "sum": 2904192
+          },
+          "uncachedInput": {
+            "records": 24,
+            "sum": 490272
+          },
+          "output": {
+            "records": 24,
+            "sum": 59679
+          },
+          "total": {
+            "records": 24,
+            "sum": 3454143
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.044760281814471004,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 23,
+        "baselineTotal": 3122901,
+        "comparatorTotal": 3188574,
+        "reduction": -0.02102948508454161
+      }
+    },
+    {
+      "group": "all-entrypoints",
+      "skills": [
+        "layz-test",
+        "lazy",
+        "lazy-audit",
+        "lazy-clean",
+        "lazy-debt",
+        "lazy-gain",
+        "lazy-help",
+        "lazy-review",
+        "lazy-verify",
+        "slop-check",
+        "test-quality-review"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 33,
+        "attempts": 33,
+        "absentOrNotYetTerminal": 0,
+        "completions": 33,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 32,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 33,
+            "sum": 4575692
+          },
+          "cachedInput": {
+            "records": 33,
+            "sum": 3953152
+          },
+          "uncachedInput": {
+            "records": 33,
+            "sum": 622540
+          },
+          "output": {
+            "records": 33,
+            "sum": 71544
+          },
+          "total": {
+            "records": 33,
+            "sum": 4647236
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 33,
+        "attempts": 33,
+        "absentOrNotYetTerminal": 0,
+        "completions": 33,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 32,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 33,
+            "sum": 4412766
+          },
+          "cachedInput": {
+            "records": 33,
+            "sum": 3849600
+          },
+          "uncachedInput": {
+            "records": 33,
+            "sum": 563166
+          },
+          "output": {
+            "records": 33,
+            "sum": 71241
+          },
+          "total": {
+            "records": 33,
+            "sum": 4484007
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.03512388869426908,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 31,
+        "baselineTotal": 3973967,
+        "comparatorTotal": 3963223,
+        "reduction": 0.002703595676561976
+      }
+    },
+    {
+      "group": "changed-three-entrypoints",
+      "skills": [
+        "lazy-help",
+        "lazy-debt",
+        "slop-check"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 9,
+        "attempts": 9,
+        "absentOrNotYetTerminal": 0,
+        "completions": 9,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 9,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 9,
+            "sum": 654990
+          },
+          "cachedInput": {
+            "records": 9,
+            "sum": 553216
+          },
+          "uncachedInput": {
+            "records": 9,
+            "sum": 101774
+          },
+          "output": {
+            "records": 9,
+            "sum": 9595
+          },
+          "total": {
+            "records": 9,
+            "sum": 664585
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "finalRecovery": {
+        "expected": 9,
+        "attempts": 9,
+        "absentOrNotYetTerminal": 0,
+        "completions": 9,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 9,
+        "qualityFail": 0,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 9,
+            "sum": 679887
+          },
+          "cachedInput": {
+            "records": 9,
+            "sum": 578560
+          },
+          "uncachedInput": {
+            "records": 9,
+            "sum": 101327
+          },
+          "output": {
+            "records": 9,
+            "sum": 9339
+          },
+          "total": {
+            "records": 9,
+            "sum": 689226
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": true
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.03707727378740122,
+      "efficiencyQualified": true,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 9,
+        "baselineTotal": 664585,
+        "comparatorTotal": 689226,
+        "reduction": -0.03707727378740122
+      }
+    },
+    {
+      "group": "unchanged-eight-entrypoints",
+      "skills": [
+        "layz-test",
+        "lazy",
+        "lazy-audit",
+        "lazy-clean",
+        "lazy-gain",
+        "lazy-review",
+        "lazy-verify",
+        "test-quality-review"
+      ],
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 24,
+        "attempts": 24,
+        "absentOrNotYetTerminal": 0,
+        "completions": 24,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 23,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 24,
+            "sum": 3920702
+          },
+          "cachedInput": {
+            "records": 24,
+            "sum": 3399936
+          },
+          "uncachedInput": {
+            "records": 24,
+            "sum": 520766
+          },
+          "output": {
+            "records": 24,
+            "sum": 61949
+          },
+          "total": {
+            "records": 24,
+            "sum": 3982651
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 24,
+        "attempts": 24,
+        "absentOrNotYetTerminal": 0,
+        "completions": 24,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 23,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 24,
+            "sum": 3732879
+          },
+          "cachedInput": {
+            "records": 24,
+            "sum": 3271040
+          },
+          "uncachedInput": {
+            "records": 24,
+            "sum": 461839
+          },
+          "output": {
+            "records": 24,
+            "sum": 61902
+          },
+          "total": {
+            "records": 24,
+            "sum": 3794781
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.04717209717848736,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 22,
+        "baselineTotal": 3309382,
+        "comparatorTotal": 3273997,
+        "reduction": 0.010692328658341688
+      }
+    },
+    {
+      "group": "all-entrypoints",
+      "skills": [
+        "layz-test",
+        "lazy",
+        "lazy-audit",
+        "lazy-clean",
+        "lazy-debt",
+        "lazy-gain",
+        "lazy-help",
+        "lazy-review",
+        "lazy-verify",
+        "slop-check",
+        "test-quality-review"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 33,
+        "attempts": 33,
+        "absentOrNotYetTerminal": 0,
+        "completions": 33,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 23,
+        "qualityFail": 10,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 33,
+            "sum": 3270476
+          },
+          "cachedInput": {
+            "records": 33,
+            "sum": 2709760
+          },
+          "uncachedInput": {
+            "records": 33,
+            "sum": 560716
+          },
+          "output": {
+            "records": 33,
+            "sum": 38171
+          },
+          "total": {
+            "records": 33,
+            "sum": 3308647
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 33,
+        "attempts": 33,
+        "absentOrNotYetTerminal": 0,
+        "completions": 33,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 20,
+        "qualityFail": 13,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 33,
+            "sum": 3408627
+          },
+          "cachedInput": {
+            "records": 33,
+            "sum": 2909184
+          },
+          "uncachedInput": {
+            "records": 33,
+            "sum": 499443
+          },
+          "output": {
+            "records": 33,
+            "sum": 41650
+          },
+          "total": {
+            "records": 33,
+            "sum": 3450277
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.0428060170819069,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 20,
+        "baselineTotal": 1387652,
+        "comparatorTotal": 1461260,
+        "reduction": -0.05304499975498178
+      }
+    },
+    {
+      "group": "changed-three-entrypoints",
+      "skills": [
+        "lazy-help",
+        "lazy-debt",
+        "slop-check"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 9,
+        "attempts": 9,
+        "absentOrNotYetTerminal": 0,
+        "completions": 9,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 8,
+        "qualityFail": 1,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 9,
+            "sum": 509294
+          },
+          "cachedInput": {
+            "records": 9,
+            "sum": 385536
+          },
+          "uncachedInput": {
+            "records": 9,
+            "sum": 123758
+          },
+          "output": {
+            "records": 9,
+            "sum": 6591
+          },
+          "total": {
+            "records": 9,
+            "sum": 515885
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 9,
+        "attempts": 9,
+        "absentOrNotYetTerminal": 0,
+        "completions": 9,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 6,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 9,
+            "sum": 548406
+          },
+          "cachedInput": {
+            "records": 9,
+            "sum": 472064
+          },
+          "uncachedInput": {
+            "records": 9,
+            "sum": 76342
+          },
+          "output": {
+            "records": 9,
+            "sum": 5539
+          },
+          "total": {
+            "records": 9,
+            "sum": 553945
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.07377613227754254,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 6,
+        "baselineTotal": 227982,
+        "comparatorTotal": 242713,
+        "reduction": -0.06461475028730335
+      }
+    },
+    {
+      "group": "unchanged-eight-entrypoints",
+      "skills": [
+        "layz-test",
+        "lazy",
+        "lazy-audit",
+        "lazy-clean",
+        "lazy-gain",
+        "lazy-review",
+        "lazy-verify",
+        "test-quality-review"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "train",
+      "baseline": {
+        "expected": 24,
+        "attempts": 24,
+        "absentOrNotYetTerminal": 0,
+        "completions": 24,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 15,
+        "qualityFail": 9,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 24,
+            "sum": 2761182
+          },
+          "cachedInput": {
+            "records": 24,
+            "sum": 2324224
+          },
+          "uncachedInput": {
+            "records": 24,
+            "sum": 436958
+          },
+          "output": {
+            "records": 24,
+            "sum": 31580
+          },
+          "total": {
+            "records": 24,
+            "sum": 2792762
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 24,
+        "attempts": 24,
+        "absentOrNotYetTerminal": 0,
+        "completions": 24,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 14,
+        "qualityFail": 10,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 24,
+            "sum": 2860221
+          },
+          "cachedInput": {
+            "records": 24,
+            "sum": 2437120
+          },
+          "uncachedInput": {
+            "records": 24,
+            "sum": 423101
+          },
+          "output": {
+            "records": 24,
+            "sum": 36111
+          },
+          "total": {
+            "records": 24,
+            "sum": 2896332
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.03708515082917918,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 14,
+        "baselineTotal": 1159670,
+        "comparatorTotal": 1218547,
+        "reduction": -0.050770477808341985
+      }
+    },
+    {
+      "group": "all-entrypoints",
+      "skills": [
+        "layz-test",
+        "lazy",
+        "lazy-audit",
+        "lazy-clean",
+        "lazy-debt",
+        "lazy-gain",
+        "lazy-help",
+        "lazy-review",
+        "lazy-verify",
+        "slop-check",
+        "test-quality-review"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 33,
+        "attempts": 33,
+        "absentOrNotYetTerminal": 0,
+        "completions": 33,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 17,
+        "qualityFail": 16,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 33,
+            "sum": 3177707
+          },
+          "cachedInput": {
+            "records": 33,
+            "sum": 2644480
+          },
+          "uncachedInput": {
+            "records": 33,
+            "sum": 533227
+          },
+          "output": {
+            "records": 33,
+            "sum": 36293
+          },
+          "total": {
+            "records": 33,
+            "sum": 3214000
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 33,
+        "attempts": 33,
+        "absentOrNotYetTerminal": 0,
+        "completions": 33,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 18,
+        "qualityFail": 15,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 33,
+            "sum": 3565052
+          },
+          "cachedInput": {
+            "records": 33,
+            "sum": 3074560
+          },
+          "uncachedInput": {
+            "records": 33,
+            "sum": 490492
+          },
+          "output": {
+            "records": 33,
+            "sum": 43330
+          },
+          "total": {
+            "records": 33,
+            "sum": 3608382
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.12270752955818298,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 14,
+        "baselineTotal": 905924,
+        "comparatorTotal": 934085,
+        "reduction": -0.031085389061334068
+      }
+    },
+    {
+      "group": "changed-three-entrypoints",
+      "skills": [
+        "lazy-help",
+        "lazy-debt",
+        "slop-check"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 9,
+        "attempts": 9,
+        "absentOrNotYetTerminal": 0,
+        "completions": 9,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 5,
+        "qualityFail": 4,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 9,
+            "sum": 570555
+          },
+          "cachedInput": {
+            "records": 9,
+            "sum": 460800
+          },
+          "uncachedInput": {
+            "records": 9,
+            "sum": 109755
+          },
+          "output": {
+            "records": 9,
+            "sum": 6023
+          },
+          "total": {
+            "records": 9,
+            "sum": 576578
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 9,
+        "attempts": 9,
+        "absentOrNotYetTerminal": 0,
+        "completions": 9,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 6,
+        "qualityFail": 3,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 9,
+            "sum": 554828
+          },
+          "cachedInput": {
+            "records": 9,
+            "sum": 468992
+          },
+          "uncachedInput": {
+            "records": 9,
+            "sum": 85836
+          },
+          "output": {
+            "records": 9,
+            "sum": 8708
+          },
+          "total": {
+            "records": 9,
+            "sum": 563536
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": 0.022619662907707228,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 5,
+        "baselineTotal": 196911,
+        "comparatorTotal": 227813,
+        "reduction": -0.1569338432083529
+      }
+    },
+    {
+      "group": "unchanged-eight-entrypoints",
+      "skills": [
+        "layz-test",
+        "lazy",
+        "lazy-audit",
+        "lazy-clean",
+        "lazy-gain",
+        "lazy-review",
+        "lazy-verify",
+        "test-quality-review"
+      ],
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "variant": "heldout",
+      "baseline": {
+        "expected": 24,
+        "attempts": 24,
+        "absentOrNotYetTerminal": 0,
+        "completions": 24,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 12,
+        "qualityFail": 12,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 24,
+            "sum": 2607152
+          },
+          "cachedInput": {
+            "records": 24,
+            "sum": 2183680
+          },
+          "uncachedInput": {
+            "records": 24,
+            "sum": 423472
+          },
+          "output": {
+            "records": 24,
+            "sum": 30270
+          },
+          "total": {
+            "records": 24,
+            "sum": 2637422
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 24,
+        "attempts": 24,
+        "absentOrNotYetTerminal": 0,
+        "completions": 24,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 12,
+        "qualityFail": 12,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 24,
+            "sum": 3010224
+          },
+          "cachedInput": {
+            "records": 24,
+            "sum": 2605568
+          },
+          "uncachedInput": {
+            "records": 24,
+            "sum": 404656
+          },
+          "output": {
+            "records": 24,
+            "sum": 34622
+          },
+          "total": {
+            "records": 24,
+            "sum": 3044846
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.15447812295491592,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 9,
+        "baselineTotal": 709013,
+        "comparatorTotal": 706272,
+        "reduction": 0.0038659375780133454
+      }
+    },
+    {
+      "group": "all-entrypoints",
+      "skills": [
+        "layz-test",
+        "lazy",
+        "lazy-audit",
+        "lazy-clean",
+        "lazy-debt",
+        "lazy-gain",
+        "lazy-help",
+        "lazy-review",
+        "lazy-verify",
+        "slop-check",
+        "test-quality-review"
+      ],
+      "model": null,
+      "reasoning": "medium",
+      "variant": null,
+      "baseline": {
+        "expected": 132,
+        "attempts": 132,
+        "absentOrNotYetTerminal": 0,
+        "completions": 132,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 105,
+        "qualityFail": 27,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 132,
+            "sum": 15229959
+          },
+          "cachedInput": {
+            "records": 132,
+            "sum": 12859392
+          },
+          "uncachedInput": {
+            "records": 132,
+            "sum": 2370567
+          },
+          "output": {
+            "records": 132,
+            "sum": 213120
+          },
+          "total": {
+            "records": 132,
+            "sum": 15443079
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 132,
+        "attempts": 132,
+        "absentOrNotYetTerminal": 0,
+        "completions": 132,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 102,
+        "qualityFail": 30,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 132,
+            "sum": 15421094
+          },
+          "cachedInput": {
+            "records": 132,
+            "sum": 13300736
+          },
+          "uncachedInput": {
+            "records": 132,
+            "sum": 2120358
+          },
+          "output": {
+            "records": 132,
+            "sum": 222380
+          },
+          "total": {
+            "records": 132,
+            "sum": 15643474
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.012976363068530672,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 97,
+        "baselineTotal": 10047644,
+        "comparatorTotal": 10193807,
+        "reduction": -0.014546992309838913
+      }
+    },
+    {
+      "group": "changed-three-entrypoints",
+      "skills": [
+        "lazy-help",
+        "lazy-debt",
+        "slop-check"
+      ],
+      "model": null,
+      "reasoning": "medium",
+      "variant": null,
+      "baseline": {
+        "expected": 36,
+        "attempts": 36,
+        "absentOrNotYetTerminal": 0,
+        "completions": 36,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 31,
+        "qualityFail": 5,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 36,
+            "sum": 2384455
+          },
+          "cachedInput": {
+            "records": 36,
+            "sum": 1950592
+          },
+          "uncachedInput": {
+            "records": 36,
+            "sum": 433863
+          },
+          "output": {
+            "records": 36,
+            "sum": 29793
+          },
+          "total": {
+            "records": 36,
+            "sum": 2414248
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 36,
+        "attempts": 36,
+        "absentOrNotYetTerminal": 0,
+        "completions": 36,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 30,
+        "qualityFail": 6,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 36,
+            "sum": 2423306
+          },
+          "cachedInput": {
+            "records": 36,
+            "sum": 2082816
+          },
+          "uncachedInput": {
+            "records": 36,
+            "sum": 340490
+          },
+          "output": {
+            "records": 36,
+            "sum": 30066
+          },
+          "total": {
+            "records": 36,
+            "sum": 2453372
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.01620546025097669,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 29,
+        "baselineTotal": 1746678,
+        "comparatorTotal": 1806417,
+        "reduction": -0.034201495639150536
+      }
+    },
+    {
+      "group": "unchanged-eight-entrypoints",
+      "skills": [
+        "layz-test",
+        "lazy",
+        "lazy-audit",
+        "lazy-clean",
+        "lazy-gain",
+        "lazy-review",
+        "lazy-verify",
+        "test-quality-review"
+      ],
+      "model": null,
+      "reasoning": "medium",
+      "variant": null,
+      "baseline": {
+        "expected": 96,
+        "attempts": 96,
+        "absentOrNotYetTerminal": 0,
+        "completions": 96,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 74,
+        "qualityFail": 22,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 96,
+            "sum": 12845504
+          },
+          "cachedInput": {
+            "records": 96,
+            "sum": 10908800
+          },
+          "uncachedInput": {
+            "records": 96,
+            "sum": 1936704
+          },
+          "output": {
+            "records": 96,
+            "sum": 183327
+          },
+          "total": {
+            "records": 96,
+            "sum": 13028831
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "finalRecovery": {
+        "expected": 96,
+        "attempts": 96,
+        "absentOrNotYetTerminal": 0,
+        "completions": 96,
+        "executionFailures": 0,
+        "missingUsage": 0,
+        "qualityPass": 72,
+        "qualityFail": 24,
+        "ungraded": 0,
+        "knownUsage": {
+          "input": {
+            "records": 96,
+            "sum": 12997788
+          },
+          "cachedInput": {
+            "records": 96,
+            "sum": 11217920
+          },
+          "uncachedInput": {
+            "records": 96,
+            "sum": 1779868
+          },
+          "output": {
+            "records": 96,
+            "sum": 192314
+          },
+          "total": {
+            "records": 96,
+            "sum": 13190102
+          }
+        },
+        "allExpectedMeasured": true,
+        "allExpectedQualityPass": false
+      },
+      "allExpectedMeasured": true,
+      "fullRowTotalReduction": -0.01237800996881444,
+      "efficiencyQualified": false,
+      "conditionalMatchedQualityPass": {
+        "label": "Conditional on both attempts passing; not a full-suite efficiency qualification",
+        "pairCount": 68,
+        "baselineTotal": 8300966,
+        "comparatorTotal": 8387390,
+        "reduction": -0.01041131839354592
+      }
+    }
+  ]
+}

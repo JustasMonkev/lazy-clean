@@ -1,0 +1,13 @@
+{
+  "scope": "Only the two archived known-good Playwright oracle controls, not the whole current repository.",
+  "exitCode": 1,
+  "findings": 12,
+  "command": [
+    "node",
+    "inputs/baseline/skills/slop-check/scripts/check.mjs",
+    "inputs/grading/known-good-train.ts",
+    "inputs/grading/known-good-heldout.ts",
+    "--json"
+  ],
+  "rationale": "All reported any signatures/casts preserve unchanged upstream APIs/escape behavior outside the requested control fix. They are intentional retained fixture context, not suppressed, changed, relocated to silence scans, or claimed clean."
+}

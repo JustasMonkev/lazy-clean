@@ -1,0 +1,98 @@
+[
+  {
+    "path": "<STUDY_ROOT>/grading/known-good-train.ts",
+    "line": 37,
+    "column": 31,
+    "rule": "no-any",
+    "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+    "severity": "review"
+  },
+  {
+    "path": "<STUDY_ROOT>/grading/known-good-train.ts",
+    "line": 50,
+    "column": 37,
+    "rule": "no-any",
+    "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+    "severity": "review"
+  },
+  {
+    "path": "<STUDY_ROOT>/grading/known-good-train.ts",
+    "line": 71,
+    "column": 43,
+    "rule": "no-any",
+    "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+    "severity": "review"
+  },
+  {
+    "path": "<STUDY_ROOT>/grading/known-good-train.ts",
+    "line": 106,
+    "column": 28,
+    "rule": "no-any",
+    "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+    "severity": "review"
+  },
+  {
+    "path": "<STUDY_ROOT>/grading/known-good-train.ts",
+    "line": 160,
+    "column": 53,
+    "rule": "no-any",
+    "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+    "severity": "review"
+  },
+  {
+    "path": "<STUDY_ROOT>/grading/known-good-train.ts",
+    "line": 163,
+    "column": 50,
+    "rule": "no-any",
+    "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+    "severity": "review"
+  },
+  {
+    "path": "<STUDY_ROOT>/grading/known-good-heldout.ts",
+    "line": 37,
+    "column": 31,
+    "rule": "no-any",
+    "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+    "severity": "review"
+  },
+  {
+    "path": "<STUDY_ROOT>/grading/known-good-heldout.ts",
+    "line": 50,
+    "column": 37,
+    "rule": "no-any",
+    "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+    "severity": "review"
+  },
+  {
+    "path": "<STUDY_ROOT>/grading/known-good-heldout.ts",
+    "line": 71,
+    "column": 43,
+    "rule": "no-any",
+    "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+    "severity": "review"
+  },
+  {
+    "path": "<STUDY_ROOT>/grading/known-good-heldout.ts",
+    "line": 106,
+    "column": 28,
+    "rule": "no-any",
+    "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+    "severity": "review"
+  },
+  {
+    "path": "<STUDY_ROOT>/grading/known-good-heldout.ts",
+    "line": 159,
+    "column": 53,
+    "rule": "no-any",
+    "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+    "severity": "review"
+  },
+  {
+    "path": "<STUDY_ROOT>/grading/known-good-heldout.ts",
+    "line": 162,
+    "column": 50,
+    "rule": "no-any",
+    "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+    "severity": "review"
+  }
+]

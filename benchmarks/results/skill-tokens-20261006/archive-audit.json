@@ -1,0 +1,28 @@
+{
+  "captured": "2026-10-07T03:38:51.363Z",
+  "counts": {
+    "members": 5531,
+    "private_account_paths": 44,
+    "original_study_paths": 0,
+    "git_entries": 0,
+    "credential_shapes": 0,
+    "record_metric_mismatches": 0,
+    "compared_records": 660,
+    "archive_hash_mismatches": 0,
+    "binary_files": 0,
+    "private_owner_headers": 0,
+    "unexpected_pax_headers": 0,
+    "missing_archives": 0,
+    "missing_original_records": 0,
+    "missing_archive_inventory": 0,
+    "unexpected_archives": 0,
+    "duplicate_archives": 0,
+    "duplicate_records": 0,
+    "missing_published_records": 0,
+    "unexpected_published_records": 0,
+    "duplicate_snapshot_records": 0,
+    "snapshot_record_mismatches": 0,
+    "comparison_discrepancies": 0
+  },
+  "scope": "Every listed archive and original terminal record is required; missing evidence fails the audit. Pattern audit is not proof of absence of all possible secrets."
+}
