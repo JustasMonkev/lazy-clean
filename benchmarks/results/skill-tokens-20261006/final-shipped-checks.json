@@ -50,7 +50,9 @@
   "publishedArchiveAudit": {
     "exit": 0,
     "comparedOriginalRecords": 660,
-    "archiveMembers": 5523,
+    "archiveMembers": 5531,
+    "captured": "2026-10-07T03:38:51.363Z",
+    "report": "archive-audit.json",
     "allDiscrepancies": 0
   },
   "diffCheck": {

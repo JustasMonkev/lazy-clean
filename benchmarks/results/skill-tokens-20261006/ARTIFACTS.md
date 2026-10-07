@@ -4,6 +4,12 @@ This package records GPT-6.1 Sol / medium and GPT-6 Luna / medium trials on a bo
 
 ## Files
 
+All four `.tar.gz` files are local-only and ignored, removed from the PR at the
+user's request. `archives.json` retains their historical hashes and sizes; it
+does not mean they are distributed. Raw reconstruction and full archive audits
+require those local files and the original live study records. Readable tables,
+grades, controls and audit helpers remain in the repository.
+
 | File | Contents |
 |---|---|
 | `inputs.tar.gz` | Frozen public source, all task prompts, all available frozen skill closures, original manifests/harnesses, prompt-isolation audit, and independent coding oracles. |

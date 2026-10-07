@@ -12,7 +12,9 @@
     "binary_files": 0,
     "private_owner_headers": 0,
     "unexpected_pax_headers": 0,
+    "missing_archives": 0,
+    "missing_original_records": 0,
     "comparison_discrepancies": 0
   },
-  "scope": "Every archive member; available original terminal record usage/status fields compared. Pattern audit is not proof of absence of all possible secrets."
+  "scope": "Every listed archive and original terminal record is required; missing evidence fails the audit. Pattern audit is not proof of absence of all possible secrets."
 }

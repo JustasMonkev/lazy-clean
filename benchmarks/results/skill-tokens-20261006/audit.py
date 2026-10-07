@@ -10,9 +10,13 @@ def main():
     study = Path(os.environ.get('STUDY_SNAPSHOT_ROOT', publication.parent))
     counts = dict(members=0, private_account_paths=0, original_study_paths=0, git_entries=0,
                   credential_shapes=0, record_metric_mismatches=0, compared_records=0,
-                  archive_hash_mismatches=0, binary_files=0, private_owner_headers=0, unexpected_pax_headers=0)
+                  archive_hash_mismatches=0, binary_files=0, private_owner_headers=0, unexpected_pax_headers=0,
+                  missing_archives=0, missing_original_records=0)
     for archive in json.loads((publication / 'archives.json').read_text()):
         archive_path = publication / archive['file']
+        if not archive_path.is_file():
+            counts['missing_archives'] += 1
+            continue
         counts['archive_hash_mismatches'] += hashlib.sha256(archive_path.read_bytes()).hexdigest() != archive['sha256']
         with tarfile.open(archive_path) as entries:
             for entry in entries:
@@ -39,6 +43,8 @@ def main():
                         fields = ['usage', 'status', 'terminal', 'code', 'signal', 'timeout', 'elapsedMs', 'arm', 'model', 'skill', 'variant', 'repetition']
                         counts['compared_records'] += 1
                         counts['record_metric_mismatches'] += any(published.get(key) != original.get(key) for key in fields)
+                    else:
+                        counts['missing_original_records'] += 1
     snapshot = json.loads((publication / 'snapshot.json').read_text())
     comparison = json.loads((publication / 'final-comparison.json').read_text())
     comparison_checks = {'all44Rows': len(comparison['perSkill']) == 44, 'all15Groups': len(comparison['grouped']) == 15,
@@ -57,7 +63,7 @@ def main():
         'allPassed': all(comparison_checks.values()), 'scope': 'All per-entrypoint/group field sums independently recomputed from captured status rows'}, indent=2) + '\n')
     counts['comparison_discrepancies'] = sum(not value for value in comparison_checks.values())
     report = {'captured': json.loads((publication / 'snapshot.json').read_text())['captured'], 'counts': counts,
-              'scope': 'Every archive member; available original terminal record usage/status fields compared. Pattern audit is not proof of absence of all possible secrets.'}
+              'scope': 'Every listed archive and original terminal record is required; missing evidence fails the audit. Pattern audit is not proof of absence of all possible secrets.'}
     (publication / 'archive-audit.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(counts))
     raise SystemExit(int(any(value for key, value in counts.items() if key not in ['members', 'compared_records'])))

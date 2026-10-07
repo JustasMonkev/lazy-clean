@@ -128,6 +128,12 @@ quality failure; coverage, effectiveness proof and restoration are assessed too.
 
 ## Checks and artifacts
 
+The four `.tar.gz` archives were removed from the PR at the user's request.
+They remain local, ignored artifacts. The archive/check records below describe
+the original complete capture, not files distributed by the current PR.
+Tables, grades, hashes, public controls and helpers remain committed; full raw
+reconstruction requires the separately retained local evidence.
+
 - Actual final `npm test`: exit 0; checker/CLI suites, 812 hook checks and 764
   language checks pass. Fake-client/mutation failures are intentional harness
   cases; bridge fixtures do not qualify a real verification engine.
@@ -150,22 +156,27 @@ quality failure; coverage, effectiveness proof and restoration are assessed too.
   Git repository; its first no-Git setup failure is preserved.
 
 Detailed checked outcomes and limitations are in [final-shipped-checks.json](final-shipped-checks.json)
-and the checks archive; [archive-audit.json](archive-audit.json) and
+and the local checks archive; [archive-audit.json](archive-audit.json) and
 [comparison-audit.json](comparison-audit.json) record package verification.
 
 [Artifact guide](ARTIFACTS.md) explains extraction, case reconstruction,
 normalization, checksums and portable runner guards. Frozen inputs, terminal
 JSONL/stderr/diffs, submitted tests, independent grades/oracles and failures are
-retained in four deduplicated archives. Original and publication hashes/modes
+retained locally in four deduplicated archives, not shipped in this PR. Original and publication hashes/modes
 are recorded; no user Git/auth/home state is bundled. Publication paths are
 normalized and credential-shaped values scanned/redacted. The audit is a
 bounded heuristic check, not a secrecy guarantee or deterministic replay.
 
-To rerun the public oracle proof after extracting `inputs.tar.gz` here:
+If the local `inputs.tar.gz` is available, extract it here and run the proof:
 
 ```sh
-node grading/proof.mjs "$PWD/inputs/source/packages/isomorphic/stringUtils.ts"
+node grading/proof.mjs
 ```
 
 The expected original-source assertion failures distinguish the two known-good
 controls from tooling failures; they are not presented as passing project tests.
+
+Review-fix regression checks run with `python3 tests/skill_token_publication_test.py`
+from the repository root. They use temporary fixtures, not the omitted archives.
+`audit.py` now fails for any missing archive or original record; a clean clone
+without local evidence cannot report a complete successful archive audit.

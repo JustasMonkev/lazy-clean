@@ -1,10 +1,10 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 const grading = dirname(fileURLToPath(import.meta.url));
 const root = dirname(grading);
-const original = process.argv[2] ?? join(root, 'source/packages/isomorphic/stringUtils.ts');
+const original = process.argv[2] ?? join(root, 'inputs/source/packages/isomorphic/stringUtils.ts');
 const cases = [
   ['original-train', 'train', original, 1, 'behavior-fail'],
   ['original-heldout', 'heldout', original, 1, 'behavior-fail'],
