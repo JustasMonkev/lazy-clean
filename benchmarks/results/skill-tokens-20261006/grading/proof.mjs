@@ -18,7 +18,7 @@ for (const [name, variant, module, expectedExit, expectedStatus] of cases) {
   writeFileSync(join(grading, name + '.json'), result.stdout);
   writeFileSync(join(grading, name + '.stderr'), result.stderr);
   const report = JSON.parse(result.stdout);
-  if (result.status !== expectedExit || report.status !== expectedStatus) throw new Error(`Oracle proof failed for ${name}`);
+  if (result.status !== expectedExit || report.status !== expectedStatus) throw new Error(`Oracle proof failed for ${name}: ${report.error ?? report.status}`);
   if (name.startsWith('original') && !report.checks.some(c => c.status === 'fail' && c.name === (variant === 'train' ? 'astral suffix counts one point' : 'uppercase scheme'))) throw new Error(`Intended assertion did not fail for ${name}`);
   proof.push({ name, exitCode: result.status, status: report.status, passed: report.passed ?? null, failed: report.failed ?? null });
 }

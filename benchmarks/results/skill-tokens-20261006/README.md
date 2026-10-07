@@ -51,6 +51,10 @@ Its manifest pins TypeScript 6.0.3. Observed host versions were Node v26.5.0 and
 Codex CLI 0.160.1. These extracted-source experiments are not a full Playwright
 suite, a new OS sandbox, or verification-engine qualification.
 
+The TypeScript-loading study oracle and proof require **Node >=26**, matching
+the measured runtime. They are not part of the project's Node >=18 runtime
+contract. Older Node versions receive an explicit tooling-failure diagnostic.
+
 ## Measured arms
 
 | Arm | Terminal attempts | Completed / execution failed | Valid / missing usage | Quality pass / fail |
@@ -180,3 +184,17 @@ Review-fix regression checks run with `python3 tests/skill_token_publication_tes
 from the repository root. They use temporary fixtures, not the omitted archives.
 `audit.py` now fails for any missing archive or original record; a clean clone
 without local evidence cannot report a complete successful archive audit.
+It requires exactly the four historical archives and every snapshot record,
+checks archived metrics against snapshot/original records, and independently
+recomputes all 44 rows and 15 groups, including quality counts, completeness,
+all-attempt reductions and conditional passing pairs. Cross-platform packaging
+tests run with `node --test tests/skill-token-paths.test.mjs` (also in `npm test`).
+
+The merge from `main` adds its test-quality-review help guidance. Historical
+help byte/token measurements above describe the pre-merge body, not that
+new guidance; no new token-savings measurement is claimed.
+
+The stricter follow-up archive audit exits **1** on 44 synthetic home-path
+examples printed by archived shell-safety/VSCode tests. They are not suppressed or
+called a clean audit. All 660 original/snapshot/archive records and all derived
+comparison fields match. These ignored local archives are not shipped in the PR.

@@ -3,9 +3,11 @@
   "checks": {
     "all44Rows": true,
     "all15Groups": true,
-    "allKnownSumsIndependentMatch": true,
-    "matchingCapture": true
+    "allDerivedFieldsMatch": true,
+    "matchingCapture": true,
+    "gridFlagsMatch": true,
+    "armsMatch": true
   },
   "allPassed": true,
-  "scope": "All per-entrypoint/group field sums independently recomputed from captured status rows"
+  "scope": "Every comparison row and derived count, sum, completeness flag, reduction and matched passing pair independently recomputed from snapshot statuses and canonical grades"
 }

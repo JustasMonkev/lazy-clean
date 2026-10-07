@@ -6,6 +6,12 @@ Also show `/layz-test`: test the requested code across applicable layers, add
 missing behavioral checks, and end with manual steps and automation limits.
 It is a one-shot skill and never changes lazy mode.
 
+Also show `/test-quality-review`: review pointless tests or assertions,
+implementation coupling, and weak behavioral oracles with concrete evidence.
+Mocks, snapshots, and shape assertions are not inherently wrong. It is a
+whole-suite review by default, independent of lazy mode. This agent reports only;
+requested fixes use a fresh-context, tests-only agent that explains every deletion.
+
 Also show `/lazy-verify`: experimental, explicitly opt-in fix/preserve evidence
 through a separately reviewed local engine and policy. It is not a lazy level,
 does not change persisted mode, and never runs automatically.

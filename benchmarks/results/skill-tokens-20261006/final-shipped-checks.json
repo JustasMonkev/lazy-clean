@@ -48,12 +48,14 @@
     "retention": "Baseline-identical argument-hint/disable-model-invocation fields"
   },
   "publishedArchiveAudit": {
-    "exit": 0,
+    "exit": 1,
     "comparedOriginalRecords": 660,
     "archiveMembers": 5531,
     "captured": "2026-10-07T03:38:51.363Z",
     "report": "archive-audit.json",
-    "allDiscrepancies": 0
+    "allDiscrepancies": 44,
+    "privatePathPatternFindings": 44,
+    "limits": "Stricter follow-up path audit flags 44 synthetic shell-safety/VSCode fixture paths in ignored local check archives; no suppression. All 660 record metrics/statuses and all comparison fields match. Archives are not included in the PR."
   },
   "diffCheck": {
     "exit": 0

@@ -41,6 +41,12 @@ To reconstruct a case, independently copy `inputs/source/` into a fresh workspac
 
 The coding oracle accepts `train` or `heldout` and an absolute reconstructed `stringUtils.ts` path. It imports real code; it does not install dependencies. Product behavior checks do not establish submitted-test quality, mutation/red-green proof, scoped edits, or report honesty by themselves.
 
+Use Node >=26 for the study oracle/proof's native TypeScript imports; this
+separate evidence-tool requirement does not raise the project's Node >=18
+minimum. `prepare.mjs` normalizes the configured study root and Linux, macOS,
+and Windows home paths, including JSON-escaped Windows paths. Subtree exclusions
+use native relative path components rather than POSIX-only string fragments.
+
 The portable runners preserve exact model IDs, medium effort, task/source hashes, flags, repetitions, and bounds. If present, final-recovery-runner.portable.mjs has the same selftest entrypoint. Model execution requires `STUDY_HOST_SKILLS` pointing to a freshly audited JSON list of absolute skill paths; without it, execution stops before Codex starts. Host isolation, CLI/runtime versions, credentials, and cross-host equivalence must be checked separately. These are trusted-local experiments, not deterministic replays or an OS sandbox. Auth/home state is never bundled. Historical commands containing `<STUDY_ROOT>` are inspection records, not shell commands to paste unchanged.
 
 ## Redactions and limits

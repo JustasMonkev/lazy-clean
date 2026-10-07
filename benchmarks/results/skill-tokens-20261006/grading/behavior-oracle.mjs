@@ -6,6 +6,7 @@ const [variant, modulePath] = process.argv.slice(2);
 const outcomes = [];
 let subject;
 try {
+  if (Number(process.versions.node.split('.')[0]) < 26) throw new Error('This study oracle requires Node >=26 for native TypeScript imports; the main project still supports Node >=18.');
   if (!['train', 'heldout'].includes(variant) || !modulePath) throw new Error('Usage: node behavior-oracle.mjs train|heldout /absolute/stringUtils.ts');
   subject = await import(pathToFileURL(resolve(modulePath)).href);
 } catch (error) {

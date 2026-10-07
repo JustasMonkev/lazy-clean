@@ -1,10 +1,11 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, lstatSync, existsSync, rmSync } from 'node:fs';
-import { join, dirname, relative } from 'node:path';
+import { join, dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
+import { isExcludedSubtree, normalizePrivatePaths } from './publication-paths.mjs';
 const publication = dirname(fileURLToPath(import.meta.url));
-const study = process.env.STUDY_SNAPSHOT_ROOT ?? dirname(publication);
+const study = resolve(process.env.STUDY_SNAPSHOT_ROOT ?? dirname(publication));
 const stage = join(publication, '.stage');
 if (existsSync(stage)) rmSync(stage, { recursive: true });
 mkdirSync(stage, { recursive: true });
@@ -15,8 +16,7 @@ const excluded = [];
 function redact(bytes, label) {
   const text = bytes.toString('utf8');
   if (!Buffer.from(text).equals(bytes)) throw new Error(`Binary evidence needs separate review before publication: ${label}`);
-  let clean = text.replace(/\/Users\/[^/\s"'`]+/g, '/Users/REDACTED');
-  clean = clean.replaceAll('/private/tmp/lazy-token-study-20261006', '<STUDY_ROOT>');
+  let clean = normalizePrivatePaths(text, study);
   const patterns = [
     ['private-key', /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----[\s\S]*?-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/g],
     ['OpenAI-key-shaped', /\bsk-[A-Za-z0-9_-]{20,}\b/g],
@@ -52,7 +52,7 @@ function copyTree(from, to) { for (const path of walk(from)) publishFile(path, j
 const inputs = join(stage, 'inputs');
 for (const path of ['source', 'prompts', 'baseline/skills', 'candidate/skills', 'revision2/skills', 'final/skills', 'final-recovery/skills']) if (existsSync(join(study, path))) copyTree(join(study, path), join(inputs, path));
 for (const name of ['manifest-v1.json', 'manifest.json', 'manifest-revision2.json', 'manifest-final.json', 'manifest-final-grading.json', 'manifest-final-recovery.json', 'manifest-final-recovery-grading.json', 'final-selection.json', 'runtime-provenance.json', 'global-skill-paths.json', 'prompt-audit-disabled.json', 'prompt-audit-disabled.stderr.log', 'runner.mjs', 'revision2-runner.mjs', 'final-runner.mjs', 'final-recovery-runner.mjs', 'audit.mjs']) if (existsSync(join(study, name))) publishFile(join(study, name), join(inputs, name));
-if (existsSync(join(study, 'grading'))) for (const path of walk(join(study, 'grading')).filter(path => !path.includes('/results/'))) publishFile(path, join(inputs, 'grading', relative(join(study, 'grading'), path)));
+if (existsSync(join(study, 'grading'))) for (const path of walk(join(study, 'grading')).filter(path => !isExcludedSubtree(join(study, 'grading'), path, 'results'))) publishFile(path, join(inputs, 'grading', relative(join(study, 'grading'), path)));
 for (const name of ['runner.mjs', 'revision2-runner.mjs', 'final-runner.mjs', 'final-recovery-runner.mjs']) {
   const from = join(study, name);
   if (!existsSync(from)) continue;
@@ -115,7 +115,7 @@ for (const id of readdirSync(runs).sort()) {
   }
   cases.push({ id, arm: record.arm, reconstruction: 'Start from frozen source plus this arm skill-files closure; overlay indexed case files/delete entries. The raw diff includes seeded review changes. No original Git history/config, credentials, or repeated unchanged workspaces are shipped.', files: caseFiles });
 }
-if (existsSync(join(study, 'preflight'))) for (const path of walk(join(study, 'preflight')).filter(path => !path.includes('/workspace/'))) publishFile(path, join(stage, 'attempts/preflight', relative(join(study, 'preflight'), path)));
+if (existsSync(join(study, 'preflight'))) for (const path of walk(join(study, 'preflight')).filter(path => !isExcludedSubtree(join(study, 'preflight'), path, 'workspace'))) publishFile(path, join(stage, 'attempts/preflight', relative(join(study, 'preflight'), path)));
 const grades = {};
 for (const name of readdirSync(study).filter(name => /^grades(?:-[\w-]+)?\.json$/.test(name)).sort()) {
   const original = JSON.parse(readFileSync(join(study, name)));
@@ -128,7 +128,7 @@ for (const name of readdirSync(study).filter(name => /^grades(?:-[\w-]+)?\.json$
 }
 for (const name of readdirSync(study).filter(name => /^(?:final-|root-scan-grade-amendment).+\.(?:json|md|log|stderr)$/.test(name) || name === 'root-scan-grade-amendment.json').sort()) if (!name.endsWith('.mjs')) publishFile(join(study, name), join(stage, 'checks/final-evidence', name));
 for (const name of readdirSync(study).filter(name => /(?:notes|checks|test)\.(?:md|log)$/.test(name)).sort()) publishFile(join(study, name), join(stage, 'checks', name));
-for (const folder of ['proposal-checks', 'revision2-checks', 'checks', 'recovery-grader-scratch']) if (existsSync(join(study, folder))) for (const path of walk(join(study, folder)).filter(path => !path.includes('/repo/'))) publishFile(path, join(stage, 'checks', folder, relative(join(study, folder), path)));
+for (const folder of ['proposal-checks', 'revision2-checks', 'checks', 'recovery-grader-scratch']) if (existsSync(join(study, folder))) for (const path of walk(join(study, folder)).filter(path => !isExcludedSubtree(join(study, folder), path, 'repo'))) publishFile(path, join(stage, 'checks', folder, relative(join(study, folder), path)));
 const repoEvidence = process.env.STUDY_REPO_EVIDENCE ?? join(process.cwd(), 'benchmarks/results/skill-tokens-20261006');
 for (const name of ['README.md', 'harness.md', 'source-copy-check.json', 'final-slop-scan.log', 'final-slop-scan.json']) if (existsSync(join(repoEvidence, name))) publishFile(join(repoEvidence, name), join(stage, 'checks/repository-report', name));
 if (existsSync(join(study, 'final-shipped-checks.json'))) publishFile(join(study, 'final-shipped-checks.json'), join(publication, 'final-shipped-checks.json'));

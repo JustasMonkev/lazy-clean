@@ -18,7 +18,7 @@ Same ruleset, five levels of wiring — pick whatever your agent supports.
 | Tier | Platforms | What you get | Files |
 | --- | --- | --- | --- |
 | Full hooks | Claude Code, Codex | Compact ruleset injected at session and subagent start, `/lazy` level switching, slop-check auto-run after every Write/Edit | `hooks/lazy-clean.json` via `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` |
-| Plugin | OpenCode | Ruleset injected every turn plus eight slash commands | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
+| Plugin | OpenCode | Ruleset injected every turn plus nine slash commands | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
 | Rules file | Cursor, Copilot | Always-on ruleset for all seven supported languages; run the TS/JS-only checker by hand after TS/JS changes | `.cursor/rules/lazy-clean.mdc`, `.github/copilot-instructions.md` |
 | `AGENTS.md` | Everything else that reads it — Codex, Zed, Amp, Jules | The compact ruleset plus the post-edit checker step | `AGENTS.md` |
 | Skills only | Anything that reads `~/.claude/skills` | Every skill on demand, no automation | `skills/` |
@@ -96,15 +96,84 @@ missing dependencies or browsers are listed as blocked automation. Passing
 checks apply only to the stated scope. This instruction-only skill adds no
 runner or dependencies and does not change lazy mode.
 
-## Install — zero-install, skills only
+## Reviewing tests with test-quality-review
 
-No packages, no npm, no plugin needed. Copy the skills into your global skills folder:
+Use the shared `test-quality-review` skill in OpenCode, Codex, or Claude Code
+to review pointless tests or assertions, implementation coupling, and weak
+oracles that can pass despite broken behavior. Findings need concrete evidence
+and a recommendation to keep, strengthen, replace, or remove the check; mocks,
+snapshots, and shape assertions are not inherently wrong when they verify a
+real contract. This [instruction-only review](skills/test-quality-review/SKILL.md)
+is one-shot and independent of lazy mode. With no narrower scope it reviews the
+entire suite, records reviewed and unfinished scope, and can prioritize recent
+additions without silently excluding older tests. An explicit recent-tests audit
+uses an established base revision or date.
+
+| Platform | Invocation | Discovery |
+| --- | --- | --- |
+| OpenCode | `/test-quality-review <scope>` | Existing OpenCode plugin registers the command and shared skills directory. |
+| Codex | Select Test Quality Review in the skill picker; CLI: `$test-quality-review <scope>` | `.codex-plugin/plugin.json` registers `./skills/`; the skill includes Codex UI metadata. |
+| Claude Code plugin | `/lazy-clean:test-quality-review <scope>` | `.claude-plugin/plugin.json` explicitly registers `./skills/`. |
+| Claude Code skills-only | `/test-quality-review <scope>` | Install the skill in `.claude/skills` or `~/.claude/skills`. |
+
+All entry points load the same review and fixer instructions. If the host cannot
+start a separate agent without reviewer history, use the self-contained report
+and bundled fixer instructions in a new session; do not edit in reviewer context.
+
+The reviewer reports only. When findings are applied, a separate fresh-context
+agent receives the self-contained report and makes tests-only changes. It may
+delete genuinely pointless tests without replacement, but must explain each
+deletion in its final report and preserve useful coverage. It must not change
+production code to make strengthened tests pass; exposed product bugs are
+reported separately with their failing reproducer. No fixer starts automatically
+for a review-only request.
+
+## Install — skills only
+
+No npm packages or plugin needed. Install with GitHub CLI to keep source metadata
+for future updates:
+
+```sh
+gh skill install JustasMonkev/lazy-clean --all --agent claude-code --scope user
+```
+
+For Codex, use `--agent codex` instead. Omit `--scope user` for a project-local
+installation. GitHub CLI selects the latest tagged release, or the default
+branch when there are no releases.
+
+Check and apply updates to that installation:
+
+```sh
+gh skill update --dir ~/.claude/skills --dry-run \
+  layz-test lazy lazy-audit lazy-clean lazy-debt lazy-gain lazy-help \
+  lazy-review lazy-verify slop-check test-quality-review
+gh skill update --dir ~/.claude/skills \
+  layz-test lazy lazy-audit lazy-clean lazy-debt lazy-gain lazy-help \
+  lazy-review lazy-verify slop-check test-quality-review
+```
+
+For user-scope Codex skills, use `--dir ~/.agents/skills`. For project-scope
+Claude Code use `--dir .claude/skills`; for project-scope Codex use
+`--dir .agents/skills`. These explicit directories also avoid scanning this
+checkout's source `skills/` directory, which has no installation metadata.
+
+If you previously copied these skills manually, back up any local edits, then
+reinstall once with metadata:
+
+```sh
+gh skill install JustasMonkev/lazy-clean --all --agent claude-code --scope user --force
+```
+
+These commands install and update this repository's skills only.
+
+Without GitHub CLI, manual copying still works, but does not enable
+`gh skill update`:
 
 ```
 cp -R /path/to/lazy-clean/skills/* ~/.claude/skills/
 ```
 
-That gives you all 10 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-verify`, `layz-test`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
+That gives you all 11 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-verify`, `layz-test`, `test-quality-review`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
 
 What you DON'T get in skills-only mode: the automatic parts (ruleset injected every session, checker auto-run after every edit). Those need the hooks — install as a plugin for that:
 
@@ -206,7 +275,7 @@ Existing justified `slop-check-ignore` directives remain supported for compatibi
 
 An existing ignore with no reason after `--`, an unknown rule ID, or a file-level directive below line 10 suppresses nothing and is reported as `no-unjustified-ignore`. The run summary counts suppressions; a clean result with suppressions is not evidence that the ignored code was checked.
 
-Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `slop-check`, `lazy-clean` (the main workflow), `lazy-verify`, `layz-test`.
+Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `slop-check`, `lazy-clean` (the main workflow), `lazy-verify`, `layz-test`, `test-quality-review`.
 
 ## Intensity
 
