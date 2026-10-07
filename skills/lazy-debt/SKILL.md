@@ -1,12 +1,9 @@
 ---
 name: lazy-debt
 description: >
-  Harvest every `lazy:` comment in the codebase into a debt ledger, so the
-  deliberate shortcuts and deferrals lazy leaves behind get tracked instead
-  of rotting into "later means never". Use when the user says "lazy debt",
-  "/lazy-debt", "what did lazy defer", "list the shortcuts", "lazy
-  ledger", "tech debt ledger", or "what did we mark to do later". It tracks
-  `lazy:` markers only, not generic TODOs. One-shot report, changes nothing.
+  Harvest every `lazy:` comment into a debt ledger of deliberate shortcuts
+  (not generic TODOs). One-shot report, changes nothing. Use for "lazy debt",
+  "what did lazy defer", or /lazy-debt.
 ---
 
 Collect existing `lazy:` comments into a ledger. Do not add new markers:

@@ -1,12 +1,10 @@
 ---
 name: lazy-audit
 description: >
-  Whole-repo audit for over-engineering. Like lazy-review, but scans the
-  entire codebase instead of a diff: a ranked list of what to delete, simplify,
-  or replace with stdlib/native equivalents. Use when the user says "audit this
-  codebase", "audit for over-engineering", "what can I delete from this repo",
-  "find bloat", "find dead code", "which dependencies can we drop",
-  "lazy-audit", or "/lazy-audit". One-shot report, does not apply fixes.
+  Whole-repo over-engineering audit: a ranked list of what to delete, simplify,
+  or replace with stdlib/native code, including dead code and droppable
+  dependencies. One-shot report, no fixes. Use for "audit this codebase",
+  "find bloat", or /lazy-audit.
 ---
 
 lazy-review, repo-wide. Scan the whole tree instead of a diff. Rank findings by

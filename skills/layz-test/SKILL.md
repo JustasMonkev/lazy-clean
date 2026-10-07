@@ -1,10 +1,10 @@
 ---
 name: layz-test
 description: >
-  Find and reproduce bugs across applicable layers, add behavioral coverage, run the
-  checks, and finish with manual testing steps and why automation cannot settle
-  them. Use when asked to fully test code, assess test coverage, identify manual
-  testing gaps, or invoke layz-test. Use existing tools; no benchmark framework.
+  Find and reproduce bugs across applicable layers, add behavioral coverage, run
+  the checks, and finish with manual testing steps automation cannot settle.
+  Use when asked to fully test code, assess coverage or manual gaps, or invoke
+  layz-test. Use existing tools; no benchmark framework.
 ---
 
 # layz-test

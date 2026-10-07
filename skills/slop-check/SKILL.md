@@ -1,6 +1,6 @@
 ---
 name: slop-check
-description: Detect and remove AI slop — pointless, low-evidence, or filler code — in TypeScript and JavaScript. Use after writing or editing TypeScript or JavaScript, when reviewing a diff or pull request, or whenever the user asks to check for slop, clean up AI-generated code, or run slop-check. Fully self-contained; runs with plain node and requires no npm packages or project configuration.
+description: Detect and remove AI slop (pointless, low-evidence, or filler code) in TypeScript and JavaScript. Use after TS/JS edits, when reviewing a diff, or when asked to check for slop or run slop-check. Needs only plain node.
 ---
 
 # slop-check

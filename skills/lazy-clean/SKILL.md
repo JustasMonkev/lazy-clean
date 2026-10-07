@@ -1,6 +1,6 @@
 ---
 name: lazy-clean
-description: Write clean minimal code — the lazy ladder while writing, the slop-check checker after. Use when the user wants BOTH passes on one change, says "lazy-clean", asks for code that is lazy and slop-free, or wants over-engineering and AI slop caught together. For the ladder alone use lazy; for the checker alone use slop-check.
+description: The lazy ladder while writing, then the slop-check checker, on one change. Use for "lazy-clean" or code that must be both minimal and slop-free; use lazy or slop-check for one pass.
 ---
 
 # lazy-clean
