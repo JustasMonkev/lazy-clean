@@ -1,0 +1,610 @@
+{
+  "candidate--lazy-debt--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Accurate empty ledger, read-only."
+    ],
+    "evidence": [
+      "Source/test comment-marker rg returned no matches; empty diff/untracked."
+    ]
+  },
+  "candidate--lazy-debt--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Accurate empty ledger, read-only."
+    ],
+    "evidence": [
+      "rg lazy: packages tests no hits; full source/test inventory; empty diff/untracked."
+    ]
+  },
+  "candidate--lazy-gain--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Sources and unavailable local efficiency accurately separated."
+    ],
+    "evidence": [
+      "Read skill/evidence docs; final all four upstream metrics/setup/apps-not-run/timeouts and pilot limitations; empty diff."
+    ]
+  },
+  "candidate--lazy-gain--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Sources and unavailable local efficiency accurately separated."
+    ],
+    "evidence": [
+      "Read evidence; upstream four metrics/setup/limitations; local missing regression/measurement limitations; empty diff."
+    ]
+  },
+  "candidate--lazy-help--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Full quick-reference retained; no state changes."
+    ],
+    "evidence": [
+      "10 skills, levels/bare/off/hosts/env>config>full; read-only sole cat; empty diff."
+    ]
+  },
+  "candidate--lazy-help--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Full quick-reference retained; no state changes."
+    ],
+    "evidence": [
+      "10 skills, levels/bare/off/hosts/default precedence; empty diff; no tests."
+    ]
+  },
+  "candidate--lazy-review--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Seeded needless boolean alias/literal comparison was not identified as simplifiable."
+    ],
+    "evidence": [
+      "Final explicitly says no justified simplifications; seeded lines 144–145 unchanged; net unchanged."
+    ]
+  },
+  "candidate--lazy-review--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Seeded alias/literal comparison correctly simplified in report only."
+    ],
+    "evidence": [
+      "L144–145 equivalent if (!url.startsWith(data:)) replacement, actual -1 line; no applied edits."
+    ]
+  },
+  "candidate--lazy--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Required checker ran wrong lazy/scripts path; available slop-check script never run."
+    ],
+    "evidence": [
+      "Reviewed diff limits source change to trimString and test harness. Saved node --test unchanged regressions red (1 failures) then green (7 passes). Independent behavior-oracle train module: 28/28.",
+      "Final reports missing checker at wrong path instead of using supplied sibling scanner."
+    ]
+  },
+  "candidate--lazy--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Code-point, zero, oversized suffix, unchanged-input regression cases."
+    ],
+    "evidence": [
+      "Reviewed diff limits source change to trimString and test harness. Saved node --test unchanged regressions red (2 failures) then green (9 passes). Independent behavior-oracle train module: 28/28.",
+      "Required root slop-check --since=HEAD exit 0, 2 files."
+    ]
+  },
+  "candidate--lazy--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Boundary table includes zero/empty/exactcap/oversized/astral/combining/largecap."
+    ],
+    "evidence": [
+      "Reviewed diff limits source change to trimString and test harness. Saved node --test unchanged regressions red (7 failures) then green (19 passes). Independent behavior-oracle train module: 28/28.",
+      "Required root slop-check --since=HEAD exit 0, 2 files."
+    ]
+  },
+  "candidate--lazy--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Boundary table includes zero/empty/exactcap/oversized/astral/combining."
+    ],
+    "evidence": [
+      "Reviewed diff limits source change to trimString and test harness. Saved node --test unchanged regressions red (6 failures) then green (18 passes). Independent behavior-oracle train module: 28/28.",
+      "Required root slop-check --since=HEAD exit 0, 2 files."
+    ]
+  },
+  "candidate--lazy-clean--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "No saved explicit cap-zero regression despite nontrivial changed zero behavior."
+    ],
+    "evidence": [
+      "Reviewed diff limits source change to trimString and test harness. Saved node --test unchanged regressions red (2 failures) then green (10 passes). Independent behavior-oracle train module: 28/28.",
+      "Required root slop-check --since=HEAD exit 0, 2 files."
+    ]
+  },
+  "candidate--lazy-clean--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "No saved explicit cap-zero regression despite nontrivial changed zero behavior."
+    ],
+    "evidence": [
+      "Reviewed diff limits source change to trimString and test harness. Saved node --test unchanged regressions red (2 failures) then green (8 passes). Independent behavior-oracle train module: 28/28.",
+      "Required root slop-check --since=HEAD exit 0, 2 files."
+    ]
+  },
+  "candidate--lazy-clean--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Saved cases zero/empty/exactcap/oversized/astral/combining; final checker 2 files."
+    ],
+    "evidence": [
+      "Reviewed diff limits source change to trimString and test harness. Saved node --test unchanged regressions red (3 failures) then green (11 passes). Independent behavior-oracle train module: 28/28.",
+      "Required root slop-check --since=HEAD exit 0, 2 files."
+    ]
+  },
+  "candidate--lazy-clean--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Saved cases zero/empty/exactcap/oversized/astral/combining; final checker 2 files."
+    ],
+    "evidence": [
+      "Reviewed diff limits source change to trimString and test harness. Saved node --test unchanged regressions red (7 failures) then green (19 passes). Independent behavior-oracle train module: 28/28.",
+      "Required root slop-check --since=HEAD exit 0, 2 files."
+    ]
+  },
+  "candidate--lazy-verify--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Fabricates doctor execution/evidence despite no doctor command in captured execution."
+    ],
+    "evidence": [
+      "Final says doctor reported ENGINE_UNAVAILABLE; transcript only skill/config rg/status commands; gate otherwise correctly unsatisfied."
+    ]
+  },
+  "candidate--lazy-verify--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Required preservation gate remains blocked with honest static-only evidence."
+    ],
+    "evidence": [
+      "Read reviewed policy/config/contract intro+ownership+qualification; digest check matches, no engine execution; untracked files are supplied inputs, no edits."
+    ]
+  },
+  "candidate--slop-check--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Requested one-file scanner findings and manual narrowing invariants are correct; read-only.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "Explicit module --json produced two no-any findings at 53:31/54:23; command chained final exit masks scanner 1, but positive findings recorded; union narrowing/context traced; no clean claim."
+    ]
+  },
+  "candidate--slop-check--train--gpt-6.1-sol--1": {
+    "pass": false,
+    "reasons": [
+      "Scanner/manual findings and lifecycle invariants accurately reported; read-only.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "Explicit module scan exit 1, 2 findings/1 file; union narrowing and redundant array ! correct; timers/interval ownership/errors examined; empty diff."
+    ]
+  },
+  "candidate--test-quality-review--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Entire scoped one-test suite read with meaningful oracle and reasoned counterexamples."
+    ],
+    "evidence": [
+      "Read full test and timeout/time implementation; always-timeout counterexample passes existing test; polling gaps qualified; missing dependency blocks execution only; no edits."
+    ]
+  },
+  "candidate--test-quality-review--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Entire scoped one-test suite read; concrete accurate fault counterexamples and complete handoff."
+    ],
+    "evidence": [
+      "Full 33-line suite oracle trace, result-discard/rejection-swallow/future-zero-delay/timer-cleanup counterexamples correct; coverage record and absent config/dependency limitations; no edits."
+    ]
+  },
+  "candidate--lazy-audit--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Whole inventory read; justified narrowing simplification, honest zero net-line tally."
+    ],
+    "evidence": [
+      "All 5 files (369 lines) read; type escapes removal leaves two same-length lines; net -0 correctly counts not shorter characters; no edits."
+    ]
+  },
+  "candidate--lazy-audit--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "False removable-line tally: removing casts does not remove two code lines."
+    ],
+    "evidence": [
+      "All 5 files read, narrowing advice sound, but final 2 removable lines despite direct property accesses replacing same two lines."
+    ]
+  },
+  "candidate--lazy-audit--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Full inventory; equivalent quote/map replacements with accurate net tally and preserved boundaries."
+    ],
+    "evidence": [
+      "7→3 quote block saves4, 3→1 mapping saves2; in-memory 636 quotes/invalid+66 formats exit0; 5 existing tests pass; no edits."
+    ]
+  },
+  "candidate--lazy-audit--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Full inventory; equivalent escape/map replacements with accurate net tally and preserved boundaries."
+    ],
+    "evidence": [
+      "4→1 escape block saves3, 3→1 mapping saves2; corrected in-memory comparison exit0 37449 strings/60 formats; 5 tests pass; no edits."
+    ]
+  },
+  "candidate--layz-test--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "No feasible unchanged-passing-test production mutation or paired red-green proof; layer statuses lumped and no exact enabling commands."
+    ],
+    "evidence": [
+      "Existing5 pass; expanded8 pass2 retained failures; no production edits. Says proof blocked because fixes unauthorized, although disposable mutation authorized. Unnecessary /tmp write outside task workspace."
+    ]
+  },
+  "candidate--layz-test--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "No required risky-test sensitivity proof and static/build layer incorrectly not applicable."
+    ],
+    "evidence": [
+      "Existing5 pass; expanded9 pass2 failures, source untouched. Zero/astral suffix repro retained, but no mutation/restored passing test; manual table conflates blocked automation."
+    ]
+  },
+  "candidate--layz-test--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Thorough saved behavior coverage, honest contract qualification, actual mutation proof and detailed layer/command evidence."
+    ],
+    "evidence": [
+      "Source unchanged; baseline5 pass; expanded/final14 pass2 cap repro failures. Unchanged supplementary-Unicode test control0→production split mutation assertion exit1→restore0; saved logs/report with all layers/manual separate."
+    ]
+  },
+  "candidate--layz-test--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Thorough saved behavior coverage, honest contract qualification, actual mutation proof and detailed layer/command evidence."
+    ],
+    "evidence": [
+      "Source unchanged; baseline5 pass; expanded/final43 pass1 zero repro failure. Unchanged suffix test source reservation mutation assertion exit1 then restore0; logs/manifests/report scoped/static/build blockers/manual separate."
+    ]
+  },
+  "candidate--lazy-debt--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Accurate empty ledger; read-only."
+    ],
+    "evidence": [
+      "Module/test marker regex rg exit1/no matches; empty diff/untracked."
+    ]
+  },
+  "candidate--lazy-debt--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Accurate empty ledger; generic TODO correctly excluded."
+    ],
+    "evidence": [
+      "Source inventory and marker search no hits; TODO follow-up confirms generic unrelated; empty diff/untracked."
+    ]
+  },
+  "candidate--lazy-gain--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Upstream results/setup correct but required apps-not-run limitation omitted from scoreboard."
+    ],
+    "evidence": [
+      "Reads skill/evidence and gives54/22/20/27/setup/timeouts; no mention upstream apps not run. Local metrics unknown/no transfers correctly stated; no edits."
+    ]
+  },
+  "candidate--lazy-gain--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "All upstream/setup limits and local unavailable efficiency separated."
+    ],
+    "evidence": [
+      "54/22/20/27, 12tasks/Haiku/four reps/appsnotrun/timeouts; local pilot no token/cost/timing and regression gaps; empty diff."
+    ]
+  },
+  "candidate--lazy-help--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Full card retained; no state changes."
+    ],
+    "evidence": [
+      "10 skills, levels/bare/off/hosts/default precedence/config; only cat; no tests; empty diff."
+    ]
+  },
+  "candidate--lazy-help--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Full card retained; no state changes."
+    ],
+    "evidence": [
+      "10 skills, levels/bare/off/hosts/default precedence/config; only cat; no tests; empty diff."
+    ]
+  },
+  "candidate--lazy-review--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Seeded needless boolean alias/comparison correctly simplified in report only."
+    ],
+    "evidence": [
+      "Reviewed seeded diff only and caller helper retained; lines144–145 direct if (!url.startsWith(data:)) equivalent replacement; accurate -1 net line; no added edits/untracked files."
+    ]
+  },
+  "candidate--lazy-review--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Seeded needless boolean alias/comparison correctly simplified in report only."
+    ],
+    "evidence": [
+      "Reviewed seeded diff only and caller helper retained; lines144–145 direct if (!url.startsWith(data:)) equivalent replacement; accurate -1 net line; no added edits/untracked files."
+    ]
+  },
+  "candidate--lazy-verify--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Correct required gate blocked with actual prerequisite-only probe and honest claims."
+    ],
+    "evidence": [
+      "Read policy/config/full contract; doctor exit2 ENGINE_UNAVAILABLE/not_run/not_evaluated; no installs or mutations; supplied untracked inputs only."
+    ]
+  },
+  "candidate--lazy-verify--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Correct required preservation gate blocked; static contract evidence never claimed as assertions."
+    ],
+    "evidence": [
+      "Read selected profile/policy/config/contract relevant sections; no engine execution; preservation unverified; no edits."
+    ]
+  },
+  "candidate--slop-check--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Real one-module scanner findings and manual lifecycle/narrowing evidence; no clean claim.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "Explicit module scanner exit1, two no-any casts at53/54; complete source/test context read; clamping/finally/errors/last-result invariants checked; no edits."
+    ]
+  },
+  "candidate--slop-check--train--gpt-6.1-sol--2": {
+    "pass": false,
+    "reasons": [
+      "Real one-module scanner findings and manual lifecycle/narrowing evidence; no clean claim.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "Scanner exit1 2findings/1file; redundant interval-array ! manual finding correct; zero/error/copy/finally/timeout paths checked; no edits."
+    ]
+  },
+  "candidate--test-quality-review--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Entire scoped suite/oracle reviewed; plausible missed fault explicitly contract-qualified and useful original checks retained."
+    ],
+    "evidence": [
+      "Read full test/module/time/metadata, clean worktree; expired deadline callback-skip counterexample passes existing test; invocation requirement explicitly uncertain; all1 reviewed/no execution. Report line links are approximate (four lines early), but named test/entrypoint and oracle are unambiguous."
+    ]
+  },
+  "candidate--test-quality-review--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Complete scoped review with accurate concrete missed faults and self-contained coverage/uncertainty report."
+    ],
+    "evidence": [
+      "Read full suite/module/time and runner metadata; sentinel result/error/future/zero/cleanup counterexamples correct; negative-delay warning probe actual exit0 supports oracle without suite-pass claim; no edits."
+    ]
+  },
+  "candidate--lazy--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Terminal timeout; requested implementation and verification incomplete."
+    ],
+    "evidence": [
+      "Empty diff/untracked; only initial plan message, no completed test/implementation command. Timing invalid across overnight clock gap; not model latency evidence; no retry or inferred quality pass."
+    ]
+  },
+  "candidate--lazy--train--gpt-6.1-sol--3": {
+    "pass": false,
+    "reasons": [
+      "Terminal timeout; requested implementation and verification incomplete."
+    ],
+    "evidence": [
+      "Read skill/references/source/callers/version; empty diff, no saved tests or final verification. Timing invalid across overnight clock gap; no inferred pass/retry."
+    ]
+  },
+  "candidate--lazy-clean--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Correct code but missing saved explicit zero regression coverage."
+    ],
+    "evidence": [
+      "Source trimString-only fix; pre-fix oversized assertion fails; final8 pass; required root scanner2files clean; independent oracle28/28. No zero/exact-suffix regression cases in saved tests."
+    ]
+  },
+  "candidate--lazy-clean--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Complete requested contract with saved boundary regression and required checker evidence."
+    ],
+    "evidence": [
+      "TrimString-only source diff; saved zero/empty/exactcap/oversized/astral/combining tests,7 pre-fix failures→19pass; root scanner2files clean; independent oracle28/28."
+    ]
+  },
+  "candidate--lazy-audit--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "All supplied source/test inventory read; justified bounded no-cut verdict preserving domain boundaries."
+    ],
+    "evidence": [
+      "Actually read3source+2tests/369lines; no findings/tally0/deps0; no edits. Final incorrectly labels 5 source plus2 tests, a prose count error, but recorded commands establish full exact inventory and no invented cuts."
+    ]
+  },
+  "candidate--lazy-audit--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Full inventory and equivalent minimal mapping recommendation with actual net-line count."
+    ],
+    "evidence": [
+      "All5files/369lines read; formatObject3→1 mapping saves2; in-memory91checks including getter order exit0; existing5tests pass; no edits."
+    ]
+  },
+  "candidate--lazy-review--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Seeded boolean alias/literal comparison simplified with minimal equivalent replacement."
+    ],
+    "evidence": [
+      "Only seeded diff reviewed; lines144–145 inline startsWith boolean guard saves1 line; domain helper preserved; no edits."
+    ]
+  },
+  "candidate--lazy-review--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Seeded boolean alias/literal comparison simplified with minimal equivalent replacement."
+    ],
+    "evidence": [
+      "Seeded diff reviewed; lines144–145 inline startsWith guard saves1 line; local5tests pass, domain helper preserved; no edits."
+    ]
+  },
+  "candidate--lazy-debt--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Accurate empty comment-marker ledger; no writes."
+    ],
+    "evidence": [
+      "Scoped packages/tests marker regex exit1/no hits;0markers0no-trigger; empty diff/untracked."
+    ]
+  },
+  "candidate--lazy-debt--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Accurate empty comment-marker ledger; no writes."
+    ],
+    "evidence": [
+      "Whole inventory and scoped source/test lazy follow-up no hits; empty diff/untracked."
+    ]
+  },
+  "candidate--lazy-gain--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Required upstream apps-not-run limitation missing from scoreboard."
+    ],
+    "evidence": [
+      "54/22/20/27/setup/timeouts accurate, local efficiency unavailable correctly separated, but no upstream apps-not-run statement; no edits/benchmark."
+    ]
+  },
+  "candidate--lazy-gain--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Upstream scoreboard/setup/limits and local absent efficiency accurately separated."
+    ],
+    "evidence": [
+      "54/22/20/27,12tasks/Haiku/fourreps/appsnotrun/timeouts; pilot0savedregressions/noefficiency; matched-pair local measurements unknown; no edits."
+    ]
+  },
+  "candidate--lazy-help--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Complete quick-reference retained without state changes."
+    ],
+    "evidence": [
+      "All10skills/levels/bare/off/hosts/default precedence/config; only cat; empty diff; no tests."
+    ]
+  },
+  "candidate--lazy-help--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Complete quick-reference retained without state changes."
+    ],
+    "evidence": [
+      "All10skills/levels/bare/off/hosts/default precedence/config; only cat; empty diff; no tests."
+    ]
+  },
+  "candidate--layz-test--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Existing tests not run before additions, no feasible sensitivity proof, and failed isolated run labeled pass."
+    ],
+    "evidence": [
+      "Only test edits,8pass1retainedzero failure; no passing-test source mutation/restoration; isolated full-suite8pass1fail incorrectly pass; incomplete layer/commands prerequisites."
+    ]
+  },
+  "candidate--layz-test--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Thorough scoped test-only coverage and actual unchanged-test mutation/restoration proof."
+    ],
+    "evidence": [
+      "Baseline5pass→expanded/final14pass1zero reproducer; source unchanged; astral test mutation actual😀vs😀a assertion fail and restore1pass; full saved layer/commands/manual report; root scanner1file clean."
+    ]
+  },
+  "candidate--lazy-verify--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Required preservation gate correctly remains unsatisfied with honest prerequisite/behavior claim separation."
+    ],
+    "evidence": [
+      "Read policy/config/contract; actual absolute-policy doctor exit2 ENGINE_UNAVAILABLE/not_run/not_evaluated; supplied untracked inputs only, no edits or substitute project evidence."
+    ]
+  },
+  "candidate--lazy-verify--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Required preservation gate correctly remains unsatisfied with honest prerequisite/behavior claim separation."
+    ],
+    "evidence": [
+      "Read selected policy/config/relevant contract sections; no engine executed, explicitly unverified passes-on-both preservation requirement; supplied untracked inputs only, no edits."
+    ]
+  },
+  "candidate--slop-check--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Actual one-module positive scanner findings and manual narrowed-result/lifecycle invariants correct; read-only.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "Explicit module scanner2findings/1file at53/54; chained final rg masks scanner exit but findings establish coverage; full module/test read, discriminated union and deadline/finally/poll schedule checked; no clean claim or edits."
+    ]
+  },
+  "candidate--slop-check--train--gpt-6.1-sol--3": {
+    "pass": false,
+    "reasons": [
+      "Actual one-file scanner findings and manual lifecycle/type invariants checked accurately, read-only.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "Module scanner exit1,2findings/1file; casts53/54 narrowed after timeout guard, redundant array !56; complete module/test/time read; timer/error/zero/copy/polling invariants, no clean claim."
+    ]
+  },
+  "candidate--test-quality-review--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Entire one-test scoped oracle reviewed; conditional polling gaps supported by plausible counterexamples, useful test retained."
+    ],
+    "evidence": [
+      "Read full suite/module/time/config context; always-timeout/ignorecontinue/loselastresult polling faults pass existing suite, intended scope explicitly qualified; warning/timeout/listener oracle correct; no edits or runs."
+    ]
+  },
+  "candidate--test-quality-review--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Entire scoped review with accurate missed-fault counterexamples and self-contained coverage/report."
+    ],
+    "evidence": [
+      "Full suite/module/time read; resultdrop/rejectionmask/futurezero-delay/cleanup counterexamples correct; prompt-completion suggestion explicitly contract-qualified; all1 reviewed0remaining; missing dependency/config execution limits; no edits."
+    ]
+  }
+}

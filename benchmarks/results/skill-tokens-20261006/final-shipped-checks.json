@@ -1,0 +1,64 @@
+{
+  "sourceScope": [
+    "skills/lazy-help/SKILL.md"
+  ],
+  "npmTest": {
+    "exit": 0,
+    "log": "final-shipped-npm-test.log",
+    "hooks": {
+      "passed": 812,
+      "failed": 0
+    },
+    "language": {
+      "passed": 764,
+      "failed": 0
+    },
+    "limits": "Includes intentionally failing fake-client/mutation cases; protocol fixtures are not real engine qualification"
+  },
+  "rootScan": {
+    "exit": 1,
+    "findings": 12,
+    "rule": "no-any",
+    "paths": [
+      "grading/known-good-train.ts",
+      "grading/known-good-heldout.ts"
+    ],
+    "retention": "Unchanged upstream public signatures/casts retained in oracle controls; no suppressions or checker weakening",
+    "log": "final-shipped-root-scan.json"
+  },
+  "scopedAuthoredHelperScan": {
+    "exit": 0,
+    "findings": 0,
+    "log": "final-shipped-helper-scan.json",
+    "limits": "Separate scoped result, not a clean full repository scan"
+  },
+  "syntax": {
+    "exit": 0,
+    "files": [
+      "prepare.mjs",
+      "grading/behavior-oracle.mjs",
+      "grading/proof.mjs"
+    ]
+  },
+  "frontmatter": {
+    "valid": 7,
+    "rejected": 4,
+    "allMetadataEqualBaseline": true,
+    "log": "final-shipped-frontmatter-validator.json",
+    "retention": "Baseline-identical argument-hint/disable-model-invocation fields"
+  },
+  "publishedArchiveAudit": {
+    "exit": 0,
+    "comparedOriginalRecords": 660,
+    "archiveMembers": 5523,
+    "allDiscrepancies": 0
+  },
+  "diffCheck": {
+    "exit": 0
+  },
+  "preservedUserDrafts": {
+    "allHashesEqual": true,
+    "sourcePublished": false
+  },
+  "limits": "No full132 measurement of restored shipped closure; all132 measurements are rejected three-entrypoint candidate."
+}

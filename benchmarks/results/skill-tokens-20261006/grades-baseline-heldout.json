@@ -1,0 +1,781 @@
+{
+  "baseline--layz-test--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "No paired pre-fix/fix or meaningful unchanged-passing-test production mutation proof, and no concrete feasibility blocker, despite dependency-free copied-source mutation being feasible.",
+      "Installed slop checker was available but no post-test-edit scan ran.",
+      "CR-to-LF template parsing is classified as a confirmed defect without establishing cooked newline preservation contract or a caller; uncertain contract was not separated from actual interpolation discovery."
+    ],
+    "evidence": [
+      "runs/baseline--layz-test--heldout--gpt-6-luna--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--layz-test--heldout--gpt-6-luna--1/diff.patch and untracked.txt: source/test changes ['tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc \"node --test tests/string-utils.test.mjs; rg -n 'escapeWithQuotes|escapeTemplateString' packages tests --glob '\"'!tests/string-utils.test.mjs'\"'\" => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 9; \u2139 pass 7; \u2139 fail 2",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs; git diff --check; git status --short; git diff -- tests/string-utils.test.mjs' => exit 0; \u2139 tests 10; \u2139 pass 8; \u2139 fail 2",
+      "Only harness and test-evidence files modified; real imported helpers tested with parser/evaluator oracles and retained interpolation reproducers, with no unauthorized product fix."
+    ]
+  },
+  "baseline--layz-test--heldout--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "No paired pre-fix/fix or meaningful unchanged-passing-test production mutation proof, and no concrete feasibility blocker, despite dependency-free copied-source mutation being feasible."
+    ],
+    "evidence": [
+      "runs/baseline--layz-test--heldout--gpt-6-luna--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--layz-test--heldout--gpt-6-luna--2/diff.patch and untracked.txt: source/test changes ['tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --version; node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "/bin/zsh -lc 'cat skill-files/slop-check/SKILL.md; node skill-files/slop-check/scripts/check.mjs tests/string-utils.test.mjs' => exit 0; slop-check: clean (1 file checked)",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD; git diff --check; git status --short; git diff --stat' => exit 0; slop-check: clean (1 file checked)",
+      "9 malformed physical JSONL lines; source/diff and remaining complete events considered, not blindly accepted CLI status",
+      "Only harness and test-evidence files modified; real imported helpers tested with parser/evaluator oracles and retained interpolation reproducers, with no unauthorized product fix."
+    ]
+  },
+  "baseline--layz-test--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "No paired pre-fix/fix or meaningful unchanged-passing-test production mutation proof, and no concrete feasibility blocker, despite dependency-free copied-source mutation being feasible.",
+      "Installed slop checker was available but no post-test-edit scan ran.",
+      "CR-to-LF template parsing is classified as a confirmed defect without establishing cooked newline preservation contract or a caller; uncertain contract was not separated from actual interpolation discovery."
+    ],
+    "evidence": [
+      "runs/baseline--layz-test--heldout--gpt-6-luna--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--layz-test--heldout--gpt-6-luna--3/diff.patch and untracked.txt: source/test changes ['tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --version && node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 9; \u2139 pass 7; \u2139 fail 2",
+      "Only harness and test-evidence files modified; real imported helpers tested with parser/evaluator oracles and retained interpolation reproducers, with no unauthorized product fix."
+    ]
+  },
+  "baseline--layz-test--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--layz-test--heldout--gpt-6.1-sol--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--layz-test--heldout--gpt-6.1-sol--1/diff.patch and untracked.txt: source/test changes ['tests/string-utils.test.mjs']; untracked ['evidence/string-utils-mutation.log', 'evidence/string-utils-mutation.mjs', 'evidence/string-utils-report.md', 'evidence/string-utils-test.log']",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 20; \u2139 pass 17; \u2139 fail 3",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD' => exit 0; slop-check: clean (1 file checked)",
+      "/bin/zsh -lc 'node evidence/string-utils-mutation.mjs > evidence/string-utils-mutation.log 2>&1' => exit 0; ",
+      "/bin/zsh -lc 'node --check evidence/string-utils-mutation.mjs' => exit 0; ",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs > evidence/string-utils-test.log 2>&1' => exit 1; ",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD' => exit 0; slop-check: clean (2 files checked)",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD' => exit 0; slop-check: clean (2 files checked)",
+      "Only harness and test-evidence files modified; real imported helpers tested with parser/evaluator oracles and retained interpolation reproducers, with no unauthorized product fix.",
+      "workspace/evidence/string-utils-report.md and saved logs reviewed: full requested cases, exact commands and layer/manual/blocker mapping; 2 source mutations rejected by unchanged selected assertions with restored greens and regular-file/hash/mode cleanup checks."
+    ]
+  },
+  "baseline--layz-test--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--layz-test--heldout--gpt-6.1-sol--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--layz-test--heldout--gpt-6.1-sol--2/diff.patch and untracked.txt: source/test changes ['tests/string-utils.test.mjs']; untracked ['evidence/string-utils-checks.mjs', 'evidence/string-utils-report.md', 'evidence/string-utils-results/baseline.log', 'evidence/string-utils-results/expanded.log', 'evidence/string-utils-results/invalid-delimiter-control.log', 'evidence/string-utils-results/invalid-delimiter-mutant.log', 'evidence/string-utils-results/invalid-delimiter-restored.log', 'evidence/string-utils-results/single-quote-control.log', 'evidence/string-utils-results/single-quote-mutant.log', 'evidence/string-utils-results/single-quote-restored.log', 'evidence/string-utils-results/slop-initial-probe.log', 'evidence/string-utils-results/slop.log', 'evidence/string-utils-results/summary.json', 'evidence/string-utils-results/syntax.log', 'evidence/string-utils-results/template-backslash-control.log', 'evidence/string-utils-results/template-backslash-mutant.log', 'evidence/string-utils-results/template-backslash-restored.log', 'evidence/string-utils-results/template-backtick-control.log', 'evidence/string-utils-results/template-backtick-mutant.log', 'evidence/string-utils-results/template-backtick-restored.log', 'evidence/string-utils-results/template-interpolation-control.log', 'evidence/string-utils-results/template-interpolation-mutant.log', 'evidence/string-utils-results/template-interpolation-restored.log']",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 20; \u2139 pass 17; \u2139 fail 3",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD' => exit 0; slop-check: clean (1 file checked)",
+      "/bin/zsh -lc 'node evidence/string-utils-checks.mjs' => exit 1; ",
+      "/bin/zsh -lc 'cp evidence/string-utils-results/slop.log evidence/string-utils-results/slop-initial-probe.log; node evidence/string-utils-checks.mjs' => exit 0; ",
+      "/bin/zsh -lc 'node --check evidence/string-utils-checks.mjs; node skill-files/slop-check/scripts/check.mjs --since=HEAD; git diff --check; git status --short; git diff -- packages/isomorphic/stringUtils.ts' => exit 0; slop-check: clean (2 files checked)",
+      "Only harness and test-evidence files modified; real imported helpers tested with parser/evaluator oracles and retained interpolation reproducers, with no unauthorized product fix.",
+      "workspace/evidence/string-utils-report.md and saved logs reviewed: full requested cases, exact commands and layer/manual/blocker mapping; 5 source mutations rejected by unchanged selected assertions with restored greens and regular-file/hash/mode cleanup checks.",
+      "CR/CRLF failing assumptions explicitly qualified pending consumer contract, not asserted as established application defects; final 17 pass/3 fail matches saved expanded log."
+    ]
+  },
+  "baseline--layz-test--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--layz-test--heldout--gpt-6.1-sol--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--layz-test--heldout--gpt-6.1-sol--3/diff.patch and untracked.txt: source/test changes ['tests/string-utils.test.mjs']; untracked ['evidence/string-utils-probes.log', 'evidence/string-utils-probes.mjs', 'evidence/string-utils-report.md', 'evidence/string-utils-slop-incomplete.log', 'evidence/string-utils-slop.log', 'evidence/string-utils-tests.log']",
+      "/bin/zsh -lc 'cat skill-files/lazy/references/simplification-checks.md; rg --files skill-files/slop-check tests packages; node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 18; \u2139 pass 17; \u2139 fail 1",
+      "/bin/zsh -lc \"node skill-files/slop-check/scripts/check.mjs --since=HEAD; git diff --check; rg --files -g 'tsconfig*' -g '*lock*' -g 'node_modules/**' -g 'AGENTS.md'\" => exit 1; slop-check: clean (1 file checked)",
+      "/bin/zsh -lc 'node evidence/string-utils-probes.mjs' => exit 0; ",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs > evidence/string-utils-tests.log 2>&1' => exit 1; ",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD > evidence/string-utils-slop.log 2>&1' => exit 2; ",
+      "/bin/zsh -lc 'node evidence/string-utils-probes.mjs > evidence/string-utils-probes.log 2>&1' => exit 0; ",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD > evidence/string-utils-slop.log 2>&1' => exit 0; ",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD > evidence/string-utils-slop.log 2>&1' => exit 0; ",
+      "Only harness and test-evidence files modified; real imported helpers tested with parser/evaluator oracles and retained interpolation reproducers, with no unauthorized product fix.",
+      "workspace/evidence/string-utils-report.md and saved logs reviewed: full requested cases, exact commands and layer/manual/blocker mapping; 7 source mutations rejected by unchanged selected assertions with restored greens and regular-file/hash/mode cleanup checks.",
+      "Final saved harness/log reviewed as 20 tests, 18 pass/2 fail, superseding initial 18-test run; intermediate scanner exit 2 retained and final stable scan checked two files."
+    ]
+  },
+  "baseline--lazy--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Required rerunnable edge coverage incomplete: no empty-payload or multiple-comma/first-comma assertion; successful implementation oracle does not replace saved regression coverage.",
+      "Saved case-insensitivity regression covers mixed case only, not uppercase scheme.",
+      "Original lazy contract requires final bundled --since=HEAD checker; none was run."
+    ],
+    "evidence": [
+      "runs/baseline--lazy--heldout--gpt-6-luna--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy--heldout--gpt-6-luna--1/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 7; \u2139 pass 6; \u2139 fail 1",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs && git diff --check && git diff -- packages/isomorphic/stringUtils.ts tests/string-utils.test.mjs' => exit 0; \u2139 tests 7; \u2139 pass 7; \u2139 fail 0",
+      "Independent grading/behavior-oracle.mjs heldout: exit 0, 27 passed, 0 failed; public exports and unrelated behavior preserved",
+      "Saved test/source diff reviewed: scheme match anchored at start, original prefix sliced through first comma; recorded pre-fix ERR_ASSERTION and post-fix green tests"
+    ]
+  },
+  "baseline--lazy--heldout--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Required rerunnable edge coverage incomplete: no empty-payload or multiple-comma/first-comma assertion; successful implementation oracle does not replace saved regression coverage."
+    ],
+    "evidence": [
+      "runs/baseline--lazy--heldout--gpt-6-luna--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy--heldout--gpt-6-luna--2/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 7; \u2139 pass 6; \u2139 fail 1",
+      "/bin/zsh -lc \"node --test tests/string-utils.test.mjs && git diff --check && git diff -- packages/isomorphic/stringUtils.ts tests/string-utils.test.mjs && rg --files skill-files | rg 'slop-check/scripts/check\\\\.mjs\"'$'\"'\" => exit 0; \u2139 tests 7; \u2139 pass 7; \u2139 fail 0",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD' => exit 0; slop-check: clean (2 files checked)",
+      "Independent grading/behavior-oracle.mjs heldout: exit 0, 27 passed, 0 failed; public exports and unrelated behavior preserved",
+      "Saved test/source diff reviewed: scheme match anchored at start, original prefix sliced through first comma; recorded pre-fix ERR_ASSERTION and post-fix green tests"
+    ]
+  },
+  "baseline--lazy--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Required rerunnable edge coverage incomplete: no empty-payload or multiple-comma/first-comma assertion; successful implementation oracle does not replace saved regression coverage.",
+      "Required checker attempted at wrong lazy/scripts path and failed MODULE_NOT_FOUND; bundled slop-check script was actually present, so reported absence is unsupported and no final valid scan ran."
+    ],
+    "evidence": [
+      "runs/baseline--lazy--heldout--gpt-6-luna--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy--heldout--gpt-6-luna--3/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 7; \u2139 pass 6; \u2139 fail 1",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs && node \"skill-files/lazy/scripts/check.mjs\" --since=HEAD' => exit 1; \u2139 tests 7; \u2139 pass 7; \u2139 fail 0; Error: Cannot find module '<STUDY_ROOT>/runs/baseline--lazy--heldout--gpt-6-luna--3/workspace/skill-files/lazy/scripts/check.mjs'",
+      "Independent grading/behavior-oracle.mjs heldout: exit 0, 27 passed, 0 failed; public exports and unrelated behavior preserved",
+      "Saved test/source diff reviewed: scheme match anchored at start, original prefix sliced through first comma; recorded pre-fix ERR_ASSERTION and post-fix green tests"
+    ]
+  },
+  "baseline--lazy--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy--heldout--gpt-6.1-sol--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy--heldout--gpt-6.1-sol--1/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 9; \u2139 pass 7; \u2139 fail 2",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 9; \u2139 pass 9; \u2139 fail 0",
+      "/bin/zsh -lc 'node \"skill-files/slop-check/scripts/check.mjs\" --since=HEAD' => exit 0; slop-check: clean (2 files checked)",
+      "Independent grading/behavior-oracle.mjs heldout: exit 0, 27 passed, 0 failed; public exports and unrelated behavior preserved",
+      "Saved test/source diff reviewed: scheme match anchored at start, original prefix sliced through first comma; recorded pre-fix ERR_ASSERTION and post-fix green tests",
+      "Saved tests cover uppercase/mixed schemes, exact prefix, first comma, empty payload, unchanged non-data/no-comma; final --since=HEAD checked two files clean."
+    ]
+  },
+  "baseline--lazy--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy--heldout--gpt-6.1-sol--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy--heldout--gpt-6.1-sol--2/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 7; \u2139 pass 6; \u2139 fail 1",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 7; \u2139 pass 7; \u2139 fail 0",
+      "/bin/zsh -lc 'node \"skill-files/slop-check/scripts/check.mjs\" --since=HEAD' => exit 0; slop-check: clean (2 files checked)",
+      "Independent grading/behavior-oracle.mjs heldout: exit 0, 27 passed, 0 failed; public exports and unrelated behavior preserved",
+      "Saved test/source diff reviewed: scheme match anchored at start, original prefix sliced through first comma; recorded pre-fix ERR_ASSERTION and post-fix green tests",
+      "Saved tests cover uppercase/mixed schemes, exact prefix, first comma, empty payload, unchanged non-data/no-comma; final --since=HEAD checked two files clean."
+    ]
+  },
+  "baseline--lazy--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy--heldout--gpt-6.1-sol--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy--heldout--gpt-6.1-sol--3/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 15; \u2139 pass 12; \u2139 fail 3",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 15; \u2139 pass 15; \u2139 fail 0",
+      "/bin/zsh -lc 'node \"./skill-files/slop-check/scripts/check.mjs\" --since=HEAD' => exit 0; slop-check: clean (2 files checked)",
+      "Independent grading/behavior-oracle.mjs heldout: exit 0, 27 passed, 0 failed; public exports and unrelated behavior preserved",
+      "Saved test/source diff reviewed: scheme match anchored at start, original prefix sliced through first comma; recorded pre-fix ERR_ASSERTION and post-fix green tests",
+      "Saved tests cover uppercase/mixed schemes, exact prefix, first comma, empty payload, unchanged non-data/no-comma; final --since=HEAD checked two files clean."
+    ]
+  },
+  "baseline--lazy-audit--heldout--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-audit--heldout--gpt-6-luna--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-audit--heldout--gpt-6-luna--1/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc \"rg -n \\\"trimString|trimStringWithEllipsis|escapeTemplateString|truncateDataUrl|raceAgainstDeadline|pollAgainstDeadline|monotonicTime|setTimeOrigin|formatObject\\\" packages tests && node --test tests/string-utils.test.mjs && nl -ba packag => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Command outputs establish reads of all five source/test files (369 lines), metadata/skill evidence excluded; recommendations are read-only and retain domain helpers, timer cleanup, Unicode behavior and meaningful tests.",
+      "Accurate no-justified-cuts verdict; absent callers correctly not used as proof of dead exports."
+    ]
+  },
+  "baseline--lazy-audit--heldout--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Only finding supplies neither exact shorter indexed polling replacement nor justified removable-line tally; empty intervals, explicit zero intervals, repeated-last fallback and ownership preservation are not established for the proposed -2 lines."
+    ],
+    "evidence": [
+      "runs/baseline--lazy-audit--heldout--gpt-6-luna--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-audit--heldout--gpt-6-luna--2/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Command outputs establish reads of all five source/test files (369 lines), metadata/skill evidence excluded; recommendations are read-only and retain domain helpers, timer cleanup, Unicode behavior and meaningful tests."
+    ]
+  },
+  "baseline--lazy-audit--heldout--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-audit--heldout--gpt-6-luna--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-audit--heldout--gpt-6-luna--3/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Command outputs establish reads of all five source/test files (369 lines), metadata/skill evidence excluded; recommendations are read-only and retain domain helpers, timer cleanup, Unicode behavior and meaningful tests.",
+      "Accurate no-justified-cuts verdict; absent callers correctly not used as proof of dead exports."
+    ]
+  },
+  "baseline--lazy-audit--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-audit--heldout--gpt-6.1-sol--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-audit--heldout--gpt-6.1-sol--1/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc \"cat skill-files/lazy/references/design-checks.md; nl -ba packages/isomorphic/time.ts; rg -n '\"'^(export |function |import )|quoteCSSAttributeValue|formatObject|escapeRegExp|stripAnsiEscapes'\"' packages tests; node --test tests/string-ut => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Command outputs establish reads of all five source/test files (369 lines), metadata/skill evidence excluded; recommendations are read-only and retain domain helpers, timer cleanup, Unicode behavior and meaningful tests.",
+      "Ranked narrow source-local findings and physical line/dependency counts checked against actual source; read-only parity probes succeeded; proposed browser-sensitive replaceAll adoption explicitly conditional on target verification."
+    ]
+  },
+  "baseline--lazy-audit--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-audit--heldout--gpt-6.1-sol--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-audit--heldout--gpt-6.1-sol--2/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc \"rg -n 'escapeWithQuotes|quoteCSSAttributeValue|escapeForAttributeSelector|formatObject|trimString|cacheNormalizedWhitespaces|setTimeOrigin|raceAgainstDeadline|pollAgainstDeadline|stripAnsiEscapes|escapeRegExp|tomlBasicString' packages t => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Command outputs establish reads of all five source/test files (369 lines), metadata/skill evidence excluded; recommendations are read-only and retain domain helpers, timer cleanup, Unicode behavior and meaningful tests.",
+      "Ranked narrow source-local findings and physical line/dependency counts checked against actual source; read-only parity probes succeeded; proposed browser-sensitive replaceAll adoption explicitly conditional on target verification."
+    ]
+  },
+  "baseline--lazy-audit--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-audit--heldout--gpt-6.1-sol--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-audit--heldout--gpt-6.1-sol--3/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc \"rg --files --hidden -g '\"'!.git/**'\"'; rg -n 'escapeWithQuotes|quoteCSSAttributeValue|escapeForAttributeSelector|cacheNormalizedWhitespaces|setTimeOrigin|stripAnsiEscapes|escapeRegExp|tomlBasicString|raceAgainstDeadline' packages tests; => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Command outputs establish reads of all five source/test files (369 lines), metadata/skill evidence excluded; recommendations are read-only and retain domain helpers, timer cleanup, Unicode behavior and meaningful tests.",
+      "Ranked narrow source-local findings and physical line/dependency counts checked against actual source; read-only parity probes succeeded; proposed browser-sensitive replaceAll adoption explicitly conditional on target verification."
+    ]
+  },
+  "baseline--lazy-clean--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Required rerunnable edge coverage incomplete: no empty-payload or multiple-comma/first-comma assertion; successful implementation oracle does not replace saved regression coverage."
+    ],
+    "evidence": [
+      "runs/baseline--lazy-clean--heldout--gpt-6-luna--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-clean--heldout--gpt-6-luna--1/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 7; \u2139 pass 6; \u2139 fail 1",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 7; \u2139 pass 7; \u2139 fail 0",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD' => exit 0; slop-check: clean (2 files checked)",
+      "Independent grading/behavior-oracle.mjs heldout: exit 0, 27 passed, 0 failed; public exports and unrelated behavior preserved",
+      "Saved test/source diff reviewed: scheme match anchored at start, original prefix sliced through first comma; recorded pre-fix ERR_ASSERTION and post-fix green tests"
+    ]
+  },
+  "baseline--lazy-clean--heldout--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Required rerunnable edge coverage incomplete: no empty-payload or multiple-comma/first-comma assertion; successful implementation oracle does not replace saved regression coverage.",
+      "Only explicit-path scanner ran, not required final --since=HEAD scan. Six existing findings were reported rather than falsely called clean, but mandatory final gate is missing."
+    ],
+    "evidence": [
+      "runs/baseline--lazy-clean--heldout--gpt-6-luna--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-clean--heldout--gpt-6-luna--2/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 7; \u2139 pass 6; \u2139 fail 1",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts tests/string-utils.test.mjs' => exit 1; slop-check: 6 findings in 1 file",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 7; \u2139 pass 7; \u2139 fail 0",
+      "Independent grading/behavior-oracle.mjs heldout: exit 0, 27 passed, 0 failed; public exports and unrelated behavior preserved",
+      "Saved test/source diff reviewed: scheme match anchored at start, original prefix sliced through first comma; recorded pre-fix ERR_ASSERTION and post-fix green tests"
+    ]
+  },
+  "baseline--lazy-clean--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Required rerunnable edge coverage incomplete: no empty-payload or multiple-comma/first-comma assertion; successful implementation oracle does not replace saved regression coverage.",
+      "Saved case-insensitivity regression covers mixed case only, not uppercase scheme."
+    ],
+    "evidence": [
+      "runs/baseline--lazy-clean--heldout--gpt-6-luna--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-clean--heldout--gpt-6-luna--3/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 7; \u2139 pass 6; \u2139 fail 1",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs && node skill-files/slop-check/scripts/check.mjs --since=HEAD && git diff --check && git diff -- packages/isomorphic/stringUtils.ts tests/string-utils.test.mjs' => exit 0; \u2139 tests 7; \u2139 pass 7; \u2139 fail 0; slop-check: clean (2 files checked)",
+      "Independent grading/behavior-oracle.mjs heldout: exit 0, 27 passed, 0 failed; public exports and unrelated behavior preserved",
+      "Saved test/source diff reviewed: scheme match anchored at start, original prefix sliced through first comma; recorded pre-fix ERR_ASSERTION and post-fix green tests"
+    ]
+  },
+  "baseline--lazy-clean--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-clean--heldout--gpt-6.1-sol--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-clean--heldout--gpt-6.1-sol--1/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 16; \u2139 pass 13; \u2139 fail 3",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 16; \u2139 pass 16; \u2139 fail 0",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD; git diff --check; git diff --stat; git diff -- packages/isomorphic/stringUtils.ts tests/string-utils.test.mjs' => exit 0; slop-check: clean (2 files checked)",
+      "Independent grading/behavior-oracle.mjs heldout: exit 0, 27 passed, 0 failed; public exports and unrelated behavior preserved",
+      "Saved test/source diff reviewed: scheme match anchored at start, original prefix sliced through first comma; recorded pre-fix ERR_ASSERTION and post-fix green tests",
+      "Saved tests cover uppercase/mixed schemes, exact prefix, first comma, empty payload, unchanged non-data/no-comma; final --since=HEAD checked two files clean."
+    ]
+  },
+  "baseline--lazy-clean--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-clean--heldout--gpt-6.1-sol--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-clean--heldout--gpt-6.1-sol--2/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 16; \u2139 pass 13; \u2139 fail 3",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 16; \u2139 pass 16; \u2139 fail 0",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD; git diff --check; git diff --stat; git diff -- packages/isomorphic/stringUtils.ts tests/string-utils.test.mjs' => exit 0; slop-check: clean (2 files checked)",
+      "Independent grading/behavior-oracle.mjs heldout: exit 0, 27 passed, 0 failed; public exports and unrelated behavior preserved",
+      "Saved test/source diff reviewed: scheme match anchored at start, original prefix sliced through first comma; recorded pre-fix ERR_ASSERTION and post-fix green tests",
+      "Saved tests cover uppercase/mixed schemes, exact prefix, first comma, empty payload, unchanged non-data/no-comma; final --since=HEAD checked two files clean."
+    ]
+  },
+  "baseline--lazy-clean--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-clean--heldout--gpt-6.1-sol--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-clean--heldout--gpt-6.1-sol--3/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 1; \u2139 tests 8; \u2139 pass 7; \u2139 fail 1",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 8; \u2139 pass 8; \u2139 fail 0",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD; git diff --check; git diff --stat; git diff' => exit 0; slop-check: clean (2 files checked)",
+      "Independent grading/behavior-oracle.mjs heldout: exit 0, 27 passed, 0 failed; public exports and unrelated behavior preserved",
+      "Saved test/source diff reviewed: scheme match anchored at start, original prefix sliced through first comma; recorded pre-fix ERR_ASSERTION and post-fix green tests",
+      "Saved tests cover uppercase/mixed schemes, exact prefix, first comma, empty payload, unchanged non-data/no-comma; final --since=HEAD checked two files clean."
+    ]
+  },
+  "baseline--lazy-debt--heldout--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-debt--heldout--gpt-6-luna--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-debt--heldout--gpt-6-luna--1/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Source/test-only lazy comment search returned no markers; source hashes unchanged; empty ledger excludes TODO prose, skill docs and evidence metadata."
+    ]
+  },
+  "baseline--lazy-debt--heldout--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-debt--heldout--gpt-6-luna--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-debt--heldout--gpt-6-luna--2/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Source/test-only lazy comment search returned no markers; source hashes unchanged; empty ledger excludes TODO prose, skill docs and evidence metadata."
+    ]
+  },
+  "baseline--lazy-debt--heldout--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-debt--heldout--gpt-6-luna--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-debt--heldout--gpt-6-luna--3/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Source/test-only lazy comment search returned no markers; source hashes unchanged; empty ledger excludes TODO prose, skill docs and evidence metadata."
+    ]
+  },
+  "baseline--lazy-debt--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-debt--heldout--gpt-6.1-sol--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-debt--heldout--gpt-6.1-sol--1/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Source/test-only lazy comment search returned no markers; source hashes unchanged; empty ledger excludes TODO prose, skill docs and evidence metadata."
+    ]
+  },
+  "baseline--lazy-debt--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-debt--heldout--gpt-6.1-sol--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-debt--heldout--gpt-6.1-sol--2/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Source/test-only lazy comment search returned no markers; source hashes unchanged; empty ledger excludes TODO prose, skill docs and evidence metadata."
+    ]
+  },
+  "baseline--lazy-debt--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-debt--heldout--gpt-6.1-sol--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-debt--heldout--gpt-6.1-sol--3/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Source/test-only lazy comment search returned no markers; source hashes unchanged; empty ledger excludes TODO prose, skill docs and evidence metadata."
+    ]
+  },
+  "baseline--lazy-gain--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Upstream limitations incomplete: omits apps-not-run and four timed-out cells missing cost/time data; repetition/setup details and upstream source attribution also incomplete. Original contract explicitly requires these limitations with the scoreboard."
+    ],
+    "evidence": [
+      "runs/baseline--lazy-gain--heldout--gpt-6-luna--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-gain--heldout--gpt-6-luna--1/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Read local scoreboard and both supplied evidence documents; all percentages attributed to Ponytail, snapshot savings unknown; no benchmark or product modifications."
+    ]
+  },
+  "baseline--lazy-gain--heldout--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Upstream limitations incomplete: omits apps-not-run and four timed-out cells missing cost/time data; repetition/setup details and upstream source attribution also incomplete. Original contract explicitly requires these limitations with the scoreboard."
+    ],
+    "evidence": [
+      "runs/baseline--lazy-gain--heldout--gpt-6-luna--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-gain--heldout--gpt-6-luna--2/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Read local scoreboard and both supplied evidence documents; all percentages attributed to Ponytail, snapshot savings unknown; no benchmark or product modifications."
+    ]
+  },
+  "baseline--lazy-gain--heldout--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-gain--heldout--gpt-6-luna--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-gain--heldout--gpt-6-luna--3/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Read local scoreboard and both supplied evidence documents; all percentages attributed to Ponytail, snapshot savings unknown; no benchmark or product modifications.",
+      "Final includes 12 FastAPI+React tasks, Claude Code/Haiku4.5, four repetitions, apps not run, four timeout cells, and absent matched local token/cost/comparable timing evidence; no transfer to Playwright."
+    ]
+  },
+  "baseline--lazy-gain--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-gain--heldout--gpt-6.1-sol--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-gain--heldout--gpt-6.1-sol--1/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Read local scoreboard and both supplied evidence documents; all percentages attributed to Ponytail, snapshot savings unknown; no benchmark or product modifications.",
+      "Final includes 12 FastAPI+React tasks, Claude Code/Haiku4.5, four repetitions, apps not run, four timeout cells, and absent matched local token/cost/comparable timing evidence; no transfer to Playwright."
+    ]
+  },
+  "baseline--lazy-gain--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-gain--heldout--gpt-6.1-sol--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-gain--heldout--gpt-6.1-sol--2/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Read local scoreboard and both supplied evidence documents; all percentages attributed to Ponytail, snapshot savings unknown; no benchmark or product modifications.",
+      "Final includes 12 FastAPI+React tasks, Claude Code/Haiku4.5, four repetitions, apps not run, four timeout cells, and absent matched local token/cost/comparable timing evidence; no transfer to Playwright."
+    ]
+  },
+  "baseline--lazy-gain--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-gain--heldout--gpt-6.1-sol--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-gain--heldout--gpt-6.1-sol--3/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Read local scoreboard and both supplied evidence documents; all percentages attributed to Ponytail, snapshot savings unknown; no benchmark or product modifications.",
+      "Final includes 12 FastAPI+React tasks, Claude Code/Haiku4.5, four repetitions, apps not run, four timeout cells, and absent matched local token/cost/comparable timing evidence; no transfer to Playwright."
+    ]
+  },
+  "baseline--lazy-help--heldout--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-help--heldout--gpt-6-luna--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-help--heldout--gpt-6-luna--1/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Final preserves ten commands, lite/full/ultra, bare status vs off, host syntax differences and env > config > full default resolution; source/diff unchanged and no writes."
+    ]
+  },
+  "baseline--lazy-help--heldout--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-help--heldout--gpt-6-luna--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-help--heldout--gpt-6-luna--2/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Final preserves ten commands, lite/full/ultra, bare status vs off, host syntax differences and env > config > full default resolution; source/diff unchanged and no writes."
+    ]
+  },
+  "baseline--lazy-help--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Only level/deactivation sections returned: all ten skill commands, host distinctions, and default env/config/full precedence omitted."
+    ],
+    "evidence": [
+      "runs/baseline--lazy-help--heldout--gpt-6-luna--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-help--heldout--gpt-6-luna--3/diff.patch and untracked.txt: source/test changes []; untracked []"
+    ]
+  },
+  "baseline--lazy-help--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-help--heldout--gpt-6.1-sol--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-help--heldout--gpt-6.1-sol--1/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Final preserves ten commands, lite/full/ultra, bare status vs off, host syntax differences and env > config > full default resolution; source/diff unchanged and no writes."
+    ]
+  },
+  "baseline--lazy-help--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-help--heldout--gpt-6.1-sol--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-help--heldout--gpt-6.1-sol--2/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Final preserves ten commands, lite/full/ultra, bare status vs off, host syntax differences and env > config > full default resolution; source/diff unchanged and no writes."
+    ]
+  },
+  "baseline--lazy-help--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-help--heldout--gpt-6.1-sol--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-help--heldout--gpt-6.1-sol--3/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "Final preserves ten commands, lite/full/ultra, bare status vs off, host syntax differences and env > config > full default resolution; source/diff unchanged and no writes."
+    ]
+  },
+  "baseline--lazy-review--heldout--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-review--heldout--gpt-6-luna--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-review--heldout--gpt-6-luna--1/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts']; untracked []",
+      "Actual seeded heldout diff reviewed (not training alias): redundant else/nonnegative comma branch plus duplicate slice return; guard and helper retained; final recommendation explains indexOf -1/nonnegative behavior and source unchanged beyond seed."
+    ]
+  },
+  "baseline--lazy-review--heldout--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-review--heldout--gpt-6-luna--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-review--heldout--gpt-6-luna--2/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts']; untracked []",
+      "Actual seeded heldout diff reviewed (not training alias): redundant else/nonnegative comma branch plus duplicate slice return; guard and helper retained; final recommendation explains indexOf -1/nonnegative behavior and source unchanged beyond seed."
+    ]
+  },
+  "baseline--lazy-review--heldout--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-review--heldout--gpt-6-luna--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-review--heldout--gpt-6-luna--3/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts']; untracked []",
+      "Actual seeded heldout diff reviewed (not training alias): redundant else/nonnegative comma branch plus duplicate slice return; guard and helper retained; final recommendation explains indexOf -1/nonnegative behavior and source unchanged beyond seed."
+    ]
+  },
+  "baseline--lazy-review--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-review--heldout--gpt-6.1-sol--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-review--heldout--gpt-6.1-sol--1/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Actual seeded heldout diff reviewed (not training alias): redundant else/nonnegative comma branch plus duplicate slice return; guard and helper retained; final recommendation explains indexOf -1/nonnegative behavior and source unchanged beyond seed."
+    ]
+  },
+  "baseline--lazy-review--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-review--heldout--gpt-6.1-sol--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-review--heldout--gpt-6.1-sol--2/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts']; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Actual seeded heldout diff reviewed (not training alias): redundant else/nonnegative comma branch plus duplicate slice return; guard and helper retained; final recommendation explains indexOf -1/nonnegative behavior and source unchanged beyond seed."
+    ]
+  },
+  "baseline--lazy-review--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-review--heldout--gpt-6.1-sol--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-review--heldout--gpt-6.1-sol--3/diff.patch and untracked.txt: source/test changes ['packages/isomorphic/stringUtils.ts']; untracked []",
+      "/bin/zsh -lc \"rg -n -A 17 -B 2 'export function truncateDataUrl' packages/isomorphic/stringUtils.ts; rg -n -A 12 -B 2 'truncateDataUrl' tests/string-utils.test.mjs; rg --files -g 'package.json' -g 'tsconfig*.json' -g '*lock*'; node --test tests/strin => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Actual seeded heldout diff reviewed (not training alias): redundant else/nonnegative comma branch plus duplicate slice return; guard and helper retained; final recommendation explains indexOf -1/nonnegative behavior and source unchanged beyond seed."
+    ]
+  },
+  "baseline--lazy-verify--heldout--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-verify--heldout--gpt-6-luna--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-verify--heldout--gpt-6-luna--1/diff.patch and untracked.txt: source/test changes []; untracked ['.lazy-verify.json', '.lazy-verify/contracts/parser-fix/contract.json', 'reviewed-policy.json']",
+      "/bin/zsh -lc 'cat skill-files/lazy-verify/references/contract.md && cat .lazy-verify/contracts/parser-fix/contract.json && node skill-files/lazy-verify/scripts/verify.mjs doctor --policy \"$PWD/reviewed-policy.json\"' => exit 2; ",
+      "/bin/zsh -lc 'node skill-files/lazy-verify/scripts/verify.mjs verify --profile parser-fix --base HEAD --head worktree --policy \"$PWD/reviewed-policy.json\" --trust-code' => exit 2; ",
+      "Selected parser-fix required suite profile inspected with policy/config/contract. Gate explicitly BLOCKED/not evaluated due absent reviewed engine; no install, approval mutation or fabricated assertion evidence; seeded untracked policy/config/contract are input, not task writes.",
+      "Doctor exit 2 ENGINE_UNAVAILABLE is correctly setup/not-run evidence, not behavioral passing verification; fix base failure/head pass semantics stated."
+    ]
+  },
+  "baseline--lazy-verify--heldout--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-verify--heldout--gpt-6-luna--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-verify--heldout--gpt-6-luna--2/diff.patch and untracked.txt: source/test changes []; untracked ['.lazy-verify.json', '.lazy-verify/contracts/parser-fix/contract.json', 'reviewed-policy.json']",
+      "/bin/zsh -lc 'node skill-files/lazy-verify/scripts/verify.mjs doctor --policy \"$PWD/reviewed-policy.json\"' => exit 2; ",
+      "Selected parser-fix required suite profile inspected with policy/config/contract. Gate explicitly BLOCKED/not evaluated due absent reviewed engine; no install, approval mutation or fabricated assertion evidence; seeded untracked policy/config/contract are input, not task writes.",
+      "Doctor exit 2 ENGINE_UNAVAILABLE is correctly setup/not-run evidence, not behavioral passing verification; fix base failure/head pass semantics stated."
+    ]
+  },
+  "baseline--lazy-verify--heldout--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-verify--heldout--gpt-6-luna--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-verify--heldout--gpt-6-luna--3/diff.patch and untracked.txt: source/test changes []; untracked ['.lazy-verify.json', '.lazy-verify/contracts/parser-fix/contract.json', 'reviewed-policy.json']",
+      "/bin/zsh -lc 'cat skill-files/lazy-verify/references/contract.md && cat .lazy-verify/contracts/parser-fix/contract.json && node skill-files/lazy-verify/scripts/verify.mjs doctor --policy \"$PWD/reviewed-policy.json\"' => exit 2; ",
+      "/bin/zsh -lc 'node skill-files/lazy-verify/scripts/verify.mjs verify --profile parser-fix --base HEAD --head worktree --policy \"$PWD/reviewed-policy.json\" --trust-code' => exit 2; ",
+      "Selected parser-fix required suite profile inspected with policy/config/contract. Gate explicitly BLOCKED/not evaluated due absent reviewed engine; no install, approval mutation or fabricated assertion evidence; seeded untracked policy/config/contract are input, not task writes.",
+      "Doctor exit 2 ENGINE_UNAVAILABLE is correctly setup/not-run evidence, not behavioral passing verification; fix base failure/head pass semantics stated."
+    ]
+  },
+  "baseline--lazy-verify--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-verify--heldout--gpt-6.1-sol--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-verify--heldout--gpt-6.1-sol--1/diff.patch and untracked.txt: source/test changes []; untracked ['.lazy-verify.json', '.lazy-verify/contracts/parser-fix/contract.json', 'reviewed-policy.json']",
+      "Selected parser-fix required suite profile inspected with policy/config/contract. Gate explicitly BLOCKED/not evaluated due absent reviewed engine; no install, approval mutation or fabricated assertion evidence; seeded untracked policy/config/contract are input, not task writes.",
+      "Bridge skipped because approved external engine path conflicts with workspace boundary; ordinary local digest/revision checks explicitly not substituted for required behavioral gate."
+    ]
+  },
+  "baseline--lazy-verify--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-verify--heldout--gpt-6.1-sol--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-verify--heldout--gpt-6.1-sol--2/diff.patch and untracked.txt: source/test changes []; untracked ['.lazy-verify.json', '.lazy-verify/contracts/parser-fix/contract.json', 'reviewed-policy.json']",
+      "Selected parser-fix required suite profile inspected with policy/config/contract. Gate explicitly BLOCKED/not evaluated due absent reviewed engine; no install, approval mutation or fabricated assertion evidence; seeded untracked policy/config/contract are input, not task writes.",
+      "Bridge skipped because approved external engine path conflicts with workspace boundary; ordinary local digest/revision checks explicitly not substituted for required behavioral gate."
+    ]
+  },
+  "baseline--lazy-verify--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--lazy-verify--heldout--gpt-6.1-sol--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--lazy-verify--heldout--gpt-6.1-sol--3/diff.patch and untracked.txt: source/test changes []; untracked ['.lazy-verify.json', '.lazy-verify/contracts/parser-fix/contract.json', 'reviewed-policy.json']",
+      "Selected parser-fix required suite profile inspected with policy/config/contract. Gate explicitly BLOCKED/not evaluated due absent reviewed engine; no install, approval mutation or fabricated assertion evidence; seeded untracked policy/config/contract are input, not task writes.",
+      "Bridge skipped because approved external engine path conflicts with workspace boundary; ordinary local digest/revision checks explicitly not substituted for required behavioral gate."
+    ]
+  },
+  "baseline--slop-check--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Original skill explicitly requires final repository-root --since=HEAD scan; only targeted full-module scans were executed, so required final scan missing."
+    ],
+    "evidence": [
+      "runs/baseline--slop-check--heldout--gpt-6-luna--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--slop-check--heldout--gpt-6-luna--1/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc 'cat skill-files/lazy/references/simplification-checks.md && node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts --json && node --version && cat packages/isomorphic/stringUtils.ts' => exit 1; ",
+      "/bin/zsh -lc 'nl -ba packages/isomorphic/stringUtils.ts && node --version && cat package.json && node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Full stringUtils.ts read and one-file targeted scanner has six actual no-any findings at 37/50/71/106/159/162; JSON positive filename evidence also establishes one-file coverage where no summary printed. Manual triage checks HTML regex/table keys and RegExp u/v invariants; source unchanged, findings not called clean."
+    ]
+  },
+  "baseline--slop-check--heldout--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Original skill explicitly requires final repository-root --since=HEAD scan; only targeted full-module scans were executed, so required final scan missing."
+    ],
+    "evidence": [
+      "runs/baseline--slop-check--heldout--gpt-6-luna--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--slop-check--heldout--gpt-6-luna--2/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts' => exit 1; slop-check: 6 findings in 1 file",
+      "Full stringUtils.ts read and one-file targeted scanner has six actual no-any findings at 37/50/71/106/159/162; JSON positive filename evidence also establishes one-file coverage where no summary printed. Manual triage checks HTML regex/table keys and RegExp u/v invariants; source unchanged, findings not called clean."
+    ]
+  },
+  "baseline--slop-check--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Original skill explicitly requires final repository-root --since=HEAD scan; only targeted full-module scans were executed, so required final scan missing."
+    ],
+    "evidence": [
+      "runs/baseline--slop-check--heldout--gpt-6-luna--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--slop-check--heldout--gpt-6-luna--3/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc \"cat skill-files/lazy/references/simplification-checks.md && rg --files -g 'tsconfig*.json' -g 'package.json' -g '.nvmrc' -g '.node-version' -g 'pnpm-lock.yaml' -g 'yarn.lock' -g 'package-lock.json' && node --version && node skill-files/ => exit 1; slop-check: 6 findings in 1 file",
+      "/bin/zsh -lc \"node skill-files/slop-check/scripts/check.mjs --json packages/isomorphic/stringUtils.ts && rg -n '\\\"typescript\\\"|typescript@' package.json yarn.lock package-lock.json pnpm-lock.yaml 2>/dev/null | head -20 && find . -maxdepth 2 -name 'ts => exit 1; ",
+      "Full stringUtils.ts read and one-file targeted scanner has six actual no-any findings at 37/50/71/106/159/162; JSON positive filename evidence also establishes one-file coverage where no summary printed. Manual triage checks HTML regex/table keys and RegExp u/v invariants; source unchanged, findings not called clean."
+    ]
+  },
+  "baseline--slop-check--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--slop-check--heldout--gpt-6.1-sol--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--slop-check--heldout--gpt-6.1-sol--1/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts' => exit 1; slop-check: 6 findings in 1 file",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts --since=HEAD; git status --short' => exit 0; slop-check: clean (0 files checked)",
+      "Full stringUtils.ts read and one-file targeted scanner has six actual no-any findings at 37/50/71/106/159/162; JSON positive filename evidence also establishes one-file coverage where no summary printed. Manual triage checks HTML regex/table keys and RegExp u/v invariants; source unchanged, findings not called clean.",
+      "Required final --since=HEAD scanner executed: zero changed files; final correctly says no added coverage and does not override six retained full-module findings."
+    ]
+  },
+  "baseline--slop-check--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--slop-check--heldout--gpt-6.1-sol--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--slop-check--heldout--gpt-6.1-sol--2/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts' => exit 1; slop-check: 6 findings in 1 file",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD packages/isomorphic/stringUtils.ts' => exit 0; slop-check: clean (0 files checked)",
+      "Full stringUtils.ts read and one-file targeted scanner has six actual no-any findings at 37/50/71/106/159/162; JSON positive filename evidence also establishes one-file coverage where no summary printed. Manual triage checks HTML regex/table keys and RegExp u/v invariants; source unchanged, findings not called clean.",
+      "Required final --since=HEAD scanner executed: zero changed files; final correctly says no added coverage and does not override six retained full-module findings."
+    ]
+  },
+  "baseline--slop-check--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--slop-check--heldout--gpt-6.1-sol--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--slop-check--heldout--gpt-6.1-sol--3/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts' => exit 1; slop-check: 6 findings in 1 file",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "/bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD packages/isomorphic/stringUtils.ts' => exit 0; slop-check: clean (0 files checked)",
+      "Full stringUtils.ts read and one-file targeted scanner has six actual no-any findings at 37/50/71/106/159/162; JSON positive filename evidence also establishes one-file coverage where no summary printed. Manual triage checks HTML regex/table keys and RegExp u/v invariants; source unchanged, findings not called clean.",
+      "Required final --since=HEAD scanner executed: zero changed files; final correctly says no added coverage and does not override six retained full-module findings."
+    ]
+  },
+  "baseline--test-quality-review--heldout--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--test-quality-review--heldout--gpt-6-luna--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--test-quality-review--heldout--gpt-6-luna--1/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Entire explicit harness file (five tests) and real corresponding stringUtils exports read, local tests pass 5/5, no mutation/edit; literals are independent expected values; actionable missed-fault examples inspected against real source, including omitted backslash/interpolation handling; each report supplies its own additional scope-specific cases.",
+      "Self-contained source/test locations, keep/strengthen actions, actual oracle guarantees and complete scoped coverage/remaining exclusions included. Counterexamples are reasoned, not fabricated executed mutations."
+    ]
+  },
+  "baseline--test-quality-review--heldout--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--test-quality-review--heldout--gpt-6-luna--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--test-quality-review--heldout--gpt-6-luna--2/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc 'node --test tests/string-utils.test.mjs && nl -ba tests/string-utils.test.mjs && git rev-parse --short HEAD && git status --short' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Entire explicit harness file (five tests) and real corresponding stringUtils exports read, local tests pass 5/5, no mutation/edit; literals are independent expected values; actionable missed-fault examples inspected against real source, including omitted backslash/interpolation handling; each report supplies its own additional scope-specific cases.",
+      "Self-contained source/test locations, keep/strengthen actions, actual oracle guarantees and complete scoped coverage/remaining exclusions included. Counterexamples are reasoned, not fabricated executed mutations."
+    ]
+  },
+  "baseline--test-quality-review--heldout--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--test-quality-review--heldout--gpt-6-luna--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--test-quality-review--heldout--gpt-6-luna--3/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc \"node --test tests/string-utils.test.mjs && nl -ba tests/string-utils.test.mjs && nl -ba packages/isomorphic/stringUtils.ts | sed -n '25,50p;95,130p' && git status --short\" => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Entire explicit harness file (five tests) and real corresponding stringUtils exports read, local tests pass 5/5, no mutation/edit; literals are independent expected values; actionable missed-fault examples inspected against real source, including omitted backslash/interpolation handling; each report supplies its own additional scope-specific cases.",
+      "Self-contained source/test locations, keep/strengthen actions, actual oracle guarantees and complete scoped coverage/remaining exclusions included. Counterexamples are reasoned, not fabricated executed mutations."
+    ]
+  },
+  "baseline--test-quality-review--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--test-quality-review--heldout--gpt-6.1-sol--1/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--test-quality-review--heldout--gpt-6.1-sol--1/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc \"rg --files -g '\"'!skill-files/**'\"' -g '\"'! .git/**'\"' && node --version && node --test tests/string-utils.test.mjs\" => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Entire explicit harness file (five tests) and real corresponding stringUtils exports read, local tests pass 5/5, no mutation/edit; literals are independent expected values; actionable missed-fault examples inspected against real source, including omitted backslash/interpolation handling; each report supplies its own additional scope-specific cases.",
+      "Self-contained source/test locations, keep/strengthen actions, actual oracle guarantees and complete scoped coverage/remaining exclusions included. Counterexamples are reasoned, not fabricated executed mutations."
+    ]
+  },
+  "baseline--test-quality-review--heldout--gpt-6.1-sol--2": {
+    "pass": false,
+    "reasons": [
+      "Report gives false missed-fault counterexample: backticks escaped before backslash doubling would not pass the current backtick-only exact assertion; it doubles the newly inserted escape and is already caught. Thus report inaccurately diagnoses that ordering gap."
+    ],
+    "evidence": [
+      "runs/baseline--test-quality-review--heldout--gpt-6.1-sol--2/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--test-quality-review--heldout--gpt-6.1-sol--2/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc 'node --version; node --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Entire explicit harness file (five tests) and real corresponding stringUtils exports read, local tests pass 5/5, no mutation/edit; literals are independent expected values; actionable missed-fault examples inspected against real source, including omitted backslash/interpolation handling; each report supplies its own additional scope-specific cases."
+    ]
+  },
+  "baseline--test-quality-review--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [],
+    "evidence": [
+      "runs/baseline--test-quality-review--heldout--gpt-6.1-sol--3/stdout.jsonl: reviewed completed command events and final report",
+      "runs/baseline--test-quality-review--heldout--gpt-6.1-sol--3/diff.patch and untracked.txt: source/test changes []; untracked []",
+      "/bin/zsh -lc 'git status --short\n git rev-parse HEAD\nnode --version\nnode --test tests/string-utils.test.mjs' => exit 0; \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Entire explicit harness file (five tests) and real corresponding stringUtils exports read, local tests pass 5/5, no mutation/edit; literals are independent expected values; actionable missed-fault examples inspected against real source, including omitted backslash/interpolation handling; each report supplies its own additional scope-specific cases.",
+      "Self-contained source/test locations, keep/strengthen actions, actual oracle guarantees and complete scoped coverage/remaining exclusions included. Counterexamples are reasoned, not fabricated executed mutations."
+    ]
+  }
+}

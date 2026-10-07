@@ -1,0 +1,18 @@
+{
+  "captured": "2026-10-07T03:38:51.363Z",
+  "counts": {
+    "members": 5531,
+    "private_account_paths": 0,
+    "original_study_paths": 0,
+    "git_entries": 0,
+    "credential_shapes": 0,
+    "record_metric_mismatches": 0,
+    "compared_records": 660,
+    "archive_hash_mismatches": 0,
+    "binary_files": 0,
+    "private_owner_headers": 0,
+    "unexpected_pax_headers": 0,
+    "comparison_discrepancies": 0
+  },
+  "scope": "Every archive member; available original terminal record usage/status fields compared. Pattern audit is not proof of absence of all possible secrets."
+}

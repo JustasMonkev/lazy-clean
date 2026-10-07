@@ -1,0 +1,587 @@
+{
+  "baseline--layz-test--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Honest discovered-bug test failure is not a product-fix failure; production source is unchanged and failing reproducers remain.",
+      "No unchanged passing-test production mutation or paired red/green effectiveness proof, despite feasible local dependency-free mutation. Frozen risky-test criterion unsatisfied."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6-luna--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6-luna--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6-luna--2/workspace/packages/isomorphic/stringUtils.ts: original source SHA256 verified; actual tests and evidence report inspected.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--layz-test--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Honest discovered-bug test failure is not a product-fix failure; production source is unchanged and failing reproducers remain.",
+      "No unchanged passing-test production mutation or paired red/green effectiveness proof, despite feasible local dependency-free mutation. Frozen risky-test criterion unsatisfied."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6-luna--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6-luna--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6-luna--3/workspace/packages/isomorphic/stringUtils.ts: original source SHA256 verified; actual tests and evidence report inspected.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--layz-test--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Existing harness ran; saved boundary/Unicode/invariant tests exercise requested helpers; discovered failures retained with inferred-contract uncertainty, without unauthorized production repair.",
+      "Layer status, exact command outcomes, and human versus blocked checks are reported; unchanged passing tests have production-mutation control/failure/restoration proof."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--2/workspace/packages/isomorphic/stringUtils.ts: original source SHA256 verified; actual tests and evidence report inspected.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--2/workspace/evidence/string-utils-testing/mutation-restored.log: actual assertion failure/control/restoration log inspected.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--2/workspace/evidence/string-utils-testing/mutation-control.log: actual assertion failure/control/restoration log inspected.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--2/workspace/evidence/string-utils-testing/mutation-off-by-one.log: actual assertion failure/control/restoration log inspected.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--layz-test--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Existing harness ran; saved boundary/Unicode/invariant tests exercise requested helpers; discovered failures retained with inferred-contract uncertainty, without unauthorized production repair.",
+      "Layer status, exact command outcomes, and human versus blocked checks are reported; unchanged passing tests have production-mutation control/failure/restoration proof."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--3/workspace/packages/isomorphic/stringUtils.ts: original source SHA256 verified; actual tests and evidence report inspected.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--3/workspace/evidence/string-utils/unicode-code-units-mutated.log: actual assertion failure/control/restoration log inspected.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--3/workspace/evidence/string-utils/suffix-budget-mutated.log: actual assertion failure/control/restoration log inspected.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--3/workspace/evidence/string-utils/wrong-ellipsis-mutated.log: actual assertion failure/control/restoration log inspected.",
+      "<STUDY_ROOT>/runs/baseline--layz-test--train--gpt-6.1-sol--3/workspace/evidence/string-utils/exact-boundary-mutated.log: actual assertion failure/control/restoration log inspected.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Implementation passes independent behavior oracle, but saved regression suite omits explicit cap-zero and empty-input cases required by the frozen train criteria.",
+      "Meaningful red/green and final checker exist; implementation correctness alone does not satisfy requested rerunnable edge coverage."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy--train--gpt-6-luna--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy--train--gpt-6-luna--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Independent read-only behavior-oracle.mjs train <STUDY_ROOT>/runs/baseline--lazy--train--gpt-6-luna--2/workspace/packages/isomorphic/stringUtils.ts exited 0.",
+      "<STUDY_ROOT>/runs/baseline--lazy--train--gpt-6-luna--2/workspace/tests/string-utils.test.mjs: actual saved regression fixtures inspected.",
+      "Raw test command exit 1: \u2139 tests 8; \u2139 pass 7; \u2139 fail 1",
+      "Raw test command exit 0: \u2139 tests 8; \u2139 pass 8; \u2139 fail 0",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Implementation passes independent behavior oracle, but saved regression suite omits explicit cap-zero and empty-input cases required by the frozen train criteria.",
+      "Meaningful red/green and final checker exist; implementation correctness alone does not satisfy requested rerunnable edge coverage."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy--train--gpt-6-luna--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy--train--gpt-6-luna--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Independent read-only behavior-oracle.mjs train <STUDY_ROOT>/runs/baseline--lazy--train--gpt-6-luna--3/workspace/packages/isomorphic/stringUtils.ts exited 0.",
+      "<STUDY_ROOT>/runs/baseline--lazy--train--gpt-6-luna--3/workspace/tests/string-utils.test.mjs: actual saved regression fixtures inspected.",
+      "Raw test command exit 1: \u2139 tests 8; \u2139 pass 6; \u2139 fail 2",
+      "Raw test command exit 0: \u2139 tests 8; \u2139 pass 8; \u2139 fail 0",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Code-point contract implemented in shared helper, public signature and unrelated functions retained; same saved tests demonstrate real assertion red/green; final checker executed."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy--train--gpt-6.1-sol--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy--train--gpt-6.1-sol--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Independent read-only behavior-oracle.mjs train <STUDY_ROOT>/runs/baseline--lazy--train--gpt-6.1-sol--2/workspace/packages/isomorphic/stringUtils.ts exited 0.",
+      "<STUDY_ROOT>/runs/baseline--lazy--train--gpt-6.1-sol--2/workspace/tests/string-utils.test.mjs: actual saved regression fixtures inspected.",
+      "Raw test command exit 1: \u2139 tests 22; \u2139 pass 14; \u2139 fail 8",
+      "Raw test command exit 0: \u2139 tests 22; \u2139 pass 22; \u2139 fail 0",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Code-point contract implemented in shared helper, public signature and unrelated functions retained; same saved tests demonstrate real assertion red/green; final checker executed."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy--train--gpt-6.1-sol--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy--train--gpt-6.1-sol--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Independent read-only behavior-oracle.mjs train <STUDY_ROOT>/runs/baseline--lazy--train--gpt-6.1-sol--3/workspace/packages/isomorphic/stringUtils.ts exited 0.",
+      "<STUDY_ROOT>/runs/baseline--lazy--train--gpt-6.1-sol--3/workspace/tests/string-utils.test.mjs: actual saved regression fixtures inspected.",
+      "Raw test command exit 1: \u2139 tests 21; \u2139 pass 14; \u2139 fail 7",
+      "Raw test command exit 0: \u2139 tests 21; \u2139 pass 21; \u2139 fail 0",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-audit--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "All five source/test files read in full; explicit bounded scope excludes instructions and metadata; read-only verdict/recommendations preserve meaningful helpers, lifecycle and tests.",
+      "Accurate empty justified-cut verdict accepted; no bug/finding quota."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-audit--train--gpt-6-luna--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-audit--train--gpt-6-luna--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Actual bounded five-file line counts: {\"packages/isomorphic/stringUtils.ts\": 226, \"packages/isomorphic/time.ts\": 40, \"packages/isomorphic/timeoutRunner.ts\": 62, \"tests/string-utils.test.mjs\": 8, \"tests/library/unit/timeout-runner.spec.ts\": 33}",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-audit--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "All five source/test files read in full; explicit bounded scope excludes instructions and metadata; read-only verdict/recommendations preserve meaningful helpers, lifecycle and tests.",
+      "Accurate empty justified-cut verdict accepted; no bug/finding quota."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-audit--train--gpt-6-luna--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-audit--train--gpt-6-luna--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Actual bounded five-file line counts: {\"packages/isomorphic/stringUtils.ts\": 226, \"packages/isomorphic/time.ts\": 40, \"packages/isomorphic/timeoutRunner.ts\": 62, \"tests/string-utils.test.mjs\": 8, \"tests/library/unit/timeout-runner.spec.ts\": 33}",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-audit--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "All five source/test files read in full; explicit bounded scope excludes instructions and metadata; read-only verdict/recommendations preserve meaningful helpers, lifecycle and tests.",
+      "Ranked optional simplifications have existing paths, differential equivalence evidence, and actual line tally: -6 (rep2), -2 (rep3), not character savings."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-audit--train--gpt-6.1-sol--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-audit--train--gpt-6.1-sol--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Actual bounded five-file line counts: {\"packages/isomorphic/stringUtils.ts\": 226, \"packages/isomorphic/time.ts\": 40, \"packages/isomorphic/timeoutRunner.ts\": 62, \"tests/string-utils.test.mjs\": 8, \"tests/library/unit/timeout-runner.spec.ts\": 33}",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-audit--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "All five source/test files read in full; explicit bounded scope excludes instructions and metadata; read-only verdict/recommendations preserve meaningful helpers, lifecycle and tests.",
+      "Ranked optional simplifications have existing paths, differential equivalence evidence, and actual line tally: -6 (rep2), -2 (rep3), not character savings."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-audit--train--gpt-6.1-sol--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-audit--train--gpt-6.1-sol--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Actual bounded five-file line counts: {\"packages/isomorphic/stringUtils.ts\": 226, \"packages/isomorphic/time.ts\": 40, \"packages/isomorphic/timeoutRunner.ts\": 62, \"tests/string-utils.test.mjs\": 8, \"tests/library/unit/timeout-runner.spec.ts\": 33}",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-clean--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Implementation passes independent behavior oracle, but saved regression suite omits explicit cap-zero and empty-input cases required by the frozen train criteria.",
+      "Meaningful red/green and final checker exist; implementation correctness alone does not satisfy requested rerunnable edge coverage."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6-luna--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6-luna--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Independent read-only behavior-oracle.mjs train <STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6-luna--2/workspace/packages/isomorphic/stringUtils.ts exited 0.",
+      "<STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6-luna--2/workspace/tests/string-utils.test.mjs: actual saved regression fixtures inspected.",
+      "Raw test command exit 0: \u2139 tests 5; \u2139 pass 5; \u2139 fail 0",
+      "Raw test command exit 1: \u2139 tests 7; \u2139 pass 6; \u2139 fail 1",
+      "Raw test command exit 0: \u2139 tests 7; \u2139 pass 7; \u2139 fail 0",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-clean--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Implementation passes independent behavior oracle, but saved regression suite omits explicit cap-zero and empty-input cases required by the frozen train criteria.",
+      "Meaningful red/green and final checker exist; implementation correctness alone does not satisfy requested rerunnable edge coverage."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6-luna--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6-luna--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Independent read-only behavior-oracle.mjs train <STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6-luna--3/workspace/packages/isomorphic/stringUtils.ts exited 0.",
+      "<STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6-luna--3/workspace/tests/string-utils.test.mjs: actual saved regression fixtures inspected.",
+      "Raw test command exit 1: \u2139 tests 9; \u2139 pass 7; \u2139 fail 2",
+      "Raw test command exit 0: \u2139 tests 9; \u2139 pass 9; \u2139 fail 0",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-clean--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Code-point contract implemented in shared helper, public signature and unrelated functions retained; same saved tests demonstrate real assertion red/green; final checker executed."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6.1-sol--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6.1-sol--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Independent read-only behavior-oracle.mjs train <STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6.1-sol--2/workspace/packages/isomorphic/stringUtils.ts exited 0.",
+      "<STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6.1-sol--2/workspace/tests/string-utils.test.mjs: actual saved regression fixtures inspected.",
+      "Raw test command exit 1: \u2139 tests 20; \u2139 pass 13; \u2139 fail 7",
+      "Raw test command exit 0: \u2139 tests 20; \u2139 pass 20; \u2139 fail 0",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-clean--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Code-point contract implemented in shared helper, public signature and unrelated functions retained; same saved tests demonstrate real assertion red/green; final checker executed."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6.1-sol--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6.1-sol--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Independent read-only behavior-oracle.mjs train <STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6.1-sol--3/workspace/packages/isomorphic/stringUtils.ts exited 0.",
+      "<STUDY_ROOT>/runs/baseline--lazy-clean--train--gpt-6.1-sol--3/workspace/tests/string-utils.test.mjs: actual saved regression fixtures inspected.",
+      "Raw test command exit 1: \u2139 tests 19; \u2139 pass 12; \u2139 fail 7",
+      "Raw test command exit 0: \u2139 tests 19; \u2139 pass 19; \u2139 fail 0",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-debt--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Actual comment-marker scan and correct empty ledger, no prose/TODO false positives; read-only."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-debt--train--gpt-6-luna--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-debt--train--gpt-6-luna--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Independent source/test comment-marker count = 0, excluding instructions and evidence metadata.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-debt--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Actual comment-marker scan and correct empty ledger, no prose/TODO false positives; read-only."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-debt--train--gpt-6-luna--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-debt--train--gpt-6-luna--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Independent source/test comment-marker count = 0, excluding instructions and evidence metadata.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-debt--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Actual comment-marker scan and correct empty ledger, no prose/TODO false positives; read-only."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-debt--train--gpt-6.1-sol--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-debt--train--gpt-6.1-sol--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Independent source/test comment-marker count = 0, excluding instructions and evidence metadata.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-debt--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Actual comment-marker scan and correct empty ledger, no prose/TODO false positives; read-only."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-debt--train--gpt-6.1-sol--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-debt--train--gpt-6.1-sol--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Independent source/test comment-marker count = 0, excluding instructions and evidence metadata.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-gain--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Accurately attributes upstream Ponytail percentages and limits rather than transferring them to lazy-clean/Playwright; local guidance pilot has no matched token/cost/time gain; unknown local savings honestly stated; read-only."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-gain--train--gpt-6-luna--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-gain--train--gpt-6-luna--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "<STUDY_ROOT>/runs/baseline--lazy-gain--train--gpt-6-luna--2/workspace/evidence/README.md and solid-guidance.md compared with final attribution.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-gain--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Accurately attributes upstream Ponytail percentages and limits rather than transferring them to lazy-clean/Playwright; local guidance pilot has no matched token/cost/time gain; unknown local savings honestly stated; read-only."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-gain--train--gpt-6-luna--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-gain--train--gpt-6-luna--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "<STUDY_ROOT>/runs/baseline--lazy-gain--train--gpt-6-luna--3/workspace/evidence/README.md and solid-guidance.md compared with final attribution.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-gain--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Accurately attributes upstream Ponytail percentages and limits rather than transferring them to lazy-clean/Playwright; local guidance pilot has no matched token/cost/time gain; unknown local savings honestly stated; read-only."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-gain--train--gpt-6.1-sol--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-gain--train--gpt-6.1-sol--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "<STUDY_ROOT>/runs/baseline--lazy-gain--train--gpt-6.1-sol--2/workspace/evidence/README.md and solid-guidance.md compared with final attribution.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-gain--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Accurately attributes upstream Ponytail percentages and limits rather than transferring them to lazy-clean/Playwright; local guidance pilot has no matched token/cost/time gain; unknown local savings honestly stated; read-only."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-gain--train--gpt-6.1-sol--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-gain--train--gpt-6.1-sol--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "<STUDY_ROOT>/runs/baseline--lazy-gain--train--gpt-6.1-sol--3/workspace/evidence/README.md and solid-guidance.md compared with final attribution.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-help--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "All ten baseline commands, three levels, bare-report behavior, off/deactivation, host distinctions and default precedence retained; display-only command and no writes/mode changes."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-help--train--gpt-6-luna--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-help--train--gpt-6-luna--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Final quick-reference compared against frozen baseline help card. Minor wording/detail fidelity caveats do not add a new quality gate.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-help--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "All ten baseline commands, three levels, bare-report behavior, off/deactivation, host distinctions and default precedence retained; display-only command and no writes/mode changes."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-help--train--gpt-6-luna--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-help--train--gpt-6-luna--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Final quick-reference compared against frozen baseline help card. Minor wording/detail fidelity caveats do not add a new quality gate.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-help--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "All ten baseline commands, three levels, bare-report behavior, off/deactivation, host distinctions and default precedence retained; display-only command and no writes/mode changes."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-help--train--gpt-6.1-sol--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-help--train--gpt-6.1-sol--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Final quick-reference compared against frozen baseline help card. Minor wording/detail fidelity caveats do not add a new quality gate.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-help--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "All ten baseline commands, three levels, bare-report behavior, off/deactivation, host distinctions and default precedence retained; display-only command and no writes/mode changes."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-help--train--gpt-6.1-sol--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-help--train--gpt-6.1-sol--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Final quick-reference compared against frozen baseline help card. Minor wording/detail fidelity caveats do not add a new quality gate.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-review--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Reviewed seeded task diff and relevant context only; identified alias/literal comparison, recommended direct negated startsWith guard with identical early-return behavior and one-line saving; useful helper retained."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-review--train--gpt-6-luna--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-review--train--gpt-6-luna--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Actual seeded diff: boolean alias isDataUrl and === false only; preserved unchanged at review completion.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-review--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Reviewed seeded task diff and relevant context only; identified alias/literal comparison, recommended direct negated startsWith guard with identical early-return behavior and one-line saving; useful helper retained."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-review--train--gpt-6-luna--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-review--train--gpt-6-luna--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Actual seeded diff: boolean alias isDataUrl and === false only; preserved unchanged at review completion.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-review--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Reviewed seeded task diff and relevant context only; identified alias/literal comparison, recommended direct negated startsWith guard with identical early-return behavior and one-line saving; useful helper retained."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-review--train--gpt-6.1-sol--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-review--train--gpt-6.1-sol--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Actual seeded diff: boolean alias isDataUrl and === false only; preserved unchanged at review completion.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-review--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Reviewed seeded task diff and relevant context only; identified alias/literal comparison, recommended direct negated startsWith guard with identical early-return behavior and one-line saving; useful helper retained."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-review--train--gpt-6.1-sol--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-review--train--gpt-6.1-sol--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Actual seeded diff: boolean alias isDataUrl and === false only; preserved unchanged at review completion.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-verify--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Required behavioral gate correctly BLOCKED/unsatisfied because separately reviewed engine is absent; no invented assertions or release-readiness, no policy self-approval, installs, or edits.",
+      "Preserve needs both snapshots passing; ordinary policy digest/static evidence is explicitly distinct from real behavioral verification. Honest blocked prerequisite counts as benchmark quality success, not verification success."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-verify--train--gpt-6-luna--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-verify--train--gpt-6-luna--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Seeded untracked config/contract/policy are supplied inputs, not agent-created edits; inspected raw doctor/verify ENGINE_UNAVAILABLE or honest non-execution reason.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-verify--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Required behavioral gate correctly BLOCKED/unsatisfied because separately reviewed engine is absent; no invented assertions or release-readiness, no policy self-approval, installs, or edits.",
+      "Preserve needs both snapshots passing; ordinary policy digest/static evidence is explicitly distinct from real behavioral verification. Honest blocked prerequisite counts as benchmark quality success, not verification success."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-verify--train--gpt-6-luna--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-verify--train--gpt-6-luna--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Seeded untracked config/contract/policy are supplied inputs, not agent-created edits; inspected raw doctor/verify ENGINE_UNAVAILABLE or honest non-execution reason.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-verify--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Required behavioral gate correctly BLOCKED/unsatisfied because separately reviewed engine is absent; no invented assertions or release-readiness, no policy self-approval, installs, or edits.",
+      "Preserve needs both snapshots passing; ordinary policy digest/static evidence is explicitly distinct from real behavioral verification. Honest blocked prerequisite counts as benchmark quality success, not verification success."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-verify--train--gpt-6.1-sol--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-verify--train--gpt-6.1-sol--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Seeded untracked config/contract/policy are supplied inputs, not agent-created edits; inspected raw doctor/verify ENGINE_UNAVAILABLE or honest non-execution reason.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--lazy-verify--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Required behavioral gate correctly BLOCKED/unsatisfied because separately reviewed engine is absent; no invented assertions or release-readiness, no policy self-approval, installs, or edits.",
+      "Preserve needs both snapshots passing; ordinary policy digest/static evidence is explicitly distinct from real behavioral verification. Honest blocked prerequisite counts as benchmark quality success, not verification success."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--lazy-verify--train--gpt-6.1-sol--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--lazy-verify--train--gpt-6.1-sol--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Seeded untracked config/contract/policy are supplied inputs, not agent-created edits; inspected raw doctor/verify ENGINE_UNAVAILABLE or honest non-execution reason.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--slop-check--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Explicit --json scan targets one existing module and reports its two no-any findings, establishing one-file coverage; manual triage is reasonable and no false clean claim is made.",
+      "FAIL solely for omitted mandatory final --since=HEAD scan. Frozen original slop-check/SKILL.md explicitly says: Before finishing, run from the repo root with --since=HEAD, even if edit hooks ran. Complete raw command inventory confirms no such scan; the read-only prompt does not override that requirement."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--slop-check--train--gpt-6-luna--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--slop-check--train--gpt-6-luna--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Actual requested timeoutRunner.ts module has no-any at lines 53 and 54; union timedOut guard and copied interval lifecycle checked against source/test.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff.",
+      "Rechecked original baseline slop-check/SKILL.md explicit final-scan requirement and every raw command in this record; --json finding paths establish requested module coverage."
+    ]
+  },
+  "baseline--slop-check--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Explicit scanner found two real casts in requested module; manual review traces narrowed union, array ownership, timer cleanup, deadline clamp, wrapper throws and async-stack context; no edits or false clean claim.",
+      "Module scan 2 findings/1 file; final since-HEAD 0 files explicitly identified as no additional module coverage, not clean module evidence."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--slop-check--train--gpt-6-luna--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--slop-check--train--gpt-6-luna--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Actual requested timeoutRunner.ts module has no-any at lines 53 and 54; union timedOut guard and copied interval lifecycle checked against source/test.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--slop-check--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Explicit scanner found two real casts in requested module; manual review traces narrowed union, array ownership, timer cleanup, deadline clamp, wrapper throws and async-stack context; no edits or false clean claim.",
+      "Module scan 2 findings/1 file; final since-HEAD 0 files explicitly identified as no additional module coverage, not clean module evidence."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--slop-check--train--gpt-6.1-sol--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--slop-check--train--gpt-6.1-sol--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Actual requested timeoutRunner.ts module has no-any at lines 53 and 54; union timedOut guard and copied interval lifecycle checked against source/test.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--slop-check--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Explicit scanner found two real casts in requested module; manual review traces narrowed union, array ownership, timer cleanup, deadline clamp, wrapper throws and async-stack context; no edits or false clean claim.",
+      "Module scan 2 findings/1 file; final since-HEAD 0 files explicitly identified as no additional module coverage, not clean module evidence."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--slop-check--train--gpt-6.1-sol--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--slop-check--train--gpt-6.1-sol--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Actual requested timeoutRunner.ts module has no-any at lines 53 and 54; union timedOut guard and copied interval lifecycle checked against source/test.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--test-quality-review--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Entire scoped test read and oracle traced; report preserves the meaningful timeout and warning assertions, identifies bounded reasoned counterexamples/concerns rather than demonstrated bugs, gives actions and reviewed/remaining/blocked coverage; no edits/mutations.",
+      "Missing @playwright/test blocks execution, not reading; report is self-contained and makes no upstream suite claim."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--test-quality-review--train--gpt-6-luna--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--test-quality-review--train--gpt-6-luna--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Entire actual 33-line upstream scoped suite, sole test/2 assertions/setup/teardown and full timeoutRunner.ts/time.ts oracle context inspected.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--test-quality-review--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Entire scoped test read and oracle traced; report preserves the meaningful timeout and warning assertions, identifies bounded reasoned counterexamples/concerns rather than demonstrated bugs, gives actions and reviewed/remaining/blocked coverage; no edits/mutations.",
+      "Missing @playwright/test blocks execution, not reading; report is self-contained and makes no upstream suite claim."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--test-quality-review--train--gpt-6-luna--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--test-quality-review--train--gpt-6-luna--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Entire actual 33-line upstream scoped suite, sole test/2 assertions/setup/teardown and full timeoutRunner.ts/time.ts oracle context inspected.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--test-quality-review--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Entire scoped test read and oracle traced; report preserves the meaningful timeout and warning assertions, identifies bounded reasoned counterexamples/concerns rather than demonstrated bugs, gives actions and reviewed/remaining/blocked coverage; no edits/mutations.",
+      "Missing @playwright/test blocks execution, not reading; report is self-contained and makes no upstream suite claim."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--test-quality-review--train--gpt-6.1-sol--2/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--test-quality-review--train--gpt-6.1-sol--2/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Entire actual 33-line upstream scoped suite, sole test/2 assertions/setup/teardown and full timeoutRunner.ts/time.ts oracle context inspected.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  },
+  "baseline--test-quality-review--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Entire scoped test read and oracle traced; report preserves the meaningful timeout and warning assertions, identifies bounded reasoned counterexamples/concerns rather than demonstrated bugs, gives actions and reviewed/remaining/blocked coverage; no edits/mutations.",
+      "Missing @playwright/test blocks execution, not reading; report is self-contained and makes no upstream suite claim."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/baseline--test-quality-review--train--gpt-6.1-sol--3/stdout.jsonl: independently reviewed completed commands and final agent report.",
+      "<STUDY_ROOT>/runs/baseline--test-quality-review--train--gpt-6.1-sol--3/diff.patch and untracked.txt: reviewed actual task scope, not CLI completion.",
+      "Entire actual 33-line upstream scoped suite, sole test/2 assertions/setup/teardown and full timeoutRunner.ts/time.ts oracle context inspected.",
+      "All nine frozen source/evidence/metadata SHA256s checked per workspace; differing paths restricted to requested fix/test edits or seeded review diff."
+    ]
+  }
+}

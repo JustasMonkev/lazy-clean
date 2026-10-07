@@ -1,0 +1,26 @@
+{
+  "phase": "complete",
+  "session": 50950,
+  "exit": 0,
+  "arm": "final-recovery",
+  "expected": 132,
+  "terminal": 132,
+  "completed": 132,
+  "executionFailed": 0,
+  "missingUsage": 0,
+  "quality": {
+    "pass": 102,
+    "fail": 30,
+    "ungraded": 0
+  },
+  "oracles": {
+    "executions": 24,
+    "checks": 660,
+    "passed": 660
+  },
+  "publicationScope": [
+    "lazy-help"
+  ],
+  "decision": "checks.tar.gz: final-publication-selection.json",
+  "scopeLimit": "Measured recovery closure includes rejected debt/slop; shipped restored closure not rerun as full132."
+}

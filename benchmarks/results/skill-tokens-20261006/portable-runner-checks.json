@@ -1,0 +1,15 @@
+{
+  "checks": {
+    "runnerSelftest": true,
+    "runnerHostGuard": true,
+    "revision2-runnerSelftest": true,
+    "revision2-runnerHostGuard": true,
+    "final-runnerSelftest": true,
+    "final-runnerHostGuard": true,
+    "final-recovery-runnerSelftest": true,
+    "final-recovery-runnerHostGuard": true,
+    "frozenSourceHashes": true
+  },
+  "allPassed": true,
+  "scope": "All four extracted portable runner usage parser selftests and missing-host-config refusal before Codex; source hashes compared with frozen manifest; no model calls"
+}

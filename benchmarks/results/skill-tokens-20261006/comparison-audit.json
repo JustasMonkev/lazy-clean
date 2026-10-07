@@ -1,0 +1,11 @@
+{
+  "captured": "2026-10-07T03:38:51.363Z",
+  "checks": {
+    "all44Rows": true,
+    "all15Groups": true,
+    "allKnownSumsIndependentMatch": true,
+    "matchingCapture": true
+  },
+  "allPassed": true,
+  "scope": "All per-entrypoint/group field sums independently recomputed from captured status rows"
+}

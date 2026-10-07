@@ -1,0 +1,869 @@
+{
+  "final-recovery--lazy-help--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Complete levels, commands, deactivation, defaults/update card and host distinctions; actual read-only command completed; no tests or persistent edits."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-help--train--gpt-6.1-sol--1/record.json",
+      "runs/final-recovery--lazy-help--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/final-recovery--lazy-help--train--gpt-6.1-sol--1/diff.patch",
+      "runs/final-recovery--lazy-help--train--gpt-6.1-sol--1/untracked.txt"
+    ]
+  },
+  "final-recovery--layz-test--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Honest initial 5/5 and final 8/9 run preserves confirmed zero-cap reproducer without production edits, but no unchanged passing-test production mutation or paired intended red/green proof despite feasibility.",
+      "No captured source-byte and behavior-relevant metadata verification; no installed slop scan after JS test edits.",
+      "Saved cases omit nonempty custom suffix fitting/exceeding cap and astral suffix behavior; no full boundary case coverage."
+    ],
+    "evidence": [
+      "runs/final-recovery--layz-test--train--gpt-6-luna--1/record.json",
+      "runs/final-recovery--layz-test--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/final-recovery--layz-test--train--gpt-6-luna--1/diff.patch",
+      "runs/final-recovery--layz-test--train--gpt-6-luna--1/untracked.txt",
+      "runs/final-recovery--layz-test--train--gpt-6-luna--1/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "final-recovery--layz-test--train--gpt-6.1-sol--1": {
+    "pass": false,
+    "reasons": [
+      "Strong scoped coverage and honest retained 17-pass/1-fail zero-cap defect; three feasible unchanged-test production mutations fail intended assertions, control/restored passes, captured hashes/modes verified and cleanup recorded.",
+      "Required available slop scan after JS test edits never ran; report incorrectly claims no slop checker despite workspace/skill-files/slop-check/scripts/check.mjs being present."
+    ],
+    "evidence": [
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--1/record.json",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--1/diff.patch",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--1/untracked.txt",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--1/workspace/tests/string-utils.test.mjs",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--1/workspace/test-evidence/report.md",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--1/workspace/test-evidence/final.log",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--1/workspace/test-evidence/mutation-results.json",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--1/workspace/test-evidence/mutation-code-units.log",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--1/workspace/test-evidence/mutation-exact-boundary.log",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--1/workspace/test-evidence/mutation-suffix-budget.log",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--1/workspace/skill-files/slop-check/scripts/check.mjs"
+    ]
+  },
+  "final-recovery--lazy--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Requested production-only contract implemented with public exports/unrelated behavior preserved: independent train oracle28/28.",
+      "Saved tests explicitly cover zero, empty, Unicode suffix equal/exceeding cap, fitting input, ASCII and wrapper; actual unchanged red assertions then20/20 green and repo-root sinceHEAD scanner clean2files."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--1/record.json",
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--1/diff.patch",
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--1/untracked.txt",
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--1/workspace/tests/string-utils.test.mjs",
+      "recovery-grader-scratch/final-recovery--lazy--train--gpt-6.1-sol--1.oracle.json"
+    ]
+  },
+  "final-recovery--lazy--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Independent train oracle28/28 and actual unchanged regression2fail then8/8green, final sinceHEAD scanner clean2files.",
+      "Saved regression cases omit explicit zero cap, empty input, suffix equal-cap, and ASCII custom-suffix boundaries; required full behavioral edge coverage not satisfied despite correct implementation."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy--train--gpt-6-luna--1/record.json",
+      "runs/final-recovery--lazy--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/final-recovery--lazy--train--gpt-6-luna--1/diff.patch",
+      "runs/final-recovery--lazy--train--gpt-6-luna--1/untracked.txt",
+      "runs/final-recovery--lazy--train--gpt-6-luna--1/workspace/tests/string-utils.test.mjs",
+      "recovery-grader-scratch/final-recovery--lazy--train--gpt-6-luna--1.oracle.json"
+    ]
+  },
+  "final-recovery--lazy-audit--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "All five supplied source/test files fully inventoried/read; ranked shrink findings preserve quoting, RegExp path, sorted getter traversal and useful boundaries/test oracles; accurate tally/read-only diff.",
+      "Actual5/5Node test and2928selector+96format+getter-order candidate assertions; pinned/installed version limitations honest."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-audit--train--gpt-6.1-sol--1/record.json",
+      "runs/final-recovery--lazy-audit--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/final-recovery--lazy-audit--train--gpt-6.1-sol--1/diff.patch",
+      "runs/final-recovery--lazy-audit--train--gpt-6.1-sol--1/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-audit--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "All five scoped source/test files actually read; final correct five-file inventory, safe casts/non-null simplification after union guard, no edits and tally.",
+      "Original required pinned/installed language version check not performed: no package/snapshot version or runtime command, nor unknown-version disclosure."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-audit--train--gpt-6-luna--1/record.json",
+      "runs/final-recovery--lazy-audit--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/final-recovery--lazy-audit--train--gpt-6-luna--1/diff.patch",
+      "runs/final-recovery--lazy-audit--train--gpt-6-luna--1/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-clean--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Oracle28/28; saved boundary tests include explicit zero/empty, astral input/suffix, equal/oversized suffix, fitting input and existingASCII; no unrelated source edits.",
+      "Actual8intended unchanged red assertions then21/21green; final sinceHEAD scanner clean2files and manual guidance applied/diff checked."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--1/record.json",
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--1/diff.patch",
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--1/untracked.txt",
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--1/workspace/tests/string-utils.test.mjs",
+      "recovery-grader-scratch/final-recovery--lazy-clean--train--gpt-6.1-sol--1.oracle.json"
+    ]
+  },
+  "final-recovery--lazy-clean--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Oracle28/28 with narrow correct production fix; actual unchanged2red assertions then9/9green; final sinceHEAD scanner clean2files.",
+      "Saved regressions lack explicit zero/empty and equal-cap suffix boundaries required for full behavioral coverage."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--1/record.json",
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--1/diff.patch",
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--1/untracked.txt",
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--1/workspace/tests/string-utils.test.mjs",
+      "recovery-grader-scratch/final-recovery--lazy-clean--train--gpt-6-luna--1.oracle.json"
+    ]
+  },
+  "final-recovery--lazy-debt--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Actual comment-prefixed lazy marker search covers supplied source/tests with no matches, genericTODO not counted; accurate empty verdict/count and read-only diff/untracked."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-debt--train--gpt-6.1-sol--1/record.json",
+      "runs/final-recovery--lazy-debt--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/final-recovery--lazy-debt--train--gpt-6.1-sol--1/diff.patch",
+      "runs/final-recovery--lazy-debt--train--gpt-6.1-sol--1/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-debt--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Actual comment-prefixed lazy marker search covers supplied source/tests with no matches, genericTODO not counted; accurate empty verdict/count and read-only diff/untracked."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-debt--train--gpt-6-luna--1/record.json",
+      "runs/final-recovery--lazy-debt--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/final-recovery--lazy-debt--train--gpt-6-luna--1/diff.patch",
+      "runs/final-recovery--lazy-debt--train--gpt-6-luna--1/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-gain--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Actual skill+provided evidence read; Ponytail54/22/20/27percent setup/timeouts/apps-not-run correctly attributed and not applied locally.",
+      "Luna pilot behavior/design separately reported, saved-tests gap and missing matched token/cost/timing explicit; current Playwright savings unknown, no benchmarks/edits."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-gain--train--gpt-6.1-sol--1/record.json",
+      "runs/final-recovery--lazy-gain--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/final-recovery--lazy-gain--train--gpt-6.1-sol--1/diff.patch",
+      "runs/final-recovery--lazy-gain--train--gpt-6.1-sol--1/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-help--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Actual local skill read then display-only complete core levels, commands, deactivation/resume and host distinctions; no tests/mode/settings/files changed."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-help--train--gpt-6-luna--1/record.json",
+      "runs/final-recovery--lazy-help--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/final-recovery--lazy-help--train--gpt-6-luna--1/diff.patch",
+      "runs/final-recovery--lazy-help--train--gpt-6-luna--1/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-gain--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Actual original skill+provided evidence reads; upstream Ponytail attribution/setup/limitations and distinct current Playwright unknown savings accurately reported.",
+      "Luna guidance pilot lacks matched token/cost/comparable timing; no fabricated local savings, new benchmarking or edits."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-gain--train--gpt-6-luna--1/record.json",
+      "runs/final-recovery--lazy-gain--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/final-recovery--lazy-gain--train--gpt-6-luna--1/diff.patch",
+      "runs/final-recovery--lazy-gain--train--gpt-6-luna--1/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-review--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Actual seeded uncommitted diff scoped/reviewed, original language guidance+manifest version inspected; concrete redundant boolean alias/literal compare identified with preservation reasoning and useful helper retained.",
+      "No invented unrelated findings or agent edits; saved diff matches seeded input, no untracked files."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-review--train--gpt-6.1-sol--1/record.json",
+      "runs/final-recovery--lazy-review--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/final-recovery--lazy-review--train--gpt-6.1-sol--1/diff.patch",
+      "runs/final-recovery--lazy-review--train--gpt-6.1-sol--1/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-review--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Actual seeded uncommitted diff scoped/reviewed, original language guidance+manifest version inspected; concrete redundant boolean alias/literal compare identified with preservation reasoning and useful helper retained.",
+      "No invented unrelated findings or agent edits; saved diff matches seeded input, no untracked files."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-review--train--gpt-6-luna--1/record.json",
+      "runs/final-recovery--lazy-review--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/final-recovery--lazy-review--train--gpt-6-luna--1/diff.patch",
+      "runs/final-recovery--lazy-review--train--gpt-6-luna--1/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-verify--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Original contract reference, target config, reviewed policy and selected preserve(two snapshotpasses) contract inspected/explained; requiredgate honestly blocked by absent engine.",
+      "No install/policy/config/product edits or fabricated assertion/readiness evidence; explicitly did not run bridge due workspace-only path restriction; no doctor/exit claim."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--1/record.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--1/diff.patch",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--1/untracked.txt",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--1/workspace/reviewed-policy.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--1/workspace/.lazy-verify.json"
+    ]
+  },
+  "final-recovery--lazy-verify--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Original contract reference, target config, reviewed policy and selected preserve(two snapshotpasses) contract inspected/explained; requiredgate honestly blocked by absent engine.",
+      "No install/policy/config/product edits or fabricated assertion/readiness evidence; actual bridge prerequisiteruns report ENGINE_UNAVAILABLE executionnotrun gatenotevaluated, no target assertions."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--1/record.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--1/diff.patch",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--1/untracked.txt",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--1/workspace/reviewed-policy.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--1/workspace/.lazy-verify.json"
+    ]
+  },
+  "final-recovery--slop-check--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Actual focused scanner reads1file and returns2noany findings; manual review precise union-narrowing/array-ownership/timer/callback/deadline invariants with caller/test context.",
+      "Actual repository-root sinceHEAD scan performed;0files explicitly no coverage, retained findings never called clean; read-only diff."
+    ],
+    "evidence": [
+      "runs/final-recovery--slop-check--train--gpt-6.1-sol--1/record.json",
+      "runs/final-recovery--slop-check--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/final-recovery--slop-check--train--gpt-6.1-sol--1/diff.patch",
+      "runs/final-recovery--slop-check--train--gpt-6.1-sol--1/untracked.txt"
+    ]
+  },
+  "final-recovery--slop-check--train--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Actual module scan2noany findings with correct typed union invariant and supplied test context; no edits/false clean.",
+      "Required final repository-root sinceHEAD scan omitted: focused scan and explain only, including failed placeholder RULE explanation; full manual lifecycle/interval checks not reported."
+    ],
+    "evidence": [
+      "runs/final-recovery--slop-check--train--gpt-6-luna--1/record.json",
+      "runs/final-recovery--slop-check--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/final-recovery--slop-check--train--gpt-6-luna--1/diff.patch",
+      "runs/final-recovery--slop-check--train--gpt-6-luna--1/untracked.txt"
+    ]
+  },
+  "final-recovery--test-quality-review--train--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Read the entire scoped test and traced its production oracle and timing context. Report preserves the useful warning/deadline regression, distinguishes complementary assertions from tautologies, and provides a self-contained read-only handoff. Sol supplies reasoned whole-test surviving counterexamples; Luna justifies a clean review of the narrowly scoped warning regression. No mutation or bug quota is required. Execution limits are stated without an unrun passing claim."
+    ],
+    "evidence": [
+      "runs/final-recovery--test-quality-review--train--gpt-6.1-sol--1/record.json",
+      "runs/final-recovery--test-quality-review--train--gpt-6.1-sol--1/stdout.jsonl",
+      "runs/final-recovery--test-quality-review--train--gpt-6.1-sol--1/diff.patch",
+      "runs/final-recovery--test-quality-review--train--gpt-6.1-sol--1/untracked.txt"
+    ]
+  },
+  "final-recovery--test-quality-review--train--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Read the entire scoped test and traced its production oracle and timing context. Report preserves the useful warning/deadline regression, distinguishes complementary assertions from tautologies, and provides a self-contained read-only handoff. Sol supplies reasoned whole-test surviving counterexamples; Luna justifies a clean review of the narrowly scoped warning regression. No mutation or bug quota is required. Execution limits are stated without an unrun passing claim."
+    ],
+    "evidence": [
+      "runs/final-recovery--test-quality-review--train--gpt-6-luna--1/record.json",
+      "runs/final-recovery--test-quality-review--train--gpt-6-luna--1/stdout.jsonl",
+      "runs/final-recovery--test-quality-review--train--gpt-6-luna--1/diff.patch",
+      "runs/final-recovery--test-quality-review--train--gpt-6-luna--1/untracked.txt"
+    ]
+  },
+  "final-recovery--layz-test--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Honest unchanged-source discovery: baseline 5/5; expanded saved suite 10 passed and one genuine zero-cap red reproducer retained. The retained failure is not itself a quality failure. Required feasible unchanged passing-test production mutation or paired intended red/green proof was not performed, and no captured-byte/mode restoration evidence exists. Available final slop scan after JavaScript test edits was omitted. Saved suffix tests omit oversized and supplementary-character suffix boundaries despite the requested boundary coverage."
+    ],
+    "evidence": [
+      "runs/final-recovery--layz-test--train--gpt-6-luna--2/record.json",
+      "runs/final-recovery--layz-test--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/final-recovery--layz-test--train--gpt-6-luna--2/diff.patch",
+      "runs/final-recovery--layz-test--train--gpt-6-luna--2/untracked.txt",
+      "runs/final-recovery--layz-test--train--gpt-6-luna--2/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "final-recovery--layz-test--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Strong saved trimming boundaries and 6138 generated combinations; baseline 5/5, final 19 passed with two honest retained cap-violation reproducers on unchanged production. Three isolated unchanged-test production mutants failed intended assertions, with original/restored passing and captured regular-file bytes/modes verified. Final root --since=HEAD checker actually passed two files; layers and unclear numeric/non-BMP-suffix policy are qualified."
+    ],
+    "evidence": [
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--2/record.json",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--2/diff.patch",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--2/untracked.txt",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--2/workspace/tests/string-utils.test.mjs",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--2/workspace/evidence/string-utils-testing/report.md",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--2/workspace/evidence/string-utils-testing/mutation-check.mjs"
+    ]
+  },
+  "final-recovery--lazy--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Correct scoped code-point suffix implementation; saved tests cover zero/empty, Unicode, fitting/equal/oversized suffix and unchanged/ASCII/wrapper behavior. Actual original two assertion failures become final 7/7; final root scanner clean on two files and diff check pass. Independent functional oracle 28/28."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--2/record.json",
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--2/diff.patch",
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--2/untracked.txt",
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--2/workspace/tests/string-utils.test.mjs",
+      "recovery-grader-scratch/final-recovery--lazy--train--gpt-6.1-sol--2.oracle.json"
+    ]
+  },
+  "final-recovery--lazy--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Implementation is functionally correct (independent oracle 28/28), with actual two original assertion failures then 9/9 and final two-file scanner clean. Saved coverage omits explicitly required zero-cap and empty-input checks and equal-suffix boundary; functional correctness does not substitute for requested rerunnable case coverage."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy--train--gpt-6-luna--2/record.json",
+      "runs/final-recovery--lazy--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/final-recovery--lazy--train--gpt-6-luna--2/diff.patch",
+      "runs/final-recovery--lazy--train--gpt-6-luna--2/untracked.txt",
+      "runs/final-recovery--lazy--train--gpt-6-luna--2/workspace/tests/string-utils.test.mjs",
+      "recovery-grader-scratch/final-recovery--lazy--train--gpt-6-luna--2.oracle.json"
+    ]
+  },
+  "final-recovery--lazy-audit--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Read all five scoped files (369 lines), metadata and runtime; justified safe selector helper reuse and sorted formatter map while preserving useful timing, domain, test and compatibility boundaries. Honest 5/5 local suite plus actual read-only differential probes; no edits or speculative dependency/export deletion. Ranked findings and net tally fit scope."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-audit--train--gpt-6.1-sol--2/record.json",
+      "runs/final-recovery--lazy-audit--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/final-recovery--lazy-audit--train--gpt-6.1-sol--2/diff.patch",
+      "runs/final-recovery--lazy-audit--train--gpt-6.1-sol--2/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-audit--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Read all five bounded source/test files and versions recorded in local metadata; correct safe cast-removal recommendation after discriminant narrowing, read-only with zero-line/dependency tally. No compiler execution is claimed; no bug quota or test run required for report-only audit."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-audit--train--gpt-6-luna--2/record.json",
+      "runs/final-recovery--lazy-audit--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/final-recovery--lazy-audit--train--gpt-6-luna--2/diff.patch",
+      "runs/final-recovery--lazy-audit--train--gpt-6-luna--2/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-debt--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Actual scoped comment-prefixed lazy-marker search finds no matches; correct empty ledger and no invented debt, TODO counting or file writes. All supplied source/test scope searched, skills/metadata excluded from debt."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-debt--train--gpt-6.1-sol--2/record.json",
+      "runs/final-recovery--lazy-debt--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/final-recovery--lazy-debt--train--gpt-6.1-sol--2/diff.patch",
+      "runs/final-recovery--lazy-debt--train--gpt-6.1-sol--2/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-debt--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Actual scoped comment-prefixed lazy-marker search finds no matches; correct empty ledger and no invented debt, TODO counting or file writes. All supplied source/test scope searched, skills/metadata excluded from debt."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-debt--train--gpt-6-luna--2/record.json",
+      "runs/final-recovery--lazy-debt--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/final-recovery--lazy-debt--train--gpt-6-luna--2/diff.patch",
+      "runs/final-recovery--lazy-debt--train--gpt-6-luna--2/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-clean--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Correct scoped implementation, saved zero/empty/Unicode/equal/oversized suffix/unchanged/ASCII/wrapper coverage; actual seven original failures then 19/19 and final two-file root scanner clean; independent oracle 28/28."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--2/record.json",
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--2/diff.patch",
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--2/untracked.txt",
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--2/workspace/tests/string-utils.test.mjs",
+      "recovery-grader-scratch/final-recovery--lazy-clean--train--gpt-6.1-sol--2.oracle.json"
+    ]
+  },
+  "final-recovery--lazy-clean--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Functionally correct (independent oracle 28/28), actual original oversized suffix assertion failure then 8/8 with final two-file scanner clean. Saved tests omit zero/empty, fitting astral suffix and equal-suffix boundaries; requested full behavioral coverage incomplete."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--2/record.json",
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--2/diff.patch",
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--2/untracked.txt",
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--2/workspace/tests/string-utils.test.mjs",
+      "recovery-grader-scratch/final-recovery--lazy-clean--train--gpt-6-luna--2.oracle.json"
+    ]
+  },
+  "final-recovery--lazy-help--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Read actual local card; correctly displays levels, persistence/deactivation, mode-independent skill purposes and host trigger distinctions. No files/settings/modes changed or tests/update commands executed."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-help--train--gpt-6.1-sol--2/record.json",
+      "runs/final-recovery--lazy-help--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/final-recovery--lazy-help--train--gpt-6.1-sol--2/diff.patch",
+      "runs/final-recovery--lazy-help--train--gpt-6.1-sol--2/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-help--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Read actual local card; correctly displays levels, persistence/deactivation, mode-independent skill purposes and host trigger distinctions. No files/settings/modes changed or tests/update commands executed."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-help--train--gpt-6-luna--2/record.json",
+      "runs/final-recovery--lazy-help--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/final-recovery--lazy-help--train--gpt-6-luna--2/diff.patch",
+      "runs/final-recovery--lazy-help--train--gpt-6-luna--2/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-gain--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Actual skill and both supplied evidence sources read; correctly attributed Ponytail scoreboard/setup/source, distinguished current-vs-revised Luna pilot with no efficiency metrics, and treated this snapshot savings as unknown without matched measurements. No fabricated local savings, edits or benchmark rerun. Heldout answer addresses attribution directly."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-gain--train--gpt-6.1-sol--2/record.json",
+      "runs/final-recovery--lazy-gain--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/final-recovery--lazy-gain--train--gpt-6.1-sol--2/diff.patch",
+      "runs/final-recovery--lazy-gain--train--gpt-6.1-sol--2/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-gain--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Actual skill and both supplied evidence sources read; correctly attributed Ponytail scoreboard/setup/source, distinguished current-vs-revised Luna pilot with no efficiency metrics, and treated this snapshot savings as unknown without matched measurements. No fabricated local savings, edits or benchmark rerun. Heldout answer addresses attribution directly."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-gain--train--gpt-6-luna--2/record.json",
+      "runs/final-recovery--lazy-gain--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/final-recovery--lazy-gain--train--gpt-6-luna--2/diff.patch",
+      "runs/final-recovery--lazy-gain--train--gpt-6-luna--2/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-review--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Correct scoped seeded-diff finding with shorter behavior-equivalent boolean guard or indexOf sentinel guard, preserving domain helper and unrelated behavior. Reads local TS/JS checks and version facts, makes no unauthorized edits; diff remains only the seeded change. Actual suite pass claims supported where made."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-review--train--gpt-6.1-sol--2/record.json",
+      "runs/final-recovery--lazy-review--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/final-recovery--lazy-review--train--gpt-6.1-sol--2/diff.patch",
+      "runs/final-recovery--lazy-review--train--gpt-6.1-sol--2/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-review--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Correct scoped seeded-diff finding with shorter behavior-equivalent boolean guard or indexOf sentinel guard, preserving domain helper and unrelated behavior. Reads local TS/JS checks and version facts, makes no unauthorized edits; diff remains only the seeded change. Actual suite pass claims supported where made."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-review--train--gpt-6-luna--2/record.json",
+      "runs/final-recovery--lazy-review--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/final-recovery--lazy-review--train--gpt-6-luna--2/diff.patch",
+      "runs/final-recovery--lazy-review--train--gpt-6-luna--2/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-verify--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Benchmark-quality pass for honest blocked prerequisite gate, not release readiness. Actually reads contract reference, reviewed policy/config and selected installed contract; explains preserve both-pass or fix named-red/head-green semantics, no substitute evidence or policy/code changes. Sol train does not invoke external-path doctor/verify and explicitly labels hypothetical exit/status, with actual matching local digest checks."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--2/record.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--2/diff.patch",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--2/untracked.txt",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--2/workspace/reviewed-policy.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--2/workspace/.lazy-verify.json"
+    ]
+  },
+  "final-recovery--lazy-verify--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Benchmark-quality pass for honest blocked prerequisite gate, not release readiness. Actually reads contract reference, reviewed policy/config and selected installed contract; explains preserve both-pass or fix named-red/head-green semantics, no substitute evidence or policy/code changes. Actual doctor and verify each exit2 ENGINE_UNAVAILABLE with execution not_run/gate not_evaluated; final claims match captured outputs."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--2/record.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--2/diff.patch",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--2/untracked.txt",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--2/workspace/reviewed-policy.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--2/workspace/.lazy-verify.json"
+    ]
+  },
+  "final-recovery--slop-check--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Actual focused one-file scan flags two no-any findings; manual typed-union, intervals, deadline/timer/callback lifecycle triage is valid and read-only. Final root since=HEAD scan actually executed and honestly reported zero files/no added coverage. Version/installed-compiler limits stated without false clean result."
+    ],
+    "evidence": [
+      "runs/final-recovery--slop-check--train--gpt-6.1-sol--2/record.json",
+      "runs/final-recovery--slop-check--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/final-recovery--slop-check--train--gpt-6.1-sol--2/diff.patch",
+      "runs/final-recovery--slop-check--train--gpt-6.1-sol--2/untracked.txt"
+    ]
+  },
+  "final-recovery--slop-check--train--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Actual focused one-file scan flags two no-any findings; manual typed-union, intervals, deadline/timer/callback lifecycle triage is valid and read-only. Mandatory final repository-root --since=HEAD scan was omitted; corrected explain-rule lookup and focused scan do not satisfy original completion contract. Retained findings are honestly reported, not clean."
+    ],
+    "evidence": [
+      "runs/final-recovery--slop-check--train--gpt-6-luna--2/record.json",
+      "runs/final-recovery--slop-check--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/final-recovery--slop-check--train--gpt-6-luna--2/diff.patch",
+      "runs/final-recovery--slop-check--train--gpt-6-luna--2/untracked.txt"
+    ]
+  },
+  "final-recovery--test-quality-review--train--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Entire one-test scoped suite and production/time oracle read; meaningful timeout flag and independent warning outcome preserved. Reasoned long-fixed-delay whole-test survivor is qualified on prompt-handling contract; process-wide warning attribution/timing weakness explicitly uncertain, not claimed demonstrated. Honest no execution due missing runner, no edits, names/paths and exclusions give self-contained handoff."
+    ],
+    "evidence": [
+      "runs/final-recovery--test-quality-review--train--gpt-6-luna--2/record.json",
+      "runs/final-recovery--test-quality-review--train--gpt-6-luna--2/stdout.jsonl",
+      "runs/final-recovery--test-quality-review--train--gpt-6-luna--2/diff.patch",
+      "runs/final-recovery--test-quality-review--train--gpt-6-luna--2/untracked.txt"
+    ]
+  },
+  "final-recovery--test-quality-review--train--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Entire scoped suite and production oracles traced; self-contained report preserves useful independent checks and supplies reasoned whole-test surviving faults without inventing undocumented requirements or requiring mutation. Honest read-only scope/uncertainty/execution record. Actual Node negative-timer warning probe observed named warning; Playwright suite not run due missing dependency/config."
+    ],
+    "evidence": [
+      "runs/final-recovery--test-quality-review--train--gpt-6.1-sol--2/record.json",
+      "runs/final-recovery--test-quality-review--train--gpt-6.1-sol--2/stdout.jsonl",
+      "runs/final-recovery--test-quality-review--train--gpt-6.1-sol--2/diff.patch",
+      "runs/final-recovery--test-quality-review--train--gpt-6.1-sol--2/untracked.txt"
+    ]
+  },
+  "final-recovery--layz-test--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Actual baseline5/5 then9 pass/3 red with production unchanged and final one-file slop clean, but saved oracles/report misclassify code-point-fitting input as a bug: trimStringWithEllipsis(emoji+x,2) correctly preserves fitting input, yet test demands emoji+ellipsis. Zero-cap and oversized suffix expectations themselves exceed the claimed maximum-output cap. Qualification as an assumption does not make inconsistent oracles confirmed bugs. Required feasible unchanged passing-test production mutation/paired proof and captured restoration evidence also absent."
+    ],
+    "evidence": [
+      "runs/final-recovery--layz-test--train--gpt-6-luna--3/record.json",
+      "runs/final-recovery--layz-test--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/final-recovery--layz-test--train--gpt-6-luna--3/diff.patch",
+      "runs/final-recovery--layz-test--train--gpt-6-luna--3/untracked.txt",
+      "runs/final-recovery--layz-test--train--gpt-6-luna--3/workspace/tests/string-utils.test.mjs"
+    ]
+  },
+  "final-recovery--layz-test--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Strong saved zero/empty/Unicode/suffix/fitting/generated2955/large-input coverage, baseline5/5 then18 pass/3 genuine retained cap-overflow reds, no production edits. Four actual unchanged-test isolated production mutations have original pass/intended assertion fail/restored pass and captured bytes/modes/hash verification plus cleanup. Final root slop actually clean on two JS files; syntax/diff checks and final unchanged-source hash checks pass. Contract uncertainty and layer/blocker limits are explicit."
+    ],
+    "evidence": [
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--3/record.json",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--3/diff.patch",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--3/untracked.txt",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--3/workspace/tests/string-utils.test.mjs",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--3/workspace/evidence/string-utils-testing/report.md",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--3/workspace/evidence/string-utils-testing/mutation-check.mjs",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--3/workspace/evidence/string-utils-testing/mutation.log",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--3/workspace/evidence/string-utils-testing/node-test.log",
+      "runs/final-recovery--layz-test--train--gpt-6.1-sol--3/workspace/evidence/string-utils-testing/slop-check.log"
+    ]
+  },
+  "final-recovery--lazy--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Scoped correct implementation with full saved zero/empty/Unicode/suffix/unchanged/wrapper cases, actual2red then8/8, final root2file checker clean; independent oracle28/28."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--3/record.json",
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--3/diff.patch",
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--3/untracked.txt",
+      "runs/final-recovery--lazy--train--gpt-6.1-sol--3/workspace/tests/string-utils.test.mjs",
+      "recovery-grader-scratch/final-recovery--lazy--train--gpt-6.1-sol--3.oracle.json"
+    ]
+  },
+  "final-recovery--lazy--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Correct functional implementation (oracle28/28), actual2red then9/9 and root2filechecker clean, but requested saved zero/empty and equal-suffix cases omitted."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy--train--gpt-6-luna--3/record.json",
+      "runs/final-recovery--lazy--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/final-recovery--lazy--train--gpt-6-luna--3/diff.patch",
+      "runs/final-recovery--lazy--train--gpt-6-luna--3/untracked.txt",
+      "runs/final-recovery--lazy--train--gpt-6-luna--3/workspace/tests/string-utils.test.mjs",
+      "recovery-grader-scratch/final-recovery--lazy--train--gpt-6-luna--3.oracle.json"
+    ]
+  },
+  "final-recovery--lazy-audit--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "All five supplied source/test files inspected; bounded read-only inventory, compatible metadata read, behavior-preserving ranked simplifications and honest checks."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-audit--train--gpt-6-luna--3/record.json",
+      "runs/final-recovery--lazy-audit--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/final-recovery--lazy-audit--train--gpt-6-luna--3/diff.patch",
+      "runs/final-recovery--lazy-audit--train--gpt-6-luna--3/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-audit--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "All five supplied source/test files inspected; bounded read-only inventory, compatible metadata read, behavior-preserving ranked simplifications and honest checks."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-audit--train--gpt-6.1-sol--3/record.json",
+      "runs/final-recovery--lazy-audit--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/final-recovery--lazy-audit--train--gpt-6.1-sol--3/diff.patch",
+      "runs/final-recovery--lazy-audit--train--gpt-6.1-sol--3/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-clean--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Correct bounded code-point fix; saved full cap, suffix, Unicode, empty, zero, unchanged and wrapper cases; actual 8 red then 21 green tests, final root two-file clean scan. Independent train oracle passed all 28 cases."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--3/record.json",
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--3/diff.patch",
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--3/untracked.txt",
+      "runs/final-recovery--lazy-clean--train--gpt-6.1-sol--3/workspace/tests/string-utils.test.mjs",
+      "recovery-grader-scratch/final-recovery--lazy-clean--train--gpt-6.1-sol--3.oracle.json"
+    ]
+  },
+  "final-recovery--lazy-clean--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Functional oracle passes 28/28, but saved tests omit zero/empty/equal-suffix and wrapper edge cases. Initial fitting-input suffix expectation was wrong, persisted after production fix then changed, yet final calls both initial failures regressions; only oversized-suffix failure was genuine."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--3/record.json",
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--3/diff.patch",
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--3/untracked.txt",
+      "runs/final-recovery--lazy-clean--train--gpt-6-luna--3/workspace/tests/string-utils.test.mjs",
+      "recovery-grader-scratch/final-recovery--lazy-clean--train--gpt-6-luna--3.oracle.json"
+    ]
+  },
+  "final-recovery--lazy-debt--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Actual scoped comment-prefixed lazy-marker search found no hits; correctly excludes generic TODOs and invents no ledger, triggers or changes."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-debt--train--gpt-6-luna--3/record.json",
+      "runs/final-recovery--lazy-debt--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/final-recovery--lazy-debt--train--gpt-6-luna--3/diff.patch",
+      "runs/final-recovery--lazy-debt--train--gpt-6-luna--3/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-debt--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Actual scoped comment-prefixed lazy-marker search found no hits; correctly excludes generic TODOs and invents no ledger, triggers or changes."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-debt--train--gpt-6.1-sol--3/record.json",
+      "runs/final-recovery--lazy-debt--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/final-recovery--lazy-debt--train--gpt-6.1-sol--3/diff.patch",
+      "runs/final-recovery--lazy-debt--train--gpt-6.1-sol--3/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-gain--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Accurate upstream scoreboard and small-study limitations; separates upstream efficiency, guidance-pilot behavioral observations and absent matched Playwright measurements. Missing local savings remain unknown; read-only, no fabricated benchmark execution."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-gain--train--gpt-6-luna--3/record.json",
+      "runs/final-recovery--lazy-gain--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/final-recovery--lazy-gain--train--gpt-6-luna--3/diff.patch",
+      "runs/final-recovery--lazy-gain--train--gpt-6-luna--3/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-gain--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Accurate upstream scoreboard and small-study limitations; separates upstream efficiency, guidance-pilot behavioral observations and absent matched Playwright measurements. Missing local savings remain unknown; read-only, no fabricated benchmark execution."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-gain--train--gpt-6.1-sol--3/record.json",
+      "runs/final-recovery--lazy-gain--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/final-recovery--lazy-gain--train--gpt-6.1-sol--3/diff.patch",
+      "runs/final-recovery--lazy-gain--train--gpt-6.1-sol--3/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-help--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Faithful display-only quick-reference card with levels, commands, host aliases, defaults and deactivation; no edits, tests or mode change."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-help--train--gpt-6.1-sol--3/record.json",
+      "runs/final-recovery--lazy-help--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/final-recovery--lazy-help--train--gpt-6.1-sol--3/diff.patch",
+      "runs/final-recovery--lazy-help--train--gpt-6.1-sol--3/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-help--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Faithful display-only quick-reference card with levels, commands, host aliases, defaults and deactivation; no edits, tests or mode change."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-help--train--gpt-6-luna--3/record.json",
+      "runs/final-recovery--lazy-help--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/final-recovery--lazy-help--train--gpt-6-luna--3/diff.patch",
+      "runs/final-recovery--lazy-help--train--gpt-6-luna--3/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-review--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Inspected actual seeded diff and relevant function; identifies only redundant boolean alias or else/index guard/duplicate return, preserving domain helper and existing behavior. Required pinned language metadata inspected; no edits applied."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-review--train--gpt-6-luna--3/record.json",
+      "runs/final-recovery--lazy-review--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/final-recovery--lazy-review--train--gpt-6-luna--3/diff.patch",
+      "runs/final-recovery--lazy-review--train--gpt-6-luna--3/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-review--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Inspected actual seeded diff and relevant function; identifies only redundant boolean alias or else/index guard/duplicate return, preserving domain helper and existing behavior. Required pinned language metadata inspected; no edits applied."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-review--train--gpt-6.1-sol--3/record.json",
+      "runs/final-recovery--lazy-review--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/final-recovery--lazy-review--train--gpt-6.1-sol--3/diff.patch",
+      "runs/final-recovery--lazy-review--train--gpt-6.1-sol--3/untracked.txt"
+    ]
+  },
+  "final-recovery--lazy-verify--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Original experimental contract, selected profile, config and reviewed policy inspected; selected fix/preserve expectations explained. Honest missing-engine blocked gate with behavior unestablished, not a release pass. Actual doctor and verify report ENGINE_UNAVAILABLE/not_run/not_evaluated; verify exit 2."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--3/record.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--3/diff.patch",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--3/untracked.txt",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--3/workspace/.lazy-verify.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--3/workspace/reviewed-policy.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6-luna--3/workspace/.lazy-verify/contracts/cleanup/contract.json"
+    ]
+  },
+  "final-recovery--lazy-verify--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Original experimental contract, selected profile, config and reviewed policy inspected; selected fix/preserve expectations explained. Honest missing-engine blocked gate with behavior unestablished, not a release pass. Doctor/verify explicitly unrun to respect workspace-only reads; actual local digest verification passes, absent-engine exit semantics clearly labeled inspected rather than executed."
+    ],
+    "evidence": [
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--3/record.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--3/diff.patch",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--3/untracked.txt",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--3/workspace/.lazy-verify.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--3/workspace/reviewed-policy.json",
+      "runs/final-recovery--lazy-verify--train--gpt-6.1-sol--3/workspace/.lazy-verify/contracts/cleanup/contract.json"
+    ]
+  },
+  "final-recovery--slop-check--train--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Focused scanner honestly reports two no-any findings and correct union-invariant triage, but required final repository-root --since=HEAD scan was omitted; focused scan and explanation are not that gate."
+    ],
+    "evidence": [
+      "runs/final-recovery--slop-check--train--gpt-6-luna--3/record.json",
+      "runs/final-recovery--slop-check--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/final-recovery--slop-check--train--gpt-6-luna--3/diff.patch",
+      "runs/final-recovery--slop-check--train--gpt-6-luna--3/untracked.txt"
+    ]
+  },
+  "final-recovery--slop-check--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Actual focused scan reports two no-any findings; correct union, cleanup, deadline, interval-ownership and error invariants manually checked. Final root --since=HEAD scan actually ran with zero files explicitly described as no added coverage, not clean resolution of retained findings."
+    ],
+    "evidence": [
+      "runs/final-recovery--slop-check--train--gpt-6.1-sol--3/record.json",
+      "runs/final-recovery--slop-check--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/final-recovery--slop-check--train--gpt-6.1-sol--3/diff.patch",
+      "runs/final-recovery--slop-check--train--gpt-6.1-sol--3/untracked.txt"
+    ]
+  },
+  "final-recovery--test-quality-review--train--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Entire requested suite and production oracle traced; useful independent assertions retained, concrete whole-test missed faults reasoned without mutation requirement. Scope and uncertain behavioral contracts qualified; no edits or invented passing execution. Missing Playwright dependency honestly blocks execution; single test and warning observation window accounted for."
+    ],
+    "evidence": [
+      "runs/final-recovery--test-quality-review--train--gpt-6-luna--3/record.json",
+      "runs/final-recovery--test-quality-review--train--gpt-6-luna--3/stdout.jsonl",
+      "runs/final-recovery--test-quality-review--train--gpt-6-luna--3/diff.patch",
+      "runs/final-recovery--test-quality-review--train--gpt-6-luna--3/untracked.txt"
+    ]
+  },
+  "final-recovery--test-quality-review--train--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Entire requested suite and production oracle traced; useful independent assertions retained, concrete whole-test missed faults reasoned without mutation requirement. Scope and uncertain behavioral contracts qualified; no edits or invented passing execution. Missing Playwright dependency honestly blocks execution; single test and warning observation window accounted for."
+    ],
+    "evidence": [
+      "runs/final-recovery--test-quality-review--train--gpt-6.1-sol--3/record.json",
+      "runs/final-recovery--test-quality-review--train--gpt-6.1-sol--3/stdout.jsonl",
+      "runs/final-recovery--test-quality-review--train--gpt-6.1-sol--3/diff.patch",
+      "runs/final-recovery--test-quality-review--train--gpt-6.1-sol--3/untracked.txt"
+    ]
+  }
+}

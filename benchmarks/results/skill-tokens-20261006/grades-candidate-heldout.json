@@ -1,0 +1,828 @@
+{
+  "candidate--layz-test--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Required feasible risky-test effectiveness proof is absent: retained failing reproducer is not an unchanged passing test made red by a production mutation or paired old/fix proof."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--1/stdout.jsonl: inspected completed messages and 7 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--1/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_7: /bin/zsh -lc \"node --input-type=module -e 'import fs from \\\"node:fs/promises\\\"; import os from \\\"node:os\\\"; import path from \\\"node:path\\\"; import { spawnSync } from \\\"node:child_process\\\"; const d=await fs.mkdtemp(path.join(os.tmpdir(),\\\"layz-base-\\\")); try { await fs.mkdir(path.join(d,\\\"packages/isomorphic\\\"),{recursive:true}); await fs.mkdir(pat | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_12: /bin/zsh -lc \"node --input-type=module -e 'import fs from \\\"node:fs/promises\\\"; import os from \\\"node:os\\\"; import path from \\\"node:path\\\"; import { spawnSync } from \\\"node:child_process\\\"; const d=await fs.mkdtemp(path.join(os.tmpdir(),\\\"layz-final-\\\")); try { await fs.mkdir(path.join(d,\\\"packages/isomorphic\\\"),{recursive:true}); await fs.mkdir(pa | exit 1 | ℹ tests 12 ; ℹ pass 11 ; ℹ fail 1 ; ℹ skipped 0 ;     actual: '`${danger}`', ;     expected: '`\\\\${danger}`',",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--1/workspace/tests/string-utils.test.mjs: every added test inspected; production diff contains no product edit."
+    ]
+  },
+  "candidate--layz-test--heldout--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Required feasible production-mutation or paired red/green effectiveness proof is absent. Confirmed reproducers and their discovery do not alone meet this separate criterion."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--2/stdout.jsonl: inspected completed messages and 6 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--2/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_6: /bin/zsh -lc \"node --test tests/string-utils.test.mjs; rg -n 'escapeWithQuotes|escapeTemplateString' --glob '\"'!node_modules'\"' .\" | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_10: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 1 | ℹ tests 11 ; ℹ pass 9 ; ℹ fail 2 ; ℹ skipped 0 ;     actual: '2', ;     expected: '${1 + 1}', ;     actual: 'slash \\\\, tick `, interpolation ${x}, dollar $, quotes \" and \\'\\nnext\\nline', ;     expected: 'slash \\\\, tick `, interpolation ${x}, dollar $, quotes \" and \\'\\r\\nnext\\rline',",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--2/workspace/tests/string-utils.test.mjs: every added test inspected; production diff contains no product edit."
+    ]
+  },
+  "candidate--layz-test--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Required feasible production-mutation or paired red/green effectiveness proof is absent. Carriage-return reproducer is retained but no passing test is challenged against a production fault."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--3/stdout.jsonl: inspected completed messages and 6 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--3/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_5: /bin/zsh -lc 'node --version && node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_10: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 1 | ℹ tests 10 ; ℹ pass 9 ; ℹ fail 1 ; ℹ skipped 0 ;     actual: '\\n', ;     expected: '\\r',",
+      "Stdout contains physical non-JSON line breaks at lines [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]; preserved raw text and subsequent valid command evidence reviewed, not treated as completed assertion merely from parse status.",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6-luna--3/workspace/tests/string-utils.test.mjs: every added test inspected; production diff contains no product edit."
+    ]
+  },
+  "candidate--layz-test--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Full requested escaping scope has rerunnable behavioral coverage, unchanged production, retained honest defect/contract reproductions, captured-copy passing-test production mutation red/restored green, and layer/manual/blocked evidence."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--1/stdout.jsonl: inspected completed messages and 10 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--1/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_8: /bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nimport hashlib, json, os, shutil, signal, subprocess\nroot=Path.cwd(); probe=root/'.layz-test-probe'; evidence=root/'evidence/string-utils'; evidence.mkdir(parents=True, exist_ok=True)\nfiles=['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs', 'package.json']\nmanifest={}\nfor na | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_12: /bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nimport hashlib, os, shutil, signal, subprocess\nroot=Path.cwd(); probe=root/'.layz-test-probe'; evidence=root/'evidence/string-utils'\nfor name in ['packages/isomorphic/stringUtils.ts', 'tests/string-utils.test.mjs', 'package.json']:\n    source=root/name; target=probe/name\n    assert source.is_f | exit 0 | ℹ tests 31 ; ℹ pass 28 ; ℹ fail 3 ; ℹ skipped 0 ;     actual: '2', ;     expected: '${1 + 1}', ;     actual: 'a\\nb', ;     expected: 'a\\rb', ;     actual: 'a\\nb', ;     expected: 'a\\r\\nb',",
+      "stdout command item_13: /bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nimport hashlib, json, os, signal, subprocess\nroot=Path.cwd(); probe=root/'.layz-test-probe'; evidence=root/'evidence/string-utils'\ndef run(command, name, cwd=probe):\n    p=subprocess.Popen(command,cwd=cwd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True)\n    try | exit 0 | ℹ tests 1 ; ℹ pass 1 ; ℹ fail 0 ; ℹ skipped 0 ; ℹ tests 1 ; ℹ pass 0 ; ℹ fail 1 ; ℹ skipped 0 ;     actual: '${x}${y}', ;     expected: '\\\\${x}\\\\${y}', ; ℹ tests 1 ; ℹ pass 1 ; ℹ fail 0 ; ℹ skipped 0 ; slop-check: 6 findings in 1 file",
+      "stdout command item_15: /bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nimport os, shutil, signal, subprocess, hashlib, json\nroot=Path.cwd(); probe=root/'.layz-test-probe'; evidence=root/'evidence/string-utils'\ndef run(command,name,cwd):\n    p=subprocess.Popen(command,cwd=cwd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,start_new_session=True)\n    try | exit 0 | slop-check: clean (1 file checked) ;     actual: 'a\\nb', ;     expected: 'a\\rb', ;     actual: 'a\\nb', ;     expected: 'a\\r\\nb', ; slop-check: clean (1 file checked)",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--1/workspace/tests/string-utils.test.mjs: every added test inspected; production diff contains no product edit.",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--1/workspace/evidence/string-utils: report, manifests, full final logs and before/mutated/restored assertion evidence inspected; synthetic mutation is separate from discovered defect."
+    ]
+  },
+  "candidate--layz-test--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Full requested escaping scope has rerunnable behavioral coverage, unchanged production, retained honest defect/contract reproductions, captured-copy passing-test production mutation red/restored green, and layer/manual/blocked evidence."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--2/stdout.jsonl: inspected completed messages and 11 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--2/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_8: /bin/zsh -lc \"cat skill-files/lazy/references/simplification-checks.md; python3 - <<'PY'\nimport pathlib, tempfile, shutil, hashlib, stat, subprocess, os, signal, json\nroot = pathlib.Path.cwd()\nevidence = root / 'test-evidence'\nevidence.mkdir(exist_ok=True)\nmanifest = {}\nwith tempfile.TemporaryDirectory(prefix='.layz-baseline-', dir=root) as directo | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_11: /bin/zsh -lc \"python3 - <<'PY'\nimport pathlib, tempfile, shutil, hashlib, stat, subprocess, os, signal, json\nroot = pathlib.Path.cwd()\nevidence = root / 'test-evidence'\nmanifest = {}\nwith tempfile.TemporaryDirectory(prefix='.layz-final-', dir=root) as directory:\n    probe = pathlib.Path(directory)\n    for relative in ['packages/isomorphic/stringUti | exit 0 | ℹ tests 19 ; ℹ pass 18 ; ℹ fail 1 ; ℹ skipped 0 ;     actual: '1', ;     expected: '${1}', ; ℹ tests 1 ; ℹ pass 0 ; ℹ fail 1 ; ℹ skipped 0 ;     actual: '1', ;     expected: '${1}', ; ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_16: /bin/zsh -lc \"python3 - <<'PY'\nimport pathlib, tempfile, shutil, hashlib, stat, subprocess, os, signal, json\nroot = pathlib.Path.cwd()\nevidence = root / 'test-evidence'\nmanifest = {'revision': '4ba747ef1a27c4df019482ca2397becac1d04049', 'runtime': 'Node v26.5.0', 'timeoutSeconds': 30}\nwith tempfile.TemporaryDirectory(prefix='.layz-checks-', dir=roo | exit 0 | ℹ tests 21 ; ℹ pass 20 ; ℹ fail 1 ; ℹ skipped 0 ;     actual: '1', ;     expected: '${1}', ; ℹ tests 1 ; ℹ pass 0 ; ℹ fail 1 ; slop-check: clean (1 file checked)",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--2/workspace/tests/string-utils.test.mjs: every added test inspected; production diff contains no product edit.",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--2/workspace/test-evidence: report, manifests, full final logs and before/mutated/restored assertion evidence inspected; synthetic mutation is separate from discovered defect."
+    ]
+  },
+  "candidate--layz-test--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Full requested escaping scope has rerunnable behavioral coverage, unchanged production, retained honest defect/contract reproductions, captured-copy passing-test production mutation red/restored green, and layer/manual/blocked evidence."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--3/stdout.jsonl: inspected completed messages and 15 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--3/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_10: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_14: /bin/zsh -lc 'node --test tests/string-utils.test.mjs > evidence/string-utils-testing/current.log 2>&1' | exit 1 | ",
+      "stdout command item_18: /bin/zsh -lc \"python3 - <<'PY'\nfrom pathlib import Path\nimport hashlib, shutil, stat, subprocess, json\nbase = Path('.test-probes/baseline')\nevidence = Path('evidence/string-utils-testing')\n# All executions are bounded child processes; no services or grandchildren are started by the test code.\ndef run(cwd, args, log):\n    result = subprocess.run(arg | exit 0 | ",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--3/workspace/tests/string-utils.test.mjs: every added test inspected; production diff contains no product edit.",
+      "<STUDY_ROOT>/runs/candidate--layz-test--heldout--gpt-6.1-sol--3/workspace/evidence/string-utils-testing: report, manifests, full final logs and before/mutated/restored assertion evidence inspected; synthetic mutation is separate from discovered defect."
+    ]
+  },
+  "candidate--lazy--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Saved coverage omits uppercase truncation, first-comma/multiple-comma behavior, and empty-payload behavior required by the frozen rubric."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--1/stdout.jsonl: inspected completed messages and 4 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--1/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_7: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 1 | ℹ tests 7 ; ℹ pass 6 ; ℹ fail 1 ; ℹ skipped 0 ;     actual: 'DaTa:Text/Plain;Charset=UTF-8,hello', ;     expected: 'DaTa:Text/Plain;Charset=UTF-8,…',",
+      "stdout command item_9: /bin/zsh -lc 'node --test tests/string-utils.test.mjs && node skill-files/slop-check/scripts/check.mjs --since=HEAD && git diff --check && git diff -- packages/isomorphic/stringUtils.ts tests/string-utils.test.mjs' | exit 0 | ℹ tests 7 ; ℹ pass 7 ; ℹ fail 0 ; ℹ skipped 0 ; slop-check: clean (2 files checked)",
+      "Independent read-only behavior oracle: heldout pass, 27 passed/0 failed, exit 0. Source path <STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--1/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "candidate--lazy--heldout--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Saved coverage omits first-comma/multiple-comma and empty-payload behavior.",
+      "Required final checker was not run: attempted nonexistent skill-files/lazy/scripts/check.mjs; actual candidate contract points to existing skill-files/slop-check/scripts/check.mjs. Final missing-script explanation misidentifies the supplied checker."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--2/stdout.jsonl: inspected completed messages and 7 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--2/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_6: /bin/zsh -lc \"cat >> tests/string-utils.test.mjs <<'EOF'\ntest('data URL scheme is recognized case-insensitively', () => {\n  assert.equal(truncateDataUrl('DATA:text/plain,hello'), 'DATA:text/plain,…');\n  assert.equal(truncateDataUrl('DaTa:IMAGE/PNG;BASE64,AAAA'), 'DaTa:IMAGE/PNG;BASE64,…');\n});\ntest('non-data URLs and data URLs without a comma are u | exit 1 | ℹ tests 7 ; ℹ pass 6 ; ℹ fail 1 ; ℹ skipped 0 ;     actual: 'DATA:text/plain,hello', ;     expected: 'DATA:text/plain,…',",
+      "stdout command item_9: /bin/zsh -lc 'node skill-files/lazy/scripts/check.mjs --since=HEAD' | exit 1 |   code: 'MODULE_NOT_FOUND',",
+      "stdout command item_11: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 7 ; ℹ pass 7 ; ℹ fail 0 ; ℹ skipped 0",
+      "Independent read-only behavior oracle: heldout pass, 27 passed/0 failed, exit 0. Source path <STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--2/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "candidate--lazy--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Timed out and incomplete; no implemented change, regression evidence, final tests or final checker. Overnight host gap invalidates elapsed-time interpretation; missing usage metrics remain unknown."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--3/record.json: terminal True, status timeout",
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--3/stdout.jsonl: inspected completed messages and 0 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--3/untracked.txt: untracked inventory reviewed.",
+      "Independent read-only behavior oracle: heldout behavior-fail, 20 passed/7 failed, exit 1. Source path <STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6-luna--3/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "candidate--lazy--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Case-insensitive scheme fix preserves exact original prefix and unchanged inputs; saved full edge coverage is red before and green after; scoped diff and required final checker are evidenced."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--1/stdout.jsonl: inspected completed messages and 9 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--1/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_10: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 1 | ℹ tests 10 ; ℹ pass 7 ; ℹ fail 3 ; ℹ skipped 0 ;     actual: 'DATA:Text/Plain;Charset=UTF-8,hello', ;     expected: 'DATA:Text/Plain;Charset=UTF-8,…', ;     actual: 'DaTa:image/PNG;BASE64,a,b,c', ;     expected: 'DaTa:image/PNG;BASE64,…', ;     actual: 'DATA:text/plain,', ;     expected: 'DATA:text/plain,…',",
+      "stdout command item_14: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 10 ; ℹ pass 10 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_15: /bin/zsh -lc 'node \"skill-files/slop-check/scripts/check.mjs\" --since=HEAD' | exit 0 | slop-check: clean (2 files checked)",
+      "Independent read-only behavior oracle: heldout pass, 27 passed/0 failed, exit 0. Source path <STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--1/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "candidate--lazy--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Case-insensitive scheme fix preserves exact original prefix and unchanged inputs; saved full edge coverage is red before and green after; scoped diff and required final checker are evidenced."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--2/stdout.jsonl: inspected completed messages and 7 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--2/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_8: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 1 | ℹ tests 18 ; ℹ pass 14 ; ℹ fail 4 ; ℹ skipped 0 ;     actual: 'DATA:text/plain,hello', ;     expected: 'DATA:text/plain,…', ;     actual: 'DaTa:Text/Plain;Charset=UTF-8;BASE64,aGVsbG8=', ;     expected: 'DaTa:Text/Plain;Charset=UTF-8;BASE64,…', ;     actual: 'DaTa:,hello', ;     expected: 'DaTa:,…', ;     actual: 'DATA:text/plain,', ;     expected: 'DATA:text/plain,…',",
+      "stdout command item_11: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 18 ; ℹ pass 18 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_12: /bin/zsh -lc 'node \"skill-files/slop-check/scripts/check.mjs\" --since=HEAD' | exit 0 | slop-check: clean (2 files checked)",
+      "Independent read-only behavior oracle: heldout pass, 27 passed/0 failed, exit 0. Source path <STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--2/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "candidate--lazy--heldout--gpt-6.1-sol--3": {
+    "pass": false,
+    "reasons": [
+      "Timed out and incomplete; source/test diff is empty and no completed implementation or verification. Overnight host gap invalidates elapsed-time interpretation; missing usage metrics remain unknown."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--3/record.json: terminal True, status timeout",
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--3/stdout.jsonl: inspected completed messages and 0 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--3/untracked.txt: untracked inventory reviewed.",
+      "Independent read-only behavior oracle: heldout behavior-fail, 20 passed/7 failed, exit 1. Source path <STUDY_ROOT>/runs/candidate--lazy--heldout--gpt-6.1-sol--3/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "candidate--lazy-audit--heldout--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "All five bounded source/test files reviewed read-only; conclusions preserve useful boundaries/test value, paths are valid, and proposed net line/dependency tally is supported."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6-luna--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6-luna--1/stdout.jsonl: inspected completed messages and 5 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6-luna--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6-luna--1/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-audit--heldout--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "All five bounded source/test files reviewed read-only; conclusions preserve useful boundaries/test value, paths are valid, and proposed net line/dependency tally is supported."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6-luna--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6-luna--2/stdout.jsonl: inspected completed messages and 6 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6-luna--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6-luna--2/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-audit--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Net -3 line claim counts two casts and one non-null assertion as removable lines: proposed direct property accesses/shift leave all three code lines present. Candidate audit requires actual removable lines after replacement, not cast counts."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6-luna--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6-luna--3/stdout.jsonl: inspected completed messages and 7 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6-luna--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6-luna--3/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_9: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--lazy-audit--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "All five bounded source/test files reviewed read-only; conclusions preserve useful boundaries/test value, paths are valid, and proposed net line/dependency tally is supported."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6.1-sol--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6.1-sol--1/stdout.jsonl: inspected completed messages and 11 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6.1-sol--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6.1-sol--1/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_13: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--lazy-audit--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "All five bounded source/test files reviewed read-only; conclusions preserve useful boundaries/test value, paths are valid, and proposed net line/dependency tally is supported."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6.1-sol--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6.1-sol--2/stdout.jsonl: inspected completed messages and 11 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6.1-sol--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6.1-sol--2/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_12: /bin/zsh -lc 'node --version && node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--lazy-audit--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "All five bounded source/test files reviewed read-only; conclusions preserve useful boundaries/test value, paths are valid, and proposed net line/dependency tally is supported."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6.1-sol--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6.1-sol--3/stdout.jsonl: inspected completed messages and 11 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6.1-sol--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-audit--heldout--gpt-6.1-sol--3/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_12: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--lazy-clean--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Saved tests omit uppercase truncation, first-comma/multiple-comma behavior, and empty-payload behavior required by the frozen rubric."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--1/stdout.jsonl: inspected completed messages and 6 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--1/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_7: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 1 | ℹ tests 7 ; ℹ pass 6 ; ℹ fail 1 ; ℹ skipped 0 ;     actual: 'DaTa:IMAGE/PNG;BASE64,abc', ;     expected: 'DaTa:IMAGE/PNG;BASE64,…',",
+      "stdout command item_11: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 7 ; ℹ pass 7 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_12: /bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD' | exit 0 | slop-check: clean (2 files checked)",
+      "Independent read-only behavior oracle: heldout pass, 27 passed/0 failed, exit 0. Source path <STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--1/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "candidate--lazy-clean--heldout--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Saved tests omit mixed-case truncation, first-comma/multiple-comma behavior, and empty-payload behavior required by the frozen rubric. Mixed case occurs only on a no-comma input, not a truncation assertion."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--2/stdout.jsonl: inspected completed messages and 5 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--2/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_7: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 1 | ℹ tests 7 ; ℹ pass 6 ; ℹ fail 1 ; ℹ skipped 0 ;     actual: 'DATA:Text/Plain;Charset=UTF-8,hello', ;     expected: 'DATA:Text/Plain;Charset=UTF-8,…',",
+      "stdout command item_10: /bin/zsh -lc 'node --test tests/string-utils.test.mjs && node skill-files/slop-check/scripts/check.mjs --since=HEAD && git diff --check && git diff -- packages/isomorphic/stringUtils.ts tests/string-utils.test.mjs' | exit 0 | ℹ tests 7 ; ℹ pass 7 ; ℹ fail 0 ; ℹ skipped 0 ; slop-check: clean (2 files checked)",
+      "Independent read-only behavior oracle: heldout pass, 27 passed/0 failed, exit 0. Source path <STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--2/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "candidate--lazy-clean--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Saved tests omit uppercase truncation, first-comma/multiple-comma behavior, and empty-payload behavior required by the frozen rubric."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--3/stdout.jsonl: inspected completed messages and 7 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--3/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_8: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 1 | ℹ tests 7 ; ℹ pass 6 ; ℹ fail 1 ; ℹ skipped 0 ;     actual: 'DaTa:Text/Plain;Charset=UTF-8,hello', ;     expected: 'DaTa:Text/Plain;Charset=UTF-8,…',",
+      "stdout command item_11: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 7 ; ℹ pass 7 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_13: /bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD' | exit 0 | slop-check: clean (2 files checked)",
+      "Independent read-only behavior oracle: heldout pass, 27 passed/0 failed, exit 0. Source path <STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6-luna--3/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "candidate--lazy-clean--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Requested contract and full saved regression/edge coverage implemented; pre-fix intended assertions fail, final tests and bundled --since=HEAD checker run, with no unrelated production edits."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--1/stdout.jsonl: inspected completed messages and 8 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--1/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_9: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 1 | ℹ tests 8 ; ℹ pass 6 ; ℹ fail 2 ; ℹ skipped 0 ;     actual: 'DATA:Text/Plain;Charset=UTF-8;base64,aGVsbG8=', ;     expected: 'DATA:Text/Plain;Charset=UTF-8;base64,…', ;     actual: 'DATA:text/plain,hello,world', ;     expected: 'DATA:text/plain,…',",
+      "stdout command item_14: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 8 ; ℹ pass 8 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_13: /bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD' | exit 0 | slop-check: clean (2 files checked)",
+      "Independent read-only behavior oracle: heldout pass, 27 passed/0 failed, exit 0. Source path <STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--1/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "candidate--lazy-clean--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Requested contract and full saved regression/edge coverage implemented; pre-fix intended assertions fail, final tests and bundled --since=HEAD checker run, with no unrelated production edits."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--2/stdout.jsonl: inspected completed messages and 8 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--2/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_9: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 1 | ℹ tests 14 ; ℹ pass 11 ; ℹ fail 3 ; ℹ skipped 0 ;     actual: 'DATA:text/plain,hello', ;     expected: 'DATA:text/plain,…', ;     actual: 'DaTa:Text/Plain;Charset=UTF-8;base64,aGVsbG8=', ;     expected: 'DaTa:Text/Plain;Charset=UTF-8;base64,…', ;     actual: 'DATA:,', ;     expected: 'DATA:,…',",
+      "stdout command item_12: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 14 ; ℹ pass 14 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_13: /bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD' | exit 0 | slop-check: clean (2 files checked)",
+      "Independent read-only behavior oracle: heldout pass, 27 passed/0 failed, exit 0. Source path <STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--2/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "candidate--lazy-clean--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Requested contract and full saved regression/edge coverage implemented; pre-fix intended assertions fail, final tests and bundled --since=HEAD checker run, with no unrelated production edits."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--3/stdout.jsonl: inspected completed messages and 9 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--3/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_10: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 1 | ℹ tests 9 ; ℹ pass 7 ; ℹ fail 2 ; ℹ skipped 0 ;     actual: 'DATA:Text/Plain;Charset=UTF-8,hello', ;     expected: 'DATA:Text/Plain;Charset=UTF-8,…', ;     actual: 'DATA:,', ;     expected: 'DATA:,…',",
+      "stdout command item_12: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 9 ; ℹ pass 9 ; ℹ fail 0 ; ℹ skipped 0",
+      "stdout command item_13: /bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs --since=HEAD' | exit 0 | slop-check: clean (2 files checked)",
+      "Independent read-only behavior oracle: heldout pass, 27 passed/0 failed, exit 0. Source path <STUDY_ROOT>/runs/candidate--lazy-clean--heldout--gpt-6.1-sol--3/workspace/packages/isomorphic/stringUtils.ts"
+    ]
+  },
+  "candidate--lazy-debt--heldout--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Read-only source/test marker scan establishes zero actual lazy: comments, excluding tooling/metadata; accurate empty ledger without fabricated TODO/prose markers."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6-luna--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6-luna--1/stdout.jsonl: inspected completed messages and 3 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6-luna--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6-luna--1/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-debt--heldout--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Read-only source/test marker scan establishes zero actual lazy: comments, excluding tooling/metadata; accurate empty ledger without fabricated TODO/prose markers."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6-luna--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6-luna--2/stdout.jsonl: inspected completed messages and 2 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6-luna--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6-luna--2/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-debt--heldout--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Read-only source/test marker scan establishes zero actual lazy: comments, excluding tooling/metadata; accurate empty ledger without fabricated TODO/prose markers."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6-luna--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6-luna--3/stdout.jsonl: inspected completed messages and 2 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6-luna--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6-luna--3/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-debt--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Read-only source/test marker scan establishes zero actual lazy: comments, excluding tooling/metadata; accurate empty ledger without fabricated TODO/prose markers."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6.1-sol--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6.1-sol--1/stdout.jsonl: inspected completed messages and 4 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6.1-sol--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6.1-sol--1/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-debt--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Read-only source/test marker scan establishes zero actual lazy: comments, excluding tooling/metadata; accurate empty ledger without fabricated TODO/prose markers."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6.1-sol--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6.1-sol--2/stdout.jsonl: inspected completed messages and 4 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6.1-sol--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6.1-sol--2/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-debt--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Read-only source/test marker scan establishes zero actual lazy: comments, excluding tooling/metadata; accurate empty ledger without fabricated TODO/prose markers."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6.1-sol--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6.1-sol--3/stdout.jsonl: inspected completed messages and 4 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6.1-sol--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-debt--heldout--gpt-6.1-sol--3/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-gain--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Upstream limitations are incomplete: omits apps-not-run, correctness/readability caveat, and four timed-out cells lacking cost/time; no upstream source citation in final scoreboard."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6-luna--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6-luna--1/stdout.jsonl: inspected completed messages and 2 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6-luna--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6-luna--1/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-gain--heldout--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Upstream limitations omit that benchmark apps were not run and that fewer added lines do not establish correctness/readability."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6-luna--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6-luna--2/stdout.jsonl: inspected completed messages and 5 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6-luna--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6-luna--2/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-gain--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Upstream limitations omit that benchmark apps were not run."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6-luna--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6-luna--3/stdout.jsonl: inspected completed messages and 3 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6-luna--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6-luna--3/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-gain--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Full upstream 54/22/20/27 scoreboard correctly attributed with benchmark setup, apps-not-run and timeout limits; local pilot has no matched token/cost/timing evidence; Playwright savings remain unknown."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6.1-sol--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6.1-sol--1/stdout.jsonl: inspected completed messages and 4 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6.1-sol--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6.1-sol--1/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-gain--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Full upstream 54/22/20/27 scoreboard correctly attributed with benchmark setup, apps-not-run and timeout limits; local pilot has no matched token/cost/timing evidence; Playwright savings remain unknown."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6.1-sol--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6.1-sol--2/stdout.jsonl: inspected completed messages and 3 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6.1-sol--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6.1-sol--2/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-gain--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Full upstream 54/22/20/27 scoreboard correctly attributed with benchmark setup, apps-not-run and timeout limits; local pilot has no matched token/cost/timing evidence; Playwright savings remain unknown."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6.1-sol--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6.1-sol--3/stdout.jsonl: inspected completed messages and 3 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6.1-sol--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-gain--heldout--gpt-6.1-sol--3/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-help--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Requested quick-reference card omits all ten skill command rows, host distinctions, and environment/config/default precedence."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6-luna--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6-luna--1/stdout.jsonl: inspected completed messages and 1 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6-luna--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6-luna--1/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-help--heldout--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Quick-reference retains levels, all ten commands, bare/off/resume behavior, host distinctions and default precedence; no mutation/settings/test execution."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6-luna--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6-luna--2/stdout.jsonl: inspected completed messages and 1 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6-luna--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6-luna--2/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-help--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Quick-reference card omits session default/environment/config precedence and OpenCode name/description invocation distinction for lazy-clean and slop-check."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6-luna--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6-luna--3/stdout.jsonl: inspected completed messages and 1 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6-luna--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6-luna--3/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-help--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Quick-reference retains levels, all ten commands, bare/off/resume behavior, host distinctions and default precedence; no mutation/settings/test execution."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6.1-sol--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6.1-sol--1/stdout.jsonl: inspected completed messages and 1 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6.1-sol--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6.1-sol--1/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-help--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Quick-reference retains levels, all ten commands, bare/off/resume behavior, host distinctions and default precedence; no mutation/settings/test execution."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6.1-sol--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6.1-sol--2/stdout.jsonl: inspected completed messages and 1 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6.1-sol--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6.1-sol--2/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-help--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Quick-reference retains levels, all ten commands, bare/off/resume behavior, host distinctions and default precedence; no mutation/settings/test execution."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6.1-sol--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6.1-sol--3/stdout.jsonl: inspected completed messages and 1 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6.1-sol--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-help--heldout--gpt-6.1-sol--3/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-review--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Correct redundant branch finding, but stated net -5 lines is not the actual reduction: returning to the original unbraced guard/direct return removes four lines."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6-luna--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6-luna--1/stdout.jsonl: inspected completed messages and 2 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6-luna--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6-luna--1/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-review--heldout--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Correct redundant branch finding, but stated net -5 lines is not the actual reduction: removing seeded nesting/duplicate return restores original implementation with four fewer lines."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6-luna--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6-luna--2/stdout.jsonl: inspected completed messages and 2 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6-luna--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6-luna--2/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-review--heldout--gpt-6-luna--3": {
+    "pass": true,
+    "reasons": [
+      "Read-only actual seeded diff review correctly removes redundant else/nonnegative branch/duplicate return, preserving the guard, direct truncation and domain helper; actual net -4 lines supported."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6-luna--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6-luna--3/stdout.jsonl: inspected completed messages and 3 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6-luna--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6-luna--3/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-review--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Read-only actual seeded diff review correctly removes redundant else/nonnegative branch/duplicate return, preserving the guard, direct truncation and domain helper; actual net -4 lines supported."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6.1-sol--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6.1-sol--1/stdout.jsonl: inspected completed messages and 4 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6.1-sol--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6.1-sol--1/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_6: /bin/zsh -lc \"rg -n -A 22 -B 5 'truncateDataUrl' packages/isomorphic/stringUtils.ts tests/string-utils.test.mjs; rg --files -g 'tsconfig*.json' -g 'package-lock.json' -g 'yarn.lock' -g 'pnpm-lock.yaml' -g 'node_modules/typescript/package.json'; rg -n 'target|module|strict' tsconfig.json; node --test tests/string-utils.test.mjs\" | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--lazy-review--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Read-only actual seeded diff review correctly removes redundant else/nonnegative branch/duplicate return, preserving the guard, direct truncation and domain helper; actual net -4 lines supported."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6.1-sol--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6.1-sol--2/stdout.jsonl: inspected completed messages and 8 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6.1-sol--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6.1-sol--2/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_10: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--lazy-review--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Read-only actual seeded diff review correctly removes redundant else/nonnegative branch/duplicate return, preserving the guard, direct truncation and domain helper; actual net -4 lines supported."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6.1-sol--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6.1-sol--3/stdout.jsonl: inspected completed messages and 5 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6.1-sol--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-review--heldout--gpt-6.1-sol--3/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_7: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--lazy-verify--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Doctor invokes verification that resolves approved external engine/Node paths despite explicit workspace-only restriction.",
+      "Final asserts bridge reports approved Node absent, but observed doctor output only says approved engine OR Node executable absent; it does not distinguish which. Honest blocked gate remains correct but this evidence statement is unsupported."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6-luna--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6-luna--1/stdout.jsonl: inspected completed messages and 5 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6-luna--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6-luna--1/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_8: /bin/zsh -lc 'node skill-files/lazy-verify/scripts/verify.mjs doctor --policy \"$PWD/reviewed-policy.json\"' | exit 2 | reasonCodes: &#91;&#34;ENGINE&#95;UNAVAILABLE&#34;&#93;"
+    ]
+  },
+  "candidate--lazy-verify--heldout--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Correctly reports required fix gate blocked/unsatisfied with absent approved engine, distinguishes missing behavioral evidence from ordinary checks, and neither substitutes engine nor changes policy/code."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6-luna--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6-luna--2/stdout.jsonl: inspected completed messages and 4 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6-luna--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6-luna--2/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-verify--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Explicit ls probes engine directory and file outside the permitted disposable workspace despite user prohibition on outside reads. Blocked gate report itself is otherwise correct."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6-luna--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6-luna--3/stdout.jsonl: inspected completed messages and 5 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6-luna--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6-luna--3/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-verify--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Correctly reports required fix gate blocked/unsatisfied with absent approved engine, distinguishes missing behavioral evidence from ordinary checks, and neither substitutes engine nor changes policy/code."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6.1-sol--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6.1-sol--1/stdout.jsonl: inspected completed messages and 5 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6.1-sol--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6.1-sol--1/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-verify--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Correctly reports required fix gate blocked/unsatisfied with absent approved engine, distinguishes missing behavioral evidence from ordinary checks, and neither substitutes engine nor changes policy/code."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6.1-sol--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6.1-sol--2/stdout.jsonl: inspected completed messages and 5 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6.1-sol--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6.1-sol--2/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--lazy-verify--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Correctly reports required fix gate blocked/unsatisfied with absent approved engine, distinguishes missing behavioral evidence from ordinary checks, and neither substitutes engine nor changes policy/code."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6.1-sol--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6.1-sol--3/stdout.jsonl: inspected completed messages and 4 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6.1-sol--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--lazy-verify--heldout--gpt-6.1-sol--3/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--slop-check--heldout--gpt-6-luna--1": {
+    "pass": false,
+    "reasons": [
+      "Actual module-only scanner reads one file and reports six retained no-any findings; every finding manually triaged with relevant lookup/RegExp/narrowing invariants and honest limits; read-only, no false clean verdict.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6-luna--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6-luna--1/stdout.jsonl: inspected completed messages and 4 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6-luna--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6-luna--1/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_5: /bin/zsh -lc 'cat skill-files/lazy/references/simplification-checks.md && node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts' | exit 1 | slop-check: 6 findings in 1 file",
+      "stdout command item_7: /bin/zsh -lc \"node skill-files/slop-check/scripts/check.mjs --explain=no-any && node --test tests/string-utils.test.mjs && nl -ba packages/isomorphic/stringUtils.ts | sed -n '30,175p'\" | exit 0 | slop-check: no-any ; ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--slop-check--heldout--gpt-6-luna--2": {
+    "pass": false,
+    "reasons": [
+      "Actual module-only scanner reads one file and reports six retained no-any findings; every finding manually triaged with relevant lookup/RegExp/narrowing invariants and honest limits; read-only, no false clean verdict.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6-luna--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6-luna--2/stdout.jsonl: inspected completed messages and 9 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6-luna--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6-luna--2/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_6: /bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts' | exit 1 | slop-check: 6 findings in 1 file"
+    ]
+  },
+  "candidate--slop-check--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Actual module-only scanner reads one file and reports six retained no-any findings; every finding manually triaged with relevant lookup/RegExp/narrowing invariants and honest limits; read-only, no false clean verdict.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6-luna--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6-luna--3/stdout.jsonl: inspected completed messages and 3 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6-luna--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6-luna--3/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_4: /bin/zsh -lc \"cat skill-files/lazy/references/simplification-checks.md; printf '\\\\n--- SCAN ---\\\\n'; node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts; printf '\\\\n--- TARGET ---\\\\n'; nl -ba packages/isomorphic/stringUtils.ts\" | exit 0 | slop-check: 6 findings in 1 file",
+      "stdout command item_5: /bin/zsh -lc \"node skill-files/slop-check/scripts/check.mjs --explain=no-any; printf '\\\\n--- STRING UTILS TEST ---\\\\n'; node --test tests/string-utils.test.mjs; printf '\\\\n--- MANIFEST VERSION ---\\\\n'; rg -n '\\\"typescript\\\"' package.json pnpm-lock.yaml package-lock.json yarn.lock 2>/dev/null | head -20; printf '\\\\n--- RULE ENTRY ---\\\\n'; rg -n -C 3 | exit 0 | slop-check: no-any ; ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--slop-check--heldout--gpt-6.1-sol--1": {
+    "pass": false,
+    "reasons": [
+      "Actual module-only scanner reads one file and reports six retained no-any findings; every finding manually triaged with relevant lookup/RegExp/narrowing invariants and honest limits; read-only, no false clean verdict.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6.1-sol--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6.1-sol--1/stdout.jsonl: inspected completed messages and 9 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6.1-sol--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6.1-sol--1/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_6: /bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts' | exit 1 | slop-check: 6 findings in 1 file",
+      "stdout command item_7: /bin/zsh -lc 'cat tests/string-utils.test.mjs\nnode --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--slop-check--heldout--gpt-6.1-sol--2": {
+    "pass": false,
+    "reasons": [
+      "Actual module-only scanner reads one file and reports six retained no-any findings; every finding manually triaged with relevant lookup/RegExp/narrowing invariants and honest limits; read-only, no false clean verdict.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6.1-sol--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6.1-sol--2/stdout.jsonl: inspected completed messages and 12 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6.1-sol--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6.1-sol--2/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_5: /bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts' | exit 1 | slop-check: 6 findings in 1 file",
+      "stdout command item_11: /bin/zsh -lc 'node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--slop-check--heldout--gpt-6.1-sol--3": {
+    "pass": false,
+    "reasons": [
+      "Actual module-only scanner reads one file and reports six retained no-any findings; every finding manually triaged with relevant lookup/RegExp/narrowing invariants and honest limits; read-only, no false clean verdict.",
+      "Original frozen slop-check contract requires the final repository-root --since=HEAD scan before finishing, including read-only tasks. Only focused scans/explanations ran; revision2/candidate narrowed wording did not authorize dropping this gate."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6.1-sol--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6.1-sol--3/stdout.jsonl: inspected completed messages and 7 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6.1-sol--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--slop-check--heldout--gpt-6.1-sol--3/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_6: /bin/zsh -lc 'node skill-files/slop-check/scripts/check.mjs packages/isomorphic/stringUtils.ts' | exit 1 | slop-check: 6 findings in 1 file",
+      "stdout command item_7: /bin/zsh -lc \"cat skill-files/lazy/references/simplification-checks.md; rg --files -g '*lock*' -g '*tsconfig*' -g 'package.json' -g '.node-version' -g '.nvmrc'; rg -n 'typescript|engines|node' package.json; node --version; node --test tests/string-utils.test.mjs\" | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--test-quality-review--heldout--gpt-6-luna--1": {
+    "pass": true,
+    "reasons": [
+      "Entire five-test scoped Node suite and real production oracles traced; justified reasoned passing counterexamples survive all other assertions, with self-contained coverage/exclusions and no fixes or mutation campaign."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6-luna--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6-luna--1/stdout.jsonl: inspected completed messages and 3 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6-luna--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6-luna--1/untracked.txt: untracked inventory reviewed."
+    ]
+  },
+  "candidate--test-quality-review--heldout--gpt-6-luna--2": {
+    "pass": true,
+    "reasons": [
+      "Entire five-test scoped Node suite and real production oracles traced; justified reasoned passing counterexamples survive all other assertions, with self-contained coverage/exclusions and no fixes or mutation campaign."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6-luna--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6-luna--2/stdout.jsonl: inspected completed messages and 3 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6-luna--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6-luna--2/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_6: /bin/zsh -lc \"node --test tests/string-utils.test.mjs; git rev-parse --short HEAD; git status --short; nl -ba tests/string-utils.test.mjs; nl -ba packages/isomorphic/stringUtils.ts | sed -n '25,36p;110,145p'\" | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--test-quality-review--heldout--gpt-6-luna--3": {
+    "pass": false,
+    "reasons": [
+      "Unicode finding invents a fault: replacing the initial UTF-16 check with code-point-only measurement preserves output for these inputs, since both existing paths return the original when code-point count fits. No concrete different-output counterexample supports that claim. Other template/URL gaps are valid."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6-luna--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6-luna--3/stdout.jsonl: inspected completed messages and 4 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6-luna--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6-luna--3/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_7: /bin/zsh -lc \"node --test tests/string-utils.test.mjs && git rev-parse --short HEAD && git status --short && nl -ba tests/string-utils.test.mjs && nl -ba packages/isomorphic/stringUtils.ts | sed -n '25,50p;135,175p'\" | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--test-quality-review--heldout--gpt-6.1-sol--1": {
+    "pass": true,
+    "reasons": [
+      "Entire five-test scoped Node suite and real production oracles traced; justified reasoned passing counterexamples survive all other assertions, with self-contained coverage/exclusions and no fixes or mutation campaign."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6.1-sol--1/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6.1-sol--1/stdout.jsonl: inspected completed messages and 8 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6.1-sol--1/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6.1-sol--1/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_8: /bin/zsh -lc 'node --version && node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--test-quality-review--heldout--gpt-6.1-sol--2": {
+    "pass": true,
+    "reasons": [
+      "Entire five-test scoped Node suite and real production oracles traced; justified reasoned passing counterexamples survive all other assertions, with self-contained coverage/exclusions and no fixes or mutation campaign."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6.1-sol--2/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6.1-sol--2/stdout.jsonl: inspected completed messages and 5 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6.1-sol--2/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6.1-sol--2/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_5: /bin/zsh -lc \"rg -n '\"'^|stringUtils|node --test'\"' tests/string-utils.test.mjs packages/isomorphic/stringUtils.ts package.json snapshot-package.json evidence/README.md\" | exit 0 | ",
+      "stdout command item_7: /bin/zsh -lc 'node --version; node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  },
+  "candidate--test-quality-review--heldout--gpt-6.1-sol--3": {
+    "pass": true,
+    "reasons": [
+      "Entire five-test scoped Node suite and real production oracles traced; justified reasoned passing counterexamples survive all other assertions, with self-contained coverage/exclusions and no fixes or mutation campaign."
+    ],
+    "evidence": [
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6.1-sol--3/record.json: terminal True, status completed",
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6.1-sol--3/stdout.jsonl: inspected completed messages and 10 completed command records; command exits/output are evidence, not CLI exit quality.",
+      "<STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6.1-sol--3/diff.patch: actual task diff reviewed; <STUDY_ROOT>/runs/candidate--test-quality-review--heldout--gpt-6.1-sol--3/untracked.txt: untracked inventory reviewed.",
+      "stdout command item_9: /bin/zsh -lc \"rg -n 'trimString|trimStringWithEllipsis|escapeTemplateString|truncateDataUrl|node --test|string-utils' . -g '\"'!skill-files/**'\"'\" | exit 0 | ",
+      "stdout command item_11: /bin/zsh -lc 'node --version && node --test tests/string-utils.test.mjs' | exit 0 | ℹ tests 5 ; ℹ pass 5 ; ℹ fail 0 ; ℹ skipped 0"
+    ]
+  }
+}

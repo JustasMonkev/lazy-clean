@@ -1,0 +1,22 @@
+[
+  {
+    "file": "inputs.tar.gz",
+    "bytes": 776469,
+    "sha256": "74fde363e97652f3a0c376134373cbb1f511d0adc1833f5bbcf27e6b17833f71"
+  },
+  {
+    "file": "attempts.tar.gz",
+    "bytes": 6494101,
+    "sha256": "ea472213d70e2b14902cae1c68f8f7fd3755418b52fbb378306057f6e52a3da3"
+  },
+  {
+    "file": "cases.tar.gz",
+    "bytes": 349676,
+    "sha256": "ba15eda0dfbb82d3c0fffe6e1db34ba5267ec039435dd839563395e203bf0d3a"
+  },
+  {
+    "file": "checks.tar.gz",
+    "bytes": 522523,
+    "sha256": "55bee4a5bf736e921670e086f386081c37161506699836a37e976bb885d61bd0"
+  }
+]

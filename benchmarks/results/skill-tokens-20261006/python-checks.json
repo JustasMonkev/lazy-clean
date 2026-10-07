@@ -1,0 +1,27 @@
+{
+  "pythonVersion": "3.9.6",
+  "executable": "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+  "pythonChecksRead": "skills/lazy/references/python-checks.md",
+  "configurationFilesPresent": [],
+  "configuredPythonLinter": "none found",
+  "configuredPythonTypeChecker": "none found",
+  "installedTools": {
+    "ruff": true,
+    "mypy": false,
+    "pyright": false,
+    "flake8": false,
+    "pylint": false
+  },
+  "pyCompile": {
+    "passed": true,
+    "outputOutsidePublication": true
+  },
+  "importSafety": {
+    "mainGuard": true
+  },
+  "limits": "No dependencies installed; installed executables are not treated as project-configured tools.",
+  "otherObservedRuntime": {
+    "version": "3.14.6",
+    "scope": "Earlier python3 --version from repository cwd; actual compile/audit runtime recorded separately; no common default asserted"
+  }
+}
