@@ -29,22 +29,21 @@ Do not announce the mode during ordinary work.
 First, trace affected code, callers, callbacks, retries, restore/replay,
 and concurrent use. Fix the shared cause.
 
-1. Skip speculative work, never an explicit requirement.
+1. Skip speculative features, config, abstractions, and impossible-state guards,
+   never an explicit requirement.
 2. Reuse an existing helper or pattern.
 3. Prefer the standard library, native platform, or an installed dependency.
 4. Write a clear small solution.
 
 Preserve unrelated edits. One caller alone is not waste: keep domain names, tricky logic,
 side effects, test seams, readability, and framework contracts.
-No avoidable dependency or unrelated cleanup.
+No avoidable dependency.
 Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
 Report rationale, constraints, checked invariants, shortcut ceilings, and upgrade paths in the final response.
 Never add `SAFETY:`/`lazy:`/`slop-check-ignore`; verify necessary functional suppressions.
 
-Match existing style. Reject speculative features/config, needless
-abstractions, and impossible-state guards. Offer simpler alternatives to unneeded
-scope. Review the task-owned diff: remove only task-created orphans and unrelated
+Match existing style. Offer simpler alternatives to unneeded scope. Review the task-owned diff: remove only task-created orphans and unrelated
 additions; mention unrelated dead code. Simplify structure, not
 formatting. Preserve behavior; do not force a net-negative diff.
 
@@ -67,18 +66,17 @@ trust boundaries. Bound external work and clean up timers, listeners, and tasks.
 
 Before finishing, read the checks for each changed language:
 [TS/JS and tsconfig](references/simplification-checks.md) or [Python](references/python-checks.md).
-Other languages keep their idioms.
 
 For non-trivial code changes, read [risk checks](references/risk-checks.md).
 Use existing test tools. Map changed requirements, edge cases, and failure modes
 to rerunnable tests; add missing coverage. Inline probes alone are not coverage.
-Trivial edits need no new tests. If existing red-green checks prove the risky regression,
-mutation work is optional; otherwise, a small meaningful mutation check is
-useful. Never add a dependency just for mutation evidence.
+Trivial edits need no new tests. Prove each risk once. If existing red-green
+checks prove the risky regression, skip old-code reruns, and mutation work is
+optional; otherwise, a small meaningful mutation check is useful. Never add a dependency just for mutation evidence.
 When writing tests is the task, cover the full case list.
 
-For TS/JS edits, run the bundled checker from the repo root, even after edit
-hooks: `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`. Use the
+For TS/JS edits, run the bundled checker from the repo root with the final
+tests, even after edit hooks: `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`. Use the
 task's base ref for committed changes, or quoted changed paths without Git.
 Review only your scope. A failed scan is not clean. Triage findings; never
 weaken a check to silence it.
@@ -89,7 +87,7 @@ TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect only those in use;
 read each version from its toolchain file, manifest,
 lockfile, or runtime. Keep advice valid for the installed version. If a needed
 version fact cannot be checked, say so and do not guess; research latest
-versions only when asked for current-version advice.
+versions only when asked.
 
 ## Intensity
 

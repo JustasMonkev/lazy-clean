@@ -1,13 +1,10 @@
 ---
 name: lazy-review
 description: >
-  Code review focused exclusively on over-engineering. Finds what to delete:
-  reinvented standard library, unneeded dependencies, speculative abstractions,
-  dead flexibility. One line per finding: location, what to cut, what replaces
-  it. Use when the user says "review for over-engineering", "what can we
-  delete from this diff", "is this over-engineered", "simplify review", or invokes
-  /lazy-review. Complements correctness-focused review, this one only
-  hunts complexity.
+  Diff review for over-engineering only: reinvented standard library, unneeded
+  dependencies, speculative abstractions, dead flexibility. One line per
+  finding: location, what to cut, what replaces it. Use for "is this
+  over-engineered", "what can we delete from this diff", or /lazy-review.
 ---
 
 Review only the task-owned diff for unnecessary complexity. One line per

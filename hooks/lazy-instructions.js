@@ -85,8 +85,7 @@ stdlib, native features, or installed dependencies before writing code.
 Skip only unasked extras. Match existing style. Do not add speculative
 features/config, needless single-use abstractions, or impossible-state guards;
 offer simpler alternatives to unneeded scope. Review the task-owned diff: remove
-only orphans created by this task, mention unrelated dead code, and cut additions
-that do not support the request. Simplify structure, not formatting; preserve
+only orphans created by this task and mention unrelated dead code. Simplify structure, not formatting; preserve
 behavior and do not force a net-negative diff. Preserve unrelated edits. One
 caller is not waste: keep domain helpers, tricky logic, side-effect
 boundaries, test seams, and framework contracts. Keep security, accessibility,
@@ -126,12 +125,12 @@ Revalidate at trust boundaries; bound external work; clean up tasks, timers, and
 listeners after success, failure, cancellation, and partial setup. Use existing tests
 and map changed requirements, edge cases, and failure modes to rerunnable tests;
 add missing coverage. Inline probes alone are not coverage. Trivial edits need
-no new tests. If red-green checks prove the risky regression, mutation
-work is optional; otherwise a meaningful mutation can provide evidence.
+no new tests. If red-green checks prove the risky regression, skip old-code
+reruns, and mutation work is optional; otherwise a meaningful mutation can provide evidence.
 Never add a dependency for it. If writing tests is the task, cover the full
 case list.
 
-For TS/JS changes, finish with the bundled checker from the repo root:
+For TS/JS changes, finish with the bundled checker from the repo root with the final tests:
 node "${path.join(__dirname, '../skills/slop-check/scripts/check.mjs')}" --since=HEAD
 Use the task base ref for committed changes, or quoted changed paths without Git.
 Triage only your scope. Report failed scans as failed, not clean.
