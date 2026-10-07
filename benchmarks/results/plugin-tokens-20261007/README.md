@@ -66,25 +66,9 @@ tokens and offsets the savings.
 ## Limits
 
 - These tiny tasks pass even without the plugin, so the graders cannot show a
-  quality benefit or a quality loss. Read the transcripts for review quality.
+  quality benefit or a quality loss. Review quality was not graded.
 - Child agents ran under `acceptEdits` with a Bash allowlist. Bypass mode was
   refused in this environment. Shell commands that could not be statically
   checked were denied and retried, which adds turns, mostly in the plugin arms.
-  `denials` records this per run.
 - The arms ran one after another on the same day, with three trials. No subagents,
   Python, or TypeScript-config tasks were run.
-
-## Reproduce
-
-Create two checkouts whose paths have the same length, one at the baseline and one
-with the change. Fill in `config.example.json`, then run this from any directory:
-
-```sh
-node run.mjs config.json <new-output-dir>
-python3 analyze.py <new-output-dir>/results.jsonl
-```
-
-`run.mjs` reuses `prepare` and `grade` from the baseline `benchmarks/run.mjs`.
-It saves each run's stream-json transcript and skips runs already recorded.
-`results.jsonl` holds the per-run metrics from this study. The transcripts are not
-committed.
