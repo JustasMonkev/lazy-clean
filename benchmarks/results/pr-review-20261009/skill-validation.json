@@ -1,0 +1,34 @@
+[
+  {
+    "skill": "lazy",
+    "exitCode": 1,
+    "output": "Unexpected key(s) in SKILL.md frontmatter: argument-hint. Allowed properties are: allowed-tools, description, license, metadata, name",
+    "baselineExitCode": 1,
+    "baselineOutput": "Unexpected key(s) in SKILL.md frontmatter: argument-hint. Allowed properties are: allowed-tools, description, license, metadata, name"
+  },
+  {
+    "skill": "lazy-clean",
+    "exitCode": 0,
+    "output": "Skill is valid!"
+  },
+  {
+    "skill": "slop-check",
+    "exitCode": 0,
+    "output": "Skill is valid!"
+  },
+  {
+    "skill": "lazy-review",
+    "exitCode": 0,
+    "output": "Skill is valid!"
+  },
+  {
+    "skill": "lazy-audit",
+    "exitCode": 0,
+    "output": "Skill is valid!"
+  },
+  {
+    "skill": "lazy-debt",
+    "exitCode": 0,
+    "output": "Skill is valid!"
+  }
+]

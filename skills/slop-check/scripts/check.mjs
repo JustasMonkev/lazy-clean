@@ -2881,7 +2881,7 @@ const RULE_EXPLANATIONS = {
     why: "An `as` assertion is a claim the compiler cannot check. Verify its runtime evidence rather than adding a justification comment to silence the checker.",
     slop: "const user = payload as User;",
     correct: "if (typeof payload !== \"object\" || payload === null || !(\"id\" in payload) || typeof payload.id !== \"string\") {\n  throw new TypeError(\"Expected a user with a string id\");\n}\nconst user = payload;",
-    exceptions: "This example assumes User needs only a string id; validate every field your actual contract requires. Prefer a parser or narrowing that eliminates the assertion. If an assertion is necessary, verify its checked invariant and explain it in the final response; do not add a comment. Existing SAFETY directives and this rule id remain supported for compatibility. Catch bindings can contain any thrown value; narrow before using Error properties.",
+    exceptions: "This example assumes User needs only a string id; validate every field your actual contract requires. Prefer a parser or narrowing that eliminates the assertion. If an assertion is necessary, verify its checked invariant and explain it in the final response; do not add a comment solely to silence the checker. Accurate non-obvious constraints may belong beside the code. Existing SAFETY directives and this rule id remain supported for compatibility. Catch bindings can contain any thrown value; narrow before using Error properties.",
   },
   "no-unknown-alias": {
     why: "A bare unknown alias may add no useful meaning in a private implementation. Review its domain role and consumers before replacing it; a name alone is not evidence for a more specific type.",
@@ -2905,7 +2905,7 @@ const RULE_EXPLANATIONS = {
     why: "An empty catch swallows every failure — including the typo and the network outage. Six months later nothing was saved and nothing said so.",
     slop: "try { save(); } catch {} finally { release(); }",
     correct: "try { save(); } finally { release(); }",
-    exceptions: "If a deliberate swallow is required, verify the failure contract and explain it in the final response; do not add a comment. Existing justification comments remain supported. Otherwise remove only the catch and preserve any finally cleanup. Without finally, call the operation directly.",
+    exceptions: "If a deliberate swallow is required, verify the failure contract and explain it in the final response; do not add a comment solely to silence the checker. Keep accurate non-obvious failure rationale beside the code when it preserves local style or lint conventions. Otherwise remove only the catch and preserve any finally cleanup. Without finally, call the operation directly.",
   },
   "no-catch-fake-success": {
     why: "Returning null or [] from a catch can hide a failure when callers treat it as success. Establish the API failure contract before removing the catch: a documented sentinel may be an intentional, distinguishable result.",

@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-09",
+  "base": "8f38b32bae676c300d03191c2668e4f0c1271544",
+  "heldOutRepository": "nodejs/node",
+  "files": {
+    ".cursor/rules/lazy-clean.mdc": "970dfb2c12e77d39617dffd89b65c48fa3bb7357594737d81a6ee1270407ed4f",
+    ".github/copilot-instructions.md": "dd524a4493fb884599b6bc0e2ce691f473188e476b9d28ee4fdb06b1b7253707",
+    ".opencode/command/lazy-audit.md": "eed032f4f131f92e19cf1c478997091414a6eed3c53418ce832f19b1cc3be57c",
+    ".opencode/command/lazy-review.md": "fb3d0624d7dbdcdfed16b0a1a5ab7b101e356fc1b190571f49f9aaaf94870be6",
+    ".opencode/command/lazy.md": "32e097b9b590011c9a7094644744b09107dcc7190677f6a16d272854b7b187bd",
+    "AGENTS.md": "13261239ee5de49a6de40c805676503ac424956903dc667d244e9f772319829e",
+    "README.md": "2bef4f65df9ac0a4cafc5388c7d63b0ac17c46da3c5c6307034297059dc74e58",
+    "hooks/lazy-instructions.js": "83aa3ad25a43a065e9a099d3936e549d0f8a4d75e16e8b9e1b4c0734222b0a03",
+    "skills/lazy-audit/SKILL.md": "bca960d24afa020ecca38f07c8b89d28377aa37a248f81dc5d042a9d0248c1a1",
+    "skills/lazy-clean/SKILL.md": "a37c21fa054c2a97a8d932a7a921614b4a1c6e649a496d4df2f08ed3cc0efb12",
+    "skills/lazy-debt/SKILL.md": "99fcbec2d8e41c295b77563cddc97ec3dca56ff2ea827691ee9152a9463fbded",
+    "skills/lazy-review/SKILL.md": "2dfc87c0dc6c7537ca7fbccacc89dbcb3142694f135fb54df89067de1a1c10a1",
+    "skills/lazy/SKILL.md": "84ab46fff44366a5adc81df166067d0bcee37da02df63f055b83080e16bfe634",
+    "skills/lazy/references/python-checks.md": "655b8e0566b45a0cb6447d8840a428a2832ff77ced5c5857279730d472cec8c1",
+    "skills/slop-check/SKILL.md": "56f9db3d24eb6a956753944b3139e050e97ef097d2609eb2eca60a4c2c38f7fa",
+    "skills/slop-check/scripts/check.mjs": "9478ebb26857195b9d923bf494f4ffde8eb5618e0dd78b36957ec9ba0f7e074f",
+    "tests/cli.test.mjs": "9caae1f2bc6569ff6a6bb9dd5edc77f30d49bc59ca0244b7b72d857dd767b126",
+    "tests/language-guidance.test.mjs": "81d1b66f0ce7f58d4fb858408a71a1dbec05eeacd2d0f125543c73bff65398b8"
+  },
+  "commit": "aa27e4a810b5f0ad3f9718a92aa3a7a21375b51e",
+  "checkpointNote": "Commit preserves the frozen checker/guidance. Its CLI test assertion changed after original hash freeze; drift is recorded in the Node analysis.",
+  "originalLocalCommit": "69d8c6c5fc95c2b805a406c329b514828ac19f8d",
+  "publishedTree": "2bef52d1c1328b7f696e7ad879081d6277cd8d75",
+  "publicationNote": "The authenticated GitHub API published the identical local frozen tree with new commit metadata. Source hashes and the test-only manifest drift are unchanged."
+}

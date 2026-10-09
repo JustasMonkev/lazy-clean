@@ -12,10 +12,10 @@ come before code size.
 
 ## Think, then act
 
-Before coding, state material assumptions, interpretations, and tradeoffs. Ask
-only when missing information blocks the result. For multi-step tasks, write a
-brief step → check plan. Define a verifiable finish: bugs go red → green,
-refactors have before/after checks; loop until verified. Carry unfinished
+Before coding, state material assumptions and tradeoffs. Ask only if missing
+information blocks work. For multi-step tasks, write a step → check plan.
+Define a verifiable finish: bugs go red → green, refactors get before/after
+checks; loop until verified. Carry unfinished
 checks through handoffs and compaction; summaries do not replace these instructions.
 
 ## Persistence
@@ -31,8 +31,8 @@ and concurrent use. Fix the shared cause.
 
 1. Skip speculative features, config, abstractions, and impossible-state guards,
    never an explicit requirement.
-2. Reuse an existing helper or pattern when its contract fits: check callers,
-   ownership, errors, lifecycle, and availability. Similar syntax alone is not reuse.
+2. Reuse existing helpers or patterns with matching contracts: check callers,
+   ownership, errors, lifecycle, and availability. Avoid syntax-only reuse.
 3. Prefer the standard library, native platform, or an installed dependency.
 4. Write a clear small solution.
 
@@ -45,9 +45,10 @@ Keep required license notices and functional tool directives.
 Report rationale, constraints, checked invariants, shortcut ceilings, and upgrade paths in the final response.
 Never add `SAFETY:`/`lazy:`/`slop-check-ignore`; verify necessary functional suppressions.
 
-Match existing style. Offer simpler alternatives to unneeded scope. Review the task-owned diff: remove only task-created orphans and unrelated
-additions; mention unrelated dead code. Simplify structure, not
-formatting. Preserve behavior; do not force a net-negative diff.
+Match existing style. Offer simpler alternatives to unneeded scope. Review the
+task-owned diff: remove task-created orphans and unrelated additions; mention
+unrelated dead code. Simplify structure, preserve behavior; do not force a
+net-negative diff.
 
 ## Design boundaries
 
@@ -66,15 +67,15 @@ user state, errors, metadata, generated files, lockfiles, and platform behavior 
 Keep security, accessibility, and real-hardware calibration. Revalidate at new
 trust boundaries. Bound external work and clean up timers, listeners, and tasks.
 
-Before finishing, read the checks for each changed language:
+Read checks for each changed language:
 [TS/JS and tsconfig](references/simplification-checks.md) or [Python](references/python-checks.md).
 
 For non-trivial code changes, read [risk checks](references/risk-checks.md).
 Use existing test tools. Map changed requirements, edge cases, and failure modes
 to rerunnable tests; add missing coverage. Inline probes alone are not coverage.
-Trivial edits need no new tests. Prove each risk once. If existing red-green
+Trivial edits need no new tests. Prove each risk once. If red-green
 checks prove the risky regression, skip old-code reruns, and mutation work is
-optional; otherwise, a small meaningful mutation check is useful. Never add a dependency just for mutation evidence.
+optional; otherwise a meaningful mutation check is useful. Never add a dependency for it.
 When writing tests is the task, cover the full case list.
 
 For TS/JS edits, run the bundled checker from the repo root with the final
@@ -85,10 +86,9 @@ weaken a check to silence it.
 
 ## Language fit
 
-TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect only those in use;
-read each version from its toolchain file, manifest,
-lockfile, or runtime. Keep advice valid for the installed version. If a needed
-version fact cannot be checked, say so and do not guess; research latest
+TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect those in use. Read
+versions from the toolchain file, manifest, lockfile, or runtime. Use the
+installed version. Report unavailable facts; do not guess. Research latest
 versions only when asked.
 
 ## Intensity

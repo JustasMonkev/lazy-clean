@@ -915,6 +915,10 @@ for (const rule of ["require-safety-comment-for-type-assertion", "no-empty-catch
     assert.equal(result.status, 0);
     assert.match(result.stdout, /final response/u);
     assert.doesNotMatch(result.stdout, /needs a comment|comment is the difference|SAFETY comment is valid|slop-check-ignore no-any --/u);
+    if (rule === "no-empty-catch") {
+      assert.match(result.stdout, /solely to silence the checker/u);
+      assert.match(result.stdout, /Keep accurate non-obvious failure rationale beside the code/u);
+    }
   });
 
 check("--explain reports a mechanical tier for a mechanical rule", () => {

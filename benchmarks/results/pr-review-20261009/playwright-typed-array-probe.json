@@ -1,0 +1,75 @@
+{
+  "node": "v24.19.0",
+  "exactUpstreamExecuted": false,
+  "source": "3340855109a24c4001a2a3deb6943d991e253d43/packages/playwright-core/src/protocol/serializers.ts:62,137",
+  "cases": [
+    {
+      "kind": "Uint8Array",
+      "original": [
+        1,
+        2,
+        3
+      ],
+      "inputBytes": 3,
+      "outgoingBytes": 3,
+      "sameBackingMatches": true,
+      "wireMatches": true,
+      "wireDecoded": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "kind": "Uint16Array",
+      "original": [
+        1,
+        2,
+        3
+      ],
+      "inputBytes": 6,
+      "outgoingBytes": 3,
+      "sameBackingMatches": true,
+      "wireMatches": false,
+      "wireDecoded": [
+        1,
+        2,
+        11520
+      ]
+    },
+    {
+      "kind": "Uint32Array",
+      "original": [
+        1,
+        2,
+        3
+      ],
+      "inputBytes": 12,
+      "outgoingBytes": 3,
+      "sameBackingMatches": true,
+      "wireMatches": false,
+      "wireDecoded": [
+        1,
+        2174720,
+        2174976
+      ]
+    },
+    {
+      "kind": "Float64Array",
+      "original": [
+        1,
+        2,
+        3
+      ],
+      "inputBytes": 24,
+      "outgoingBytes": 3,
+      "sameBackingMatches": true,
+      "wireMatches": false,
+      "wireDecoded": [
+        4.78151857973154e-308,
+        4.783691505571156e-308,
+        4.78586442926161e-308
+      ]
+    }
+  ]
+}

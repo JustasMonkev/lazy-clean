@@ -1,0 +1,46 @@
+{
+  "limits": "Four isolated reruns of the unchanged existing 16 MB no-EOF stress case; no upstream suite or timing guarantee.",
+  "results": [
+    {
+      "label": "baseline",
+      "exitCode": 0,
+      "output": "LAZY MODE CHANGED \u2014 level: ultra",
+      "error": "",
+      "milliseconds": 1244,
+      "mode": "ultra"
+    },
+    {
+      "label": "final",
+      "exitCode": 0,
+      "output": "LAZY MODE CHANGED \u2014 level: ultra",
+      "error": "",
+      "milliseconds": 1265,
+      "mode": "ultra"
+    },
+    {
+      "label": "baseline",
+      "exitCode": 0,
+      "output": "LAZY MODE CHANGED \u2014 level: ultra",
+      "error": "",
+      "milliseconds": 1013,
+      "mode": "ultra"
+    },
+    {
+      "label": "final",
+      "exitCode": 0,
+      "output": "LAZY MODE CHANGED \u2014 level: ultra",
+      "error": "",
+      "milliseconds": 933,
+      "mode": "ultra"
+    }
+  ],
+  "initialFullSuiteObservation": {
+    "hookTestsPassed": 810,
+    "hookTestsFailed": 2,
+    "failures": [
+      "16 MB valid input without EOF changes mode",
+      "16 MB valid input retains its mode"
+    ]
+  },
+  "sourceComparison": "hooks/lazy-input.js, hooks/lazy-mode-tracker.js, and tests/hooks.test.mjs have no diff from baseline. Isolated reruns passed on both baseline and final; a stable timing guarantee is not established."
+}

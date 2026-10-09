@@ -1,0 +1,1807 @@
+{
+  "node": "v24.19.0",
+  "checkerBase": "8f38b32bae676c300d03191c2668e4f0c1271544",
+  "reduced": [
+    {
+      "path": "ordering-comment.ts",
+      "source": "// First, update the list because watched tests can have changed.\nawait refreshList();\nawait runWatchedTests();",
+      "findings": [
+        {
+          "path": "ordering-comment.ts",
+          "line": 1,
+          "column": 1,
+          "rule": "no-narration-comments",
+          "message": "Possible narration comment (\"now we...\", \"first, ...\"). Verify ordering and other constraints before removing nonessential comments; explain relevant rationale in the final response.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "cancellation-sentinel.ts",
+      "source": "const { selectedProjects } = await prompt().catch(() => ({ selectedProjects: null }));\nif (!selectedProjects) return;",
+      "findings": []
+    },
+    {
+      "path": "swallow-after-navigation.spec.ts",
+      "source": "setTimeout(async () => { await page.goto(url).catch(() => {}); }, 1000);",
+      "findings": []
+    },
+    {
+      "path": "assert-count.spec.ts",
+      "source": "await expect.poll(() => events).toHaveLength(1);\nexpect(events).toEqual([[\"testFilesChanged\", { testFiles: [file] }]]);",
+      "findings": []
+    },
+    {
+      "path": "table-driven-test.spec.ts",
+      "source": "for (const matcher of matchers) { const error = await matcher().catch(e => e); expect(error).toBeInstanceOf(Error); }",
+      "findings": []
+    },
+    {
+      "path": "transport-boundary.ts",
+      "source": "interface Transport { send(data: string): void; close(): void; }\nclass Connection { constructor(private transport: Transport) {} send(data: string) { this.transport.send(data); } }",
+      "findings": []
+    },
+    {
+      "path": "typed-array-wire.ts",
+      "source": "const outgoing = Buffer.from(value.buffer, value.byteOffset, value.length);\nconst ctor = constructors[kind] as any;\nreturn new ctor(buffer.buffer, buffer.byteOffset, buffer.length);",
+      "findings": [
+        {
+          "path": "typed-array-wire.ts",
+          "line": 2,
+          "column": 36,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "justified-best-effort.ts",
+      "source": "// The operation is optional and completion cannot affect the result.\ntry { await optionalCleanup(); } catch {}",
+      "findings": [
+        {
+          "path": "justified-best-effort.ts",
+          "line": 2,
+          "column": 34,
+          "rule": "no-empty-catch",
+          "message": "An empty catch silently swallows failures. Handle the error, rethrow, or verify the failure contract and justify the swallow in the final response.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "loader-contract.spec.ts",
+      "source": "jest.mock(\"./dependency\", () => ({ run: mockRun }));\nconst result = runConsumer();\nexpect(mockRun).toHaveBeenCalledWith(\"selected\");",
+      "findings": [
+        {
+          "path": "loader-contract.spec.ts",
+          "line": 1,
+          "column": 1,
+          "rule": "no-module-mocking",
+          "message": "Module mocks patch the loader instead of the design. Inject the dependency through a real seam.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "required-timeout.spec.ts",
+      "source": "const pending = actionUnderTest();\nawait new Promise(resolve => setTimeout(resolve, 20));\nexpect(completed).toBe(false);\nreleaseAction();\nawait pending;",
+      "findings": [
+        {
+          "path": "required-timeout.spec.ts",
+          "line": 2,
+          "column": 7,
+          "rule": "no-arbitrary-sleep",
+          "message": "A hard-coded sleep guesses at timing instead of waiting for the event. Await the real signal, or name the delay as a policy and say why.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "empty-event-guard.ts",
+      "source": "if (testFiles.length === 0) return;\nrunWatchedTests(testFiles);",
+      "findings": []
+    },
+    {
+      "path": "same-boundary-guard.ts",
+      "source": "function process(items: string[]) { if (!items) return; return items.map(item => item.length); }",
+      "findings": []
+    }
+  ],
+  "exactWholeFile": [
+    {
+      "path": "31727/packages/playwright/src/runner/tasks.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/31727/packages/playwright/src/runner/tasks.ts",
+          "line": 161,
+          "column": 26,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/31727/packages/playwright/src/runner/tasks.ts",
+          "line": 163,
+          "column": 21,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/31727/packages/playwright/src/runner/tasks.ts",
+          "line": 190,
+          "column": 23,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "31727/packages/playwright/src/runner/vcs.ts",
+      "findings": []
+    },
+    {
+      "path": "31727/tests/playwright-test/only-changed.spec.ts",
+      "findings": []
+    },
+    {
+      "path": "31842/packages/trace-viewer/src/ui/uiModeView.tsx",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/31842/packages/trace-viewer/src/ui/uiModeView.tsx",
+          "line": 65,
+          "column": 57,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/31842/packages/trace-viewer/src/ui/uiModeView.tsx",
+          "line": 290,
+          "column": 34,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/31842/packages/trace-viewer/src/ui/uiModeView.tsx",
+          "line": 291,
+          "column": 24,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/31842/packages/trace-viewer/src/ui/uiModeView.tsx",
+          "line": 307,
+          "column": 38,
+          "endLine": 307,
+          "startLine": 307,
+          "rule": "no-array-filter-map",
+          "message": "Consecutive array filter/map passes allocate an intermediate array. Consider one pass only after checking callback ordering, indexes, sparse-array behavior, and side effects. Iterator helpers also require runtime support; this is not an automatic rewrite.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "31842/tests/playwright-test/test-server-connection.spec.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/31842/tests/playwright-test/test-server-connection.spec.ts",
+          "line": 21,
+          "column": 20,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "34949/packages/playwright-core/src/protocol/serializers.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 19,
+          "column": 71,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 23,
+          "column": 69,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 61,
+          "column": 61,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 66,
+          "column": 19,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 73,
+          "column": 19,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 87,
+          "column": 60,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 93,
+          "column": 39,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 97,
+          "column": 37,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 173,
+          "column": 24,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 177,
+          "column": 22,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 181,
+          "column": 21,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 185,
+          "column": 23,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/protocol/serializers.ts",
+          "line": 205,
+          "column": 142,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 35,
+          "column": 53,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 44,
+          "column": 26,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 47,
+          "column": 7,
+          "endLine": 49,
+          "rule": "no-catch-fake-success",
+          "message": "Returning a default from catch disguises failure as success. Propagate the error or return an explicit failure value.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 52,
+          "column": 24,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 55,
+          "column": 7,
+          "endLine": 57,
+          "rule": "no-catch-fake-success",
+          "message": "Returning a default from catch disguises failure as success. Propagate the error or return an explicit failure value.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 60,
+          "column": 23,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 63,
+          "column": 7,
+          "endLine": 65,
+          "rule": "no-catch-fake-success",
+          "message": "Returning a default from catch disguises failure as success. Propagate the error or return an explicit failure value.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 68,
+          "column": 25,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 71,
+          "column": 7,
+          "endLine": 73,
+          "rule": "no-catch-fake-success",
+          "message": "Returning a default from catch disguises failure as success. Propagate the error or return an explicit failure value.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 76,
+          "column": 30,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 79,
+          "column": 7,
+          "endLine": 81,
+          "rule": "no-catch-fake-success",
+          "message": "Returning a default from catch disguises failure as success. Propagate the error or return an explicit failure value.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 99,
+          "column": 38,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 110,
+          "column": 70,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 118,
+          "column": 72,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 154,
+          "column": 23,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 161,
+          "column": 23,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 175,
+          "column": 43,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 179,
+          "column": 29,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 194,
+          "column": 34,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 241,
+          "column": 68,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+          "line": 281,
+          "column": 9,
+          "endLine": 282,
+          "rule": "no-empty-catch",
+          "message": "An empty catch silently swallows failures. Handle the error, rethrow, or verify the failure contract and justify the swallow in the final response.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "34949/tests/page/page-evaluate.spec.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 222,
+          "column": 3,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 273,
+          "column": 25,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 301,
+          "column": 5,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 322,
+          "column": 3,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 324,
+          "column": 3,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 326,
+          "column": 3,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 328,
+          "column": 3,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 330,
+          "column": 3,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 333,
+          "column": 3,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 335,
+          "column": 3,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 337,
+          "column": 3,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 339,
+          "column": 3,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 341,
+          "column": 3,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 467,
+          "column": 21,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 471,
+          "column": 19,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 527,
+          "column": 101,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 606,
+          "column": 5,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 608,
+          "column": 5,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 616,
+          "column": 5,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 618,
+          "column": 5,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 630,
+          "column": 17,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 659,
+          "column": 17,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 660,
+          "column": 17,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 661,
+          "column": 17,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 723,
+          "column": 25,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 806,
+          "column": 5,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 808,
+          "column": 5,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 810,
+          "column": 5,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 829,
+          "column": 5,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 831,
+          "column": 5,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/34949/tests/page/page-evaluate.spec.ts",
+          "line": 833,
+          "column": 5,
+          "rule": "no-unjustified-suppression",
+          "message": "This type-checker suppression has no stated reason. Fix the reported problem or verify why the existing functional directive is necessary; explain the evidence in the final response.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "32156/packages/playwright/src/isomorphic/testServerConnection.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/32156/packages/playwright/src/isomorphic/testServerConnection.ts",
+          "line": 66,
+          "column": 35,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/32156/packages/playwright/src/isomorphic/testServerConnection.ts",
+          "line": 72,
+          "column": 54,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/32156/packages/playwright/src/isomorphic/testServerConnection.ts",
+          "line": 79,
+          "column": 57,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/32156/packages/playwright/src/isomorphic/testServerConnection.ts",
+          "line": 123,
+          "column": 55,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/32156/packages/playwright/src/isomorphic/testServerConnection.ts",
+          "line": 124,
+          "column": 39,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/32156/packages/playwright/src/isomorphic/testServerConnection.ts",
+          "line": 136,
+          "column": 56,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/32156/packages/playwright/src/isomorphic/testServerConnection.ts",
+          "line": 140,
+          "column": 51,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/32156/packages/playwright/src/isomorphic/testServerConnection.ts",
+          "line": 246,
+          "column": 7,
+          "endLine": 247,
+          "rule": "no-empty-catch",
+          "message": "An empty catch silently swallows failures. Handle the error, rethrow, or verify the failure contract and justify the swallow in the final response.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "32156/packages/playwright/src/runner/watchMode.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/32156/packages/playwright/src/runner/watchMode.ts",
+          "line": 35,
+          "column": 28,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/32156/packages/playwright/src/runner/watchMode.ts",
+          "line": 277,
+          "column": 39,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "36059/packages/injected/src/ariaSnapshot.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/packages/injected/src/ariaSnapshot.ts",
+          "line": 74,
+          "column": 26,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/packages/injected/src/ariaSnapshot.ts",
+          "line": 108,
+          "column": 66,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/packages/injected/src/ariaSnapshot.ts",
+          "line": 114,
+          "column": 21,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/packages/injected/src/ariaSnapshot.ts",
+          "line": 157,
+          "column": 25,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/packages/injected/src/ariaSnapshot.ts",
+          "line": 160,
+          "column": 17,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/packages/injected/src/ariaSnapshot.ts",
+          "line": 460,
+          "column": 100,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "36059/packages/playwright-core/src/server/codegen/javascript.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/packages/playwright-core/src/server/codegen/javascript.ts",
+          "line": 29,
+          "column": 30,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/packages/playwright-core/src/server/codegen/javascript.ts",
+          "line": 186,
+          "column": 31,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/packages/playwright-core/src/server/codegen/javascript.ts",
+          "line": 193,
+          "column": 30,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/packages/playwright-core/src/server/codegen/javascript.ts",
+          "line": 210,
+          "column": 36,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "36059/tests/page/page-aria-snapshot-ai.spec.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/tests/page/page-aria-snapshot-ai.spec.ts",
+          "line": 19,
+          "column": 30,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/tests/page/page-aria-snapshot-ai.spec.ts",
+          "line": 92,
+          "column": 59,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/tests/page/page-aria-snapshot-ai.spec.ts",
+          "line": 96,
+          "column": 61,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/36059/tests/page/page-aria-snapshot-ai.spec.ts",
+          "line": 101,
+          "column": 81,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "29890/packages/playwright/src/matchers/toMatchText.ts",
+      "findings": []
+    },
+    {
+      "path": "29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 38,
+          "column": 103,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 124,
+          "column": 23,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 127,
+          "column": 29,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 168,
+          "column": 28,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 169,
+          "column": 28,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 194,
+          "column": 19,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 206,
+          "column": 20,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 210,
+          "column": 42,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 215,
+          "column": 64,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 218,
+          "column": 63,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 220,
+          "column": 60,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 254,
+          "column": 52,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 261,
+          "column": 44,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 262,
+          "column": 52,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 285,
+          "column": 28,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 286,
+          "column": 64,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 299,
+          "column": 30,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 312,
+          "column": 30,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 324,
+          "column": 69,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 346,
+          "column": 64,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 354,
+          "column": 42,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 364,
+          "column": 81,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 376,
+          "column": 26,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 386,
+          "column": 31,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 395,
+          "column": 36,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 395,
+          "column": 74,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 407,
+          "column": 34,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 437,
+          "column": 72,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 457,
+          "column": 62,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 462,
+          "column": 69,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 470,
+          "column": 22,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 475,
+          "column": 28,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 588,
+          "column": 28,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 620,
+          "column": 33,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 632,
+          "column": 29,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 655,
+          "column": 26,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 667,
+          "column": 29,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 673,
+          "column": 32,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 686,
+          "column": 14,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 691,
+          "column": 47,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 703,
+          "column": 15,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 703,
+          "column": 99,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 706,
+          "column": 22,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 710,
+          "column": 11,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 711,
+          "column": 11,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 715,
+          "column": 28,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 729,
+          "column": 11,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 736,
+          "column": 47,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 739,
+          "column": 27,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 769,
+          "column": 29,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 799,
+          "column": 40,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 803,
+          "column": 55,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 904,
+          "column": 121,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 949,
+          "column": 83,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 950,
+          "column": 71,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 958,
+          "column": 121,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 959,
+          "column": 66,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 973,
+          "column": 26,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1095,
+          "column": 47,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1101,
+          "column": 135,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1127,
+          "column": 123,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1147,
+          "column": 36,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1181,
+          "column": 31,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1183,
+          "column": 37,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1200,
+          "column": 56,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1203,
+          "column": 39,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1225,
+          "column": 52,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1234,
+          "column": 29,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1246,
+          "column": 104,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1258,
+          "column": 62,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/29890/packages/playwright-core/src/server/injected/injectedScript.ts",
+          "line": 1455,
+          "column": 24,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "29890/tests/page/matchers.misc.spec.ts",
+      "findings": []
+    },
+    {
+      "path": "37761/packages/playwright/src/util.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/util.ts",
+          "line": 70,
+          "column": 47,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/util.ts",
+          "line": 160,
+          "column": 30,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/util.ts",
+          "line": 162,
+          "column": 53,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/util.ts",
+          "line": 167,
+          "column": 20,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/util.ts",
+          "line": 191,
+          "column": 39,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/util.ts",
+          "line": 315,
+          "column": 7,
+          "endLine": 316,
+          "rule": "no-empty-catch",
+          "message": "An empty catch silently swallows failures. Handle the error, rethrow, or verify the failure contract and justify the swallow in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/util.ts",
+          "line": 398,
+          "column": 5,
+          "endLine": 400,
+          "rule": "no-catch-fake-success",
+          "message": "Returning a default from catch disguises failure as success. Propagate the error or return an explicit failure value.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/util.ts",
+          "line": 414,
+          "column": 5,
+          "endLine": 415,
+          "rule": "no-empty-catch",
+          "message": "An empty catch silently swallows failures. Handle the error, rethrow, or verify the failure contract and justify the swallow in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/util.ts",
+          "line": 423,
+          "column": 48,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "37761/packages/playwright/src/worker/testInfo.ts",
+      "findings": [
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 43,
+          "column": 12,
+          "rule": "no-unsafe-dictionary-type",
+          "message": "A string-keyed `any` dictionary erases key and value evidence. Model the actual keys and values.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 43,
+          "column": 27,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 92,
+          "column": 16,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 93,
+          "column": 17,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 94,
+          "column": 16,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 95,
+          "column": 16,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 151,
+          "column": 67,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 243,
+          "column": 96,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 320,
+          "column": 69,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 321,
+          "column": 30,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 403,
+          "column": 86,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 405,
+          "column": 36,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 405,
+          "column": 62,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 410,
+          "column": 134,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 421,
+          "column": 74,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 483,
+          "column": 5,
+          "rule": "no-double-negation-condition",
+          "message": "Conditions already coerce to boolean; `!!` here is noise. Drop it.",
+          "severity": "fix"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 524,
+          "column": 5,
+          "rule": "no-backcompat-comments",
+          "message": "Review whether this compatibility shim is still required. Preserve published APIs, persisted data, and protocol compatibility; remove it only when callers and stored formats no longer need it.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 609,
+          "column": 25,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 648,
+          "column": 16,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 660,
+          "column": 35,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 669,
+          "column": 24,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        },
+        {
+          "path": "/workspace/scratch/305db44b1a20/playwright-analysis-cache/37761/packages/playwright/src/worker/testInfo.ts",
+          "line": 675,
+          "column": 26,
+          "rule": "require-safety-comment-for-type-assertion",
+          "message": "Review this type assertion. Prefer narrowing or parsing; if it is necessary, verify the checked invariant and explain it in the final response.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "37761/packages/trace-viewer/src/ui/annotationsTab.tsx",
+      "findings": []
+    }
+  ]
+}

@@ -71,19 +71,19 @@ Use this level until /lazy off, "stop lazy", or "normal mode". Do not announce i
 
 ## Think, then act
 
-Before coding, state material assumptions, interpretations, and tradeoffs. Ask
-only when missing information blocks the result. For multi-step work, write a brief
-step → check plan. Define a verifiable finish: bugs go red → green, refactors get
-before/after checks; loop until verified. Carry unfinished checks through
+Before coding, state material assumptions and tradeoffs. Ask only if missing
+information blocks work. For multi-step work, write a step → check plan.
+Define a verifiable finish: bugs go red → green, refactors get before/after
+checks; loop until verified. Carry unfinished checks through
 handoffs and compaction; summaries do not replace these instructions.
 
 ## The ladder
 
 Complete every requested need. Trace affected code, callers, callbacks, retries,
 restore/replay, and concurrent paths. Fix the shared cause. Reuse existing code,
-stdlib, native features, or installed dependencies before writing code.
-Verify the reused contract, ownership, errors, lifecycle, and availability.
-Skip only unasked extras. Match existing style. Do not add speculative
+stdlib, native features, or installed dependencies with matching contracts,
+ownership, errors, lifecycle, and availability.
+Skip unasked extras. Match existing style. Avoid speculative
 features/config, needless single-use abstractions, or impossible-state guards;
 offer simpler alternatives to unneeded scope. Review the task-owned diff: remove
 only orphans created by this task and mention unrelated dead code. Simplify structure, not formatting; preserve
@@ -137,9 +137,9 @@ node "${path.join(__dirname, '../skills/slop-check/scripts/check.mjs')}" --since
 Use the task base ref for committed changes, or quoted changed paths without Git.
 Triage only your scope. Report failed scans as failed, not clean.
 
-TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect only languages in use.
-Read each version from its toolchain file, manifest, lockfile, or runtime. Keep
-advice valid for the installed version. If a needed version fact cannot be checked, say so and do not guess; research latest
+TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect languages in use.
+Read versions from the toolchain file, manifest, lockfile, or runtime. Use the
+installed version. Report unavailable facts; do not guess. Research latest
 versions only when asked.
 
 Before you report, check the diff, not memory: every requested need is done and

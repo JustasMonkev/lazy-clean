@@ -1,0 +1,2103 @@
+{
+  "retrieved": "2026-10-09",
+  "repository": "nodejs/node",
+  "sampling": "Purposeful; see node-research.md. Not representative.",
+  "originalSnapshotLimits": [
+    {
+      "original": "57144:f68fd2bd8f06df2b40ef0d9b011366b7c3af5909",
+      "availability": "404 on upstream and original fork contents API; original evidence is exact raw comment diff_hunk, not whole file"
+    },
+    {
+      "original": "61871:3a8546e517b8969cbb6353c6ba0c2acf7b97d083",
+      "availability": "404 on upstream and original fork contents API; original evidence is exact raw comment diff_hunk, not whole file"
+    },
+    {
+      "original": "12712:117aeb05b5406c3bd87fa4e985b2a2d2dd8e62cb",
+      "availability": "404 on upstream and original fork contents API; original evidence is exact raw comment diff_hunk, not whole file"
+    }
+  ],
+  "prs": {
+    "12712": {
+      "info": {
+        "url": "https://github.com/nodejs/node/pull/12712",
+        "number": 12712,
+        "state": "closed",
+        "merged": true,
+        "mergeable": false,
+        "draft": false,
+        "title": "util: add util.callbackify()",
+        "base": "master",
+        "base_sha": "780acc2208a3cdd3b01ae93aeaa478771fd3fd56",
+        "head": "callbackify",
+        "head_sha": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+        "head_repo_id": 81225016,
+        "head_repo_full_name": "refack/node",
+        "merge_commit_sha": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+        "user": {
+          "login": "refack",
+          "name": "refack",
+          "email": null,
+          "avatar_url": "https://avatars.githubusercontent.com/u/96947?v=4",
+          "id": 96947
+        },
+        "requested_reviewers": null,
+        "requested_team_reviewers": null,
+        "created_at": "2017-04-28T02:22:53Z",
+        "updated_at": "2018-01-11T18:10:42Z",
+        "closed_at": "2017-06-11T02:50:51Z",
+        "merged_at": "2017-06-11T02:50:51Z",
+        "commits": 1,
+        "changed_files": 6,
+        "additions": 374,
+        "deletions": 0,
+        "display_url": "https://github.com/nodejs/node/pull/12712",
+        "display_title": "util: add util.callbackify()"
+      },
+      "selectedTimeline": [
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#issuecomment-297895360",
+          "body": "> For how to treat the returned value I choose to:\r\n> 1. By default pass on as-is\r\n> 2. Allow the user to ask us to splat the value\r\n> 3. Allow the user to specify a list of keys that we will project out of the value\r\n> 4. [Just thought of] allow the user to provide a projection lambda\r\n\r\nI think option 1 is definitely best. The other options can easily be simulated in userland by using destructuring in the callback, so I don't think it's necessary to have special behavior to for spreading arrays/objects in core.",
+          "user": {
+            "login": "not-an-aardvark",
+            "name": "not-an-aardvark",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/11638619?v=4",
+            "id": 11638619
+          },
+          "id": 297895360,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2017-04-28T03:06:50Z",
+          "updated_at": "2017-04-28T03:06:50Z",
+          "review": null,
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113844782",
+          "body": "This could cause confusing behavior if the original Promise rejects with a non-error:\r\n\r\n```js\r\nfunction promiseFunction() {\r\n  return Promise.reject(null);\r\n}\r\n\r\nutil.callbackify(promiseFunction)((err, result) => {\r\n  // err will be null, which could be confusing because the promise actually rejected.\r\n});\r\n```\r\n\r\nBluebird seems to handle this by [wrapping the rejection reason in an `Error` if it's falsy](https://github.com/petkaantonov/bluebird/blob/2207fae3572f03b089bc92d3a6cefdd278cff7ab/src/nodeify.js#L30-L43).",
+          "user": {
+            "login": "not-an-aardvark",
+            "name": "not-an-aardvark",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/11638619?v=4",
+            "id": 11638619
+          },
+          "id": 113844782,
+          "pull_request_review_id": 35267659,
+          "in_reply_to_id": null,
+          "created_at": "2017-04-28T03:15:35Z",
+          "updated_at": "2017-06-11T02:49:54Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/util.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113932742",
+          "body": "I don't think we need these properties - they complicate the PR and with destructuring syntax and a uniform convention none of the benefits it would bring to `util.promisify` apply here IMO.\r\n\r\nFor example, it is required for `fs.exists` to work in `promisify` but there is no equivalent here.",
+          "user": {
+            "login": "benjamingr",
+            "name": "benjamingr",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1315533?v=4",
+            "id": 1315533
+          },
+          "id": 113932742,
+          "pull_request_review_id": 35363161,
+          "in_reply_to_id": null,
+          "created_at": "2017-04-28T13:42:33Z",
+          "updated_at": "2017-06-11T02:49:54Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/util.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113933560",
+          "body": "You _have_ to call `cb` inside a `process.nextTick` in case it throws - you can't just abort the process or emit an event since it has to work with domains.\r\n\r\nThis is what bluebird and other libraries do with their implementations and it's the most reasonable thing to do.\r\n\r\nI would also avoid all the `if/else` here and the projection - which users can just do in a second `then`.",
+          "user": {
+            "login": "benjamingr",
+            "name": "benjamingr",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1315533?v=4",
+            "id": 1315533
+          },
+          "id": 113933560,
+          "pull_request_review_id": 35363161,
+          "in_reply_to_id": null,
+          "created_at": "2017-04-28T13:46:20Z",
+          "updated_at": "2017-06-11T02:49:54Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/util.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113934904",
+          "body": "Came to same conclusion. Gone in last commit.",
+          "user": {
+            "login": "refack",
+            "name": "refack",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/96947?v=4",
+            "id": 96947
+          },
+          "id": 113934904,
+          "pull_request_review_id": 35365592,
+          "in_reply_to_id": 113932742,
+          "created_at": "2017-04-28T13:52:21Z",
+          "updated_at": "2017-06-11T02:49:54Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/util.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113942370",
+          "body": "I saw that, but we can't assume that if someone threw a falsey value it should be converted to an error. Bluebird does this to overcome the lack of stack trace but node should not make that decision for users. As a platform we should provide a more careful API.",
+          "user": {
+            "login": "benjamingr",
+            "name": "benjamingr",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1315533?v=4",
+            "id": 1315533
+          },
+          "id": 113942370,
+          "pull_request_review_id": 35373930,
+          "in_reply_to_id": 113933789,
+          "created_at": "2017-04-28T14:26:28Z",
+          "updated_at": "2017-06-11T02:49:54Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/util.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113944695",
+          "body": "To clarify, I didn't suggest doing this so that errors would have a stack trace -- I suggested it because `null` is a special error value in callbacks which means \"no error occurred\". If we don't error-wrap, there is no way for a callback consumer to distinguish between \"the promise rejected with `null`\" and \"the promise fulfilled with `undefined`\".",
+          "user": {
+            "login": "not-an-aardvark",
+            "name": "not-an-aardvark",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/11638619?v=4",
+            "id": 11638619
+          },
+          "id": 113944695,
+          "pull_request_review_id": 35376647,
+          "in_reply_to_id": 113933789,
+          "created_at": "2017-04-28T14:36:06Z",
+          "updated_at": "2017-06-11T02:49:54Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/util.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r120000142",
+          "body": "It would be good to have tests asserting that:\r\n\r\n* A rejection reason of `null` is wrapped in an `Error` when passed to the callback\r\n* If the callbackified function is called with any arguments, they get passed through to the promise-returning function\r\n* The promise-returning function is called with the same `this` value as the callbackified version\r\n* Nothing crashes when the Promise rejection reason is a `Symbol`\r\n* The `err` argument has a `cause` property when the rejection reason is falsy (do we actually want to do this? I'm not convinced it's necessary to have a property that only sometimes exists and is always falsy, but if we're setting the property we should have a test for it.)",
+          "user": {
+            "login": "not-an-aardvark",
+            "name": "not-an-aardvark",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/11638619?v=4",
+            "id": 11638619
+          },
+          "id": 120000142,
+          "pull_request_review_id": 41932542,
+          "in_reply_to_id": null,
+          "created_at": "2017-06-04T04:08:00Z",
+          "updated_at": "2017-06-11T02:49:54Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "test/parallel/test-util-callbackify.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#issuecomment-306041880",
+          "body": "Tracking new test cases\r\n- [X] A rejection reason of null is wrapped in an Error when passed to the callback\r\n- [x] If the callbackified function is called with any arguments, they get passed through to the promise-returning function\r\n- [x] The promise-returning function is called with the same this value as the callbackified version (uncovered a bug e9791273ee)\r\n- [x] Nothing crashes when the Promise rejection reason is a Symbol\r\n- [x] The err argument has a cause property when the rejection reason is falsy (do we actually want to do this? I'm not convinced it's necessary to have a property that only sometimes exists and is always falsy, but if we're setting the property we should have a test for it.)\r\n",
+          "user": {
+            "login": "refack",
+            "name": "refack",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/96947?v=4",
+            "id": 96947
+          },
+          "id": 306041880,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2017-06-04T14:02:22Z",
+          "updated_at": "2017-06-05T14:08:41Z",
+          "review": null,
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#pullrequestreview-42051884",
+          "body": "Good work addressing all the feedback. Left some nits but LGTM.\r\n\r\nIf people are interested in more tests - you can look at https://github.com/benjamingr/bluebird-api/blob/master/tests/asCallback.js or the bluebird tests at https://github.com/petkaantonov/bluebird/blob/master/test/mocha/nodeify.js \r\n\r\n",
+          "user": {
+            "login": "benjamingr",
+            "name": "benjamingr",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1315533?v=4",
+            "id": 1315533
+          },
+          "id": 42051884,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2017-06-05T14:11:57Z",
+          "updated_at": null,
+          "review": "APPROVED",
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#pullrequestreview-43295077",
+          "body": ":+1: on the very comprehensive test suite. LGTM!",
+          "user": {
+            "login": "TimothyGu",
+            "name": "TimothyGu",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1538624?v=4",
+            "id": 1538624
+          },
+          "id": 43295077,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2017-06-10T10:32:49Z",
+          "updated_at": null,
+          "review": "APPROVED",
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#issuecomment-307602634",
+          "body": "Landed in af3aa682ac",
+          "user": {
+            "login": "refack",
+            "name": "refack",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/96947?v=4",
+            "id": 96947
+          },
+          "id": 307602634,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2017-06-11T02:51:19Z",
+          "updated_at": "2017-06-11T02:51:19Z",
+          "review": null,
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113844519",
+          "body": "We should not make `toSplat` or `project` public for now, just like for `promisify`.",
+          "user": {
+            "login": "TimothyGu",
+            "name": "TimothyGu",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1538624?v=4",
+            "id": 1538624
+          },
+          "id": 113844519,
+          "pull_request_review_id": 35267481,
+          "in_reply_to_id": null,
+          "created_at": "2017-04-28T03:11:01Z",
+          "updated_at": "2017-06-11T02:49:54Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/util.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#issuecomment-299257606",
+          "body": "@benjamingr @not-an-aardvark removed all frills... PTAL",
+          "user": {
+            "login": "refack",
+            "name": "refack",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/96947?v=4",
+            "id": 96947
+          },
+          "id": 299257606,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2017-05-04T17:40:59Z",
+          "updated_at": "2017-05-04T17:40:59Z",
+          "review": null,
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r120115661",
+          "body": "It's worth mentioning that `process.nextTick` is here so the `then` does not handle the errors - but I'm fine with it",
+          "user": {
+            "login": "benjamingr",
+            "name": "benjamingr",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1315533?v=4",
+            "id": 1315533
+          },
+          "id": 120115661,
+          "pull_request_review_id": 42051884,
+          "in_reply_to_id": null,
+          "created_at": "2017-06-05T14:08:42Z",
+          "updated_at": "2017-06-11T02:49:54Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/util.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r120117786",
+          "body": "Adding a comment (as you saw there is a *Note*: in the docs)",
+          "user": {
+            "login": "refack",
+            "name": "refack",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/96947?v=4",
+            "id": 96947
+          },
+          "id": 120117786,
+          "pull_request_review_id": 42053848,
+          "in_reply_to_id": 120115661,
+          "created_at": "2017-06-05T14:18:47Z",
+          "updated_at": "2017-06-11T02:49:54Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/util.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r120861446",
+          "body": "@BridgeAR Re: https://github.com/nodejs/node/issues/12956\r\n```\r\n> function cb(arg) {console.log(this); console.log(arg);}\r\nundefined\r\n> cb.apply = 5\r\n5\r\n> cb.apply({}, 1)\r\nTypeError: cb.apply is not a function\r\n    at repl:1:4\r\n    at ContextifyScript.Script.runInThisContext (vm.js:44:33)\r\n    at REPLServer.defaultEval (repl.js:239:29)\r\n    at bound (domain.js:301:14)\r\n    at REPLServer.runBound [as eval] (domain.js:314:12)\r\n    at REPLServer.onLine (repl.js:433:10)\r\n    at emitOne (events.js:120:20)\r\n    at REPLServer.emit (events.js:210:7)\r\n    at REPLServer.Interface._onLine (readline.js:278:10)\r\n    at REPLServer.Interface._line (readline.js:625:8)\r\n>\r\n```\r\nAFAIK there is no penalty.",
+          "user": {
+            "login": "refack",
+            "name": "refack",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/96947?v=4",
+            "id": 96947
+          },
+          "id": 120861446,
+          "pull_request_review_id": 42859939,
+          "in_reply_to_id": 120844587,
+          "created_at": "2017-06-08T11:16:15Z",
+          "updated_at": "2017-06-11T02:49:54Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/util.js"
+        }
+      ],
+      "originalReviewHunks": [
+        {
+          "id": 113844782,
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113844782",
+          "author": "not-an-aardvark",
+          "body": "This could cause confusing behavior if the original Promise rejects with a non-error:\r\n\r\n```js\r\nfunction promiseFunction() {\r\n  return Promise.reject(null);\r\n}\r\n\r\nutil.callbackify(promiseFunction)((err, result) => {\r\n  // err will be null, which could be confusing because the promise actually rejected.\r\n});\r\n```\r\n\r\nBluebird seems to handle this by [wrapping the rejection reason in an `Error` if it's falsy](https://github.com/petkaantonov/bluebird/blob/2207fae3572f03b089bc92d3a6cefdd278cff7ab/src/nodeify.js#L30-L43).",
+          "path": "lib/util.js",
+          "diff_hunk": "@@ -1057,3 +1057,68 @@ exports._exceptionWithHostPort = function(err,\n // process.versions needs a custom function as some values are lazy-evaluated.\n process.versions[exports.inspect.custom] =\n   (depth) => exports.format(JSON.parse(JSON.stringify(process.versions)));\n+\n+const kCustomCallbackifyiedSymbol = Symbol('util.callbackify.custom');\n+const kCustomCallbackifyiedToSplat = Symbol('util.callbackify.toSplat');\n+const kCustomCallbackifyiedProject = Symbol('util.callbackify.project');\n+\n+function callbackify(orig) {\n+  if (typeof orig !== 'function') {\n+    throw new TypeError('The first argument to callbackify() ' +\n+      'must be a function');\n+  }\n+\n+  if (orig[kCustomCallbackifyiedSymbol]) {\n+    const fn = orig[kCustomCallbackifyiedSymbol];\n+    if (typeof fn !== 'function') {\n+      throw new TypeError('The [util.callbackify.custom] property must be ' +\n+        'a function');\n+    }\n+    Object.defineProperty(fn, kCustomCallbackifyiedSymbol, {\n+      value: fn, enumerable: false, writable: false, configurable: true\n+    });\n+    return fn;\n+  }\n+\n+  // we have two way to convert the returned value into multiple arguments\n+  // either splat it or project some of it's keys\n+  const toSplat = orig[kCustomCallbackifyiedToSplat];\n+  const project = orig[kCustomCallbackifyiedProject];\n+\n+  const fn = function(...args) {\n+    const cb = args.pop();\n+    if (typeof cb !== 'function') {\n+      throw new TypeError('The first argument to the callbackified function ' +\n+        'must be a callback style function');\n+    }\n+    orig.call(this, ...args).then((ret) => {\n+      if (toSplat) {\n+        cb(null, ...ret);\n+      } else if (project) {\n+        const allThere = project.all((k) => k in ret);\n+        if (!allThere) {\n+          throw new TypeError('Not all of the projected properties' +\n+            'are present in the returned value: ' +\n+            inspect(ret));\n+        }\n+        const args = project.reduce((s, k) => s.concat(ret[k]), []);\n+        cb(null, ...args);\n+      } else {\n+        cb(null, ret);\n+      }\n+    }, cb);",
+          "commit_id": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "original_commit_id": "117aeb05b5406c3bd87fa4e985b2a2d2dd8e62cb"
+        },
+        {
+          "id": 113932742,
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113932742",
+          "author": "benjamingr",
+          "body": "I don't think we need these properties - they complicate the PR and with destructuring syntax and a uniform convention none of the benefits it would bring to `util.promisify` apply here IMO.\r\n\r\nFor example, it is required for `fs.exists` to work in `promisify` but there is no equivalent here.",
+          "path": "lib/util.js",
+          "diff_hunk": "@@ -1057,3 +1057,81 @@ exports._exceptionWithHostPort = function(err,\n // process.versions needs a custom function as some values are lazy-evaluated.\n process.versions[exports.inspect.custom] =\n   (depth) => exports.format(JSON.parse(JSON.stringify(process.versions)));\n+\n+const kCustomCallbackifiedSymbol = Symbol('util.callbackify.custom');\n+const kCustomCallbackifiedToSplat = Symbol('util.callbackify.toSplat');\n+const kCustomCallbackifiedProject = Symbol('util.callbackify.project');",
+          "commit_id": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "original_commit_id": "cdd0463dee80fe584cee49ec4ed79e3bd5aba0b2"
+        },
+        {
+          "id": 113933560,
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113933560",
+          "author": "benjamingr",
+          "body": "You _have_ to call `cb` inside a `process.nextTick` in case it throws - you can't just abort the process or emit an event since it has to work with domains.\r\n\r\nThis is what bluebird and other libraries do with their implementations and it's the most reasonable thing to do.\r\n\r\nI would also avoid all the `if/else` here and the projection - which users can just do in a second `then`.",
+          "path": "lib/util.js",
+          "diff_hunk": "@@ -1057,3 +1057,72 @@ exports._exceptionWithHostPort = function(err,\n // process.versions needs a custom function as some values are lazy-evaluated.\n process.versions[exports.inspect.custom] =\n   (depth) => exports.format(JSON.parse(JSON.stringify(process.versions)));\n+\n+\n+/**\n+ * @typedef {Object} callbackifyOptions\n+ * @property {function} transformer\n+ * @property {boolean} toSplat\n+ * @property {Array.<String>} project\n+ */\n+\n+/**\n+ * @param {function(): Promise} orig\n+ * @param {callbackifyOptions} options\n+ */\n+function callbackify(orig, options) {\n+  if (typeof orig !== 'function') {\n+    throw new TypeError('The first argument to callbackify() ' +\n+                        'must be a function');\n+  }\n+\n+  // we have two way to convert the returned value into multiple arguments\n+  // either splat it or project some of it's keys\n+  const toSplat = options.toSplat;\n+  const project = options.project;\n+\n+  const fn = function(...args) {\n+    const cb = args.pop();\n+    if (typeof cb !== 'function') {\n+      throw new TypeError('The first argument to the callbackified function ' +\n+        'must be a callback style function');\n+    }\n+    var p = orig.call(this, ...args);\n+    if (typeof options.transformer === 'function') {\n+      p = options.transformer(p);\n+    }\n+    p = p.then((ret) => {\n+      if (toSplat) {",
+          "commit_id": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "original_commit_id": "d777c0e80a02e132ea52109031c8dd6198934574"
+        },
+        {
+          "id": 113934904,
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113934904",
+          "author": "refack",
+          "body": "Came to same conclusion. Gone in last commit.",
+          "path": "lib/util.js",
+          "diff_hunk": "@@ -1057,3 +1057,81 @@ exports._exceptionWithHostPort = function(err,\n // process.versions needs a custom function as some values are lazy-evaluated.\n process.versions[exports.inspect.custom] =\n   (depth) => exports.format(JSON.parse(JSON.stringify(process.versions)));\n+\n+const kCustomCallbackifiedSymbol = Symbol('util.callbackify.custom');\n+const kCustomCallbackifiedToSplat = Symbol('util.callbackify.toSplat');\n+const kCustomCallbackifiedProject = Symbol('util.callbackify.project');",
+          "commit_id": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "original_commit_id": "cdd0463dee80fe584cee49ec4ed79e3bd5aba0b2",
+          "in_reply_to_id": 113932742
+        },
+        {
+          "id": 113942370,
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113942370",
+          "author": "benjamingr",
+          "body": "I saw that, but we can't assume that if someone threw a falsey value it should be converted to an error. Bluebird does this to overcome the lack of stack trace but node should not make that decision for users. As a platform we should provide a more careful API.",
+          "path": "lib/util.js",
+          "diff_hunk": "@@ -1057,3 +1057,72 @@ exports._exceptionWithHostPort = function(err,\n // process.versions needs a custom function as some values are lazy-evaluated.\n process.versions[exports.inspect.custom] =\n   (depth) => exports.format(JSON.parse(JSON.stringify(process.versions)));\n+\n+\n+/**\n+ * @typedef {Object} callbackifyOptions\n+ * @property {function} transformer\n+ * @property {boolean} toSplat\n+ * @property {Array.<String>} project\n+ */\n+\n+/**\n+ * @param {function(): Promise} orig\n+ * @param {callbackifyOptions} options\n+ */\n+function callbackify(orig, options) {\n+  if (typeof orig !== 'function') {\n+    throw new TypeError('The first argument to callbackify() ' +\n+                        'must be a function');\n+  }\n+\n+  // we have two way to convert the returned value into multiple arguments\n+  // either splat it or project some of it's keys\n+  const toSplat = options.toSplat;\n+  const project = options.project;\n+\n+  const fn = function(...args) {\n+    const cb = args.pop();\n+    if (typeof cb !== 'function') {\n+      throw new TypeError('The first argument to the callbackified function ' +\n+        'must be a callback style function');\n+    }\n+    var p = orig.call(this, ...args);\n+    if (typeof options.transformer === 'function') {\n+      p = options.transformer(p);\n+    }\n+    p = p.then((ret) => {\n+      if (toSplat) {\n+        cb(null, ...ret);\n+      } else if (project) {\n+        const allThere = project.all((k) => k in ret);\n+        if (!allThere) {\n+          const notAll = new TypeError('Not all of the projected properties' +\n+                                       ' are present in the returned value:' +\n+                                       inspect(ret));\n+          return cb(notAll);\n+        } else {\n+          const args = project.reduce((s, k) => s.concat(ret[k]), []);\n+          cb(null, ...args);\n+        }\n+      } else {\n+        cb(null, ret);\n+      }\n+    }, (rej) => {\n+      // !rej guard inspired by BlueBird https://goo.gl/t5IS6M",
+          "commit_id": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "original_commit_id": "d777c0e80a02e132ea52109031c8dd6198934574",
+          "in_reply_to_id": 113933789
+        },
+        {
+          "id": 113944695,
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113944695",
+          "author": "not-an-aardvark",
+          "body": "To clarify, I didn't suggest doing this so that errors would have a stack trace -- I suggested it because `null` is a special error value in callbacks which means \"no error occurred\". If we don't error-wrap, there is no way for a callback consumer to distinguish between \"the promise rejected with `null`\" and \"the promise fulfilled with `undefined`\".",
+          "path": "lib/util.js",
+          "diff_hunk": "@@ -1057,3 +1057,72 @@ exports._exceptionWithHostPort = function(err,\n // process.versions needs a custom function as some values are lazy-evaluated.\n process.versions[exports.inspect.custom] =\n   (depth) => exports.format(JSON.parse(JSON.stringify(process.versions)));\n+\n+\n+/**\n+ * @typedef {Object} callbackifyOptions\n+ * @property {function} transformer\n+ * @property {boolean} toSplat\n+ * @property {Array.<String>} project\n+ */\n+\n+/**\n+ * @param {function(): Promise} orig\n+ * @param {callbackifyOptions} options\n+ */\n+function callbackify(orig, options) {\n+  if (typeof orig !== 'function') {\n+    throw new TypeError('The first argument to callbackify() ' +\n+                        'must be a function');\n+  }\n+\n+  // we have two way to convert the returned value into multiple arguments\n+  // either splat it or project some of it's keys\n+  const toSplat = options.toSplat;\n+  const project = options.project;\n+\n+  const fn = function(...args) {\n+    const cb = args.pop();\n+    if (typeof cb !== 'function') {\n+      throw new TypeError('The first argument to the callbackified function ' +\n+        'must be a callback style function');\n+    }\n+    var p = orig.call(this, ...args);\n+    if (typeof options.transformer === 'function') {\n+      p = options.transformer(p);\n+    }\n+    p = p.then((ret) => {\n+      if (toSplat) {\n+        cb(null, ...ret);\n+      } else if (project) {\n+        const allThere = project.all((k) => k in ret);\n+        if (!allThere) {\n+          const notAll = new TypeError('Not all of the projected properties' +\n+                                       ' are present in the returned value:' +\n+                                       inspect(ret));\n+          return cb(notAll);\n+        } else {\n+          const args = project.reduce((s, k) => s.concat(ret[k]), []);\n+          cb(null, ...args);\n+        }\n+      } else {\n+        cb(null, ret);\n+      }\n+    }, (rej) => {\n+      // !rej guard inspired by BlueBird https://goo.gl/t5IS6M",
+          "commit_id": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "original_commit_id": "d777c0e80a02e132ea52109031c8dd6198934574",
+          "in_reply_to_id": 113933789
+        },
+        {
+          "id": 120000142,
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r120000142",
+          "author": "not-an-aardvark",
+          "body": "It would be good to have tests asserting that:\r\n\r\n* A rejection reason of `null` is wrapped in an `Error` when passed to the callback\r\n* If the callbackified function is called with any arguments, they get passed through to the promise-returning function\r\n* The promise-returning function is called with the same `this` value as the callbackified version\r\n* Nothing crashes when the Promise rejection reason is a `Symbol`\r\n* The `err` argument has a `cause` property when the rejection reason is falsy (do we actually want to do this? I'm not convinced it's necessary to have a property that only sometimes exists and is always falsy, but if we're setting the property we should have a test for it.)",
+          "path": "test/parallel/test-util-callbackify.js",
+          "diff_hunk": "@@ -0,0 +1,49 @@\n+'use strict';\n+const common = require('../common');\n+\n+\n+const assert = require('assert');\n+const { callbackify } = require('util');\n+\n+\n+{\n+  const sentinel = 'hello world';\n+  async function fn() {\n+    return await Promise.resolve(sentinel);\n+  }\n+  const cbFn = callbackify(fn);\n+\n+  cbFn(common.mustCall((err, ret) => {\n+    if (err) assert.ifError(err);\n+    assert.strictEqual(ret, sentinel);\n+  }));\n+}\n+\n+{\n+  const sentinel = 'hello world 2';\n+  function fn2() {\n+    return Promise.resolve(sentinel);\n+  }\n+  const cbFn = callbackify(fn2);\n+\n+  cbFn(common.mustCall((err, ret) => {\n+    if (err) assert.ifError(err);\n+    assert.strictEqual(ret, sentinel);\n+  }));\n+}\n+\n+{\n+  const sentinel = new Error('hello world 3');\n+  process.once('uncaughtException', common.mustCall((err) => {\n+    assert.strictEqual(err, sentinel);\n+  }));\n+  async function fn3() {\n+    return await Promise.reject(sentinel);\n+  }\n+  const cbFn = callbackify(fn3);\n+\n+  cbFn(common.mustCall((err, ret) => {\n+    if (err) assert.ifError(err);\n+    common.mustNotCall('should not reach here')();\n+  }));",
+          "commit_id": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "original_commit_id": "633b812250d4938341fc4baa53aa1380c7167e51"
+        },
+        {
+          "id": 113844519,
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r113844519",
+          "author": "TimothyGu",
+          "body": "We should not make `toSplat` or `project` public for now, just like for `promisify`.",
+          "path": "lib/util.js",
+          "diff_hunk": "@@ -1057,3 +1057,68 @@ exports._exceptionWithHostPort = function(err,\n // process.versions needs a custom function as some values are lazy-evaluated.\n process.versions[exports.inspect.custom] =\n   (depth) => exports.format(JSON.parse(JSON.stringify(process.versions)));\n+\n+const kCustomCallbackifyiedSymbol = Symbol('util.callbackify.custom');\n+const kCustomCallbackifyiedToSplat = Symbol('util.callbackify.toSplat');\n+const kCustomCallbackifyiedProject = Symbol('util.callbackify.project');\n+\n+function callbackify(orig) {\n+  if (typeof orig !== 'function') {\n+    throw new TypeError('The first argument to callbackify() ' +\n+      'must be a function');\n+  }\n+\n+  if (orig[kCustomCallbackifyiedSymbol]) {\n+    const fn = orig[kCustomCallbackifyiedSymbol];\n+    if (typeof fn !== 'function') {\n+      throw new TypeError('The [util.callbackify.custom] property must be ' +\n+        'a function');\n+    }\n+    Object.defineProperty(fn, kCustomCallbackifyiedSymbol, {\n+      value: fn, enumerable: false, writable: false, configurable: true\n+    });\n+    return fn;\n+  }\n+\n+  // we have two way to convert the returned value into multiple arguments\n+  // either splat it or project some of it's keys\n+  const toSplat = orig[kCustomCallbackifyiedToSplat];\n+  const project = orig[kCustomCallbackifyiedProject];\n+\n+  const fn = function(...args) {\n+    const cb = args.pop();\n+    if (typeof cb !== 'function') {\n+      throw new TypeError('The first argument to the callbackified function ' +\n+        'must be a callback style function');\n+    }\n+    orig.call(this, ...args).then((ret) => {\n+      if (toSplat) {\n+        cb(null, ...ret);\n+      } else if (project) {\n+        const allThere = project.all((k) => k in ret);\n+        if (!allThere) {\n+          throw new TypeError('Not all of the projected properties' +\n+            'are present in the returned value: ' +\n+            inspect(ret));\n+        }\n+        const args = project.reduce((s, k) => s.concat(ret[k]), []);\n+        cb(null, ...args);\n+      } else {\n+        cb(null, ret);\n+      }\n+    }, cb);\n+  };\n+\n+  Object.setPrototypeOf(fn, Object.getPrototypeOf(orig));\n+\n+  Object.defineProperty(fn, kCustomCallbackifyiedSymbol, {\n+    value: fn, enumerable: false, writable: false, configurable: true\n+  });\n+  return Object.defineProperties(fn, Object.getOwnPropertyDescriptors(orig));\n+}\n+\n+callbackify.custom = kCustomCallbackifyiedSymbol;\n+callbackify.toSplat = kCustomCallbackifyiedToSplat;\n+callbackify.project = kCustomCallbackifyiedProject;",
+          "commit_id": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "original_commit_id": "117aeb05b5406c3bd87fa4e985b2a2d2dd8e62cb"
+        },
+        {
+          "id": 120115661,
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r120115661",
+          "author": "benjamingr",
+          "body": "It's worth mentioning that `process.nextTick` is here so the `then` does not handle the errors - but I'm fine with it",
+          "path": "lib/util.js",
+          "diff_hunk": "@@ -1045,3 +1045,51 @@ process.versions[exports.inspect.custom] =\n   (depth) => exports.format(JSON.parse(JSON.stringify(process.versions)));\n \n exports.promisify = internalUtil.promisify;\n+\n+function callbackifyOnRejected(reason, cb) {\n+  // `!reason` guard inspired by bluebird (Ref: https://goo.gl/t5IS6M).\n+  // Because `null` is a special error value in callbacks which means \"no error\n+  // occurred\", we error-wrap so the callback consumer can distinguish between\n+  // \"the promise rejected with null\" or \"the promise fulfilled with undefined\".\n+  if (!reason) {\n+    const newRej = new Error(String(reason));\n+    newRej.cause = reason;\n+    reason = newRej;\n+  }\n+  return cb(reason);\n+}\n+\n+\n+function callbackify(original) {\n+  if (typeof original !== 'function') {\n+    throw new errors.TypeError(\n+      'ERR_INVALID_ARG_TYPE',\n+      'original',\n+      'function');\n+  }\n+\n+  // We DO NOT return the promise as it gives the user a false sense that\n+  // the promise is actually somehow related to the callback's execution\n+  // and that the callback throwing will reject the promise.\n+  function callbackified(...args) {\n+    const maybeCb = args.pop();\n+    if (typeof maybeCb !== 'function') {\n+      throw new errors.TypeError(\n+        'ERR_INVALID_ARG_TYPE',\n+        'last argument',\n+        'function');\n+    }\n+    const cb = maybeCb.bind(this);\n+    original.call(this, ...args)\n+      .then((ret) => process.nextTick(cb, null, ret),",
+          "commit_id": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "original_commit_id": "e9791273eec36a3096a18bac38e1ebc736b4ccf1"
+        },
+        {
+          "id": 120117786,
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r120117786",
+          "author": "refack",
+          "body": "Adding a comment (as you saw there is a *Note*: in the docs)",
+          "path": "lib/util.js",
+          "diff_hunk": "@@ -1045,3 +1045,51 @@ process.versions[exports.inspect.custom] =\n   (depth) => exports.format(JSON.parse(JSON.stringify(process.versions)));\n \n exports.promisify = internalUtil.promisify;\n+\n+function callbackifyOnRejected(reason, cb) {\n+  // `!reason` guard inspired by bluebird (Ref: https://goo.gl/t5IS6M).\n+  // Because `null` is a special error value in callbacks which means \"no error\n+  // occurred\", we error-wrap so the callback consumer can distinguish between\n+  // \"the promise rejected with null\" or \"the promise fulfilled with undefined\".\n+  if (!reason) {\n+    const newRej = new Error(String(reason));\n+    newRej.cause = reason;\n+    reason = newRej;\n+  }\n+  return cb(reason);\n+}\n+\n+\n+function callbackify(original) {\n+  if (typeof original !== 'function') {\n+    throw new errors.TypeError(\n+      'ERR_INVALID_ARG_TYPE',\n+      'original',\n+      'function');\n+  }\n+\n+  // We DO NOT return the promise as it gives the user a false sense that\n+  // the promise is actually somehow related to the callback's execution\n+  // and that the callback throwing will reject the promise.\n+  function callbackified(...args) {\n+    const maybeCb = args.pop();\n+    if (typeof maybeCb !== 'function') {\n+      throw new errors.TypeError(\n+        'ERR_INVALID_ARG_TYPE',\n+        'last argument',\n+        'function');\n+    }\n+    const cb = maybeCb.bind(this);\n+    original.call(this, ...args)\n+      .then((ret) => process.nextTick(cb, null, ret),",
+          "commit_id": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "original_commit_id": "e9791273eec36a3096a18bac38e1ebc736b4ccf1",
+          "in_reply_to_id": 120115661
+        },
+        {
+          "id": 120861446,
+          "url": "https://github.com/nodejs/node/pull/12712#discussion_r120861446",
+          "author": "refack",
+          "body": "@BridgeAR Re: https://github.com/nodejs/node/issues/12956\r\n```\r\n> function cb(arg) {console.log(this); console.log(arg);}\r\nundefined\r\n> cb.apply = 5\r\n5\r\n> cb.apply({}, 1)\r\nTypeError: cb.apply is not a function\r\n    at repl:1:4\r\n    at ContextifyScript.Script.runInThisContext (vm.js:44:33)\r\n    at REPLServer.defaultEval (repl.js:239:29)\r\n    at bound (domain.js:301:14)\r\n    at REPLServer.runBound [as eval] (domain.js:314:12)\r\n    at REPLServer.onLine (repl.js:433:10)\r\n    at emitOne (events.js:120:20)\r\n    at REPLServer.emit (events.js:210:7)\r\n    at REPLServer.Interface._onLine (readline.js:278:10)\r\n    at REPLServer.Interface._line (readline.js:625:8)\r\n>\r\n```\r\nAFAIK there is no penalty.",
+          "path": "lib/util.js",
+          "diff_hunk": "@@ -1045,3 +1045,54 @@ process.versions[exports.inspect.custom] =\n   (depth) => exports.format(JSON.parse(JSON.stringify(process.versions)));\n \n exports.promisify = internalUtil.promisify;\n+\n+function callbackifyOnRejected(reason, cb) {\n+  // `!reason` guard inspired by bluebird (Ref: https://goo.gl/t5IS6M).\n+  // Because `null` is a special error value in callbacks which means \"no error\n+  // occurred\", we error-wrap so the callback consumer can distinguish between\n+  // \"the promise rejected with null\" or \"the promise fulfilled with undefined\".\n+  if (!reason) {\n+    const newReason = new errors.Error('NULL_REJECTION');\n+    newReason.reason = reason;\n+    reason = newReason;\n+    Error.captureStackTrace(reason, callbackifyOnRejected);\n+  }\n+  return cb(reason);\n+}\n+\n+\n+function callbackify(original) {\n+  if (typeof original !== 'function') {\n+    throw new errors.TypeError(\n+      'ERR_INVALID_ARG_TYPE',\n+      'original',\n+      'function');\n+  }\n+\n+  // We DO NOT return the promise as it gives the user a false sense that\n+  // the promise is actually somehow related to the callback's execution\n+  // and that the callback throwing will reject the promise.\n+  function callbackified(...args) {\n+    const maybeCb = args.pop();\n+    if (typeof maybeCb !== 'function') {\n+      throw new errors.TypeError(\n+        'ERR_INVALID_ARG_TYPE',\n+        'last argument',\n+        'function');\n+    }\n+    const context = this;\n+    function cb() { Reflect.apply(maybeCb, context, arguments); }",
+          "commit_id": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "original_commit_id": "9db45138273ecb81c617ec8473443054801d427b",
+          "in_reply_to_id": 120844587
+        }
+      ],
+      "branchCommits": [
+        {
+          "sha": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "url": "https://github.com/nodejs/node/commit/af3aa682ac534bb55765f5fef2755a88e5ff2580",
+          "message": "util: add callbackify\n\nAdd `util.callbackify(function)` for creating callback style functions\nfrom functions returning a `Thenable`\n\nPR-URL: https://github.com/nodejs/node/pull/12712\nFixes: https://github.com/nodejs/CTC/issues/109\nReviewed-By: Benjamin Gruenbaum <benjamingr@gmail.com>\nReviewed-By: Teddy Katz <teddy.katz@gmail.com>\nReviewed-By: Matteo Collina <matteo.collina@gmail.com>\nReviewed-By: Colin Ihrig <cjihrig@gmail.com>\nReviewed-By: Timothy Gu <timothygu99@gmail.com>\nReviewed-By: Anna Henningsen <anna@addaleax.net>"
+        }
+      ],
+      "headVsMergeSameContent": true
+    },
+    "44943": {
+      "info": {
+        "url": "https://github.com/nodejs/node/pull/44943",
+        "number": 44943,
+        "state": "closed",
+        "merged": true,
+        "mergeable": false,
+        "draft": false,
+        "title": "diagnostics_channel: add tracing channel",
+        "base": "main",
+        "base_sha": "978b57d750511dc61a71673c7a0e777a733f4e7e",
+        "head": "diagnostics-channel-tracing-channel",
+        "head_sha": "c23e772ccc19618493937fd2a6a7addf83267ade",
+        "head_repo_id": 27193779,
+        "head_repo_full_name": "nodejs/node",
+        "merge_commit_sha": "fe751df537dc58eb1c14ef27192f935a89718007",
+        "user": {
+          "login": "Qard",
+          "name": "Qard",
+          "email": null,
+          "avatar_url": "https://avatars.githubusercontent.com/u/205482?v=4",
+          "id": 205482
+        },
+        "requested_reviewers": [
+          {
+            "login": "tlhunter",
+            "name": "tlhunter",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/551402?v=4",
+            "id": 551402
+          },
+          {
+            "login": "benjamingr",
+            "name": "benjamingr",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1315533?v=4",
+            "id": 1315533
+          }
+        ],
+        "requested_team_reviewers": null,
+        "created_at": "2022-10-10T01:20:27Z",
+        "updated_at": "2023-07-03T06:40:05Z",
+        "closed_at": "2023-03-31T17:40:31Z",
+        "merged_at": "2023-03-31T17:40:31Z",
+        "commits": 9,
+        "changed_files": 13,
+        "additions": 1309,
+        "deletions": 35,
+        "display_url": "https://github.com/nodejs/node/pull/44943",
+        "display_title": "diagnostics_channel: add tracing channel"
+      },
+      "selectedTimeline": [
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1052479777",
+          "body": "```suggestion\r\n    channels[channel.name] = undefined;\r\n```\r\n\r\nOtherwise, you will delete the shapes and the property access will be slower.",
+          "user": {
+            "login": "RafaelGSS",
+            "name": "RafaelGSS",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/26234614?v=4",
+            "id": 26234614
+          },
+          "id": 1052479777,
+          "pull_request_review_id": 1223287093,
+          "in_reply_to_id": null,
+          "created_at": "2022-12-19T17:53:03Z",
+          "updated_at": "2022-12-19T17:56:06Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/diagnostics_channel.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1053126325",
+          "body": "if this is considered as a hot function it would maybe make sense to avoid the `bind` in case `this._stores.size === 0`",
+          "user": {
+            "login": "Flarna",
+            "name": "Flarna",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/18708370?v=4",
+            "id": 18708370
+          },
+          "id": 1053126325,
+          "pull_request_review_id": 1224154747,
+          "in_reply_to_id": null,
+          "created_at": "2022-12-20T09:56:00Z",
+          "updated_at": "2022-12-20T10:16:28Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/diagnostics_channel.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1053785562",
+          "body": "The inactive channel prototype handles that for the most part. A bit of a weird case with subscribers and stores competing for active status. Ideally this should be a no-op when there's no stores. 🤔 ",
+          "user": {
+            "login": "Qard",
+            "name": "Qard",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/205482?v=4",
+            "id": 205482
+          },
+          "id": 1053785562,
+          "pull_request_review_id": 1225188794,
+          "in_reply_to_id": 1053126325,
+          "created_at": "2022-12-20T21:53:39Z",
+          "updated_at": "2022-12-20T21:53:40Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/diagnostics_channel.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1053821728",
+          "body": "Not a noop, the function needs to be called. But this can be a simple `Refect.apply` instead of creating a bound function and call it.",
+          "user": {
+            "login": "Flarna",
+            "name": "Flarna",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/18708370?v=4",
+            "id": 18708370
+          },
+          "id": 1053821728,
+          "pull_request_review_id": 1225240510,
+          "in_reply_to_id": 1053126325,
+          "created_at": "2022-12-20T22:49:10Z",
+          "updated_at": "2022-12-20T22:49:10Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/diagnostics_channel.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1053864093",
+          "body": "I mean no-op in the form of doesn't need to check anything. Basically it should do what `Channel.prototype.runStores` does even if there are subscribers but no stores.",
+          "user": {
+            "login": "Qard",
+            "name": "Qard",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/205482?v=4",
+            "id": 205482
+          },
+          "id": 1053864093,
+          "pull_request_review_id": 1225301189,
+          "in_reply_to_id": 1053126325,
+          "created_at": "2022-12-21T00:14:52Z",
+          "updated_at": "2022-12-21T00:14:52Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/diagnostics_channel.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1055997830",
+          "body": "We have a test around that at the moment. https://github.com/nodejs/node/blob/main/test/parallel/test-diagnostics-channel-memory-leak.js\r\n\r\nWithout the delete that test will fail because the shape of `channels` keeps expanding and will get filled out with a bunch of empty `WeakReference` instances that the referenced object can get cleaned up but the container itself will not and those containers can add up quickly if people are, for example, generating channels uniquely named to ids of things. In my opinion that's bad practice, but there's not really any reasonable way to _stop_ users from doing that so we opted for being the least damaging to the environment we can be if the API is used badly.",
+          "user": {
+            "login": "Qard",
+            "name": "Qard",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/205482?v=4",
+            "id": 205482
+          },
+          "id": 1055997830,
+          "pull_request_review_id": 1228474324,
+          "in_reply_to_id": 1052479777,
+          "created_at": "2022-12-23T02:45:07Z",
+          "updated_at": "2022-12-23T02:45:07Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/diagnostics_channel.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#pullrequestreview-1264428617",
+          "body": "",
+          "user": {
+            "login": "RafaelGSS",
+            "name": "RafaelGSS",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/26234614?u=5edcb211e86232b06e6d6133439f9490f9f5d689&v=4",
+            "id": 26234614
+          },
+          "id": 1264428617,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2023-01-20T22:33:34Z",
+          "updated_at": null,
+          "review": "APPROVED",
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1092363057",
+          "body": "`asyncStart` should also use `runStore` so that the parent context from when `bindStore` was called can be restored.",
+          "user": {
+            "login": "rochdev",
+            "name": "rochdev",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1596303?v=4",
+            "id": 1596303
+          },
+          "id": 1092363057,
+          "pull_request_review_id": 1277841412,
+          "in_reply_to_id": null,
+          "created_at": "2023-01-31T19:05:10Z",
+          "updated_at": "2023-01-31T19:29:33Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/diagnostics_channel.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1148873078",
+          "body": "I'm ok with using `runStores` for `asyncStart` in the `traceCallback` but I think we should clearly document this and also verify it in tests.\r\nI think it's quite special that  `asyncStart` uses `runStores` in `traceCallback` but not in `tracePromise`.\r\nAlso that `runStores` is not used for `error` channel in the callback nor the `asyncEnd` channel uses it (runs within `asyncStart` instead).",
+          "user": {
+            "login": "Flarna",
+            "name": "Flarna",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/18708370?v=4",
+            "id": 18708370
+          },
+          "id": 1148873078,
+          "pull_request_review_id": 1358462978,
+          "in_reply_to_id": 1092363057,
+          "created_at": "2023-03-27T07:09:16Z",
+          "updated_at": "2023-03-27T07:09:16Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/diagnostics_channel.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#issuecomment-1490972498",
+          "body": "@Flarna I've added tests for that and expanded the docs as you requested. I'd appreciate another review.\r\n\r\ncc @nodejs/diagnostics I'd really like to land this before the v20 cut-off, if possible. I'd appreciate if anyone can review this today/tomorrow.",
+          "user": {
+            "login": "Qard",
+            "name": "Qard",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/205482?v=4",
+            "id": 205482
+          },
+          "id": 1490972498,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2023-03-30T21:15:09Z",
+          "updated_at": "2023-03-30T21:15:09Z",
+          "review": null,
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1154159768",
+          "body": "Should we add something similar as in the callback case here:\r\n```\r\nchannel.asyncStart.bindStore(store, common.mustCall(() => {\r\n  return secondContext;\r\n}));\r\n```\r\nBut asserts stay as is to actually verify the runStores is not used in promise case?\r\n\r\nNot meant as blocking comment, perfectly fine to do this in a followup or skip at all.",
+          "user": {
+            "login": "Flarna",
+            "name": "Flarna",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/18708370?v=4",
+            "id": 18708370
+          },
+          "id": 1154159768,
+          "pull_request_review_id": 1366466491,
+          "in_reply_to_id": null,
+          "created_at": "2023-03-31T08:12:07Z",
+          "updated_at": "2023-03-31T08:12:08Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": 16,
+          "start_line": null,
+          "path": "test/parallel/test-diagnostics-channel-tracing-channel-promise-run-stores.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#pullrequestreview-1366466682",
+          "body": "",
+          "user": {
+            "login": "Flarna",
+            "name": "Flarna",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/18708370?v=4",
+            "id": 18708370
+          },
+          "id": 1366466682,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2023-03-31T08:12:12Z",
+          "updated_at": null,
+          "review": "APPROVED",
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1154577798",
+          "body": "I think I'll do that as a follow up. Don't want to tempt fate with CI the day before v20 cut-off. 😂",
+          "user": {
+            "login": "Qard",
+            "name": "Qard",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/205482?v=4",
+            "id": 205482
+          },
+          "id": 1154577798,
+          "pull_request_review_id": 1367099361,
+          "in_reply_to_id": 1154159768,
+          "created_at": "2023-03-31T14:52:57Z",
+          "updated_at": "2023-03-31T14:52:57Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": 16,
+          "start_line": null,
+          "path": "test/parallel/test-diagnostics-channel-tracing-channel-promise-run-stores.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#issuecomment-1492352800",
+          "body": "Landed in fe751df537dc58eb1c14ef27192f935a89718007",
+          "user": {
+            "login": "nodejs-github-bot",
+            "name": "nodejs-github-bot",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/18269663?v=4",
+            "id": 18269663
+          },
+          "id": 1492352800,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2023-03-31T17:40:34Z",
+          "updated_at": "2023-03-31T17:40:34Z",
+          "review": null,
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r993496790",
+          "body": "isn't this eating the rejection in case user is not installing a then nor a catch handler?",
+          "user": {
+            "login": "Flarna",
+            "name": "Flarna",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/18708370?v=4",
+            "id": 18708370
+          },
+          "id": 993496790,
+          "pull_request_review_id": 1139140308,
+          "in_reply_to_id": null,
+          "created_at": "2022-10-12T13:54:01Z",
+          "updated_at": "2022-10-12T14:12:25Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/diagnostics_channel.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r993937136",
+          "body": "Well, it doesn't return the _new_ promise, so they'll still receive the rejection from the level the user continues from. It _will_ result in the unhandled rejection warnings disappearing though.",
+          "user": {
+            "login": "Qard",
+            "name": "Qard",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/205482?v=4",
+            "id": 205482
+          },
+          "id": 993937136,
+          "pull_request_review_id": 1139775739,
+          "in_reply_to_id": 993496790,
+          "created_at": "2022-10-12T22:09:55Z",
+          "updated_at": "2022-10-12T22:09:55Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/diagnostics_channel.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r994226970",
+          "body": "recent node versions end the process in case of unhandled rejections. This will no longer happen here which is likely an unwanted side effect.",
+          "user": {
+            "login": "Flarna",
+            "name": "Flarna",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/18708370?v=4",
+            "id": 18708370
+          },
+          "id": 994226970,
+          "pull_request_review_id": 1140169914,
+          "in_reply_to_id": 993496790,
+          "created_at": "2022-10-13T06:52:39Z",
+          "updated_at": "2022-10-13T06:52:39Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/diagnostics_channel.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/44943#issuecomment-1281750830",
+          "body": "Made some changes to split up the logic for sync, callback, and promise functions. What do people think of this design? If this seems reasonable I can move forward with writing docs for it.",
+          "user": {
+            "login": "Qard",
+            "name": "Qard",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/205482?v=4",
+            "id": 205482
+          },
+          "id": 1281750830,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2022-10-18T03:02:02Z",
+          "updated_at": "2022-10-18T03:02:02Z",
+          "review": null,
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        }
+      ],
+      "originalReviewHunks": [
+        {
+          "id": 1052479777,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1052479777",
+          "author": "RafaelGSS",
+          "body": "```suggestion\r\n    channels[channel.name] = undefined;\r\n```\r\n\r\nOtherwise, you will delete the shapes and the property access will be slower.",
+          "path": "lib/diagnostics_channel.js",
+          "diff_hunk": "@@ -23,11 +29,44 @@ const { triggerUncaughtException } = internalBinding('errors');\n \n const { WeakReference } = internalBinding('util');\n \n+function decRef(channel) {\n+  channel._weak.decRef();\n+  if (channel._weak.getRef() === 0) {\n+    delete channels[channel.name];",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "6b38fcba5ab6c6fa9f42e63aaf388eab9c6111e4"
+        },
+        {
+          "id": 1053126325,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1053126325",
+          "author": "Flarna",
+          "body": "if this is considered as a hot function it would maybe make sense to avoid the `bind` in case `this._stores.size === 0`",
+          "path": "lib/diagnostics_channel.js",
+          "diff_hunk": "@@ -61,11 +115,28 @@ class ActiveChannel {\n       }\n     }\n   }\n+\n+  runStores(data, fn, thisArg, ...args) {\n+    this.publish(data);\n+\n+    // Bind base fn first due to AsyncLocalStorage.run not having thisArg\n+    fn = FunctionPrototypeBind(fn, thisArg, ...args);",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "bc67924de066f1d1762b9fafd224df066323b34a"
+        },
+        {
+          "id": 1053785562,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1053785562",
+          "author": "Qard",
+          "body": "The inactive channel prototype handles that for the most part. A bit of a weird case with subscribers and stores competing for active status. Ideally this should be a no-op when there's no stores. 🤔 ",
+          "path": "lib/diagnostics_channel.js",
+          "diff_hunk": "@@ -61,11 +115,28 @@ class ActiveChannel {\n       }\n     }\n   }\n+\n+  runStores(data, fn, thisArg, ...args) {\n+    this.publish(data);\n+\n+    // Bind base fn first due to AsyncLocalStorage.run not having thisArg\n+    fn = FunctionPrototypeBind(fn, thisArg, ...args);",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "bc67924de066f1d1762b9fafd224df066323b34a",
+          "in_reply_to_id": 1053126325
+        },
+        {
+          "id": 1053821728,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1053821728",
+          "author": "Flarna",
+          "body": "Not a noop, the function needs to be called. But this can be a simple `Refect.apply` instead of creating a bound function and call it.",
+          "path": "lib/diagnostics_channel.js",
+          "diff_hunk": "@@ -61,11 +115,28 @@ class ActiveChannel {\n       }\n     }\n   }\n+\n+  runStores(data, fn, thisArg, ...args) {\n+    this.publish(data);\n+\n+    // Bind base fn first due to AsyncLocalStorage.run not having thisArg\n+    fn = FunctionPrototypeBind(fn, thisArg, ...args);",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "bc67924de066f1d1762b9fafd224df066323b34a",
+          "in_reply_to_id": 1053126325
+        },
+        {
+          "id": 1053864093,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1053864093",
+          "author": "Qard",
+          "body": "I mean no-op in the form of doesn't need to check anything. Basically it should do what `Channel.prototype.runStores` does even if there are subscribers but no stores.",
+          "path": "lib/diagnostics_channel.js",
+          "diff_hunk": "@@ -61,11 +115,28 @@ class ActiveChannel {\n       }\n     }\n   }\n+\n+  runStores(data, fn, thisArg, ...args) {\n+    this.publish(data);\n+\n+    // Bind base fn first due to AsyncLocalStorage.run not having thisArg\n+    fn = FunctionPrototypeBind(fn, thisArg, ...args);",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "bc67924de066f1d1762b9fafd224df066323b34a",
+          "in_reply_to_id": 1053126325
+        },
+        {
+          "id": 1055997830,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1055997830",
+          "author": "Qard",
+          "body": "We have a test around that at the moment. https://github.com/nodejs/node/blob/main/test/parallel/test-diagnostics-channel-memory-leak.js\r\n\r\nWithout the delete that test will fail because the shape of `channels` keeps expanding and will get filled out with a bunch of empty `WeakReference` instances that the referenced object can get cleaned up but the container itself will not and those containers can add up quickly if people are, for example, generating channels uniquely named to ids of things. In my opinion that's bad practice, but there's not really any reasonable way to _stop_ users from doing that so we opted for being the least damaging to the environment we can be if the API is used badly.",
+          "path": "lib/diagnostics_channel.js",
+          "diff_hunk": "@@ -23,11 +29,44 @@ const { triggerUncaughtException } = internalBinding('errors');\n \n const { WeakReference } = internalBinding('util');\n \n+function decRef(channel) {\n+  channel._weak.decRef();\n+  if (channel._weak.getRef() === 0) {\n+    delete channels[channel.name];",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "6b38fcba5ab6c6fa9f42e63aaf388eab9c6111e4",
+          "in_reply_to_id": 1052479777
+        },
+        {
+          "id": 1092363057,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1092363057",
+          "author": "rochdev",
+          "body": "`asyncStart` should also use `runStore` so that the parent context from when `bindStore` was called can be restored.",
+          "path": "lib/diagnostics_channel.js",
+          "diff_hunk": "@@ -138,10 +226,171 @@ function hasSubscribers(name) {\n   return channel.hasSubscribers;\n }\n \n+const traceEvents = [\n+  'start',\n+  'end',\n+  'asyncStart',\n+  'asyncEnd',\n+  'error',\n+];\n+\n+function assertChannel(value, name) {\n+  if (!(value instanceof Channel)) {\n+    throw new ERR_INVALID_ARG_TYPE(name, ['Channel'], value);\n+  }\n+}\n+\n+class TracingChannel {\n+  constructor(nameOrChannels) {\n+    if (typeof nameOrChannels === 'string') {\n+      this.start = channel(`tracing:${nameOrChannels}:start`);\n+      this.end = channel(`tracing:${nameOrChannels}:end`);\n+      this.asyncStart = channel(`tracing:${nameOrChannels}:asyncStart`);\n+      this.asyncEnd = channel(`tracing:${nameOrChannels}:asyncEnd`);\n+      this.error = channel(`tracing:${nameOrChannels}:error`);\n+    } else if (typeof nameOrChannels === 'object') {\n+      const { start, end, asyncStart, asyncEnd, error } = nameOrChannels;\n+\n+      assertChannel(start, 'nameOrChannels.start');\n+      assertChannel(end, 'nameOrChannels.end');\n+      assertChannel(asyncStart, 'nameOrChannels.asyncStart');\n+      assertChannel(asyncEnd, 'nameOrChannels.asyncEnd');\n+      assertChannel(error, 'nameOrChannels.error');\n+\n+      this.start = start;\n+      this.end = end;\n+      this.asyncStart = asyncStart;\n+      this.asyncEnd = asyncEnd;\n+      this.error = error;\n+    } else {\n+      throw new ERR_INVALID_ARG_TYPE('nameOrChannels',\n+                                     ['string', 'object', 'Channel'],\n+                                     nameOrChannels);\n+    }\n+  }\n+\n+  subscribe(handlers) {\n+    for (const name of traceEvents) {\n+      if (!handlers[name]) continue;\n+\n+      this[name]?.subscribe(handlers[name]);\n+    }\n+  }\n+\n+  unsubscribe(handlers) {\n+    let done = true;\n+\n+    for (const name of traceEvents) {\n+      if (!handlers[name]) continue;\n+\n+      if (!this[name]?.unsubscribe(handlers[name])) {\n+        done = false;\n+      }\n+    }\n+\n+    return done;\n+  }\n+\n+  traceSync(fn, ctx = {}, thisArg, ...args) {\n+    const { start, end, error } = this;\n+\n+    try {\n+      const result = start.runStores(ctx, fn, thisArg, ...args);\n+      ctx.result = result;\n+      return result;\n+    } catch (err) {\n+      ctx.error = err;\n+      error.publish(ctx);\n+      throw err;\n+    } finally {\n+      end.publish(ctx);\n+    }\n+  }\n+\n+  tracePromise(fn, ctx = {}, thisArg, ...args) {\n+    const { start, end, asyncStart, asyncEnd, error } = this;\n+\n+    function reject(err) {\n+      ctx.error = err;\n+      error.publish(ctx);\n+      asyncStart.publish(ctx);\n+      // TODO: Is there a way to have asyncEnd _after_ the continuation?\n+      asyncEnd.publish(ctx);\n+      return PromiseReject(err);\n+    }\n+\n+    function resolve(result) {\n+      ctx.result = result;\n+      asyncStart.publish(ctx);",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "66825e784f6edd9fff49f04f0818e52110f30ea0"
+        },
+        {
+          "id": 1148873078,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1148873078",
+          "author": "Flarna",
+          "body": "I'm ok with using `runStores` for `asyncStart` in the `traceCallback` but I think we should clearly document this and also verify it in tests.\r\nI think it's quite special that  `asyncStart` uses `runStores` in `traceCallback` but not in `tracePromise`.\r\nAlso that `runStores` is not used for `error` channel in the callback nor the `asyncEnd` channel uses it (runs within `asyncStart` instead).",
+          "path": "lib/diagnostics_channel.js",
+          "diff_hunk": "@@ -138,10 +226,171 @@ function hasSubscribers(name) {\n   return channel.hasSubscribers;\n }\n \n+const traceEvents = [\n+  'start',\n+  'end',\n+  'asyncStart',\n+  'asyncEnd',\n+  'error',\n+];\n+\n+function assertChannel(value, name) {\n+  if (!(value instanceof Channel)) {\n+    throw new ERR_INVALID_ARG_TYPE(name, ['Channel'], value);\n+  }\n+}\n+\n+class TracingChannel {\n+  constructor(nameOrChannels) {\n+    if (typeof nameOrChannels === 'string') {\n+      this.start = channel(`tracing:${nameOrChannels}:start`);\n+      this.end = channel(`tracing:${nameOrChannels}:end`);\n+      this.asyncStart = channel(`tracing:${nameOrChannels}:asyncStart`);\n+      this.asyncEnd = channel(`tracing:${nameOrChannels}:asyncEnd`);\n+      this.error = channel(`tracing:${nameOrChannels}:error`);\n+    } else if (typeof nameOrChannels === 'object') {\n+      const { start, end, asyncStart, asyncEnd, error } = nameOrChannels;\n+\n+      assertChannel(start, 'nameOrChannels.start');\n+      assertChannel(end, 'nameOrChannels.end');\n+      assertChannel(asyncStart, 'nameOrChannels.asyncStart');\n+      assertChannel(asyncEnd, 'nameOrChannels.asyncEnd');\n+      assertChannel(error, 'nameOrChannels.error');\n+\n+      this.start = start;\n+      this.end = end;\n+      this.asyncStart = asyncStart;\n+      this.asyncEnd = asyncEnd;\n+      this.error = error;\n+    } else {\n+      throw new ERR_INVALID_ARG_TYPE('nameOrChannels',\n+                                     ['string', 'object', 'Channel'],\n+                                     nameOrChannels);\n+    }\n+  }\n+\n+  subscribe(handlers) {\n+    for (const name of traceEvents) {\n+      if (!handlers[name]) continue;\n+\n+      this[name]?.subscribe(handlers[name]);\n+    }\n+  }\n+\n+  unsubscribe(handlers) {\n+    let done = true;\n+\n+    for (const name of traceEvents) {\n+      if (!handlers[name]) continue;\n+\n+      if (!this[name]?.unsubscribe(handlers[name])) {\n+        done = false;\n+      }\n+    }\n+\n+    return done;\n+  }\n+\n+  traceSync(fn, ctx = {}, thisArg, ...args) {\n+    const { start, end, error } = this;\n+\n+    try {\n+      const result = start.runStores(ctx, fn, thisArg, ...args);\n+      ctx.result = result;\n+      return result;\n+    } catch (err) {\n+      ctx.error = err;\n+      error.publish(ctx);\n+      throw err;\n+    } finally {\n+      end.publish(ctx);\n+    }\n+  }\n+\n+  tracePromise(fn, ctx = {}, thisArg, ...args) {\n+    const { start, end, asyncStart, asyncEnd, error } = this;\n+\n+    function reject(err) {\n+      ctx.error = err;\n+      error.publish(ctx);\n+      asyncStart.publish(ctx);\n+      // TODO: Is there a way to have asyncEnd _after_ the continuation?\n+      asyncEnd.publish(ctx);\n+      return PromiseReject(err);\n+    }\n+\n+    function resolve(result) {\n+      ctx.result = result;\n+      asyncStart.publish(ctx);",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "66825e784f6edd9fff49f04f0818e52110f30ea0",
+          "in_reply_to_id": 1092363057
+        },
+        {
+          "id": 1154159768,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1154159768",
+          "author": "Flarna",
+          "body": "Should we add something similar as in the callback case here:\r\n```\r\nchannel.asyncStart.bindStore(store, common.mustCall(() => {\r\n  return secondContext;\r\n}));\r\n```\r\nBut asserts stay as is to actually verify the runStores is not used in promise case?\r\n\r\nNot meant as blocking comment, perfectly fine to do this in a followup or skip at all.",
+          "path": "test/parallel/test-diagnostics-channel-tracing-channel-promise-run-stores.js",
+          "diff_hunk": "@@ -0,0 +1,24 @@\n+'use strict';\n+\n+const common = require('../common');\n+const { setTimeout } = require('node:timers/promises');\n+const { AsyncLocalStorage } = require('async_hooks');\n+const dc = require('diagnostics_channel');\n+const assert = require('assert');\n+\n+const channel = dc.tracingChannel('test');\n+const store = new AsyncLocalStorage();\n+\n+const context = { foo: 'bar' };\n+\n+channel.start.bindStore(store, common.mustCall(() => {\n+  return context;\n+}));",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade"
+        },
+        {
+          "id": 1154577798,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r1154577798",
+          "author": "Qard",
+          "body": "I think I'll do that as a follow up. Don't want to tempt fate with CI the day before v20 cut-off. 😂",
+          "path": "test/parallel/test-diagnostics-channel-tracing-channel-promise-run-stores.js",
+          "diff_hunk": "@@ -0,0 +1,24 @@\n+'use strict';\n+\n+const common = require('../common');\n+const { setTimeout } = require('node:timers/promises');\n+const { AsyncLocalStorage } = require('async_hooks');\n+const dc = require('diagnostics_channel');\n+const assert = require('assert');\n+\n+const channel = dc.tracingChannel('test');\n+const store = new AsyncLocalStorage();\n+\n+const context = { foo: 'bar' };\n+\n+channel.start.bindStore(store, common.mustCall(() => {\n+  return context;\n+}));",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "in_reply_to_id": 1154159768
+        },
+        {
+          "id": 993496790,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r993496790",
+          "author": "Flarna",
+          "body": "isn't this eating the rejection in case user is not installing a then nor a catch handler?",
+          "path": "lib/diagnostics_channel.js",
+          "diff_hunk": "@@ -136,10 +136,95 @@ function hasSubscribers(name) {\n   return channel.hasSubscribers;\n }\n \n+class TracingChannel {\n+  constructor(name) {\n+    this.name = name;\n+    this.channels = {\n+      start: channel(`${name}.start`),\n+      end: channel(`${name}.end`),\n+      asyncEnd: channel(`${name}.asyncEnd`),\n+      error: channel(`${name}.error`)\n+    };\n+  }\n+\n+  get hasSubscribers() {\n+    const { channels } = this;\n+    for (const key in channels) {\n+      if (channels[key].hasSubscribers) return true;\n+    }\n+    return false;\n+  }\n+\n+  subscribe(handlers) {\n+    const { channels } = this;\n+    for (const key in handlers) {\n+      const channel = channels[key];\n+      if (!channel) continue;\n+      channel.subscribe(handlers[key]);\n+    }\n+  }\n+\n+  unsubscribe(handlers) {\n+    const { channels } = this;\n+    for (const key in handlers) {\n+      const channel = channels[key];\n+      if (!channel) continue;\n+      channel.unsubscribe(handlers[key]);\n+    }\n+  }\n+\n+  trace(fn, ctx = {}) {\n+    const { start, end, asyncEnd, error } = this.channels;\n+    start.publish(ctx);\n+\n+    const fail = (err) => {\n+      ctx.error = err;\n+      error.publish(ctx);\n+    };\n+\n+    const reject = (err) => {\n+      fail(err);\n+      asyncEnd.publish(ctx);\n+    };\n+\n+    const resolve = (result) => {\n+      ctx.result = result;\n+      asyncEnd.publish(ctx);\n+    };\n+\n+    try {\n+      if (fn.length) {\n+        return fn((err, res) => {\n+          if (err) return reject(err);\n+          resolve(res);\n+        });\n+      }\n+\n+      const result = fn();\n+      if (result && typeof result.then === 'function') {\n+        result.then(resolve, reject);",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "98b3bbce3ab07618bc483063a1050adbda333317"
+        },
+        {
+          "id": 993937136,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r993937136",
+          "author": "Qard",
+          "body": "Well, it doesn't return the _new_ promise, so they'll still receive the rejection from the level the user continues from. It _will_ result in the unhandled rejection warnings disappearing though.",
+          "path": "lib/diagnostics_channel.js",
+          "diff_hunk": "@@ -136,10 +136,95 @@ function hasSubscribers(name) {\n   return channel.hasSubscribers;\n }\n \n+class TracingChannel {\n+  constructor(name) {\n+    this.name = name;\n+    this.channels = {\n+      start: channel(`${name}.start`),\n+      end: channel(`${name}.end`),\n+      asyncEnd: channel(`${name}.asyncEnd`),\n+      error: channel(`${name}.error`)\n+    };\n+  }\n+\n+  get hasSubscribers() {\n+    const { channels } = this;\n+    for (const key in channels) {\n+      if (channels[key].hasSubscribers) return true;\n+    }\n+    return false;\n+  }\n+\n+  subscribe(handlers) {\n+    const { channels } = this;\n+    for (const key in handlers) {\n+      const channel = channels[key];\n+      if (!channel) continue;\n+      channel.subscribe(handlers[key]);\n+    }\n+  }\n+\n+  unsubscribe(handlers) {\n+    const { channels } = this;\n+    for (const key in handlers) {\n+      const channel = channels[key];\n+      if (!channel) continue;\n+      channel.unsubscribe(handlers[key]);\n+    }\n+  }\n+\n+  trace(fn, ctx = {}) {\n+    const { start, end, asyncEnd, error } = this.channels;\n+    start.publish(ctx);\n+\n+    const fail = (err) => {\n+      ctx.error = err;\n+      error.publish(ctx);\n+    };\n+\n+    const reject = (err) => {\n+      fail(err);\n+      asyncEnd.publish(ctx);\n+    };\n+\n+    const resolve = (result) => {\n+      ctx.result = result;\n+      asyncEnd.publish(ctx);\n+    };\n+\n+    try {\n+      if (fn.length) {\n+        return fn((err, res) => {\n+          if (err) return reject(err);\n+          resolve(res);\n+        });\n+      }\n+\n+      const result = fn();\n+      if (result && typeof result.then === 'function') {\n+        result.then(resolve, reject);",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "98b3bbce3ab07618bc483063a1050adbda333317",
+          "in_reply_to_id": 993496790
+        },
+        {
+          "id": 994226970,
+          "url": "https://github.com/nodejs/node/pull/44943#discussion_r994226970",
+          "author": "Flarna",
+          "body": "recent node versions end the process in case of unhandled rejections. This will no longer happen here which is likely an unwanted side effect.",
+          "path": "lib/diagnostics_channel.js",
+          "diff_hunk": "@@ -136,10 +136,95 @@ function hasSubscribers(name) {\n   return channel.hasSubscribers;\n }\n \n+class TracingChannel {\n+  constructor(name) {\n+    this.name = name;\n+    this.channels = {\n+      start: channel(`${name}.start`),\n+      end: channel(`${name}.end`),\n+      asyncEnd: channel(`${name}.asyncEnd`),\n+      error: channel(`${name}.error`)\n+    };\n+  }\n+\n+  get hasSubscribers() {\n+    const { channels } = this;\n+    for (const key in channels) {\n+      if (channels[key].hasSubscribers) return true;\n+    }\n+    return false;\n+  }\n+\n+  subscribe(handlers) {\n+    const { channels } = this;\n+    for (const key in handlers) {\n+      const channel = channels[key];\n+      if (!channel) continue;\n+      channel.subscribe(handlers[key]);\n+    }\n+  }\n+\n+  unsubscribe(handlers) {\n+    const { channels } = this;\n+    for (const key in handlers) {\n+      const channel = channels[key];\n+      if (!channel) continue;\n+      channel.unsubscribe(handlers[key]);\n+    }\n+  }\n+\n+  trace(fn, ctx = {}) {\n+    const { start, end, asyncEnd, error } = this.channels;\n+    start.publish(ctx);\n+\n+    const fail = (err) => {\n+      ctx.error = err;\n+      error.publish(ctx);\n+    };\n+\n+    const reject = (err) => {\n+      fail(err);\n+      asyncEnd.publish(ctx);\n+    };\n+\n+    const resolve = (result) => {\n+      ctx.result = result;\n+      asyncEnd.publish(ctx);\n+    };\n+\n+    try {\n+      if (fn.length) {\n+        return fn((err, res) => {\n+          if (err) return reject(err);\n+          resolve(res);\n+        });\n+      }\n+\n+      const result = fn();\n+      if (result && typeof result.then === 'function') {\n+        result.then(resolve, reject);",
+          "commit_id": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "original_commit_id": "98b3bbce3ab07618bc483063a1050adbda333317",
+          "in_reply_to_id": 993496790
+        }
+      ],
+      "branchCommits": [
+        {
+          "sha": "6a950b4652dffd2fcf127eb27a3690b829f4ab3b",
+          "url": "https://github.com/nodejs/node/commit/6a950b4652dffd2fcf127eb27a3690b829f4ab3b",
+          "message": "lib: add tracing channel to diagnostics_channel"
+        },
+        {
+          "sha": "db68463adf22390cc04eb6a4a0ae299ee735d18d",
+          "url": "https://github.com/nodejs/node/commit/db68463adf22390cc04eb6a4a0ae299ee735d18d",
+          "message": "diagnostics_channel: throw when callback missing"
+        },
+        {
+          "sha": "568b7ea7d87750b644a8efe21ad5ff161cce370f",
+          "url": "https://github.com/nodejs/node/commit/568b7ea7d87750b644a8efe21ad5ff161cce370f",
+          "message": "doc: improve TracingChannel docs"
+        },
+        {
+          "sha": "366f973b5b64f01314038e560606669f39271ef7",
+          "url": "https://github.com/nodejs/node/commit/366f973b5b64f01314038e560606669f39271ef7",
+          "message": "diagnostics_channel: change traceCallback position to -1"
+        },
+        {
+          "sha": "7c2c401404c382a158f491e17ba88c48ac8227b6",
+          "url": "https://github.com/nodejs/node/commit/7c2c401404c382a158f491e17ba88c48ac8227b6",
+          "message": "diagnostics_channel: always runStores for tracing channel events"
+        },
+        {
+          "sha": "9a1e79b22119c8c2a0b036bb0bc39ca125037de1",
+          "url": "https://github.com/nodejs/node/commit/9a1e79b22119c8c2a0b036bb0bc39ca125037de1",
+          "message": "diagnostics_channel: only runStores where helpful"
+        },
+        {
+          "sha": "79b7f565135062217c68bdd1d98a8289b15abe8a",
+          "url": "https://github.com/nodejs/node/commit/79b7f565135062217c68bdd1d98a8289b15abe8a",
+          "message": "doc: improve tracing channel docs"
+        },
+        {
+          "sha": "51e9418d050354b645a7649f061522c0bcf7d00d",
+          "url": "https://github.com/nodejs/node/commit/51e9418d050354b645a7649f061522c0bcf7d00d",
+          "message": "test: test tracing channel run stores behaviour"
+        },
+        {
+          "sha": "c23e772ccc19618493937fd2a6a7addf83267ade",
+          "url": "https://github.com/nodejs/node/commit/c23e772ccc19618493937fd2a6a7addf83267ade",
+          "message": "fixup! test: test tracing channel run stores behaviour"
+        }
+      ],
+      "headVsMergeSameContent": true
+    },
+    "57144": {
+      "info": {
+        "url": "https://github.com/nodejs/node/pull/57144",
+        "number": 57144,
+        "state": "closed",
+        "merged": true,
+        "mergeable": false,
+        "draft": false,
+        "title": "test: simplify test-http2-client-promisify-connect-error",
+        "base": "main",
+        "base_sha": "8fc919d3cb29a9a4664260bafe8b213efa810271",
+        "head": "simply/test-http2-client-promisify-connect-error",
+        "head_sha": "42a53b87c600bd2f8e45e548de8fb1e0ded64126",
+        "head_repo_id": 47134295,
+        "head_repo_full_name": "lpinca/node",
+        "merge_commit_sha": "ba8fbf34f46dab885cf4bf3602e784c063be2ef3",
+        "user": {
+          "login": "lpinca",
+          "name": "lpinca",
+          "email": null,
+          "avatar_url": "https://avatars.githubusercontent.com/u/1443911?v=4",
+          "id": 1443911
+        },
+        "requested_reviewers": null,
+        "requested_team_reviewers": null,
+        "created_at": "2025-02-20T08:47:22Z",
+        "updated_at": "2025-02-22T09:43:21Z",
+        "closed_at": "2025-02-22T09:25:11Z",
+        "merged_at": "2025-02-22T09:25:11Z",
+        "commits": 1,
+        "changed_files": 1,
+        "additions": 11,
+        "deletions": 10,
+        "display_url": "https://github.com/nodejs/node/pull/57144",
+        "display_title": "test: simplify test-http2-client-promisify-connect-error"
+      },
+      "selectedTimeline": [
+        {
+          "url": "https://github.com/nodejs/node/pull/57144#issuecomment-2670828667",
+          "body": "The first commit is from https://github.com/nodejs/node/pull/57135.",
+          "user": {
+            "login": "lpinca",
+            "name": "lpinca",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1443911?v=4",
+            "id": 1443911
+          },
+          "id": 2670828667,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2025-02-20T08:48:11Z",
+          "updated_at": "2025-02-20T08:48:11Z",
+          "review": null,
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57144#discussion_r1963164451",
+          "body": "nit\r\n```suggestion\r\nconst error = new Error('Unable to resolve hostname');\r\n\r\nfunction lookup(hostname, options, callback) {\r\n  callback(error);\r\n}\r\n\r\nassert.rejects(\r\n  connect('http://hostname', { lookup }),\r\n  error,\r\n```",
+          "user": {
+            "login": "aduh95",
+            "name": "aduh95",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/14309773?v=4",
+            "id": 14309773
+          },
+          "id": 1963164451,
+          "pull_request_review_id": 2629207228,
+          "in_reply_to_id": null,
+          "created_at": "2025-02-20T09:26:30Z",
+          "updated_at": "2025-02-20T09:26:30Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "test/parallel/test-http2-client-promisify-connect-error.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57144#issuecomment-2671132401",
+          "body": "Let's wait for https://github.com/nodejs/node/pull/57135 to land before running CI as we'd have to rebase anyway",
+          "user": {
+            "login": "aduh95",
+            "name": "aduh95",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/14309773?v=4",
+            "id": 14309773
+          },
+          "id": 2671132401,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2025-02-20T10:49:10Z",
+          "updated_at": "2025-02-20T10:49:10Z",
+          "review": null,
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57144#pullrequestreview-2629779292",
+          "body": "",
+          "user": {
+            "login": "joyeecheung",
+            "name": "joyeecheung",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/4299420?u=d7eb2cf3db5f2a4df73a8f719c2e9e3d648e4e43&v=4",
+            "id": 4299420
+          },
+          "id": 2629779292,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2025-02-20T13:00:23Z",
+          "updated_at": null,
+          "review": "APPROVED",
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57144#pullrequestreview-2634760411",
+          "body": "",
+          "user": {
+            "login": "aduh95",
+            "name": "aduh95",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/14309773?v=4",
+            "id": 14309773
+          },
+          "id": 2634760411,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2025-02-22T09:23:11Z",
+          "updated_at": null,
+          "review": "APPROVED",
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57144#issuecomment-2676117536",
+          "body": "Landed in ba8fbf34f46dab885cf4bf3602e784c063be2ef3",
+          "user": {
+            "login": "nodejs-github-bot",
+            "name": "nodejs-github-bot",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/18269663?v=4",
+            "id": 18269663
+          },
+          "id": 2676117536,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2025-02-22T09:25:13Z",
+          "updated_at": "2025-02-22T09:25:13Z",
+          "review": null,
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        }
+      ],
+      "originalReviewHunks": [
+        {
+          "id": 1963164451,
+          "url": "https://github.com/nodejs/node/pull/57144#discussion_r1963164451",
+          "author": "aduh95",
+          "body": "nit\r\n```suggestion\r\nconst error = new Error('Unable to resolve hostname');\r\n\r\nfunction lookup(hostname, options, callback) {\r\n  callback(error);\r\n}\r\n\r\nassert.rejects(\r\n  connect('http://hostname', { lookup }),\r\n  error,\r\n```",
+          "path": "test/parallel/test-http2-client-promisify-connect-error.js",
+          "diff_hunk": "@@ -8,17 +8,15 @@ const assert = require('assert');\n const http2 = require('http2');\n const util = require('util');\n \n-const server = http2.createServer();\n+const connect = util.promisify(http2.connect);\n \n-server.listen(0, common.mustCall(() => {\n-  const port = server.address().port;\n-  server.close(() => {\n-    const connect = util.promisify(http2.connect);\n-    connect(`http://localhost:${port}`)\n-      .then(common.mustNotCall('Promise should not be resolved'))\n-      .catch(common.mustCall((err) => {\n-        assert(err instanceof Error);\n-        assert.strictEqual(err.code, 'ECONNREFUSED');\n-      }));\n-  });\n-}));\n+function lookup(hostname, options, callback) {\n+  const error = new Error('Unable to resolve hostname');\n+  error.code = 'ENOTFOUND';\n+  callback(error);\n+}\n+\n+assert.rejects(\n+  connect('http://hostname', { lookup }),\n+  { code: 'ENOTFOUND' }",
+          "commit_id": "42a53b87c600bd2f8e45e548de8fb1e0ded64126",
+          "original_commit_id": "f68fd2bd8f06df2b40ef0d9b011366b7c3af5909"
+        }
+      ],
+      "branchCommits": [
+        {
+          "sha": "42a53b87c600bd2f8e45e548de8fb1e0ded64126",
+          "url": "https://github.com/nodejs/node/commit/42a53b87c600bd2f8e45e548de8fb1e0ded64126",
+          "message": "test: simplify test-http2-client-promisify-connect-error\n\nThere is no need to try to create a TCP connection that fails due to a\nmissing listening server. Also, the port used for the connection might\nbe used by another process when the connection is made."
+        }
+      ],
+      "headVsMergeSameContent": true
+    },
+    "59700": {
+      "info": {
+        "url": "https://github.com/nodejs/node/pull/59700",
+        "number": 59700,
+        "state": "closed",
+        "merged": true,
+        "mergeable": false,
+        "draft": false,
+        "title": "test_runner: simplify logic, nix dead reporter code",
+        "base": "main",
+        "base_sha": "2ea31e53c61463727c002c2d862615081940f355",
+        "head": "test_runner-1",
+        "head_sha": "44ccad87f4d229a2cf3755affae1dc5e3fbbfba9",
+        "head_repo_id": 1010302757,
+        "head_repo_full_name": "vassudanagunta/node",
+        "merge_commit_sha": "e3071d52b6e8190d2158d7604161503a8b626b37",
+        "user": {
+          "login": "vassudanagunta",
+          "name": "vassudanagunta",
+          "email": null,
+          "avatar_url": "https://avatars.githubusercontent.com/u/2830093?v=4",
+          "id": 2830093
+        },
+        "requested_reviewers": null,
+        "requested_team_reviewers": null,
+        "created_at": "2025-09-01T14:02:41Z",
+        "updated_at": "2026-01-16T17:50:21Z",
+        "closed_at": "2026-01-16T17:48:44Z",
+        "merged_at": "2026-01-16T17:48:44Z",
+        "commits": 4,
+        "changed_files": 2,
+        "additions": 4,
+        "deletions": 13,
+        "display_url": "https://github.com/nodejs/node/pull/59700",
+        "display_title": "test_runner: simplify logic, nix dead reporter code"
+      },
+      "selectedTimeline": [
+        {
+          "url": "https://github.com/nodejs/node/pull/59700#discussion_r2685312372",
+          "body": "NBC: \n```suggestion\n  const err = showErrorDetails ? formatError(data.details.error, indent) : '';\n```\n\nWe are already checking `data.details?.error` inside `formatError`, and in this specific scenario IMHO, the cost of the extra method invocation is negligible",
+          "user": {
+            "login": "pmarchini",
+            "name": "pmarchini",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/49943249?v=4",
+            "id": 49943249
+          },
+          "id": 2685312372,
+          "pull_request_review_id": 3654422046,
+          "in_reply_to_id": null,
+          "created_at": "2026-01-13T08:10:01Z",
+          "updated_at": "2026-01-13T08:10:01Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": 83,
+          "start_line": null,
+          "path": "lib/internal/test_runner/reporter/utils.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/59700#pullrequestreview-3654424169",
+          "body": "LGTM",
+          "user": {
+            "login": "pmarchini",
+            "name": "pmarchini",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/49943249?u=ad600b1eaf7a4c88f0078298b2a22137cc65b129&v=4",
+            "id": 49943249
+          },
+          "id": 3654424169,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2026-01-13T08:10:33Z",
+          "updated_at": null,
+          "review": "APPROVED",
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/59700#issuecomment-3761143494",
+          "body": "Landed in e3071d52b6e8190d2158d7604161503a8b626b37",
+          "user": {
+            "login": "nodejs-github-bot",
+            "name": "nodejs-github-bot",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/18269663?v=4",
+            "id": 18269663
+          },
+          "id": 3761143494,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2026-01-16T17:48:45Z",
+          "updated_at": "2026-01-16T17:48:45Z",
+          "review": null,
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        }
+      ],
+      "originalReviewHunks": [
+        {
+          "id": 2685312372,
+          "url": "https://github.com/nodejs/node/pull/59700#discussion_r2685312372",
+          "author": "pmarchini",
+          "body": "NBC: \n```suggestion\n  const err = showErrorDetails ? formatError(data.details.error, indent) : '';\n```\n\nWe are already checking `data.details?.error` inside `formatError`, and in this specific scenario IMHO, the cost of the extra method invocation is negligible",
+          "path": "lib/internal/test_runner/reporter/utils.js",
+          "diff_hunk": "@@ -81,10 +80,7 @@ function formatTestReport(type, data, prefix = '', indent = '', hasChildren = fa\n     title += ` # ${typeof todo === 'string' && todo.length ? todo : 'TODO'}`;\n   }\n \n-  const error = showErrorDetails ? formatError(data.details?.error, indent) : '';\n-  const err = hasChildren ?\n-    (!error || data.details?.error?.failureType === 'subtestsFailed' ? '' : `\\n${error}`) :\n-    error;\n+  const err = showErrorDetails && data.details?.error ? formatError(data.details.error, indent) : '';",
+          "commit_id": "44ccad87f4d229a2cf3755affae1dc5e3fbbfba9",
+          "original_commit_id": "44ccad87f4d229a2cf3755affae1dc5e3fbbfba9"
+        }
+      ],
+      "branchCommits": [
+        {
+          "sha": "d6a40ce54ae1125cc758a9b838ecf84953b96755",
+          "url": "https://github.com/nodejs/node/commit/d6a40ce54ae1125cc758a9b838ecf84953b96755",
+          "message": "test_runner: nix dead reporter code\n\nreporter/utils.js formatTestReport:\n1. hasChildren and showErrorDetails are never both true in\n   existing calls.\n2. Thus if hasChildren is true, showErrorDetails is false.\n3. So `|| data.details?.error?.failureType === 'subtestsFailed'`\n   is irrelevant.\n4. And `\\n${error}` never occurs.\n\nEven though all tests pass after this commit, what if future reporter\ncode might make calls where both hasChildren and showErrorDetails\nare true? I will address this in the last commit of this PR.\nTrust me for now."
+        },
+        {
+          "sha": "adada91bfcc8ca09e4a39d6d622aa7c37674078e",
+          "url": "https://github.com/nodejs/node/commit/adada91bfcc8ca09e4a39d6d622aa7c37674078e",
+          "message": "test_runner: make logic more straightforward\n\n1. formatTestReport: inline the `const error`\n2. move the check for `data.details?.error` out of formatError\n   to its sole caller, formatTestReport, which makes more sense.\n3. collapse the nested ternary expressions in formatTestReport to one."
+        },
+        {
+          "sha": "dac69ea13ebad7c8cfa12fedc0422e889ed62416",
+          "url": "https://github.com/nodejs/node/commit/dac69ea13ebad7c8cfa12fedc0422e889ed62416",
+          "message": "test_runner: nix more dead code\n\nreporter/utils.js formatTestReport:\n1. consider again that hasChildren and showErrorDetails are never\n   both true in existing calls to formatTestReport."
+        },
+        {
+          "sha": "44ccad87f4d229a2cf3755affae1dc5e3fbbfba9",
+          "url": "https://github.com/nodejs/node/commit/44ccad87f4d229a2cf3755affae1dc5e3fbbfba9",
+          "message": "test_runner: make more straightforward, nix more dead code\n\n1. formatTestReport: hasChildren arg is unused\n2. consider that the existing calls to formatTestReport break down into\n   two types:\n    - print a line in the test result tree without error details (spec)\n    - print error details (spec and dot)\n\n   i.e. whether or not to showErrorDetails."
+        }
+      ],
+      "headVsMergeSameContent": false
+    },
+    "61871": {
+      "info": {
+        "url": "https://github.com/nodejs/node/pull/61871",
+        "number": 61871,
+        "state": "closed",
+        "merged": true,
+        "mergeable": false,
+        "draft": false,
+        "title": "buffer: improve performance of multiple Buffer operations",
+        "base": "main",
+        "base_sha": "0d7e4b1d4b0220b68bc2c5c2b973deff1664824b",
+        "head": "buffer-perf-improvements",
+        "head_sha": "85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca",
+        "head_repo_id": 778866702,
+        "head_repo_full_name": "thisalihassan/node",
+        "merge_commit_sha": "9e0dc8b4725e4052126edbc35bbc3be073bf5c01",
+        "user": {
+          "login": "thisalihassan",
+          "name": "thisalihassan",
+          "email": null,
+          "avatar_url": "https://avatars.githubusercontent.com/u/24819103?v=4",
+          "id": 24819103
+        },
+        "requested_reviewers": [
+          {
+            "login": "ChALkeR",
+            "name": "ChALkeR",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/291301?v=4",
+            "id": 291301
+          },
+          {
+            "login": "Renegade334",
+            "name": "Renegade334",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/9092381?v=4",
+            "id": 9092381
+          }
+        ],
+        "requested_team_reviewers": null,
+        "created_at": "2026-02-17T21:33:58Z",
+        "updated_at": "2026-04-01T23:28:55Z",
+        "closed_at": "2026-03-27T21:50:58Z",
+        "merged_at": "2026-03-27T21:50:58Z",
+        "commits": 11,
+        "changed_files": 10,
+        "additions": 280,
+        "deletions": 70,
+        "display_url": "https://github.com/nodejs/node/pull/61871",
+        "display_title": "buffer: improve performance of multiple Buffer operations"
+      },
+      "selectedTimeline": [
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2824124248",
+          "body": "Please update comment to why we can add ASCII here.",
+          "user": {
+            "login": "anonrig",
+            "name": "anonrig",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1935246?v=4",
+            "id": 1935246
+          },
+          "id": 2824124248,
+          "pull_request_review_id": 3821854167,
+          "in_reply_to_id": null,
+          "created_at": "2026-02-18T19:42:22Z",
+          "updated_at": "2026-02-18T19:43:00Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": 1124,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2824126829",
+          "body": "Can you add a comment to why we have this change now?",
+          "user": {
+            "login": "anonrig",
+            "name": "anonrig",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1935246?v=4",
+            "id": 1935246
+          },
+          "id": 2824126829,
+          "pull_request_review_id": 3821854167,
+          "in_reply_to_id": null,
+          "created_at": "2026-02-18T19:42:52Z",
+          "updated_at": "2026-02-18T19:43:00Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2947530802",
+          "body": "This is extremely confusing. Please use more readable variable names.",
+          "user": {
+            "login": "anonrig",
+            "name": "anonrig",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1935246?v=4",
+            "id": 1935246
+          },
+          "id": 2947530802,
+          "pull_request_review_id": 3961595713,
+          "in_reply_to_id": null,
+          "created_at": "2026-03-17T15:12:02Z",
+          "updated_at": "2026-03-17T15:15:31Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2947536524",
+          "body": "This can be simplified into a single line.\n\n```\nArray.from({ length: this.length }, (_, i) => this[i]);\n```",
+          "user": {
+            "login": "anonrig",
+            "name": "anonrig",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1935246?v=4",
+            "id": 1935246
+          },
+          "id": 2947536524,
+          "pull_request_review_id": 3961595713,
+          "in_reply_to_id": null,
+          "created_at": "2026-03-17T15:12:56Z",
+          "updated_at": "2026-03-17T15:15:31Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2947611843",
+          "body": "Classic `for` loop is likely more performant, no?",
+          "user": {
+            "login": "aduh95",
+            "name": "aduh95",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/14309773?v=4",
+            "id": 14309773
+          },
+          "id": 2947611843,
+          "pull_request_review_id": 3961687301,
+          "in_reply_to_id": 2947536524,
+          "created_at": "2026-03-17T15:24:33Z",
+          "updated_at": "2026-03-17T15:24:34Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2969708449",
+          "body": "I'm not sure anymore",
+          "user": {
+            "login": "anonrig",
+            "name": "anonrig",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1935246?v=4",
+            "id": 1935246
+          },
+          "id": 2969708449,
+          "pull_request_review_id": 3986149671,
+          "in_reply_to_id": 2947536524,
+          "created_at": "2026-03-21T15:25:45Z",
+          "updated_at": "2026-03-21T15:25:46Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2969886201",
+          "body": "Interesting, did a quick benchmark with claude:\r\n\r\n```\r\n25.3ms | Array.from:   381.8ms | Array.from is 15.10x slower\r\nsize=  64 | for-loop:    15.9ms | Array.from:   427.7ms | Array.from is 26.98x slower\r\nsize= 256 | for-loop:    13.9ms | Array.from:   343.0ms | Array.from is 24.62x slower\r\nsize=1024 | for-loop:    14.1ms | Array.from:   326.9ms | Array.from is 23.12x slower\r\n```",
+          "user": {
+            "login": "thisalihassan",
+            "name": "thisalihassan",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/24819103?v=4",
+            "id": 24819103
+          },
+          "id": 2969886201,
+          "pull_request_review_id": 3986319546,
+          "in_reply_to_id": 2947536524,
+          "created_at": "2026-03-21T17:58:53Z",
+          "updated_at": "2026-03-21T17:58:53Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": null,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#pullrequestreview-4019924251",
+          "body": "",
+          "user": {
+            "login": "aduh95",
+            "name": "aduh95",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/14309773?v=4",
+            "id": 14309773
+          },
+          "id": 4019924251,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2026-03-27T09:29:15Z",
+          "updated_at": null,
+          "review": "APPROVED",
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#pullrequestreview-4021113079",
+          "body": "",
+          "user": {
+            "login": "anonrig",
+            "name": "anonrig",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1935246?u=440932d4aed022e31a2140e1825c0167b7a12357&v=4",
+            "id": 1935246
+          },
+          "id": 4021113079,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2026-03-27T13:18:48Z",
+          "updated_at": null,
+          "review": "APPROVED",
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#issuecomment-4145548517",
+          "body": "Landed in 9e0dc8b4725e4052126edbc35bbc3be073bf5c01",
+          "user": {
+            "login": "nodejs-github-bot",
+            "name": "nodejs-github-bot",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/18269663?v=4",
+            "id": 18269663
+          },
+          "id": 4145548517,
+          "pull_request_review_id": null,
+          "in_reply_to_id": null,
+          "created_at": "2026-03-27T21:50:59Z",
+          "updated_at": "2026-03-27T21:50:59Z",
+          "review": null,
+          "side": null,
+          "line": null,
+          "start_line": null,
+          "path": null
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2947539385",
+          "body": "Can you add a reference link to this pull-request above this line",
+          "user": {
+            "login": "anonrig",
+            "name": "anonrig",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/1935246?v=4",
+            "id": 1935246
+          },
+          "id": 2947539385,
+          "pull_request_review_id": 3961595713,
+          "in_reply_to_id": null,
+          "created_at": "2026-03-17T15:13:23Z",
+          "updated_at": "2026-03-17T15:15:31Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": 1262,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2971591359",
+          "body": "Would switching from `TypedArrayPrototypeSlice` to `TypedArrayPrototypeSubarray` be easier here? It avoids the extraneous copy possibly eliminates the more complicated manual processing here.",
+          "user": {
+            "login": "jasnell",
+            "name": "jasnell",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/439929?v=4",
+            "id": 439929
+          },
+          "id": 2971591359,
+          "pull_request_review_id": 3988188136,
+          "in_reply_to_id": null,
+          "created_at": "2026-03-22T14:26:46Z",
+          "updated_at": "2026-03-22T14:26:46Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": 388,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2972174975",
+          "body": "Ok @jasnell  I tried as you suggested, here's my implementation did bench with the current implementation and there was consistant 14-20% of regresssion with `TypedArrayPrototypeSubarray` although I like the code, it's much cleaner\r\n\r\n```javascript\r\nBuffer.copyBytesFrom = function copyBytesFrom(view, offset, length) {\r\n  if (!isTypedArray(view)) {\r\n    throw new ERR_INVALID_ARG_TYPE('view', [ 'TypedArray' ], view);\r\n  }\r\n\r\n  const viewLength = TypedArrayPrototypeGetLength(view);\r\n  if (viewLength === 0) {\r\n    return new FastBuffer();\r\n  }\r\n\r\n  let start = 0;\r\n  let end = viewLength;\r\n\r\n  if (offset !== undefined) {\r\n    validateInteger(offset, 'offset', 0);\r\n    if (offset >= viewLength) return new FastBuffer();\r\n    start = offset;\r\n  }\r\n\r\n  if (length !== undefined) {\r\n    validateInteger(length, 'length', 0);\r\n    end = start + length;\r\n  }\r\n\r\n  view = TypedArrayPrototypeSubarray(view, start, end);\r\n\r\n  return fromArrayLike(new Uint8Array(\r\n    TypedArrayPrototypeGetBuffer(view),\r\n    TypedArrayPrototypeGetByteOffset(view),\r\n    TypedArrayPrototypeGetByteLength(view)));\r\n};\r\n```",
+          "user": {
+            "login": "thisalihassan",
+            "name": "thisalihassan",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/24819103?v=4",
+            "id": 24819103
+          },
+          "id": 2972174975,
+          "pull_request_review_id": 3988671378,
+          "in_reply_to_id": 2971591359,
+          "created_at": "2026-03-22T22:16:39Z",
+          "updated_at": "2026-03-22T22:18:35Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": 388,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2972190846",
+          "body": "A comment here would be helpful then.",
+          "user": {
+            "login": "jasnell",
+            "name": "jasnell",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/439929?v=4",
+            "id": 439929
+          },
+          "id": 2972190846,
+          "pull_request_review_id": 3988687414,
+          "in_reply_to_id": 2971607372,
+          "created_at": "2026-03-22T22:27:03Z",
+          "updated_at": "2026-03-22T22:27:04Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": 1306,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2972195280",
+          "body": "hmm... that would still make it a net improvement over the current implementation. I'll leave it up to you, I'm just not a big fan of the manual handling.",
+          "user": {
+            "login": "jasnell",
+            "name": "jasnell",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/439929?v=4",
+            "id": 439929
+          },
+          "id": 2972195280,
+          "pull_request_review_id": 3988690831,
+          "in_reply_to_id": 2971591359,
+          "created_at": "2026-03-22T22:30:57Z",
+          "updated_at": "2026-03-22T22:30:57Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": 388,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2972235299",
+          "body": "Since I was aiming to maxing perf, I will keep it if the regression was less I would have kept your solution",
+          "user": {
+            "login": "thisalihassan",
+            "name": "thisalihassan",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/24819103?v=4",
+            "id": 24819103
+          },
+          "id": 2972235299,
+          "pull_request_review_id": 3988724179,
+          "in_reply_to_id": 2971591359,
+          "created_at": "2026-03-22T23:02:52Z",
+          "updated_at": "2026-03-22T23:02:52Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": 388,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r3002863679",
+          "body": "Could I perhaps bother you to add a TODO comment indicating that the manual approach was tested to be faster and suggesting that it might be worth revisiting later? Good either way tho.",
+          "user": {
+            "login": "jasnell",
+            "name": "jasnell",
+            "email": null,
+            "avatar_url": "https://avatars.githubusercontent.com/u/439929?v=4",
+            "id": 439929
+          },
+          "id": 3002863679,
+          "pull_request_review_id": 4023288792,
+          "in_reply_to_id": 2971591359,
+          "created_at": "2026-03-27T19:41:55Z",
+          "updated_at": "2026-03-27T19:41:56Z",
+          "review": null,
+          "side": "RIGHT",
+          "line": 388,
+          "start_line": null,
+          "path": "lib/buffer.js"
+        }
+      ],
+      "originalReviewHunks": [
+        {
+          "id": 2824124248,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2824124248",
+          "author": "anonrig",
+          "body": "Please update comment to why we can add ASCII here.",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -1087,7 +1096,7 @@ function _fill(buf, value, offset, end, encoding) {\n       value = 0;\n     } else if (value.length === 1) {\n       // Fast path: If `value` fits into a single byte, use that numeric value.\n-      if (normalizedEncoding === 'utf8') {\n+      if (normalizedEncoding === 'utf8' || normalizedEncoding === 'ascii') {",
+          "commit_id": "85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca",
+          "original_commit_id": "f5c875bd570e847095828c5868eb87530d6a41aa"
+        },
+        {
+          "id": 2824126829,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2824126829",
+          "author": "anonrig",
+          "body": "Can you add a comment to why we have this change now?",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -382,28 +381,41 @@ Buffer.copyBytesFrom = function copyBytesFrom(view, offset, length) {\n     return new FastBuffer();\n   }\n \n+  const byteLength = TypedArrayPrototypeGetByteLength(view);\n+\n   if (offset !== undefined || length !== undefined) {\n     if (offset !== undefined) {\n       validateInteger(offset, 'offset', 0);\n       if (offset >= viewLength) return new FastBuffer();\n     } else {\n       offset = 0;\n     }\n+\n     let end;\n     if (length !== undefined) {\n       validateInteger(length, 'length', 0);\n-      end = offset + length;\n+      end = MathMin(offset + length, viewLength);",
+          "commit_id": "a049a90c2c37898dccb5b8e1ab3603189e31801a",
+          "original_commit_id": "f5c875bd570e847095828c5868eb87530d6a41aa"
+        },
+        {
+          "id": 2947530802,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2947530802",
+          "author": "anonrig",
+          "body": "This is extremely confusing. Please use more readable variable names.",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -1168,29 +1171,30 @@ function _fill(buf, value, offset, end, encoding) {\n }\n \n Buffer.prototype.write = function write(string, offset, length, encoding) {\n+  const len = this.length;\n   // Buffer#write(string);\n   if (offset === undefined) {\n-    return utf8Write(this, string, 0, this.length);\n+    return utf8Write(this, string, 0, len);\n   }\n   // Buffer#write(string, encoding)\n   if (length === undefined && typeof offset === 'string') {\n     encoding = offset;\n-    length = this.length;\n+    length = len;",
+          "commit_id": "3a8546e517b8969cbb6353c6ba0c2acf7b97d083",
+          "original_commit_id": "3a8546e517b8969cbb6353c6ba0c2acf7b97d083"
+        },
+        {
+          "id": 2947536524,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2947536524",
+          "author": "anonrig",
+          "body": "This can be simplified into a single line.\n\n```\nArray.from({ length: this.length }, (_, i) => this[i]);\n```",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -1208,9 +1212,10 @@ Buffer.prototype.write = function write(string, offset, length, encoding) {\n };\n \n Buffer.prototype.toJSON = function toJSON() {\n-  if (this.length > 0) {\n-    const data = new Array(this.length);\n-    for (let i = 0; i < this.length; ++i)\n+  const len = this.length;\n+  if (len > 0) {\n+    const data = new Array(len);\n+    for (let i = 0; i < len; ++i)\n       data[i] = this[i];",
+          "commit_id": "7c8b68d25f548bc8b3d7eeffb745d4b2e6ab1c68",
+          "original_commit_id": "3a8546e517b8969cbb6353c6ba0c2acf7b97d083"
+        },
+        {
+          "id": 2947611843,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2947611843",
+          "author": "aduh95",
+          "body": "Classic `for` loop is likely more performant, no?",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -1208,9 +1212,10 @@ Buffer.prototype.write = function write(string, offset, length, encoding) {\n };\n \n Buffer.prototype.toJSON = function toJSON() {\n-  if (this.length > 0) {\n-    const data = new Array(this.length);\n-    for (let i = 0; i < this.length; ++i)\n+  const len = this.length;\n+  if (len > 0) {\n+    const data = new Array(len);\n+    for (let i = 0; i < len; ++i)\n       data[i] = this[i];",
+          "commit_id": "7c8b68d25f548bc8b3d7eeffb745d4b2e6ab1c68",
+          "original_commit_id": "3a8546e517b8969cbb6353c6ba0c2acf7b97d083",
+          "in_reply_to_id": 2947536524
+        },
+        {
+          "id": 2969708449,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2969708449",
+          "author": "anonrig",
+          "body": "I'm not sure anymore",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -1208,9 +1212,10 @@ Buffer.prototype.write = function write(string, offset, length, encoding) {\n };\n \n Buffer.prototype.toJSON = function toJSON() {\n-  if (this.length > 0) {\n-    const data = new Array(this.length);\n-    for (let i = 0; i < this.length; ++i)\n+  const len = this.length;\n+  if (len > 0) {\n+    const data = new Array(len);\n+    for (let i = 0; i < len; ++i)\n       data[i] = this[i];",
+          "commit_id": "7c8b68d25f548bc8b3d7eeffb745d4b2e6ab1c68",
+          "original_commit_id": "3a8546e517b8969cbb6353c6ba0c2acf7b97d083",
+          "in_reply_to_id": 2947536524
+        },
+        {
+          "id": 2969886201,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2969886201",
+          "author": "thisalihassan",
+          "body": "Interesting, did a quick benchmark with claude:\r\n\r\n```\r\n25.3ms | Array.from:   381.8ms | Array.from is 15.10x slower\r\nsize=  64 | for-loop:    15.9ms | Array.from:   427.7ms | Array.from is 26.98x slower\r\nsize= 256 | for-loop:    13.9ms | Array.from:   343.0ms | Array.from is 24.62x slower\r\nsize=1024 | for-loop:    14.1ms | Array.from:   326.9ms | Array.from is 23.12x slower\r\n```",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -1208,9 +1212,10 @@ Buffer.prototype.write = function write(string, offset, length, encoding) {\n };\n \n Buffer.prototype.toJSON = function toJSON() {\n-  if (this.length > 0) {\n-    const data = new Array(this.length);\n-    for (let i = 0; i < this.length; ++i)\n+  const len = this.length;\n+  if (len > 0) {\n+    const data = new Array(len);\n+    for (let i = 0; i < len; ++i)\n       data[i] = this[i];",
+          "commit_id": "7c8b68d25f548bc8b3d7eeffb745d4b2e6ab1c68",
+          "original_commit_id": "3a8546e517b8969cbb6353c6ba0c2acf7b97d083",
+          "in_reply_to_id": 2947536524
+        },
+        {
+          "id": 2947539385,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2947539385",
+          "author": "anonrig",
+          "body": "Can you add a reference link to this pull-request above this line",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -1253,45 +1258,47 @@ function swap(b, n, m) {\n }\n \n Buffer.prototype.swap16 = function swap16() {\n-  // For Buffer.length < 128, it's generally faster to\n+  // For Buffer.length <= 32, it's generally faster to",
+          "commit_id": "85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca",
+          "original_commit_id": "3a8546e517b8969cbb6353c6ba0c2acf7b97d083"
+        },
+        {
+          "id": 2971591359,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2971591359",
+          "author": "jasnell",
+          "body": "Would switching from `TypedArrayPrototypeSlice` to `TypedArrayPrototypeSubarray` be easier here? It avoids the extraneous copy possibly eliminates the more complicated manual processing here.",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -383,28 +382,33 @@ Buffer.copyBytesFrom = function copyBytesFrom(view, offset, length) {\n     return new FastBuffer();\n   }\n \n-  if (offset !== undefined || length !== undefined) {\n-    if (offset !== undefined) {\n-      validateInteger(offset, 'offset', 0);\n-      if (offset >= viewLength) return new FastBuffer();\n-    } else {\n-      offset = 0;\n-    }\n-    let end;\n-    if (length !== undefined) {\n-      validateInteger(length, 'length', 0);\n-      end = offset + length;\n-    } else {\n-      end = viewLength;\n-    }\n+  let start = 0;\n+  let end = viewLength;\n \n-    view = TypedArrayPrototypeSlice(view, offset, end);\n+  if (offset !== undefined) {",
+          "commit_id": "85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca",
+          "original_commit_id": "f1d938bfb77a6b6229dba79ebc675b29c37f1080"
+        },
+        {
+          "id": 2972174975,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2972174975",
+          "author": "thisalihassan",
+          "body": "Ok @jasnell  I tried as you suggested, here's my implementation did bench with the current implementation and there was consistant 14-20% of regresssion with `TypedArrayPrototypeSubarray` although I like the code, it's much cleaner\r\n\r\n```javascript\r\nBuffer.copyBytesFrom = function copyBytesFrom(view, offset, length) {\r\n  if (!isTypedArray(view)) {\r\n    throw new ERR_INVALID_ARG_TYPE('view', [ 'TypedArray' ], view);\r\n  }\r\n\r\n  const viewLength = TypedArrayPrototypeGetLength(view);\r\n  if (viewLength === 0) {\r\n    return new FastBuffer();\r\n  }\r\n\r\n  let start = 0;\r\n  let end = viewLength;\r\n\r\n  if (offset !== undefined) {\r\n    validateInteger(offset, 'offset', 0);\r\n    if (offset >= viewLength) return new FastBuffer();\r\n    start = offset;\r\n  }\r\n\r\n  if (length !== undefined) {\r\n    validateInteger(length, 'length', 0);\r\n    end = start + length;\r\n  }\r\n\r\n  view = TypedArrayPrototypeSubarray(view, start, end);\r\n\r\n  return fromArrayLike(new Uint8Array(\r\n    TypedArrayPrototypeGetBuffer(view),\r\n    TypedArrayPrototypeGetByteOffset(view),\r\n    TypedArrayPrototypeGetByteLength(view)));\r\n};\r\n```",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -383,28 +382,33 @@ Buffer.copyBytesFrom = function copyBytesFrom(view, offset, length) {\n     return new FastBuffer();\n   }\n \n-  if (offset !== undefined || length !== undefined) {\n-    if (offset !== undefined) {\n-      validateInteger(offset, 'offset', 0);\n-      if (offset >= viewLength) return new FastBuffer();\n-    } else {\n-      offset = 0;\n-    }\n-    let end;\n-    if (length !== undefined) {\n-      validateInteger(length, 'length', 0);\n-      end = offset + length;\n-    } else {\n-      end = viewLength;\n-    }\n+  let start = 0;\n+  let end = viewLength;\n \n-    view = TypedArrayPrototypeSlice(view, offset, end);\n+  if (offset !== undefined) {",
+          "commit_id": "85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca",
+          "original_commit_id": "f1d938bfb77a6b6229dba79ebc675b29c37f1080",
+          "in_reply_to_id": 2971591359
+        },
+        {
+          "id": 2972190846,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2972190846",
+          "author": "jasnell",
+          "body": "A comment here would be helpful then.",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -1253,45 +1258,50 @@ function swap(b, n, m) {\n }\n \n Buffer.prototype.swap16 = function swap16() {\n-  // For Buffer.length < 128, it's generally faster to\n+  // Ref: https://github.com/nodejs/node/pull/61871#discussion_r2889557696\n+  // For Buffer.length <= 32, it's generally faster to\n   // do the swap in javascript. For larger buffers,\n   // dropping down to the native code is faster.\n-  const len = this.length;\n+  const len = TypedArrayPrototypeGetLength(this);\n   if (len % 2 !== 0)\n     throw new ERR_INVALID_BUFFER_SIZE('16-bits');\n-  if (len < 128) {\n+  if (len <= 32) {\n     for (let i = 0; i < len; i += 2)\n       swap(this, i, i + 1);\n     return this;\n   }\n-  return _swap16(this);\n+  _swap16(this);\n+  return this;\n };\n \n Buffer.prototype.swap32 = function swap32() {\n-  // For Buffer.length < 192, it's generally faster to\n+  // Ref: https://github.com/nodejs/node/pull/61871#discussion_r2889557696\n+  // For Buffer.length <= 32, it's generally faster to\n   // do the swap in javascript. For larger buffers,\n   // dropping down to the native code is faster.\n-  const len = this.length;\n+  const len = TypedArrayPrototypeGetLength(this);\n   if (len % 4 !== 0)\n     throw new ERR_INVALID_BUFFER_SIZE('32-bits');\n-  if (len < 192) {\n+  if (len <= 32) {\n     for (let i = 0; i < len; i += 4) {\n       swap(this, i, i + 3);\n       swap(this, i + 1, i + 2);\n     }\n     return this;\n   }\n-  return _swap32(this);\n+  _swap32(this);\n+  return this;\n };\n \n Buffer.prototype.swap64 = function swap64() {\n-  // For Buffer.length < 192, it's generally faster to\n+  // Ref: https://github.com/nodejs/node/pull/61871#discussion_r2889557696\n+  // For Buffer.length < 48, it's generally faster to\n   // do the swap in javascript. For larger buffers,\n   // dropping down to the native code is faster.\n-  const len = this.length;\n+  const len = TypedArrayPrototypeGetLength(this);\n   if (len % 8 !== 0)\n     throw new ERR_INVALID_BUFFER_SIZE('64-bits');\n-  if (len < 192) {\n+  if (len < 48) {",
+          "commit_id": "85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca",
+          "original_commit_id": "f1d938bfb77a6b6229dba79ebc675b29c37f1080",
+          "in_reply_to_id": 2971607372
+        },
+        {
+          "id": 2972195280,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2972195280",
+          "author": "jasnell",
+          "body": "hmm... that would still make it a net improvement over the current implementation. I'll leave it up to you, I'm just not a big fan of the manual handling.",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -383,28 +382,33 @@ Buffer.copyBytesFrom = function copyBytesFrom(view, offset, length) {\n     return new FastBuffer();\n   }\n \n-  if (offset !== undefined || length !== undefined) {\n-    if (offset !== undefined) {\n-      validateInteger(offset, 'offset', 0);\n-      if (offset >= viewLength) return new FastBuffer();\n-    } else {\n-      offset = 0;\n-    }\n-    let end;\n-    if (length !== undefined) {\n-      validateInteger(length, 'length', 0);\n-      end = offset + length;\n-    } else {\n-      end = viewLength;\n-    }\n+  let start = 0;\n+  let end = viewLength;\n \n-    view = TypedArrayPrototypeSlice(view, offset, end);\n+  if (offset !== undefined) {",
+          "commit_id": "85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca",
+          "original_commit_id": "f1d938bfb77a6b6229dba79ebc675b29c37f1080",
+          "in_reply_to_id": 2971591359
+        },
+        {
+          "id": 2972235299,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r2972235299",
+          "author": "thisalihassan",
+          "body": "Since I was aiming to maxing perf, I will keep it if the regression was less I would have kept your solution",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -383,28 +382,33 @@ Buffer.copyBytesFrom = function copyBytesFrom(view, offset, length) {\n     return new FastBuffer();\n   }\n \n-  if (offset !== undefined || length !== undefined) {\n-    if (offset !== undefined) {\n-      validateInteger(offset, 'offset', 0);\n-      if (offset >= viewLength) return new FastBuffer();\n-    } else {\n-      offset = 0;\n-    }\n-    let end;\n-    if (length !== undefined) {\n-      validateInteger(length, 'length', 0);\n-      end = offset + length;\n-    } else {\n-      end = viewLength;\n-    }\n+  let start = 0;\n+  let end = viewLength;\n \n-    view = TypedArrayPrototypeSlice(view, offset, end);\n+  if (offset !== undefined) {",
+          "commit_id": "85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca",
+          "original_commit_id": "f1d938bfb77a6b6229dba79ebc675b29c37f1080",
+          "in_reply_to_id": 2971591359
+        },
+        {
+          "id": 3002863679,
+          "url": "https://github.com/nodejs/node/pull/61871#discussion_r3002863679",
+          "author": "jasnell",
+          "body": "Could I perhaps bother you to add a TODO comment indicating that the manual approach was tested to be faster and suggesting that it might be worth revisiting later? Good either way tho.",
+          "path": "lib/buffer.js",
+          "diff_hunk": "@@ -383,28 +382,33 @@ Buffer.copyBytesFrom = function copyBytesFrom(view, offset, length) {\n     return new FastBuffer();\n   }\n \n-  if (offset !== undefined || length !== undefined) {\n-    if (offset !== undefined) {\n-      validateInteger(offset, 'offset', 0);\n-      if (offset >= viewLength) return new FastBuffer();\n-    } else {\n-      offset = 0;\n-    }\n-    let end;\n-    if (length !== undefined) {\n-      validateInteger(length, 'length', 0);\n-      end = offset + length;\n-    } else {\n-      end = viewLength;\n-    }\n+  let start = 0;\n+  let end = viewLength;\n \n-    view = TypedArrayPrototypeSlice(view, offset, end);\n+  if (offset !== undefined) {",
+          "commit_id": "85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca",
+          "original_commit_id": "f1d938bfb77a6b6229dba79ebc675b29c37f1080",
+          "in_reply_to_id": 2971591359
+        }
+      ],
+      "branchCommits": [
+        {
+          "sha": "1ec8a922d234cf37c10f668dc3413f75c86b4f96",
+          "url": "https://github.com/nodejs/node/commit/1ec8a922d234cf37c10f668dc3413f75c86b4f96",
+          "message": "buffer: improve performance of multiple Buffer operations\n\n- copyBytesFrom: calculate byte offsets directly instead of\n  slicing into an intermediate typed array\n- toString('hex'): use V8 Uint8Array.prototype.toHex() builtin\n- fill: add single-char ASCII fast path\n- indexOf: use indexOfString directly for ASCII encoding\n- swap16/32/64: add V8 Fast API functions"
+        },
+        {
+          "sha": "9c66a0a74a81344ac32efc4d519eba54873e87fe",
+          "url": "https://github.com/nodejs/node/commit/9c66a0a74a81344ac32efc4d519eba54873e87fe",
+          "message": "buffer: address PR feedback\n\n- Guard ensureUint8ArrayToHex against --no-js-base-64 flag by\n  falling back to C++ hexSlice when toHex is unavailable\n- Remove THROW_AND_RETURN_UNLESS_BUFFER and return value from\n  slow Swap16/32/64 to match fast path conventions (JS validates)\n- Add TRACK_V8_FAST_API_CALL to FastSwap16/32/64\n- Add test/parallel/test-buffer-swap-fast.js for fast API verification"
+        },
+        {
+          "sha": "631ec7d21ceed7189df3e70a1123eab6f0f2601e",
+          "url": "https://github.com/nodejs/node/commit/631ec7d21ceed7189df3e70a1123eab6f0f2601e",
+          "message": "buffer: revert toHex in favour of nbytes HexEncode update\n\nRemove V8 Uint8Array.prototype.toHex() path for Buffer.toString('hex')\nin favour of the upcoming nbytes HexEncode improvement (nodejs/nbytes#12)\nwhich is ~3x faster through the existing C++ hexSlice path.\n\nRefs: https://github.com/nodejs/nbytes/pull/12"
+        },
+        {
+          "sha": "ef4dd77da0fa5df978848f97b4e7bb9e6377d81d",
+          "url": "https://github.com/nodejs/node/commit/ef4dd77da0fa5df978848f97b4e7bb9e6377d81d",
+          "message": "resolve feedback"
+        },
+        {
+          "sha": "4d2f539e39cab966c37b1ebf6dd4a984dcc500b6",
+          "url": "https://github.com/nodejs/node/commit/4d2f539e39cab966c37b1ebf6dd4a984dcc500b6",
+          "message": "resolve feedback on fast callbacks"
+        },
+        {
+          "sha": "6e9f17d897206941e13979284cd08432f9c8009c",
+          "url": "https://github.com/nodejs/node/commit/6e9f17d897206941e13979284cd08432f9c8009c",
+          "message": "added comments and updated tests"
+        },
+        {
+          "sha": "2a678028b7907c886e8dceb1efdaeec843be6235",
+          "url": "https://github.com/nodejs/node/commit/2a678028b7907c886e8dceb1efdaeec843be6235",
+          "message": "resolve feedback"
+        },
+        {
+          "sha": "2cdc20a0e6f16c97036fea33685f49137679d240",
+          "url": "https://github.com/nodejs/node/commit/2cdc20a0e6f16c97036fea33685f49137679d240",
+          "message": "resolved feedback"
+        },
+        {
+          "sha": "49e79cce59bff60b24aff559e93774a4af01abd4",
+          "url": "https://github.com/nodejs/node/commit/49e79cce59bff60b24aff559e93774a4af01abd4",
+          "message": "Update lib/buffer.js\n\nCo-authored-by: Antoine du Hamel <duhamelantoine1995@gmail.com>"
+        },
+        {
+          "sha": "7c8b68d25f548bc8b3d7eeffb745d4b2e6ab1c68",
+          "url": "https://github.com/nodejs/node/commit/7c8b68d25f548bc8b3d7eeffb745d4b2e6ab1c68",
+          "message": "improve variable names and add Refs"
+        },
+        {
+          "sha": "85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca",
+          "url": "https://github.com/nodejs/node/commit/85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca",
+          "message": "used primordial getter for safety"
+        }
+      ],
+      "headVsMergeSameContent": true
+    }
+  }
+}

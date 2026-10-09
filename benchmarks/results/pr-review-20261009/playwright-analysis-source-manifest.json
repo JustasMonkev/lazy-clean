@@ -1,0 +1,102 @@
+[
+  {
+    "pr": 31727,
+    "path": "tests/playwright-test/only-changed.spec.ts",
+    "sha256": "5ff3f8d6d1ab35402caa59bde1bdee71153853583ebc0de09e96173f5e36b450"
+  },
+  {
+    "pr": 31727,
+    "path": "packages/playwright/src/runner/tasks.ts",
+    "sha256": "bf2b52529c32c6c2ccf0774139a69b9358f5534bd4d8d0c2c671f77170e4acba"
+  },
+  {
+    "pr": 31727,
+    "path": "packages/playwright/src/runner/vcs.ts",
+    "sha256": "e80a2cd53e14e9a4b29864f7cc705a60347e1d073ea36712a83f3f80f64304b6"
+  },
+  {
+    "pr": 31842,
+    "path": "tests/playwright-test/test-server-connection.spec.ts",
+    "sha256": "79aa53fa3be88b81a1fe4984e0aafc9aea531f5c8c14b246a660060d9bdda3fa"
+  },
+  {
+    "pr": 31842,
+    "path": "packages/trace-viewer/src/ui/uiModeView.tsx",
+    "sha256": "e8f6c8fafdd3309293db04b2c51cdf362bebbc8a7b2c1d9d54bc6ad48542ba1b"
+  },
+  {
+    "pr": 34949,
+    "path": "tests/page/page-evaluate.spec.ts",
+    "sha256": "274f3147bcdeb1bdbcc3333ca985e20e2c4321a63fb8f0fe86fa1df90d3a37cb"
+  },
+  {
+    "pr": 34949,
+    "path": "packages/playwright-core/src/protocol/serializers.ts",
+    "sha256": "1a5c4efca6d7ea5924d395c219711f036fe34d7d69e86788c034db044f70586a"
+  },
+  {
+    "pr": 34949,
+    "path": "packages/playwright-core/src/server/isomorphic/utilityScriptSerializers.ts",
+    "sha256": "b7628bcfcf7fcfce463254336bc5a04976314fb89b76361ae2aeec23fe616d57"
+  },
+  {
+    "pr": 32156,
+    "path": "packages/playwright/src/isomorphic/testServerConnection.ts",
+    "sha256": "0da55d4993197ac5a7f08851039612a0c3768f523a0dca6e2dd470a65ef234b9"
+  },
+  {
+    "pr": 32156,
+    "path": "packages/playwright/src/runner/watchMode.ts",
+    "sha256": "5c35880282cedcff36410354308480deac28909ccf0508c6f4c04b4f726b797d"
+  },
+  {
+    "pr": 36059,
+    "path": "tests/page/page-aria-snapshot-ai.spec.ts",
+    "sha256": "a366a277596f69e710f4677d576e83105f26a50abdbc95ecab96bf599636c3b3"
+  },
+  {
+    "pr": 36059,
+    "path": "packages/injected/src/ariaSnapshot.ts",
+    "sha256": "cadd04e062d887dbe2a09f97ef4b6a626459dee41e9116ee40445cfc55470218"
+  },
+  {
+    "pr": 36059,
+    "path": "packages/playwright-core/src/server/codegen/javascript.ts",
+    "sha256": "7d297d0470ad23efd7e5d858a4d222e6dd7e0947515aa35b41b7febff5c4dbf1"
+  },
+  {
+    "pr": 29890,
+    "path": "tests/page/matchers.misc.spec.ts",
+    "sha256": "58e74e149d3e036bff74331406d5ee13c0e89ffcfbdd6707d77ff2733c84bbaf"
+  },
+  {
+    "pr": 29890,
+    "path": "packages/playwright/src/matchers/toMatchText.ts",
+    "sha256": "048d531b43c56bd72ee5d7d73bca733278758ff1429150d731ebea218785e67c"
+  },
+  {
+    "pr": 29890,
+    "path": "packages/playwright-core/src/server/injected/injectedScript.ts",
+    "sha256": "d6f4a3e9bc6a6c4ed57da2afa2d2c5a7ee8b9ba6cded60456ed9b902b0fce707"
+  },
+  {
+    "pr": 37761,
+    "path": "packages/playwright/src/util.ts",
+    "sha256": "8997ba0b1e48294652dac497f0444e8cf5cdcb995e2f3732fa7ed9d1473ef57e"
+  },
+  {
+    "pr": 37761,
+    "path": "packages/playwright/src/worker/testInfo.ts",
+    "sha256": "d1a59b507fe66d6d9c92d96b94c2e5a66a751020dd1bc484599391dbfb931170"
+  },
+  {
+    "pr": 37761,
+    "path": "packages/trace-viewer/src/ui/annotationsTab.tsx",
+    "sha256": "c802eb33841d584342a3ed3bc3428d664b6607e82db4a1839d96980d971a33ae"
+  },
+  {
+    "pr": 34238,
+    "path": ".github/actions/run-test/action.yml",
+    "sha256": "602ff263d02c4586bb876e963be734c4cd399543bae821507e3c83dbde34624e"
+  }
+]

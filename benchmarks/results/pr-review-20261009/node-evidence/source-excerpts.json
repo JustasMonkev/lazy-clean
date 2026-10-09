@@ -1,0 +1,86 @@
+{
+  "format": "Exact fetched UTF-8 excerpts; startLine is 1-based; original review hunks are in research-source.json; full files were scanned independently and removed",
+  "excerpts": [
+    {
+      "key": "file59700",
+      "path": "lib/internal/test_runner/reporter/utils.js",
+      "commit": "44ccad87f4d229a2cf3755affae1dc5e3fbbfba9",
+      "upstreamUrl": "https://github.com/nodejs/node/blob/44ccad87f4d229a2cf3755affae1dc5e3fbbfba9/lib/internal/test_runner/reporter/utils.js",
+      "gitBlobSha": "288c129579182f5f622b15a38031b8cad32553eb",
+      "startLine": 60,
+      "code": "function formatError(error, indent) {\n  const err = error.code === 'ERR_TEST_FAILURE' ? error.cause : error;\n  const message = ArrayPrototypeJoin(\n    RegExpPrototypeSymbolSplit(\n      hardenRegExp(/\\r?\\n/),\n      inspectWithNoCustomRetry(err, inspectOptions),\n    ), `\\n${indent}  `);\n  return `\\n${indent}  ${message}\\n`;\n}\n\nfunction formatTestReport(type, data, showErrorDetails = true, prefix = '', indent = '') {\n  let color = reporterColorMap[type] ?? colors.white;\n  let symbol = reporterUnicodeSymbolMap[type] ?? ' ';\n  const { skip, todo } = data;\n  const duration_ms = data.details?.duration_ms ? ` ${colors.gray}(${data.details.duration_ms}ms)${colors.white}` : '';\n  let title = `${data.name}${duration_ms}`;\n\n  if (skip !== undefined) {\n    title += ` # ${typeof skip === 'string' && skip.length ? skip : 'SKIP'}`;\n  } else if (todo !== undefined) {\n    title += ` # ${typeof todo === 'string' && todo.length ? todo : 'TODO'}`;\n  }\n\n  const err = showErrorDetails && data.details?.error ? formatError(data.details.error, indent) : '';\n\n  if (skip !== undefined) {\n    color = colors.gray;\n    symbol = reporterUnicodeSymbolMap['hyphen:minus'];\n  }\n  return `${prefix}${indent}${color}${symbol}${title}${colors.white}${err}`;\n}\n\n"
+    },
+    {
+      "key": "file57144",
+      "path": "test/parallel/test-http2-client-promisify-connect-error.js",
+      "commit": "42a53b87c600bd2f8e45e548de8fb1e0ded64126",
+      "upstreamUrl": "https://github.com/nodejs/node/blob/42a53b87c600bd2f8e45e548de8fb1e0ded64126/test/parallel/test-http2-client-promisify-connect-error.js",
+      "gitBlobSha": "4cd4f48e4c8bbf4ea16571ef61de4200df5cb0e5",
+      "startLine": 1,
+      "code": "'use strict';\n\nconst common = require('../common');\n\nif (!common.hasCrypto)\n  common.skip('missing crypto');\nconst assert = require('assert');\nconst http2 = require('http2');\nconst util = require('util');\n\nconst connect = util.promisify(http2.connect);\n\nconst error = new Error('Unable to resolve hostname');\n\nfunction lookup(hostname, options, callback) {\n  callback(error);\n}\n\nassert.rejects(\n  connect('http://hostname', { lookup }),\n  error,\n).then(common.mustCall());\n"
+    },
+    {
+      "key": "file61871",
+      "path": "lib/buffer.js",
+      "commit": "85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca",
+      "upstreamUrl": "https://github.com/nodejs/node/blob/85fb7f19b65dba546a3c41b2d37e5b5a3c9edcca/lib/buffer.js",
+      "gitBlobSha": "4d96a536a15f8b0bc02fd99b17930fddb9fc1902",
+      "startLine": 1214,
+      "code": "Buffer.prototype.toJSON = function toJSON() {\n  const bufferLength = TypedArrayPrototypeGetLength(this);\n  if (bufferLength > 0) {\n    const data = new Array(bufferLength);\n    for (let i = 0; i < bufferLength; ++i)\n      data[i] = this[i];\n    return { type: 'Buffer', data };\n  }\n  return { type: 'Buffer', data: [] };\n};\n\n"
+    },
+    {
+      "key": "file12712",
+      "path": "lib/util.js",
+      "commit": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+      "upstreamUrl": "https://github.com/nodejs/node/blob/af3aa682ac534bb55765f5fef2755a88e5ff2580/lib/util.js",
+      "gitBlobSha": "11dd521668ddba98bcfc03a09b225dd41cadca18",
+      "startLine": 1051,
+      "code": "function callbackifyOnRejected(reason, cb) {\n  // `!reason` guard inspired by bluebird (Ref: https://goo.gl/t5IS6M).\n  // Because `null` is a special error value in callbacks which means \"no error\n  // occurred\", we error-wrap so the callback consumer can distinguish between\n  // \"the promise rejected with null\" or \"the promise fulfilled with undefined\".\n  if (!reason) {\n    const newReason = new errors.Error('FALSY_VALUE_REJECTION');\n    newReason.reason = reason;\n    reason = newReason;\n    Error.captureStackTrace(reason, callbackifyOnRejected);\n  }\n  return cb(reason);\n}\n\n\nfunction callbackify(original) {\n  if (typeof original !== 'function') {\n    throw new errors.TypeError(\n      'ERR_INVALID_ARG_TYPE',\n      'original',\n      'function');\n  }\n\n  // We DO NOT return the promise as it gives the user a false sense that\n  // the promise is actually somehow related to the callback's execution\n  // and that the callback throwing will reject the promise.\n  function callbackified(...args) {\n    const maybeCb = args.pop();\n    if (typeof maybeCb !== 'function') {\n      throw new errors.TypeError(\n        'ERR_INVALID_ARG_TYPE',\n        'last argument',\n        'function');\n    }\n    const cb = (...args) => { Reflect.apply(maybeCb, this, args); };\n    // In true node style we process the callback on `nextTick` with all the\n    // implications (stack, `uncaughtException`, `async_hooks`)\n    Reflect.apply(original, this, args)\n      .then((ret) => process.nextTick(cb, null, ret),\n            (rej) => process.nextTick(callbackifyOnRejected, rej, cb));\n  }\n\n  Object.setPrototypeOf(callbackified, Object.getPrototypeOf(original));\n  Object.defineProperties(callbackified,\n                          Object.getOwnPropertyDescriptors(original));\n  return callbackified;\n}\n\nexports.callbackify = callbackify;\n"
+    },
+    {
+      "key": "file44943",
+      "path": "lib/diagnostics_channel.js",
+      "commit": "c23e772ccc19618493937fd2a6a7addf83267ade",
+      "upstreamUrl": "https://github.com/nodejs/node/blob/c23e772ccc19618493937fd2a6a7addf83267ade/lib/diagnostics_channel.js",
+      "gitBlobSha": "be50c3b8f6e48d86ddc5ce54eff8d51de80ab8cc",
+      "startLine": 32,
+      "code": "function decRef(channel) {\n  if (channels.get(channel.name).decRef() === 0) {\n    channels.delete(channel.name);\n  }\n}\n\n"
+    },
+    {
+      "key": "44943-memory-final",
+      "path": "test/parallel/test-diagnostics-channel-memory-leak.js",
+      "commit": "c23e772ccc19618493937fd2a6a7addf83267ade",
+      "upstreamUrl": "https://github.com/nodejs/node/blob/c23e772ccc19618493937fd2a6a7addf83267ade/test/parallel/test-diagnostics-channel-memory-leak.js",
+      "gitBlobSha": "9e6364d168562f3146a6bbc3f506d00b64b8be15",
+      "startLine": 1,
+      "code": "// Flags: --expose-gc\n'use strict';\n\n// This test ensures that diagnostic channel references aren't leaked.\n\nrequire('../common');\nconst { ok } = require('assert');\n\nconst { subscribe, unsubscribe } = require('diagnostics_channel');\n\nfunction noop() {}\n\nconst heapUsedBefore = process.memoryUsage().heapUsed;\n\nfor (let i = 0; i < 1000; i++) {\n  subscribe(String(i), noop);\n  unsubscribe(String(i), noop);\n}\n\nglobal.gc();\n\nconst heapUsedAfter = process.memoryUsage().heapUsed;\n\nok(heapUsedBefore >= heapUsedAfter);\n"
+    },
+    {
+      "key": "44943-callback-test",
+      "path": "test/parallel/test-diagnostics-channel-tracing-channel-callback-run-stores.js",
+      "commit": "c23e772ccc19618493937fd2a6a7addf83267ade",
+      "upstreamUrl": "https://github.com/nodejs/node/blob/c23e772ccc19618493937fd2a6a7addf83267ade/test/parallel/test-diagnostics-channel-tracing-channel-callback-run-stores.js",
+      "gitBlobSha": "874433efd2cb4a87fd434c777f271e9525a8aeac",
+      "startLine": 1,
+      "code": "'use strict';\n\nconst common = require('../common');\nconst { AsyncLocalStorage } = require('async_hooks');\nconst dc = require('diagnostics_channel');\nconst assert = require('assert');\n\nconst channel = dc.tracingChannel('test');\nconst store = new AsyncLocalStorage();\n\nconst firstContext = { foo: 'bar' };\nconst secondContext = { baz: 'buz' };\n\nchannel.start.bindStore(store, common.mustCall(() => {\n  return firstContext;\n}));\n\nchannel.asyncStart.bindStore(store, common.mustCall(() => {\n  return secondContext;\n}));\n\nassert.strictEqual(store.getStore(), undefined);\nchannel.traceCallback(common.mustCall((cb) => {\n  assert.deepStrictEqual(store.getStore(), firstContext);\n  setImmediate(cb);\n}), 0, {}, null, common.mustCall(() => {\n  assert.deepStrictEqual(store.getStore(), secondContext);\n}));\nassert.strictEqual(store.getStore(), undefined);\n"
+    },
+    {
+      "key": "44943-promise-test",
+      "path": "test/parallel/test-diagnostics-channel-tracing-channel-promise-run-stores.js",
+      "commit": "c23e772ccc19618493937fd2a6a7addf83267ade",
+      "upstreamUrl": "https://github.com/nodejs/node/blob/c23e772ccc19618493937fd2a6a7addf83267ade/test/parallel/test-diagnostics-channel-tracing-channel-promise-run-stores.js",
+      "gitBlobSha": "bd88e5553359bd6e0794b70e8b74a14c62a47c97",
+      "startLine": 1,
+      "code": "'use strict';\n\nconst common = require('../common');\nconst { setTimeout } = require('node:timers/promises');\nconst { AsyncLocalStorage } = require('async_hooks');\nconst dc = require('diagnostics_channel');\nconst assert = require('assert');\n\nconst channel = dc.tracingChannel('test');\nconst store = new AsyncLocalStorage();\n\nconst context = { foo: 'bar' };\n\nchannel.start.bindStore(store, common.mustCall(() => {\n  return context;\n}));\n\nassert.strictEqual(store.getStore(), undefined);\nchannel.tracePromise(common.mustCall(async () => {\n  assert.deepStrictEqual(store.getStore(), context);\n  await setTimeout(1);\n  assert.deepStrictEqual(store.getStore(), context);\n}));\nassert.strictEqual(store.getStore(), undefined);\n"
+    },
+    {
+      "key": "12712-tests-final",
+      "path": "test/parallel/test-util-callbackify.js",
+      "commit": "af3aa682ac534bb55765f5fef2755a88e5ff2580",
+      "upstreamUrl": "https://github.com/nodejs/node/blob/af3aa682ac534bb55765f5fef2755a88e5ff2580/test/parallel/test-util-callbackify.js",
+      "gitBlobSha": "fa793d4a7faccbc0f9a22f192609216cf0fd7f2c",
+      "startLine": 12,
+      "code": "const values = [\n  'hello world',\n  null,\n  undefined,\n  false,\n  0,\n  {},\n  { key: 'value' },\n  Symbol('I am a symbol'),\n  function ok() {},\n  ['array', 'with', 4, 'values'],\n  new Error('boo')\n];\n\n{\n  // Test that the resolution value is passed as second argument to callback\n  for (const value of values) {\n    // Test and `async function`\n    async function asyncFn() {\n      return await Promise.resolve(value);\n    }\n\n    const cbAsyncFn = callbackify(asyncFn);\n    cbAsyncFn(common.mustCall((err, ret) => {\n      assert.ifError(err);\n      assert.strictEqual(ret, value);\n    }));\n\n    // Test Promise factory\n    function promiseFn() {\n      return Promise.resolve(value);\n    }\n\n    const cbPromiseFn = callbackify(promiseFn);\n    cbPromiseFn(common.mustCall((err, ret) => {\n      assert.ifError(err);\n      assert.strictEqual(ret, value);\n    }));\n\n    // Test Thenable\n    function thenableFn() {\n      return {\n        then(onRes, onRej) {\n          onRes(value);\n        }\n      };\n    }\n\n    const cbThenableFn = callbackify(thenableFn);\n    cbThenableFn(common.mustCall((err, ret) => {\n      assert.ifError(err);\n      assert.strictEqual(ret, value);\n    }));\n  }\n}\n\n{\n  // Test that rejection reason is passed as first argument to callback\n  for (const value of values) {\n    // Test an `async function`\n    async function asyncFn() {\n      return await Promise.reject(value);\n    }\n\n    const cbAsyncFn = callbackify(asyncFn);\n    cbAsyncFn(common.mustCall((err, ret) => {\n      assert.strictEqual(ret, undefined);\n      if (err instanceof Error) {\n        if ('reason' in err) {\n          assert(!value);\n          assert.strictEqual(err.code, 'FALSY_VALUE_REJECTION');\n          assert.strictEqual(err.reason, value);\n        } else {\n          assert.strictEqual(String(value).endsWith(err.message), true);\n        }\n      } else {\n        assert.strictEqual(err, value);\n      }\n    }));\n\n    // test a Promise factory\n    function promiseFn() {\n      return Promise.reject(value);\n    }\n\n    const cbPromiseFn = callbackify(promiseFn);\n    cbPromiseFn(common.mustCall((err, ret) => {\n      assert.strictEqual(ret, undefined);\n      if (err instanceof Error) {\n        if ('reason' in err) {\n          assert(!value);\n          assert.strictEqual(err.code, 'FALSY_VALUE_REJECTION');\n          assert.strictEqual(err.reason, value);\n        } else {\n          assert.strictEqual(String(value).endsWith(err.message), true);\n        }\n      } else {\n        assert.strictEqual(err, value);\n      }\n    }));\n\n    // Test Thenable\n    function thenableFn() {\n      return {\n        then(onRes, onRej) {\n          onRej(value);\n        }\n      };\n    }\n\n    const cbThenableFn = callbackify(thenableFn);\n    cbThenableFn(common.mustCall((err, ret) => {\n      assert.strictEqual(ret, undefined);\n      if (err instanceof Error) {\n        if ('reason' in err) {\n          assert(!value);\n          assert.strictEqual(err.code, 'FALSY_VALUE_REJECTION');\n          assert.strictEqual(err.reason, value);\n        } else {\n          assert.strictEqual(String(value).endsWith(err.message), true);\n        }\n      } else {\n        assert.strictEqual(err, value);\n      }\n    }));\n  }\n}\n\n{\n  // Test that arguments passed to callbackified function are passed to original\n  for (const value of values) {\n    async function asyncFn(arg) {\n      assert.strictEqual(arg, value);\n      return await Promise.resolve(arg);\n    }\n\n    const cbAsyncFn = callbackify(asyncFn);\n    cbAsyncFn(value, common.mustCall((err, ret) => {\n      assert.ifError(err);\n      assert.strictEqual(ret, value);\n    }));\n\n    function promiseFn(arg) {\n      assert.strictEqual(arg, value);\n      return Promise.resolve(arg);\n    }\n\n    const cbPromiseFn = callbackify(promiseFn);\n    cbPromiseFn(value, common.mustCall((err, ret) => {\n      assert.ifError(err);\n      assert.strictEqual(ret, value);\n    }));\n  }\n}\n\n{\n  // Test that `this` binding is the same for callbackified and original\n  for (const value of values) {\n    const iAmThis = {\n      fn(arg) {\n        assert.strictEqual(this, iAmThis);\n        return Promise.resolve(arg);\n      },\n    };\n    iAmThis.cbFn = callbackify(iAmThis.fn);\n    iAmThis.cbFn(value, common.mustCall(function(err, ret) {\n      assert.ifError(err);\n      assert.strictEqual(ret, value);\n      assert.strictEqual(this, iAmThis);\n    }));\n\n    const iAmThat = {\n      async fn(arg) {\n        assert.strictEqual(this, iAmThat);\n        return await Promise.resolve(arg);\n      },\n    };\n    iAmThat.cbFn = callbackify(iAmThat.fn);\n    iAmThat.cbFn(value, common.mustCall(function(err, ret) {\n      assert.ifError(err);\n      assert.strictEqual(ret, value);\n      assert.strictEqual(this, iAmThat);\n    }));\n  }\n}\n\n{\n  // Test that callback that throws emits an `uncaughtException` event\n  const fixture = join(fixtureDir, 'callbackify1.js');\n  execFile(\n    process.execPath,\n    [fixture],\n    common.mustCall((err, stdout, stderr) => {\n      assert.strictEqual(err.code, 1);\n      assert.strictEqual(Object.getPrototypeOf(err).name, 'Error');\n      assert.strictEqual(stdout, '');\n      const errLines = stderr.trim().split(/[\\r\\n]+/g);\n      const errLine = errLines.find((l) => /^Error/.exec(l));\n      assert.strictEqual(errLine, `Error: ${fixture}`);\n    })\n  );\n}\n\n{\n  // Test that handled `uncaughtException` works and passes rejection reason\n  const fixture = join(fixtureDir, 'callbackify2.js');\n  execFile(\n    process.execPath,\n    [fixture],\n    common.mustCall((err, stdout, stderr) => {\n      assert.ifError(err);\n      assert.strictEqual(stdout.trim(), fixture);\n      assert.strictEqual(stderr, '');\n    })\n  );\n}\n"
+    }
+  ]
+}

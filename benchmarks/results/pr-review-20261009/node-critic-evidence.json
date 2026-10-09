@@ -1,0 +1,1920 @@
+{
+  "purposefulSampling": true,
+  "searches": [
+    {
+      "i": 0,
+      "results": [
+        {
+          "title": "src: simplify exit code accesses",
+          "url": "https://github.com/nodejs/node/pull/45125",
+          "issue_number": 45125
+        },
+        {
+          "title": "src: simplify memory management using `node::Malloc()` and friends",
+          "url": "https://github.com/nodejs/node/pull/8482",
+          "issue_number": 8482
+        },
+        {
+          "title": "url: simplify and improve url formatting",
+          "url": "https://github.com/nodejs/node/pull/46736",
+          "issue_number": 46736
+        },
+        {
+          "title": "src: simplify ECDH::GetCurves()",
+          "url": "https://github.com/nodejs/node/pull/44309",
+          "issue_number": 44309
+        },
+        {
+          "title": "src: simplify embedder entry point execution.",
+          "url": "https://github.com/nodejs/node/pull/51557",
+          "issue_number": 51557
+        },
+        {
+          "title": "crypto: simplify assertions in Safe*Print",
+          "url": "https://github.com/nodejs/node/pull/49709",
+          "issue_number": 49709
+        },
+        {
+          "title": "deps, src: simplifying base64 encoding",
+          "url": "https://github.com/nodejs/node/pull/52714",
+          "issue_number": 52714
+        },
+        {
+          "title": "doc: simplify \"make use of\" to \"use\"",
+          "url": "https://github.com/nodejs/node/pull/34861",
+          "issue_number": 34861
+        },
+        {
+          "title": "tools: simplify and fix commit queue",
+          "url": "https://github.com/nodejs/node/pull/40742",
+          "issue_number": 40742
+        },
+        {
+          "title": "child_process: simplify spawn argument parsing",
+          "url": "https://github.com/nodejs/node/pull/27854",
+          "issue_number": 27854
+        },
+        {
+          "title": "inspector: simplify dispatchProtocolMessage",
+          "url": "https://github.com/nodejs/node/pull/49780",
+          "issue_number": 49780
+        },
+        {
+          "title": "doc: edit and simplify util.inspect() docs",
+          "url": "https://github.com/nodejs/node/pull/25195",
+          "issue_number": 25195
+        },
+        {
+          "title": "timers: simplify the compareTimersLists function",
+          "url": "https://github.com/nodejs/node/pull/57110",
+          "issue_number": 57110
+        },
+        {
+          "title": "src: simplify node modules traverse path",
+          "url": "https://github.com/nodejs/node/pull/53061",
+          "issue_number": 53061
+        },
+        {
+          "title": "stream: simplify prefinish",
+          "url": "https://github.com/nodejs/node/pull/50204",
+          "issue_number": 50204
+        }
+      ]
+    },
+    {
+      "i": 1,
+      "results": [
+        {
+          "title": "esm: add chaining to loaders",
+          "url": "https://github.com/nodejs/node/pull/42623",
+          "issue_number": 42623
+        },
+        {
+          "title": "module: implement `register` utility",
+          "url": "https://github.com/nodejs/node/pull/46826",
+          "issue_number": 46826
+        },
+        {
+          "title": "v16.14.1 release proposal",
+          "url": "https://github.com/nodejs/node/pull/42200",
+          "issue_number": 42200
+        },
+        {
+          "title": "stream: enable usage of webstreams on compose()",
+          "url": "https://github.com/nodejs/node/pull/46675",
+          "issue_number": 46675
+        },
+        {
+          "title": "test_runner: fix afterEach not running on test failures",
+          "url": "https://github.com/nodejs/node/pull/45204",
+          "issue_number": 45204
+        },
+        {
+          "title": "v17.5.0 release proposal",
+          "url": "https://github.com/nodejs/node/pull/41897",
+          "issue_number": 41897
+        },
+        {
+          "title": "v10.22.0 proposal",
+          "url": "https://github.com/nodejs/node/pull/34170",
+          "issue_number": 34170
+        },
+        {
+          "title": "test: assume priv ports start at 1024 if it can't be changed",
+          "url": "https://github.com/nodejs/node/pull/46536",
+          "issue_number": 46536
+        },
+        {
+          "title": "src: refactor deprecated v8::Function::Call call",
+          "url": "https://github.com/nodejs/node/pull/23804",
+          "issue_number": 23804
+        }
+      ]
+    },
+    {
+      "i": 2,
+      "results": [
+        {
+          "title": "Https imports",
+          "url": "https://github.com/nodejs/node/pull/36328",
+          "issue_number": 36328
+        },
+        {
+          "title": "util: add MIME utilities",
+          "url": "https://github.com/nodejs/node/pull/21128",
+          "issue_number": 21128
+        },
+        {
+          "title": "esm: add import.meta.dirname and import.meta.filename",
+          "url": "https://github.com/nodejs/node/pull/48740",
+          "issue_number": 48740
+        },
+        {
+          "title": "assert: add partialDeepStrictEqual",
+          "url": "https://github.com/nodejs/node/pull/54630",
+          "issue_number": 54630
+        },
+        {
+          "title": "test_runner: introduces a new MockTimers API ",
+          "url": "https://github.com/nodejs/node/pull/47775",
+          "issue_number": 47775
+        },
+        {
+          "title": "buffer: improve performance of multiple Buffer operations",
+          "url": "https://github.com/nodejs/node/pull/61871",
+          "issue_number": 61871
+        },
+        {
+          "title": "v20.6.0 proposal",
+          "url": "https://github.com/nodejs/node/pull/49185",
+          "issue_number": 49185
+        },
+        {
+          "title": "assert: make assertion_error user myers diff algorithm",
+          "url": "https://github.com/nodejs/node/pull/54862",
+          "issue_number": 54862
+        },
+        {
+          "title": "lib: implement AbortSignal.any()",
+          "url": "https://github.com/nodejs/node/pull/47821",
+          "issue_number": 47821
+        },
+        {
+          "title": "src: rewrite task runner in c++",
+          "url": "https://github.com/nodejs/node/pull/52609",
+          "issue_number": 52609
+        },
+        {
+          "title": "test: add `common.mustNotMutateObjectDeep()`",
+          "url": "https://github.com/nodejs/node/pull/43196",
+          "issue_number": 43196
+        },
+        {
+          "title": "lib: add navigator.language and navigator.languages",
+          "url": "https://github.com/nodejs/node/pull/50303",
+          "issue_number": 50303
+        },
+        {
+          "title": "buffer: speed up concat via TypedArray#set",
+          "url": "https://github.com/nodejs/node/pull/60399",
+          "issue_number": 60399
+        },
+        {
+          "title": "child_process: queue pending messages",
+          "url": "https://github.com/nodejs/node/pull/41221",
+          "issue_number": 41221
+        },
+        {
+          "title": "v16.4.0 proposal",
+          "url": "https://github.com/nodejs/node/pull/39031",
+          "issue_number": 39031
+        }
+      ]
+    }
+  ],
+  "selected": {
+    "27854": {
+      "pr": {
+        "url": "https://github.com/nodejs/node/pull/27854",
+        "title": "child_process: simplify spawn argument parsing",
+        "base_sha": "476c3ec750fe2809721d352598fbc02620da829b",
+        "head_sha": "4f9cd2770a5f04b4e83157c71a3a9f1bf5b42d84",
+        "merge_commit_sha": "4f9cd2770a5f04b4e83157c71a3a9f1bf5b42d84",
+        "diff": "@@ -460,16 +460,14 @@ function normalizeSpawnArguments(file, args, options) {\n   }\n \n   // Validate windowsVerbatimArguments, if present.\n-  if (options.windowsVerbatimArguments != null &&\n-      typeof options.windowsVerbatimArguments !== 'boolean') {\n+  let { windowsVerbatimArguments } = options;\n+  if (windowsVerbatimArguments != null &&\n+      typeof windowsVerbatimArguments !== 'boolean') {\n     throw new ERR_INVALID_ARG_TYPE('options.windowsVerbatimArguments',\n                                    'boolean',\n-                                   options.windowsVerbatimArguments);\n+                                   windowsVerbatimArguments);\n   }\n \n-  // Make a shallow copy so we don't clobber the user's options object.\n-  options = { ...options };\n-\n   if (options.shell) {\n     const command = [file].concat(args).join(' ');\n     // Set the shell, switches, and commands.\n@@ -481,7 +479,7 @@ function normalizeSpawnArguments(file, args, options) {\n       // '/d /s /c' is used only for cmd.exe.\n       if (/^(?:.*\\\\)?cmd(?:\\.exe)?$/i.test(file)) {\n         args = ['/d', '/s', '/c', `\"${command}\"`];\n-        options.windowsVerbatimArguments = true;\n+        windowsVerbatimArguments = true;\n       } else {\n         args = ['-c', command];\n       }\n@@ -521,58 +519,42 @@ function normalizeSpawnArguments(file, args, options) {\n   }\n \n   return {\n-    file: file,\n-    args: args,\n-    options: options,\n-    envPairs: envPairs\n+    // Make a shallow copy so we don't clobber the user's options object.\n+    ...options,\n+    args,\n+    detached: !!options.detached,\n+    envPairs,\n+    file,\n+    windowsHide: !!options.windowsHide,\n+    windowsVerbatimArguments: !!windowsVerbatimArguments\n   };\n }\n \n \n var spawn = exports.spawn = function spawn(file, args, options) {\n-  const opts = normalizeSpawnArguments(file, args, options);\n   const child = new ChildProcess();\n \n-  options = opts.options;\n-  debug('spawn', opts.args, options);\n-\n-  child.spawn({\n-    file: opts.file,\n-    args: opts.args,\n-    cwd: options.cwd,\n-    windowsHide: !!options.windowsHide,\n-    windowsVerbatimArguments: !!options.windowsVerbatimArguments,\n-    detached: !!options.detached,\n-    envPairs: opts.envPairs,\n-    stdio: options.stdio,\n-    uid: options.uid,\n-    gid: options.gid\n-  });\n+  options = normalizeSpawnArguments(file, args, options);\n+  debug('spawn', options);\n+  child.spawn(options);\n \n   return child;\n };\n \n function spawnSync(file, args, options) {\n-  const opts = normalizeSpawnArguments(file, args, options);\n-\n-  const defaults = {\n+  options = {\n     maxBuffer: MAX_BUFFER,\n-    ...opts.options\n+    ...normalizeSpawnArguments(file, args, options)\n   };\n-  options = opts.options = defaults;\n \n-  debug('spawnSync', opts.args, options);\n+  debug('spawnSync', options);\n \n   // Validate the timeout, if present.\n   validateTimeout(options.timeout);\n \n   // Validate maxBuffer, if present.\n   validateMaxBuffer(options.maxBuffer);\n \n-  options.file = opts.file;\n-  options.args = opts.args;\n-  options.envPairs = opts.envPairs;\n-\n   // Validate and translate the kill signal, if present.\n   options.killSignal = sanitizeKillSignal(options.killSignal);\n \n@@ -603,7 +585,7 @@ function spawnSync(file, args, options) {\n     }\n   }\n \n-  return child_process.spawnSync(opts);\n+  return child_process.spawnSync(options);\n }\n exports.spawnSync = spawnSync;\n \n@@ -628,15 +610,15 @@ function checkExecSyncError(ret, args, cmd) {\n \n \n function execFileSync(command, args, options) {\n-  const opts = normalizeSpawnArguments(command, args, options);\n-  const inheritStderr = !opts.options.stdio;\n+  options = normalizeSpawnArguments(command, args, options);\n \n-  const ret = spawnSync(opts.file, opts.args.slice(1), opts.options);\n+  const inheritStderr = !options.stdio;\n+  const ret = spawnSync(options.file, options.args.slice(1), options);\n \n   if (inheritStderr && ret.stderr)\n     process.stderr.write(ret.stderr);\n \n-  const err = checkExecSyncError(ret, opts.args, undefined);\n+  const err = checkExecSyncError(ret, options.args, undefined);\n \n   if (err)\n     throw err;\n@@ -1022,8 +1022,7 @@ function maybeClose(subprocess) {\n   }\n }\n \n-function spawnSync(opts) {\n-  const options = opts.options;\n+function spawnSync(options) {\n   const result = spawn_sync.spawn(options);\n \n   if (result.output && options.encoding && options.encoding !== 'buffer') {\n@@ -1038,9 +1037,9 @@ function spawnSync(opts) {\n   result.stderr = result.output && result.output[2];\n \n   if (result.error) {\n-    result.error = errnoException(result.error, 'spawnSync ' + opts.file);\n-    result.error.path = opts.file;\n-    result.error.spawnargs = opts.args.slice(1);\n+    result.error = errnoException(result.error, 'spawnSync ' + options.file);\n+    result.error.path = options.file;\n+    result.error.spawnargs = options.args.slice(1);\n   }\n \n   return result;\n@@ -36,7 +36,7 @@ if (process.argv[2] === 'child') {\n   // Verify that the default kill signal is SIGTERM.\n   {\n     const child = spawn(undefined, (opts) => {\n-      assert.strictEqual(opts.options.killSignal, undefined);\n+      assert.strictEqual(opts.killSignal, undefined);\n     });\n \n     assert.strictEqual(child.signal, 'SIGTERM');\n@@ -45,7 +45,7 @@ if (process.argv[2] === 'child') {\n   // Verify that a string signal name is handled properly.\n   {\n     const child = spawn('SIGKILL', (opts) => {\n-      assert.strictEqual(opts.options.killSignal, SIGKILL);\n+      assert.strictEqual(opts.killSignal, SIGKILL);\n     });\n \n     assert.strictEqual(child.signal, 'SIGKILL');\n@@ -56,7 +56,7 @@ if (process.argv[2] === 'child') {\n     assert.strictEqual(typeof SIGKILL, 'number');\n \n     const child = spawn(SIGKILL, (opts) => {\n-      assert.strictEqual(opts.options.killSignal, SIGKILL);\n+      assert.strictEqual(opts.killSignal, SIGKILL);\n     });\n \n     assert.strictEqual(child.signal, 'SIGKILL');\n@@ -64,12 +64,12 @@ assert.strictEqual(env.stdout.toString().trim(), 'buzz');\n       assert.strictEqual(opts.file, shellOutput);\n       assert.deepStrictEqual(opts.args,\n                              [shellOutput, ...shellFlags, outputCmd]);\n-      assert.strictEqual(opts.options.shell, shell);\n-      assert.strictEqual(opts.options.file, opts.file);\n-      assert.deepStrictEqual(opts.options.args, opts.args);\n-      assert.strictEqual(opts.options.windowsHide, undefined);\n-      assert.strictEqual(opts.options.windowsVerbatimArguments,\n-                         windowsVerbatim);\n+      assert.strictEqual(opts.shell, shell);\n+      assert.strictEqual(opts.file, opts.file);\n+      assert.deepStrictEqual(opts.args, opts.args);\n+      assert.strictEqual(opts.windowsHide, false);\n+      assert.strictEqual(opts.windowsVerbatimArguments,\n+                         !!windowsVerbatim);\n     });\n     cp.spawnSync(cmd, { shell });\n     internalCp.spawnSync = oldSpawnSync;\n@@ -19,7 +19,7 @@ internalCp.ChildProcess.prototype.spawn = common.mustCall(function(options) {\n }, 2);\n \n internalCp.spawnSync = common.mustCall(function(options) {\n-  assert.strictEqual(options.options.windowsHide, true);\n+  assert.strictEqual(options.windowsHide, true);\n   return originalSpawnSync.apply(this, arguments);\n });\n "
+      },
+      "comments": [
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-495669671",
+          "body": "Lite-CI: https://ci.nodejs.org/job/node-test-pull-request-lite-pipeline/3613",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 495669671
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#discussion_r287407067",
+          "body": "Should `opts.windowsHide` only exist on `Windows` system?",
+          "author": "himself65",
+          "review": null,
+          "path": "test/parallel/test-child-process-spawnsync-shell.js",
+          "line": 70,
+          "in_reply_to_id": null,
+          "id": 287407067
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#pullrequestreview-241802849",
+          "body": "",
+          "author": "himself65",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 241802849
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#discussion_r287407713",
+          "body": "It's only meaningful on Windows, but it's been set on every `spawn()` call since it was introduced, so I think it's fine.",
+          "author": "cjihrig",
+          "review": null,
+          "path": "test/parallel/test-child-process-spawnsync-shell.js",
+          "line": 70,
+          "in_reply_to_id": 287407067,
+          "id": 287407713
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#pullrequestreview-241803746",
+          "body": "",
+          "author": "cjihrig",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 241803746
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#pullrequestreview-241994389",
+          "body": "",
+          "author": "BridgeAR",
+          "review": "APPROVED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 241994389
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#pullrequestreview-241996490",
+          "body": "",
+          "author": "targos",
+          "review": "APPROVED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 241996490
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-496005680",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/23347/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 496005680
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#pullrequestreview-242043643",
+          "body": "",
+          "author": "addaleax",
+          "review": "APPROVED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 242043643
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-496010021",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/23351/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 496010021
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#pullrequestreview-242088538",
+          "body": "",
+          "author": "Trott",
+          "review": "APPROVED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 242088538
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-496071148",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/23384/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 496071148
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-496234230",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/23410/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 496234230
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-496242150",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/23411/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 496242150
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-496270314",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/23414/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 496270314
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-496273160",
+          "body": "@cjihrig Sorry, I cancelled the AIX build, it was running on a machine which always fails.",
+          "author": "sam-github",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 496273160
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-496273546",
+          "body": "@sam-github that's fine. Is there something else I can do? AIX has been the only failure, and I'm pretty sure it's unrelated. I've seen similar failures on AIX for other PRs.",
+          "author": "cjihrig",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 496273546
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-496273682",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/23416/\r\n\r\nEDIT(cjihrig): CI was finally green.",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 496273682
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-496274359",
+          "body": "I resumed it.\r\n\r\nWe are still looking into what's going on. https://ci.nodejs.org/job/node-test-commit-aix/ shows all builds failing, and they all seem to fail on the same set of history and repl tests. Disk space seems fine, there don't seem to be left over processes. I'm baffled. @mhdawson suggested a jenkins agent restart. I'll see if it changed anything.",
+          "author": "sam-github",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 496274359
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-502772809",
+          "body": "@cjihrig looking at the code it seems to me this could be partially backported to v12.x. Would you be so kind and open a backport for this where you cherry-pick this commit and add a compatibility patch on top that removes the actual breaking change?",
+          "author": "BridgeAR",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 502772809
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/27854#issuecomment-518668865",
+          "body": "Ping @cjihrig ",
+          "author": "BridgeAR",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 518668865
+        }
+      ]
+    },
+    "38650": {
+      "pr": {
+        "url": "https://github.com/nodejs/node/pull/38650",
+        "title": "lib: make safe primordials Promise methods",
+        "base_sha": "0996eb71edbd47d9f9ec6153331255993fd6f0d1",
+        "head_sha": "57b14cf04b6c5b2ff72c8645c15143a05e3bdc59",
+        "merge_commit_sha": "bf8aede943d292b9951b8f002de0f81306bca34f",
+        "diff": "@@ -7,11 +7,11 @@ const {\n   MathMin,\n   NumberIsSafeInteger,\n   Promise,\n-  PromisePrototypeFinally,\n   PromisePrototypeThen,\n   PromiseResolve,\n   PromiseReject,\n   SafeArrayIterator,\n+  SafePromisePrototypeFinally,\n   Symbol,\n   Uint8Array,\n } = primordials;\n@@ -188,12 +188,12 @@ class FileHandle extends EventEmitterMixin(JSTransferable) {\n     this[kRefs]--;\n     if (this[kRefs] === 0) {\n       this[kFd] = -1;\n-      this[kClosePromise] = PromisePrototypeFinally(\n+      this[kClosePromise] = SafePromisePrototypeFinally(\n         this[kHandle].close(),\n         () => { this[kClosePromise] = undefined; }\n       );\n     } else {\n-      this[kClosePromise] = PromisePrototypeFinally(\n+      this[kClosePromise] = SafePromisePrototypeFinally(\n         new Promise((resolve, reject) => {\n           this[kCloseResolve] = resolve;\n           this[kCloseReject] = reject;\n@@ -1,7 +1,6 @@\n 'use strict';\n \n const {\n-  PromisePrototypeFinally,\n   StringPrototypeEndsWith,\n } = primordials;\n const CJSLoader = require('internal/modules/cjs/loader');\n@@ -51,7 +50,7 @@ function runMainESM(mainPath) {\n   }));\n }\n \n-function handleMainPromise(promise) {\n+async function handleMainPromise(promise) {\n   // Handle a Promise from running code that potentially does Top-Level Await.\n   // In that case, it makes sense to set the exit code to a specific non-zero\n   // value if the main code never finishes running.\n@@ -60,7 +59,11 @@ function handleMainPromise(promise) {\n       process.exitCode = 13;\n   }\n   process.on('exit', handler);\n-  return PromisePrototypeFinally(promise, () => process.off('exit', handler));\n+  try {\n+    return await promise;\n+  } finally {\n+    process.off('exit', handler);\n+  }\n }\n \n // For backwards compatibility, we have to run a bunch of\n@@ -253,6 +253,8 @@ const {\n   Map,\n   ObjectFreeze,\n   ObjectSetPrototypeOf,\n+  Promise,\n+  PromisePrototypeThen,\n   Set,\n   SymbolIterator,\n   WeakMap,\n@@ -384,5 +386,34 @@ primordials.SafeWeakRef = makeSafe(\n   }\n );\n \n+const SafePromise = makeSafe(\n+  Promise,\n+  class SafePromise extends Promise {\n+    // eslint-disable-next-line no-useless-constructor\n+    constructor(executor) { super(executor); }\n+  }\n+);\n+\n+primordials.PromisePrototypeCatch = (thisPromise, onRejected) =>\n+  PromisePrototypeThen(thisPromise, undefined, onRejected);\n+\n+/**\n+ * Attaches a callback that is invoked when the Promise is settled (fulfilled or\n+ * rejected). The resolved value cannot be modified from the callback.\n+ * Prefer using async functions when possible.\n+ * @param {Promise<any>} thisPromise\n+ * @param {() => void) | undefined | null} onFinally The callback to execute\n+ *        when the Promise is settled (fulfilled or rejected).\n+ * @returns A Promise for the completion of the callback.\n+ */\n+primordials.SafePromisePrototypeFinally = (thisPromise, onFinally) =>\n+  // Wrapping on a new Promise is necessary to not expose the SafePromise\n+  // prototype to user-land.\n+  new Promise((a, b) =>\n+    new SafePromise((a, b) => PromisePrototypeThen(thisPromise, a, b))\n+      .finally(onFinally)\n+      .then(a, b)\n+  );\n+\n ObjectSetPrototypeOf(primordials, null);\n ObjectFreeze(primordials);\n@@ -3,8 +3,8 @@\n const {\n   FunctionPrototypeBind,\n   Promise,\n-  PromisePrototypeFinally,\n   PromiseReject,\n+  SafePromisePrototypeFinally,\n } = primordials;\n \n const {\n@@ -71,7 +71,7 @@ function setTimeout(after, value, options = {}) {\n     }\n   });\n   return oncancel !== undefined ?\n-    PromisePrototypeFinally(\n+    SafePromisePrototypeFinally(\n       ret,\n       () => signal.removeEventListener('abort', oncancel)) : ret;\n }\n@@ -115,7 +115,7 @@ function setImmediate(value, options = {}) {\n     }\n   });\n   return oncancel !== undefined ?\n-    PromisePrototypeFinally(\n+    SafePromisePrototypeFinally(\n       ret,\n       () => signal.removeEventListener('abort', oncancel)) : ret;\n }\n@@ -6,3 +6,4 @@ SyntaxError: The requested module '../fixtures/es-module-loaders/module-named-ex\n     at async ModuleJob.run (node:internal/modules/esm/module_job:*:*)\n     at async Loader.import (node:internal/modules/esm/loader:*:*)\n     at async Object.loadESM (node:internal/process/esm_loader:*:*)\n+    at async handleMainPromise (node:internal/modules/run_main:*:*)\n@@ -6,3 +6,4 @@ SyntaxError: The requested module './module-named-exports.mjs' does not provide\n     at async ModuleJob.run (node:internal/modules/esm/module_job:*:*)\n     at async Loader.import (node:internal/modules/esm/loader:*:*)\n     at async Object.loadESM (node:internal/process/esm_loader:*:*)\n+    at async handleMainPromise (node:internal/modules/run_main:*:*)\n@@ -0,0 +1,38 @@\n+// Flags: --expose-internals\n+'use strict';\n+\n+const common = require('../common');\n+const assert = require('assert');\n+\n+const {\n+  PromisePrototypeCatch,\n+  PromisePrototypeThen,\n+  SafePromisePrototypeFinally,\n+} = require('internal/test/binding').primordials;\n+\n+Promise.prototype.catch = common.mustNotCall();\n+Promise.prototype.finally = common.mustNotCall();\n+Promise.prototype.then = common.mustNotCall();\n+\n+assertIsPromise(PromisePrototypeCatch(Promise.reject(), common.mustCall()));\n+assertIsPromise(PromisePrototypeThen(test(), common.mustCall()));\n+assertIsPromise(SafePromisePrototypeFinally(test(), common.mustCall()));\n+\n+async function test() {\n+  const catchFn = common.mustCall();\n+  const finallyFn = common.mustCall();\n+\n+  try {\n+    await Promise.reject();\n+  } catch {\n+    catchFn();\n+  } finally {\n+    finallyFn();\n+  }\n+}\n+\n+function assertIsPromise(promise) {\n+  // Make sure the returned promise is a genuine %Promise% object and not a\n+  // subclass instance.\n+  assert.strictEqual(Object.getPrototypeOf(promise), Promise.prototype);\n+}"
+      },
+      "comments": [
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#discussion_r631087767",
+          "body": "```suggestion\r\nasync function test() {\r\n  const catchFn = common.mustCall();\r\n  const finallyFn = common.mustCall();\r\n\r\n  try {\r\n    await Promise.reject();\r\n  } catch {\r\n    catchFn();\r\n  } finally {\r\n    finallyFn();\r\n  }\r\n}\r\n```",
+          "author": "jasnell",
+          "review": null,
+          "path": "test/parallel/test-primordials-promise.js",
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 631087767
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#pullrequestreview-657950377",
+          "body": "",
+          "author": "jasnell",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 657950377
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#discussion_r631087978",
+          "body": "```suggestion\r\nfunction assertIsPromise(promise) {\r\n  // Make sure the returned promise is a genuine %Promise% object and not a\r\n  // subclass instance.\r\n  assert.strictEqual(Object.getPrototypeOf(promise), Promise.prototype);\r\n}\r\n```",
+          "author": "jasnell",
+          "review": null,
+          "path": "test/parallel/test-primordials-promise.js",
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 631087978
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#pullrequestreview-657950701",
+          "body": "",
+          "author": "jasnell",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 657950701
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#pullrequestreview-657951617",
+          "body": "",
+          "author": "jasnell",
+          "review": "APPROVED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 657951617
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#issuecomment-839891745",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/38040/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 839891745
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#issuecomment-840107185",
+          "body": "Blocked on https://github.com/nodejs/node/pull/38656",
+          "author": "aduh95",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 840107185
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#issuecomment-841727219",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/38117/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 841727219
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#issuecomment-841732991",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/38118/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 841732991
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#issuecomment-841824467",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/38128/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 841824467
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#issuecomment-841837858",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/38131/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 841837858
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#issuecomment-842531220",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/38165/\r\nARM CI: https://ci.nodejs.org/job/node-test-commit-arm-fanned/20490/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 842531220
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#discussion_r634207258",
+          "body": "I think this creates too many promises to be usable in any hot code paths. I would recommend not adding this.",
+          "author": "mcollina",
+          "review": null,
+          "path": "lib/internal/per_context/primordials.js",
+          "line": 415,
+          "in_reply_to_id": null,
+          "id": 634207258
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#pullrequestreview-661852120",
+          "body": "",
+          "author": "mcollina",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 661852120
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#discussion_r634213893",
+          "body": "Aren't promises antithetical to hot code path since they are asynchronous? For info, `PromisePrototypeFinally` is only used in `fs/promises`, `timers/promises`, and `run_main` currently. Would you prefer if I added a lint rule to discourage its use so it doesn't end up in a hot code path?",
+          "author": "aduh95",
+          "review": null,
+          "path": "lib/internal/per_context/primordials.js",
+          "line": 415,
+          "in_reply_to_id": 634207258,
+          "id": 634213893
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#pullrequestreview-661860772",
+          "body": "",
+          "author": "aduh95",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 661860772
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#discussion_r634217931",
+          "body": "I'm not sure if this allocates 3 or 4 promises instead of 1.\r\nUsing this specific code will only create problems.",
+          "author": "mcollina",
+          "review": null,
+          "path": "lib/internal/per_context/primordials.js",
+          "line": 415,
+          "in_reply_to_id": 634207258,
+          "id": 634217931
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#pullrequestreview-661866013",
+          "body": "",
+          "author": "mcollina",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 661866013
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#discussion_r634220943",
+          "body": "I'd also be more in favor of discouraging the use of the `catch` and `finally` methods in core:\r\n- catch can be easily replaced with `then(undefined, fn)`\r\n- finally may be replaceable with async functions",
+          "author": "targos",
+          "review": null,
+          "path": "lib/internal/per_context/primordials.js",
+          "line": 415,
+          "in_reply_to_id": 634207258,
+          "id": 634220943
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#pullrequestreview-661870064",
+          "body": "",
+          "author": "targos",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 661870064
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#discussion_r634362080",
+          "body": "I've removed used of `PromisePrototypeFinally` where it was possible, and rename the function to `SafePromisePrototypeFinally` to highlight the fact it is not a simple bridge to the actual primordial method. I plan to add it to the list of \"problematic\" primordials to avoid in hot code path in https://github.com/nodejs/node/pull/38635.",
+          "author": "aduh95",
+          "review": null,
+          "path": "lib/internal/per_context/primordials.js",
+          "line": 415,
+          "in_reply_to_id": 634207258,
+          "id": 634362080
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#pullrequestreview-662058961",
+          "body": "",
+          "author": "aduh95",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 662058961
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#pullrequestreview-662148717",
+          "body": "lgtm",
+          "author": "mcollina",
+          "review": "APPROVED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 662148717
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#issuecomment-843233697",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/38180/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 843233697
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#issuecomment-843367554",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/38184/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 843367554
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#issuecomment-843629697",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/38187/ 💛 ",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 843629697
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#issuecomment-844262360",
+          "body": "Landed in 2eeb4e1d944b",
+          "author": "jasnell",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 844262360
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/38650#issuecomment-851648310",
+          "body": "@aduh95 Do you mind backporting this? It broke the build when pulling into `v16.x-staging`. Thank you!",
+          "author": "danielleadams",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 851648310
+        }
+      ],
+      "threads": {
+        "review_threads": [
+          {
+            "id": "MDIzOlB1bGxSZXF1ZXN0UmV2aWV3VGhyZWFkMzk5OTc5Nzg1OnYy",
+            "is_resolved": true,
+            "is_outdated": true,
+            "path": "test/parallel/test-primordials-promise.js",
+            "line": null,
+            "diff_side": "RIGHT",
+            "start_line": null,
+            "start_diff_side": "RIGHT",
+            "original_line": 32,
+            "original_start_line": 21,
+            "resolved_by": {
+              "login": "aduh95",
+              "name": "aduh95",
+              "email": null,
+              "avatar_url": "https://avatars.githubusercontent.com/u/14309773?v=4",
+              "id": null
+            },
+            "comments": [
+              {
+                "id": "MDI0OlB1bGxSZXF1ZXN0UmV2aWV3Q29tbWVudDYzMTA4Nzc2Nw==",
+                "database_id": 631087767,
+                "body": "```suggestion\r\nasync function test() {\r\n  const catchFn = common.mustCall();\r\n  const finallyFn = common.mustCall();\r\n\r\n  try {\r\n    await Promise.reject();\r\n  } catch {\r\n    catchFn();\r\n  } finally {\r\n    finallyFn();\r\n  }\r\n}\r\n```",
+                "created_at": "2021-05-12T14:21:30Z",
+                "updated_at": "2021-05-12T14:21:32Z",
+                "author": {
+                  "login": "jasnell",
+                  "name": "jasnell",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/439929?u=88483145a53c3d594ab68146c1a8bdecc3bcd1d3&v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              }
+            ]
+          },
+          {
+            "id": "MDIzOlB1bGxSZXF1ZXN0UmV2aWV3VGhyZWFkMzk5OTc5OTE1OnYy",
+            "is_resolved": true,
+            "is_outdated": true,
+            "path": "test/parallel/test-primordials-promise.js",
+            "line": null,
+            "diff_side": "RIGHT",
+            "start_line": null,
+            "start_diff_side": "RIGHT",
+            "original_line": 38,
+            "original_start_line": 34,
+            "resolved_by": {
+              "login": "aduh95",
+              "name": "aduh95",
+              "email": null,
+              "avatar_url": "https://avatars.githubusercontent.com/u/14309773?v=4",
+              "id": null
+            },
+            "comments": [
+              {
+                "id": "MDI0OlB1bGxSZXF1ZXN0UmV2aWV3Q29tbWVudDYzMTA4Nzk3OA==",
+                "database_id": 631087978,
+                "body": "```suggestion\r\nfunction assertIsPromise(promise) {\r\n  // Make sure the returned promise is a genuine %Promise% object and not a\r\n  // subclass instance.\r\n  assert.strictEqual(Object.getPrototypeOf(promise), Promise.prototype);\r\n}\r\n```",
+                "created_at": "2021-05-12T14:21:46Z",
+                "updated_at": "2021-05-12T14:21:47Z",
+                "author": {
+                  "login": "jasnell",
+                  "name": "jasnell",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/439929?u=88483145a53c3d594ab68146c1a8bdecc3bcd1d3&v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              }
+            ]
+          },
+          {
+            "id": "MDIzOlB1bGxSZXF1ZXN0UmV2aWV3VGhyZWFkNDAyMDYxODE4OnYy",
+            "is_resolved": false,
+            "is_outdated": false,
+            "path": "lib/internal/per_context/primordials.js",
+            "line": 415,
+            "diff_side": "RIGHT",
+            "start_line": 415,
+            "start_diff_side": null,
+            "original_line": 404,
+            "original_start_line": null,
+            "resolved_by": null,
+            "comments": [
+              {
+                "id": "MDI0OlB1bGxSZXF1ZXN0UmV2aWV3Q29tbWVudDYzNDIwNzI1OA==",
+                "database_id": 634207258,
+                "body": "I think this creates too many promises to be usable in any hot code paths. I would recommend not adding this.",
+                "created_at": "2021-05-18T09:29:23Z",
+                "updated_at": "2021-05-18T09:29:23Z",
+                "author": {
+                  "login": "mcollina",
+                  "name": "mcollina",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/52195?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              },
+              {
+                "id": "MDI0OlB1bGxSZXF1ZXN0UmV2aWV3Q29tbWVudDYzNDIxMzg5Mw==",
+                "database_id": 634213893,
+                "body": "Aren't promises antithetical to hot code path since they are asynchronous? For info, `PromisePrototypeFinally` is only used in `fs/promises`, `timers/promises`, and `run_main` currently. Would you prefer if I added a lint rule to discourage its use so it doesn't end up in a hot code path?",
+                "created_at": "2021-05-18T09:37:55Z",
+                "updated_at": "2021-05-18T10:04:17Z",
+                "author": {
+                  "login": "aduh95",
+                  "name": "aduh95",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/14309773?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              },
+              {
+                "id": "MDI0OlB1bGxSZXF1ZXN0UmV2aWV3Q29tbWVudDYzNDIxNzkzMQ==",
+                "database_id": 634217931,
+                "body": "I'm not sure if this allocates 3 or 4 promises instead of 1.\r\nUsing this specific code will only create problems.",
+                "created_at": "2021-05-18T09:43:12Z",
+                "updated_at": "2021-05-18T09:43:13Z",
+                "author": {
+                  "login": "mcollina",
+                  "name": "mcollina",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/52195?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              },
+              {
+                "id": "MDI0OlB1bGxSZXF1ZXN0UmV2aWV3Q29tbWVudDYzNDIyMDk0Mw==",
+                "database_id": 634220943,
+                "body": "I'd also be more in favor of discouraging the use of the `catch` and `finally` methods in core:\r\n- catch can be easily replaced with `then(undefined, fn)`\r\n- finally may be replaceable with async functions",
+                "created_at": "2021-05-18T09:46:37Z",
+                "updated_at": "2021-05-18T09:46:37Z",
+                "author": {
+                  "login": "targos",
+                  "name": "targos",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/2352663?u=6d0db159fb863f7648118acf92b7960701228bf9&v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              },
+              {
+                "id": "MDI0OlB1bGxSZXF1ZXN0UmV2aWV3Q29tbWVudDYzNDM2MjA4MA==",
+                "database_id": 634362080,
+                "body": "I've removed used of `PromisePrototypeFinally` where it was possible, and rename the function to `SafePromisePrototypeFinally` to highlight the fact it is not a simple bridge to the actual primordial method. I plan to add it to the list of \"problematic\" primordials to avoid in hot code path in https://github.com/nodejs/node/pull/38635.",
+                "created_at": "2021-05-18T13:10:30Z",
+                "updated_at": "2021-05-18T13:10:30Z",
+                "author": {
+                  "login": "aduh95",
+                  "name": "aduh95",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/14309773?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "45204": {
+      "pr": {
+        "url": "https://github.com/nodejs/node/pull/45204",
+        "title": "test_runner: fix afterEach not running on test failures",
+        "base_sha": "e14321bb50be506231e395df36f555269668746e",
+        "head_sha": "5880f19d59b85c74945929c04954e6b6c770210a",
+        "merge_commit_sha": "3759935ee29d8042d917d3ceaa768521c14413ff",
+        "diff": "@@ -41,6 +41,7 @@ const {\n const {\n   createDeferredPromise,\n   kEmptyObject,\n+  once: runOnce,\n } = require('internal/util');\n const { isPromise } = require('internal/util/types');\n const {\n@@ -482,8 +483,14 @@ class Test extends AsyncResource {\n       return;\n     }\n \n+    const { args, ctx } = this.getRunArgs();\n+    const afterEach = runOnce(async () => {\n+      if (this.parent?.hooks.afterEach.length > 0) {\n+        await this.parent[kRunHook]('afterEach', { args, ctx });\n+      }\n+    });\n+\n     try {\n-      const { args, ctx } = this.getRunArgs();\n       if (this.parent?.hooks.beforeEach.length > 0) {\n         await this.parent[kRunHook]('beforeEach', { args, ctx });\n       }\n@@ -518,12 +525,10 @@ class Test extends AsyncResource {\n         return;\n       }\n \n-      if (this.parent?.hooks.afterEach.length > 0) {\n-        await this.parent[kRunHook]('afterEach', { args, ctx });\n-      }\n-\n+      await afterEach();\n       this.pass();\n     } catch (err) {\n+      try { await afterEach(); } catch { /* test is already failing, let's the error */ }\n       if (isTestFailureError(err)) {\n         if (err.failureType === kTestTimeoutFailure) {\n           this.cancel(err);\n@@ -728,6 +733,12 @@ class Suite extends Test {\n   }\n \n   async run() {\n+    const hookArgs = this.getRunArgs();\n+    const afterEach = runOnce(async () => {\n+      if (this.parent?.hooks.afterEach.length > 0) {\n+        await this.parent[kRunHook]('afterEach', hookArgs);\n+      }\n+    });\n     try {\n       this.parent.activeSubtests++;\n       await this.buildSuite;\n@@ -739,7 +750,6 @@ class Suite extends Test {\n         return;\n       }\n \n-      const hookArgs = this.getRunArgs();\n \n       if (this.parent?.hooks.beforeEach.length > 0) {\n         await this.parent[kRunHook]('beforeEach', hookArgs);\n@@ -753,13 +763,11 @@ class Suite extends Test {\n \n       await SafePromiseRace([promise, stopPromise]);\n       await this[kRunHook]('after', hookArgs);\n-\n-      if (this.parent?.hooks.afterEach.length > 0) {\n-        await this.parent[kRunHook]('afterEach', hookArgs);\n-      }\n+      await afterEach();\n \n       this.pass();\n     } catch (err) {\n+      try { await afterEach(); } catch { /* test is already failing, let's the error */ }\n       if (isTestFailureError(err)) {\n         this.fail(err);\n       } else {\n@@ -453,7 +453,7 @@ function once(callback) {\n   return function(...args) {\n     if (called) return;\n     called = true;\n-    ReflectApply(callback, this, args);\n+    return ReflectApply(callback, this, args);\n   };\n }\n \n@@ -42,8 +42,6 @@ not ok 4 - sync fail todo with message # TODO this is a failing todo\n     *\n     *\n     *\n-    *\n-    *\n   ...\n # Subtest: sync skip pass\n ok 5 - sync skip pass # SKIP\n@@ -1,6 +1,6 @@\n // Flags: --no-warnings\n 'use strict';\n-require('../common');\n+const common = require('../common');\n const assert = require('assert');\n const { test, describe, it, before, after, beforeEach, afterEach } = require('node:test');\n \n@@ -76,6 +76,18 @@ describe('afterEach throws', () => {\n   it('2', () => {});\n });\n \n+describe('afterEach when test fails', () => {\n+  afterEach(common.mustCall(2));\n+  it('1', () => { throw new Error('test'); });\n+  it('2', () => {});\n+});\n+\n+describe('afterEach throws and test fails', () => {\n+  afterEach(() => { throw new Error('afterEach'); });\n+  it('1', () => { throw new Error('test'); });\n+  it('2', () => {});\n+});\n+\n test('test hooks', async (t) => {\n   const testArr = [];\n   t.beforeEach((t) => testArr.push('beforeEach ' + t.name));\n@@ -111,3 +123,16 @@ test('t.afterEach throws', async (t) => {\n   await t.test('1', () => {});\n   await t.test('2', () => {});\n });\n+\n+\n+test('afterEach when test fails', async (t) => {\n+  t.afterEach(common.mustCall(2));\n+  await t.test('1', () => { throw new Error('test'); });\n+  await t.test('2', () => {});\n+});\n+\n+test('afterEach throws and test fails', async (t) => {\n+  afterEach(() => { throw new Error('afterEach'); });\n+  await t.test('1', () => { throw new Error('test'); });\n+  await t.test('2', () => {});\n+});\n@@ -189,6 +189,86 @@ not ok 5 - afterEach throws\n   error: '2 subtests failed'\n   code: 'ERR_TEST_FAILURE'\n   ...\n+# Subtest: afterEach when test fails\n+    # Subtest: 1\n+    not ok 1 - 1\n+      ---\n+      duration_ms: *\n+      failureType: 'testCodeFailure'\n+      error: 'test'\n+      code: 'ERR_TEST_FAILURE'\n+      stack: |-\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+      ...\n+    # Subtest: 2\n+    ok 2 - 2\n+      ---\n+      duration_ms: *\n+      ...\n+    1..2\n+not ok 6 - afterEach when test fails\n+  ---\n+  duration_ms: *\n+  failureType: 'subtestsFailed'\n+  error: '1 subtest failed'\n+  code: 'ERR_TEST_FAILURE'\n+  ...\n+# Subtest: afterEach throws and test fails\n+    # Subtest: 1\n+    not ok 1 - 1\n+      ---\n+      duration_ms: *\n+      failureType: 'testCodeFailure'\n+      error: 'test'\n+      code: 'ERR_TEST_FAILURE'\n+      stack: |-\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+      ...\n+    # Subtest: 2\n+    not ok 2 - 2\n+      ---\n+      duration_ms: *\n+      failureType: 'hookFailed'\n+      error: 'failed running afterEach hook'\n+      code: 'ERR_TEST_FAILURE'\n+      stack: |-\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+      ...\n+    1..2\n+not ok 7 - afterEach throws and test fails\n+  ---\n+  duration_ms: *\n+  failureType: 'subtestsFailed'\n+  error: '2 subtests failed'\n+  code: 'ERR_TEST_FAILURE'\n+  ...\n # Subtest: test hooks\n     # Subtest: 1\n     ok 1 - 1\n@@ -217,7 +297,7 @@ not ok 5 - afterEach throws\n       duration_ms: *\n       ...\n     1..3\n-ok 6 - test hooks\n+ok 8 - test hooks\n   ---\n   duration_ms: *\n   ...\n@@ -261,7 +341,7 @@ ok 6 - test hooks\n         *\n       ...\n     1..2\n-not ok 7 - t.beforeEach throws\n+not ok 9 - t.beforeEach throws\n   ---\n   duration_ms: *\n   failureType: 'subtestsFailed'\n@@ -308,17 +388,97 @@ not ok 7 - t.beforeEach throws\n         *\n       ...\n     1..2\n-not ok 8 - t.afterEach throws\n+not ok 10 - t.afterEach throws\n+  ---\n+  duration_ms: *\n+  failureType: 'subtestsFailed'\n+  error: '2 subtests failed'\n+  code: 'ERR_TEST_FAILURE'\n+  ...\n+# Subtest: afterEach when test fails\n+    # Subtest: 1\n+    not ok 1 - 1\n+      ---\n+      duration_ms: *\n+      failureType: 'testCodeFailure'\n+      error: 'test'\n+      code: 'ERR_TEST_FAILURE'\n+      stack: |-\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+      ...\n+    # Subtest: 2\n+    ok 2 - 2\n+      ---\n+      duration_ms: *\n+      ...\n+    1..2\n+not ok 11 - afterEach when test fails\n+  ---\n+  duration_ms: *\n+  failureType: 'subtestsFailed'\n+  error: '1 subtest failed'\n+  code: 'ERR_TEST_FAILURE'\n+  ...\n+# Subtest: afterEach throws and test fails\n+    # Subtest: 1\n+    not ok 1 - 1\n+      ---\n+      duration_ms: *\n+      failureType: 'testCodeFailure'\n+      error: 'test'\n+      code: 'ERR_TEST_FAILURE'\n+      stack: |-\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+      ...\n+    # Subtest: 2\n+    not ok 2 - 2\n+      ---\n+      duration_ms: *\n+      failureType: 'hookFailed'\n+      error: 'failed running afterEach hook'\n+      code: 'ERR_TEST_FAILURE'\n+      stack: |-\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+        *\n+      ...\n+    1..2\n+not ok 12 - afterEach throws and test fails\n   ---\n   duration_ms: *\n   failureType: 'subtestsFailed'\n   error: '2 subtests failed'\n   code: 'ERR_TEST_FAILURE'\n   ...\n-1..8\n-# tests 8\n+1..12\n+# tests 12\n # pass 2\n-# fail 6\n+# fail 10\n # cancelled 0\n # skipped 0\n # todo 0\n@@ -42,8 +42,6 @@ not ok 4 - sync fail todo with message # TODO this is a failing todo\n     *\n     *\n     *\n-    *\n-    *\n   ...\n # Subtest: sync skip pass\n ok 5 - sync skip pass # SKIP"
+      },
+      "comments": [
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#pullrequestreview-1157935673",
+          "body": "In general LGTM, a few comments:\r\n\r\n- `describe` should be adjusted as well and moved to `finally`: https://github.com/nodejs/node/blob/789b7eebff58d404ac8f060376a75e26b514f9af/lib/internal/test_runner/test.js#L749-L753\r\n- tests need to be added/adjusted",
+          "author": "MoLow",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1157935673
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1293425878",
+          "body": "> In general LGTM, a few comments:\r\n> \r\n> * `describe` should be adjusted as well and moved to `finally`: https://github.com/nodejs/node/blob/789b7eebff58d404ac8f060376a75e26b514f9af/lib/internal/test_runner/test.js#L749-L753\r\n> * tests need to be added/adjusted\r\n\r\n\r\nCould you please provide a test snippet or some more details?",
+          "author": "MrJithil",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1293425878
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1293539622",
+          "body": "> Could you please provide a test snippet or some more details?\r\n\r\ncheckout the failing tests\r\n",
+          "author": "MoLow",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1293539622
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1296230079",
+          "body": "Working on it. ",
+          "author": "MrJithil",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1296230079
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1304386281",
+          "body": "help needed to fix the test case. I can see the test file is failing with the latest release as well.\r\n\r\nI am confused, how to clean up or adjust the test case. Please provide some samples or feel free to commit to the PR. ",
+          "author": "MrJithil",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1304386281
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1304600271",
+          "body": "@MrJithil I took a look.\r\nprior to this PR, tests was marked as passed only in case the afterEach hook passed, https://github.com/nodejs/node/blob/789b7eebff58d404ac8f060376a75e26b514f9af/lib/internal/test_runner/test.js#L521\r\nafter this PR, if the afterEach hook failed there is no indication besides the parent test failing:\r\nsee the output for these tests:\r\nhttps://github.com/nodejs/node/blob/789b7eebff58d404ac8f060376a75e26b514f9af/test/message/test_runner_hooks.js#L73-L77\r\n<img width=\"1345\" alt=\"image\" src=\"https://user-images.githubusercontent.com/8221854/200134156-20c2f1bd-ac16-48eb-858a-5f3035d2c29d.png\">\r\n",
+          "author": "MoLow",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1304600271
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1304609787",
+          "body": "@MrJithil I pushed a fix;\r\n@nodejs/test_runner I would appreciate a review",
+          "author": "MoLow",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1304609787
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#pullrequestreview-1169503033",
+          "body": "",
+          "author": "benjamingr",
+          "review": "APPROVED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1169503033
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1304641937",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/47721/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1304641937
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#discussion_r1014728140",
+          "body": "Do we have a test where the test throws and the `afterEach()` also throws? If not, can we add one?",
+          "author": "cjihrig",
+          "review": null,
+          "path": "lib/internal/test_runner/test.js",
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1014728140
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#pullrequestreview-1169504941",
+          "body": "",
+          "author": "cjihrig",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1169504941
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#discussion_r1014730242",
+          "body": "added a test and a fix for this case, thanks for the catch!",
+          "author": "MoLow",
+          "review": null,
+          "path": "lib/internal/test_runner/test.js",
+          "line": null,
+          "in_reply_to_id": 1014728140,
+          "id": 1014730242
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#pullrequestreview-1169506579",
+          "body": "",
+          "author": "MoLow",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1169506579
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#discussion_r1014732178",
+          "body": "Wouldn't it be simpler to use a try/catch in the `afterEach` function?\r\n```suggestion\r\n      await afterEach();\r\n```\r\nIn any case, the `PromiseResolve` is not useful:\r\n```suggestion\r\n      await PromisePrototypeThen(afterEach(), noop, noop);\r\n```",
+          "author": "aduh95",
+          "review": null,
+          "path": "lib/internal/test_runner/test.js",
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1014732178
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#discussion_r1014732255",
+          "body": "Same here",
+          "author": "aduh95",
+          "review": null,
+          "path": "lib/internal/test_runner/test.js",
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1014732255
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#pullrequestreview-1169508155",
+          "body": "",
+          "author": "aduh95",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1169508155
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#discussion_r1014777475",
+          "body": "fixed",
+          "author": "MoLow",
+          "review": null,
+          "path": "lib/internal/test_runner/test.js",
+          "line": null,
+          "in_reply_to_id": 1014732255,
+          "id": 1014777475
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#pullrequestreview-1169548957",
+          "body": "",
+          "author": "MoLow",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1169548957
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1304740803",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/47732/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1304740803
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1304752804",
+          "body": "> Do we need the out files?\r\n\r\nyeah, `tools/test.py` compares the output with the actual result",
+          "author": "MoLow",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1304752804
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1304749860",
+          "body": "> @MrJithil I pushed a fix;\r\n> @nodejs/test_runner I would appreciate a review\r\n\r\nThank you so much for the help and it's a really great work. Do we need the `out` files?",
+          "author": "MrJithil",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1304749860
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1304765944",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/47733/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1304765944
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1304782497",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/47734/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1304782497
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#discussion_r1014823447",
+          "body": "FYI you can avoid the `eslint-disable` if you put a comment in the empty block, e.g.\r\n```suggestion\r\n      try { await afterEach(); } catch { /* test is already failing, let's the error */ }\r\n```",
+          "author": "aduh95",
+          "review": null,
+          "path": "lib/internal/test_runner/test.js",
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1014823447
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#pullrequestreview-1169590898",
+          "body": "",
+          "author": "aduh95",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1169590898
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1304918088",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/47749/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1304918088
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1305043669",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/47755/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1305043669
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1305112845",
+          "body": "<details><summary>Commit Queue failed</summary><pre>- Loading data for nodejs/node/pull/45204\n✔  Done loading data for nodejs/node/pull/45204\n----------------------------------- PR info ------------------------------------\nTitle      test_runner: fix afterEach not running on test failures (#45204)\n   ⚠  Could not retrieve the email or name of the PR author's from user's GitHub profile!\nBranch     MrJithil:fix-45192 -> nodejs:main\nLabels     needs-ci, dont-land-on-v14.x, commit-queue-squash, test_runner\nCommits    5\n - test_runner: fix afterEach not running on test failures\n - fix\n - CR\n - CR\n - CR\nCommitters 1\n - Moshe Atlow <moshe@atlow.co.il>\nPR-URL: https://github.com/nodejs/node/pull/45204\nFixes: https://github.com/nodejs/node/issues/45192\nReviewed-By: Benjamin Gruenbaum <benjamingr@gmail.com>\n------------------------------ Generated metadata ------------------------------\nPR-URL: https://github.com/nodejs/node/pull/45204\nFixes: https://github.com/nodejs/node/issues/45192\nReviewed-By: Benjamin Gruenbaum <benjamingr@gmail.com>\n--------------------------------------------------------------------------------\n   ⚠  Commits were pushed since the last review:\n   ⚠  - test_runner: fix afterEach not running on test failures\n   ⚠  - fix\n   ⚠  - CR\n   ⚠  - CR\n   ⚠  - CR\n   ℹ  This PR was created on Thu, 27 Oct 2022 09:31:19 GMT\n   ✔  Approvals: 1\n   ✔  - Benjamin Gruenbaum (@benjamingr): https://github.com/nodejs/node/pull/45204#pullrequestreview-1169503033\n   ✔  Last GitHub CI successful\n   ℹ  Last Full PR CI on 2022-11-07T03:50:10Z: https://ci.nodejs.org/job/node-test-pull-request/47755/\n- Querying data for job/node-test-pull-request/47755/\n   ✔  Last Jenkins CI successful\n--------------------------------------------------------------------------------\n   ✔  Aborted `git node land` session in /home/runner/work/node/node/.ncu</pre><a href='https://github.com/nodejs/node/actions/runs/3407846700'>https://github.com/nodejs/node/actions/runs/3407846700</a></details>",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1305112845
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#pullrequestreview-1169822880",
+          "body": "",
+          "author": "MoLow",
+          "review": "APPROVED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1169822880
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/45204#issuecomment-1305123060",
+          "body": "Landed in 3759935ee29d8042d917d3ceaa768521c14413ff",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1305123060
+        }
+      ],
+      "threads": {
+        "review_threads": [
+          {
+            "id": "PRRT_kwDOAZ7xs84mtOxk",
+            "is_resolved": true,
+            "is_outdated": true,
+            "path": "lib/internal/test_runner/test.js",
+            "line": null,
+            "diff_side": "RIGHT",
+            "start_line": null,
+            "start_diff_side": null,
+            "original_line": 530,
+            "original_start_line": null,
+            "resolved_by": {
+              "login": "MoLow",
+              "name": "MoLow",
+              "email": null,
+              "avatar_url": "https://avatars.githubusercontent.com/u/8221854?u=726fa18704c0cbbf4fe85069f60bdefe16bae655&v=4",
+              "id": null
+            },
+            "comments": [
+              {
+                "id": "PRRC_kwDOAZ7xs848e4XM",
+                "database_id": 1014728140,
+                "body": "Do we have a test where the test throws and the `afterEach()` also throws? If not, can we add one?",
+                "created_at": "2022-11-05T21:18:22Z",
+                "updated_at": "2022-11-05T21:19:00Z",
+                "author": {
+                  "login": "cjihrig",
+                  "name": "cjihrig",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/2512748?u=201508ed0dec9b997a58d9d3dd7aad1ca928bc79&v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              },
+              {
+                "id": "PRRC_kwDOAZ7xs848e44C",
+                "database_id": 1014730242,
+                "body": "added a test and a fix for this case, thanks for the catch!",
+                "created_at": "2022-11-05T21:42:58Z",
+                "updated_at": "2022-11-05T21:42:58Z",
+                "author": {
+                  "login": "MoLow",
+                  "name": "MoLow",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/8221854?u=726fa18704c0cbbf4fe85069f60bdefe16bae655&v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              }
+            ]
+          },
+          {
+            "id": "PRRT_kwDOAZ7xs84mtPkc",
+            "is_resolved": true,
+            "is_outdated": true,
+            "path": "lib/internal/test_runner/test.js",
+            "line": null,
+            "diff_side": "RIGHT",
+            "start_line": null,
+            "start_diff_side": null,
+            "original_line": 530,
+            "original_start_line": null,
+            "resolved_by": {
+              "login": "MoLow",
+              "name": "MoLow",
+              "email": null,
+              "avatar_url": "https://avatars.githubusercontent.com/u/8221854?u=726fa18704c0cbbf4fe85069f60bdefe16bae655&v=4",
+              "id": null
+            },
+            "comments": [
+              {
+                "id": "PRRC_kwDOAZ7xs848e5WS",
+                "database_id": 1014732178,
+                "body": "Wouldn't it be simpler to use a try/catch in the `afterEach` function?\r\n```suggestion\r\n      await afterEach();\r\n```\r\nIn any case, the `PromiseResolve` is not useful:\r\n```suggestion\r\n      await PromisePrototypeThen(afterEach(), noop, noop);\r\n```",
+                "created_at": "2022-11-05T22:06:32Z",
+                "updated_at": "2022-11-05T22:09:17Z",
+                "author": {
+                  "login": "aduh95",
+                  "name": "aduh95",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/14309773?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              }
+            ]
+          },
+          {
+            "id": "PRRT_kwDOAZ7xs84mtPlY",
+            "is_resolved": true,
+            "is_outdated": true,
+            "path": "lib/internal/test_runner/test.js",
+            "line": null,
+            "diff_side": "RIGHT",
+            "start_line": null,
+            "start_diff_side": null,
+            "original_line": 761,
+            "original_start_line": null,
+            "resolved_by": {
+              "login": "MoLow",
+              "name": "MoLow",
+              "email": null,
+              "avatar_url": "https://avatars.githubusercontent.com/u/8221854?u=726fa18704c0cbbf4fe85069f60bdefe16bae655&v=4",
+              "id": null
+            },
+            "comments": [
+              {
+                "id": "PRRC_kwDOAZ7xs848e5Xf",
+                "database_id": 1014732255,
+                "body": "Same here",
+                "created_at": "2022-11-05T22:07:50Z",
+                "updated_at": "2022-11-05T22:09:17Z",
+                "author": {
+                  "login": "aduh95",
+                  "name": "aduh95",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/14309773?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              },
+              {
+                "id": "PRRC_kwDOAZ7xs848fEaD",
+                "database_id": 1014777475,
+                "body": "fixed",
+                "created_at": "2022-11-06T06:44:25Z",
+                "updated_at": "2022-11-06T06:44:25Z",
+                "author": {
+                  "login": "MoLow",
+                  "name": "MoLow",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/8221854?u=726fa18704c0cbbf4fe85069f60bdefe16bae655&v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              }
+            ]
+          },
+          {
+            "id": "PRRT_kwDOAZ7xs84mthSw",
+            "is_resolved": true,
+            "is_outdated": true,
+            "path": "lib/internal/test_runner/test.js",
+            "line": null,
+            "diff_side": "RIGHT",
+            "start_line": null,
+            "start_diff_side": "RIGHT",
+            "original_line": 531,
+            "original_start_line": 530,
+            "resolved_by": {
+              "login": "MoLow",
+              "name": "MoLow",
+              "email": null,
+              "avatar_url": "https://avatars.githubusercontent.com/u/8221854?u=726fa18704c0cbbf4fe85069f60bdefe16bae655&v=4",
+              "id": null
+            },
+            "comments": [
+              {
+                "id": "PRRC_kwDOAZ7xs848fPoX",
+                "database_id": 1014823447,
+                "body": "FYI you can avoid the `eslint-disable` if you put a comment in the empty block, e.g.\r\n```suggestion\r\n      try { await afterEach(); } catch { /* test is already failing, let's the error */ }\r\n```",
+                "created_at": "2022-11-06T12:43:35Z",
+                "updated_at": "2022-11-06T12:43:36Z",
+                "author": {
+                  "login": "aduh95",
+                  "name": "aduh95",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/14309773?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "46536": {
+      "pr": {
+        "url": "https://github.com/nodejs/node/pull/46536",
+        "title": "test: assume priv ports start at 1024 if it can't be changed",
+        "base_sha": "f46515c2f31902d2ca275d5eae0d5790d0cc212e",
+        "head_sha": "1f161a1d5ce03e6ff1cc0631a36edda12cfddb8b",
+        "merge_commit_sha": "024e648d905dcc120741530042810352508d2583",
+        "diff": "@@ -27,9 +27,14 @@ const net = require('net');\n const { readFileSync } = require('fs');\n \n if (common.isLinux) {\n-  const unprivilegedPortStart = parseInt(readFileSync('/proc/sys/net/ipv4/ip_unprivileged_port_start'));\n-  if (unprivilegedPortStart <= 42) {\n-    common.skip('Port 42 is unprivileged');\n+  try {\n+    const unprivilegedPortStart = parseInt(readFileSync('/proc/sys/net/ipv4/ip_unprivileged_port_start'));\n+    if (unprivilegedPortStart <= 42) {\n+      common.skip('Port 42 is unprivileged');\n+    }\n+  } catch {\n+    // Do nothing, feature doesn't exist, minimum is 1024 so 42 is usable.\n+    // Continue...\n   }\n }\n "
+      },
+      "comments": [
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#discussion_r1098524529",
+          "body": "This is a TOCTOU pattern. While mostly academic in this context, node users sometimes copy \"best practices\" from the test suite so I'd rather not merge this code as-is. Open the file and handle the error when it's not there.",
+          "author": "bnoordhuis",
+          "review": null,
+          "path": "test/parallel/test-cluster-bind-privileged-port.js",
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1098524529
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#pullrequestreview-1286900485",
+          "body": "",
+          "author": "bnoordhuis",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1286900485
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#discussion_r1099436873",
+          "body": "Agreed. While the TOCTOU race condition can never occur here, your reasoning is all sound. I'll replace it with a try block. Just dislike empty catch blocks but we'll throw a comment in there.\r\nDone.\r\n",
+          "author": "KrayzeeKev",
+          "review": null,
+          "path": "test/parallel/test-cluster-bind-privileged-port.js",
+          "line": null,
+          "in_reply_to_id": 1098524529,
+          "id": 1099436873
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#pullrequestreview-1288201295",
+          "body": "",
+          "author": "KrayzeeKev",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1288201295
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#discussion_r1100599543",
+          "body": "This basically reverts https://github.com/nodejs/node/commit/f69e84c75f8fbf48e5019af6d8b59e949c5cd653. Can't you simply handle the error thrown by `readFileSync('/proc/sys/net/ipv4/ip_unprivileged_port_start')` when the file does not exist?",
+          "author": "lpinca",
+          "review": null,
+          "path": "test/parallel/test-cluster-bind-privileged-port.js",
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1100599543
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#pullrequestreview-1289884169",
+          "body": "",
+          "author": "lpinca",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1289884169
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#discussion_r1100623963",
+          "body": "Oh, that is so embarrassing. I am doing this in v19 and v18 (the one I'm actually trying to deploy). Went back to the old one. Ignore this. Will fix in next few hours. ARGGHHH",
+          "author": "KrayzeeKev",
+          "review": null,
+          "path": "test/parallel/test-cluster-bind-privileged-port.js",
+          "line": null,
+          "in_reply_to_id": 1100599543,
+          "id": 1100623963
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#pullrequestreview-1289925164",
+          "body": "",
+          "author": "KrayzeeKev",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1289925164
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#discussion_r1100656385",
+          "body": "OK, fixed. Needed more coffee. Working in 3 places (v19 source, v18 source, my build). ",
+          "author": "KrayzeeKev",
+          "review": null,
+          "path": "test/parallel/test-cluster-bind-privileged-port.js",
+          "line": null,
+          "in_reply_to_id": 1100599543,
+          "id": 1100656385
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#pullrequestreview-1289965299",
+          "body": "",
+          "author": "KrayzeeKev",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1289965299
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#discussion_r1100667830",
+          "body": "Just a nit that you are free to ignore. I would put only `readFileSync()` in the `try...catch`.\r\n\r\n```js\r\nlet unprivilegedPortStart:\r\n\r\ntry {\r\n  unprivilegedPortStart = readFileSync('/proc/sys/net/ipv4/ip_unprivileged_port_start');\r\n} catch {\r\n  // Do nothing.\r\n}\r\n\r\nif (parseInt(unprivilegedPortStart) <= 42) {\r\n  common.skip('Port 42 is unprivileged');\r\n}\r\n```",
+          "author": "lpinca",
+          "review": null,
+          "path": "test/parallel/test-cluster-bind-privileged-port.js",
+          "line": 31,
+          "in_reply_to_id": null,
+          "id": 1100667830
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#pullrequestreview-1289982374",
+          "body": "",
+          "author": "lpinca",
+          "review": "APPROVED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1289982374
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#discussion_r1100754729",
+          "body": "I considered that (and even wrote it). The above I dislike a bit because parseInt returns NaN and Nan <=42 which means it'll work but it's very obscure. First thing you think is \"isn't this broken\"? So you probably want a \"unprivilegedPortStart = 1024;\" in the catch which is what the scenario REALLY is when the readFileSync fails. \r\n\r\nBUT The entire test of minimum ports, etc is irrelevant when that read fails. That indicates the ability to change the minimum doesn't exist hence even considering it is irrelevant. \r\n\r\nSo I went with \"if the read fails, this entire block of code is irrelevant\".",
+          "author": "KrayzeeKev",
+          "review": null,
+          "path": "test/parallel/test-cluster-bind-privileged-port.js",
+          "line": 31,
+          "in_reply_to_id": 1100667830,
+          "id": 1100754729
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#pullrequestreview-1290104987",
+          "body": "",
+          "author": "KrayzeeKev",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1290104987
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#discussion_r1101052519",
+          "body": "We could be explicit and do\r\n\r\n```js\r\nif (unprivilegedPortStart !== undefined && parseInt(unprivilegedPortStart) <= 42) {\r\n  common.skip('Port 42 is unprivileged');\r\n}\r\n```\r\n\r\nMy reasoning is that only things that are expected to throws errors should be in the `try` block to avoid hiding unexpected exception.\r\n\r\nAnyway, it is only a nit. It is ok as is.",
+          "author": "lpinca",
+          "review": null,
+          "path": "test/parallel/test-cluster-bind-privileged-port.js",
+          "line": 31,
+          "in_reply_to_id": 1100667830,
+          "id": 1101052519
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#pullrequestreview-1290535610",
+          "body": "",
+          "author": "lpinca",
+          "review": "COMMENTED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1290535610
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#issuecomment-1442550738",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/49957/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1442550738
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#issuecomment-1445420227",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/50029/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1445420227
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/46536#issuecomment-1451497831",
+          "body": "Landed in 024e648d905dcc120741530042810352508d2583",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 1451497831
+        }
+      ],
+      "threads": {
+        "review_threads": [
+          {
+            "id": "PRRT_kwDOAZ7xs84p5c2r",
+            "is_resolved": false,
+            "is_outdated": true,
+            "path": "test/parallel/test-cluster-bind-privileged-port.js",
+            "line": null,
+            "diff_side": "RIGHT",
+            "start_line": null,
+            "start_diff_side": "RIGHT",
+            "original_line": 36,
+            "original_start_line": 30,
+            "resolved_by": null,
+            "comments": [
+              {
+                "id": "PRRC_kwDOAZ7xs85Beidx",
+                "database_id": 1098524529,
+                "body": "This is a TOCTOU pattern. While mostly academic in this context, node users sometimes copy \"best practices\" from the test suite so I'd rather not merge this code as-is. Open the file and handle the error when it's not there.",
+                "created_at": "2023-02-07T11:17:06Z",
+                "updated_at": "2023-02-07T11:17:06Z",
+                "author": {
+                  "login": "bnoordhuis",
+                  "name": "bnoordhuis",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/275871?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              },
+              {
+                "id": "PRRC_kwDOAZ7xs85BiBNJ",
+                "database_id": 1099436873,
+                "body": "Agreed. While the TOCTOU race condition can never occur here, your reasoning is all sound. I'll replace it with a try block. Just dislike empty catch blocks but we'll throw a comment in there.\r\nDone.\r\n",
+                "created_at": "2023-02-07T23:57:00Z",
+                "updated_at": "2023-02-07T23:57:00Z",
+                "author": {
+                  "login": "KrayzeeKev",
+                  "name": "KrayzeeKev",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/9453910?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              }
+            ]
+          },
+          {
+            "id": "PRRT_kwDOAZ7xs84p-S3-",
+            "is_resolved": false,
+            "is_outdated": true,
+            "path": "test/parallel/test-cluster-bind-privileged-port.js",
+            "line": null,
+            "diff_side": "RIGHT",
+            "start_line": null,
+            "start_diff_side": null,
+            "original_line": 31,
+            "original_start_line": null,
+            "resolved_by": null,
+            "comments": [
+              {
+                "id": "PRRC_kwDOAZ7xs85BmdD3",
+                "database_id": 1100599543,
+                "body": "This basically reverts https://github.com/nodejs/node/commit/f69e84c75f8fbf48e5019af6d8b59e949c5cd653. Can't you simply handle the error thrown by `readFileSync('/proc/sys/net/ipv4/ip_unprivileged_port_start')` when the file does not exist?",
+                "created_at": "2023-02-08T19:42:45Z",
+                "updated_at": "2023-02-08T19:43:02Z",
+                "author": {
+                  "login": "lpinca",
+                  "name": "lpinca",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/1443911?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              },
+              {
+                "id": "PRRC_kwDOAZ7xs85BmjBb",
+                "database_id": 1100623963,
+                "body": "Oh, that is so embarrassing. I am doing this in v19 and v18 (the one I'm actually trying to deploy). Went back to the old one. Ignore this. Will fix in next few hours. ARGGHHH",
+                "created_at": "2023-02-08T20:06:03Z",
+                "updated_at": "2023-02-08T20:06:04Z",
+                "author": {
+                  "login": "KrayzeeKev",
+                  "name": "KrayzeeKev",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/9453910?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              },
+              {
+                "id": "PRRC_kwDOAZ7xs85Bmq8B",
+                "database_id": 1100656385,
+                "body": "OK, fixed. Needed more coffee. Working in 3 places (v19 source, v18 source, my build). ",
+                "created_at": "2023-02-08T20:38:24Z",
+                "updated_at": "2023-02-08T20:38:24Z",
+                "author": {
+                  "login": "KrayzeeKev",
+                  "name": "KrayzeeKev",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/9453910?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              }
+            ]
+          },
+          {
+            "id": "PRRT_kwDOAZ7xs84p-dB2",
+            "is_resolved": false,
+            "is_outdated": false,
+            "path": "test/parallel/test-cluster-bind-privileged-port.js",
+            "line": 31,
+            "diff_side": "RIGHT",
+            "start_line": 31,
+            "start_diff_side": null,
+            "original_line": 31,
+            "original_start_line": null,
+            "resolved_by": null,
+            "comments": [
+              {
+                "id": "PRRC_kwDOAZ7xs85Bmtu2",
+                "database_id": 1100667830,
+                "body": "Just a nit that you are free to ignore. I would put only `readFileSync()` in the `try...catch`.\r\n\r\n```js\r\nlet unprivilegedPortStart:\r\n\r\ntry {\r\n  unprivilegedPortStart = readFileSync('/proc/sys/net/ipv4/ip_unprivileged_port_start');\r\n} catch {\r\n  // Do nothing.\r\n}\r\n\r\nif (parseInt(unprivilegedPortStart) <= 42) {\r\n  common.skip('Port 42 is unprivileged');\r\n}\r\n```",
+                "created_at": "2023-02-08T20:52:05Z",
+                "updated_at": "2023-02-08T20:55:18Z",
+                "author": {
+                  "login": "lpinca",
+                  "name": "lpinca",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/1443911?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              },
+              {
+                "id": "PRRC_kwDOAZ7xs85BnC8p",
+                "database_id": 1100754729,
+                "body": "I considered that (and even wrote it). The above I dislike a bit because parseInt returns NaN and Nan <=42 which means it'll work but it's very obscure. First thing you think is \"isn't this broken\"? So you probably want a \"unprivilegedPortStart = 1024;\" in the catch which is what the scenario REALLY is when the readFileSync fails. \r\n\r\nBUT The entire test of minimum ports, etc is irrelevant when that read fails. That indicates the ability to change the minimum doesn't exist hence even considering it is irrelevant. \r\n\r\nSo I went with \"if the read fails, this entire block of code is irrelevant\".",
+                "created_at": "2023-02-08T22:39:14Z",
+                "updated_at": "2023-02-08T22:39:15Z",
+                "author": {
+                  "login": "KrayzeeKev",
+                  "name": "KrayzeeKev",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/9453910?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              },
+              {
+                "id": "PRRC_kwDOAZ7xs85BoLpn",
+                "database_id": 1101052519,
+                "body": "We could be explicit and do\r\n\r\n```js\r\nif (unprivilegedPortStart !== undefined && parseInt(unprivilegedPortStart) <= 42) {\r\n  common.skip('Port 42 is unprivileged');\r\n}\r\n```\r\n\r\nMy reasoning is that only things that are expected to throws errors should be in the `try` block to avoid hiding unexpected exception.\r\n\r\nAnyway, it is only a nit. It is ok as is.",
+                "created_at": "2023-02-09T07:07:14Z",
+                "updated_at": "2023-02-09T07:07:15Z",
+                "author": {
+                  "login": "lpinca",
+                  "name": "lpinca",
+                  "email": null,
+                  "avatar_url": "https://avatars.githubusercontent.com/u/1443911?v=4",
+                  "id": null
+                },
+                "viewer_did_author": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "57110": {
+      "pr": {
+        "url": "https://github.com/nodejs/node/pull/57110",
+        "title": "timers: simplify the compareTimersLists function",
+        "base_sha": "e2bc395c4206ca96b921900c030da30c05d38447",
+        "head_sha": "9239cbad2980b242567966fce32e8c03bb57d49f",
+        "merge_commit_sha": "7c2709de33d644c09bc878ab1af2b3718b0b2c21",
+        "diff": "@@ -442,10 +442,7 @@ function getTimerDuration(msecs, name) {\n function compareTimersLists(a, b) {\n   const expiryDiff = a.expiry - b.expiry;\n   if (expiryDiff === 0) {\n-    if (a.id < b.id)\n-      return -1;\n-    if (a.id > b.id)\n-      return 1;\n+    return a.id - b.id;\n   }\n   return expiryDiff;\n }"
+      },
+      "comments": [
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#issuecomment-2664006464",
+          "body": "## [Codecov](https://app.codecov.io/gh/nodejs/node/pull/57110?dropdown=coverage&src=pr&el=h1&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=nodejs) Report\nAll modified and coverable lines are covered by tests :white_check_mark:\n> Project coverage is 90.34%. Comparing base [(`e2bc395`)](https://app.codecov.io/gh/nodejs/node/commit/e2bc395c4206ca96b921900c030da30c05d38447?dropdown=coverage&el=desc&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=nodejs) to head [(`9239cba`)](https://app.codecov.io/gh/nodejs/node/commit/9239cbad2980b242567966fce32e8c03bb57d49f?dropdown=coverage&el=desc&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=nodejs).\n> Report is 113 commits behind head on main.\n\n<details><summary>Additional details and impacted files</summary>\n\n\n```diff\n@@            Coverage Diff             @@\n##             main   #57110      +/-   ##\n==========================================\n- Coverage   90.37%   90.34%   -0.03%     \n==========================================\n  Files         629      629              \n  Lines      184365   184362       -3     \n  Branches    36016    36021       +5     \n==========================================\n- Hits       166612   166570      -42     \n- Misses      10918    10922       +4     \n- Partials     6835     6870      +35     \n```\n\n| [Files with missing lines](https://app.codecov.io/gh/nodejs/node/pull/57110?dropdown=coverage&src=pr&el=tree&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=nodejs) | Coverage Δ | |\n|---|---|---|\n| [lib/internal/timers.js](https://app.codecov.io/gh/nodejs/node/pull/57110?src=pr&el=tree&filepath=lib%2Finternal%2Ftimers.js&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=nodejs#diff-bGliL2ludGVybmFsL3RpbWVycy5qcw==) | `99.58% <100.00%> (-0.01%)` | :arrow_down: |\n\n... and [21 files with indirect coverage changes](https://app.codecov.io/gh/nodejs/node/pull/57110/indirect-changes?src=pr&el=tree-more&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=nodejs)\n\n</details>\n<details><summary>🚀 New features to boost your workflow: </summary>\n\n- ❄ [Test Analytics](https://docs.codecov.com/docs/test-analytics): Detect flaky tests, report on failures, and find test suite problems.\n- 📦 [JS Bundle Analysis](https://docs.codecov.com/docs/javascript-bundle-analysis): Save yourself from yourself by tracking and limiting bundle sizes in JS merges.\n</details>",
+          "author": "codecov[bot]",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2664006464
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#pullrequestreview-2622168663",
+          "body": "",
+          "author": "anonrig",
+          "review": "APPROVED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2622168663
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#issuecomment-2664363387",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/65283/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2664363387
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#issuecomment-2686212707",
+          "body": "Can we get this merged?",
+          "author": "gurgunday",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2686212707
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#pullrequestreview-2649099905",
+          "body": "",
+          "author": "jazelly",
+          "review": "APPROVED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2649099905
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#issuecomment-2689132771",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/65468/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2689132771
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#issuecomment-2690547835",
+          "body": "CI: https://ci.nodejs.org/job/node-test-pull-request/65482/",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2690547835
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#issuecomment-2708347767",
+          "body": "@atlowChemi can you take a look as well?",
+          "author": "gurgunday",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2708347767
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#pullrequestreview-2669247021",
+          "body": "",
+          "author": "atlowChemi",
+          "review": "APPROVED",
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2669247021
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#issuecomment-2708447855",
+          "body": "Landed in 7c2709de33d644c09bc878ab1af2b3718b0b2c21",
+          "author": "nodejs-github-bot",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2708447855
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#issuecomment-2708457126",
+          "body": "This PR landed without benchmark-ci even though there was a needs-benchmark-ci label. cc @atlowChemi ",
+          "author": "anonrig",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2708457126
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#issuecomment-2708484258",
+          "body": "@anonrig I totally, missed that 😕 \r\n\r\nI ran now a benchmark CI, should we add a don't land until the benchmarks have run?\r\n\r\nhttps://ci.nodejs.org/view/Node.js%20benchmark/job/benchmark-node-micro-benchmarks/1676/",
+          "author": "atlowChemi",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2708484258
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#issuecomment-2708496353",
+          "body": "```\r\n                                                             confidence improvement accuracy (*)   (**)  (***)\r\ntimers/immediate.js type='breadth' n=5000000                                 0.09 %       ±1.06% ±1.41% ±1.84%\r\ntimers/immediate.js type='breadth1' n=5000000                                0.53 %       ±1.02% ±1.35% ±1.76%\r\ntimers/immediate.js type='breadth4' n=5000000                               -0.27 %       ±0.82% ±1.09% ±1.43%\r\ntimers/immediate.js type='clear' n=5000000                                  -0.18 %       ±1.58% ±2.11% ±2.74%\r\ntimers/immediate.js type='depth' n=5000000                                   0.02 %       ±0.75% ±1.00% ±1.31%\r\ntimers/immediate.js type='depth1' n=5000000                                  0.51 %       ±0.57% ±0.76% ±1.00%\r\ntimers/set-immediate-breadth-args.js n=5000000                               0.06 %       ±2.45% ±3.27% ±4.25%\r\ntimers/set-immediate-breadth.js n=10000000                                   0.01 %       ±1.22% ±1.62% ±2.11%\r\ntimers/set-immediate-depth-args.js n=5000000                                -0.51 %       ±0.67% ±0.90% ±1.17%\r\ntimers/timers-breadth-args.js n=1000000                                      0.18 %       ±1.54% ±2.05% ±2.67%\r\ntimers/timers-breadth.js n=5000000                                          -1.04 %       ±3.07% ±4.08% ±5.32%\r\ntimers/timers-cancel-pooled.js n=5000000                                     2.45 %       ±5.63% ±7.50% ±9.76%\r\ntimers/timers-cancel-unpooled.js direction='end' n=1000000                  -0.61 %       ±3.71% ±4.94% ±6.43%\r\ntimers/timers-cancel-unpooled.js direction='start' n=1000000                -0.98 %       ±2.86% ±3.81% ±4.95%\r\ntimers/timers-depth.js n=1000                                                0.12 %       ±0.15% ±0.20% ±0.26%\r\ntimers/timers-insert-pooled.js n=5000000                                     0.97 %       ±5.39% ±7.17% ±9.33%\r\ntimers/timers-insert-unpooled.js direction='end' n=1000000                   0.36 %       ±1.03% ±1.37% ±1.78%\r\ntimers/timers-insert-unpooled.js direction='start' n=1000000                -1.49 %       ±2.66% ±3.54% ±4.61%\r\ntimers/timers-timeout-nexttick.js n=50000                                    2.38 %       ±3.87% ±5.16% ±6.71%\r\ntimers/timers-timeout-nexttick.js n=5000000                                  1.29 %       ±4.75% ±6.31% ±8.22%\r\ntimers/timers-timeout-pooled.js n=10000000                                   0.22 %       ±0.60% ±0.80% ±1.04%\r\ntimers/timers-timeout-unpooled.js n=1000000                                  2.22 %       ±3.30% ±4.39% ±5.72%\r\n\r\nBe aware that when doing many comparisons the risk of a false-positive\r\nresult increases. In this case, there are 22 comparisons, you can thus\r\nexpect the following amount of false-positive results:\r\n  1.10 false positives, when considering a   5% risk acceptance (*, **, ***),\r\n  0.22 false positives, when considering a   1% risk acceptance (**, ***),\r\n  0.02 false positives, when considering a 0.1% risk acceptance (***)\r\n```",
+          "author": "atlowChemi",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2708496353
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#issuecomment-2708498002",
+          "body": "Code is a lot simpler, and I'm fine with landing this but the performance claim seems to be invalid. ",
+          "author": "anonrig",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2708498002
+        },
+        {
+          "url": "https://github.com/nodejs/node/pull/57110#issuecomment-2708541428",
+          "body": "Well, locally I saw a small improvement but in any case it was clear to me this wouldn't be a 200% improvement\r\n\r\nI just wanted to simplify the function by returning directly here, because the result will get compared with 0 anyway in the priority queue\r\n\r\nIn terms of V8 and JS bytecode, this forces a Number result with a constant subtraction operation instead of doing 2 separate comparisons at worst case, I'd say it should perform just as well _or slightly better in a certain scenario where the ids are the same_",
+          "author": "gurgunday",
+          "review": null,
+          "path": null,
+          "line": null,
+          "in_reply_to_id": null,
+          "id": 2708541428
+        }
+      ]
+    }
+  }
+}

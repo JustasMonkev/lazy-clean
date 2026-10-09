@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1014823447,
+    "html_url": "https://github.com/nodejs/node/pull/45204#discussion_r1014823447",
+    "diff_hunk": "@@ -517,12 +524,11 @@ class Test extends AsyncResource {\n         return;\n       }\n \n-      if (this.parent?.hooks.afterEach.length > 0) {\n-        await this.parent[kRunHook]('afterEach', { args, ctx });\n-      }\n-\n+      await afterEach();\n       this.pass();\n     } catch (err) {\n+      // eslint-disable-next-line no-empty\n+      try { await afterEach(); } catch {}",
+    "original_commit_id": "63689f409bca78e7087318d9fca2ebc28c6faf4b",
+    "commit_id": "5880f19d59b85c74945929c04954e6b6c770210a",
+    "path": "lib/internal/test_runner/test.js",
+    "body": "FYI you can avoid the `eslint-disable` if you put a comment in the empty block, e.g.\r\n```suggestion\r\n      try { await afterEach(); } catch { /* test is already failing, let's the error */ }\r\n```"
+  },
+  {
+    "id": 1098524529,
+    "html_url": "https://github.com/nodejs/node/pull/46536#discussion_r1098524529",
+    "diff_hunk": "@@ -24,12 +24,16 @@ const common = require('../common');\n const assert = require('assert');\n const cluster = require('cluster');\n const net = require('net');\n-const { readFileSync } = require('fs');\n+const { readFileSync, statSync } = require('fs');\n \n if (common.isLinux) {\n-  const unprivilegedPortStart = parseInt(readFileSync('/proc/sys/net/ipv4/ip_unprivileged_port_start'));\n-  if (unprivilegedPortStart <= 42) {\n-    common.skip('Port 42 is unprivileged');\n+  const procFileName = '/proc/sys/net/ipv4/ip_unprivileged_port_start';\n+  // Does not exist for Kernel < 4.1 where answer is 1024. So only test limit if limit exists\n+  if (statSync(procFileName, { throwIfNoEntry: false })) {\n+    const unprivilegedPortStart = parseInt(readFileSync(procFileName));\n+    if (unprivilegedPortStart <= 42) {\n+      common.skip('Port 42 is unprivileged');\n+    }",
+    "original_commit_id": "526eed0ed3250297bf8db4217a8d47f371a409d8",
+    "commit_id": "1f161a1d5ce03e6ff1cc0631a36edda12cfddb8b",
+    "path": "test/parallel/test-cluster-bind-privileged-port.js",
+    "body": "This is a TOCTOU pattern. While mostly academic in this context, node users sometimes copy \"best practices\" from the test suite so I'd rather not merge this code as-is. Open the file and handle the error when it's not there."
+  },
+  {
+    "id": 634207258,
+    "html_url": "https://github.com/nodejs/node/pull/38650#discussion_r634207258",
+    "diff_hunk": "@@ -384,5 +386,23 @@ primordials.SafeWeakRef = makeSafe(\n   }\n );\n \n+const SafePromise = makeSafe(\n+  Promise,\n+  class SafePromise extends Promise {\n+    // eslint-disable-next-line no-useless-constructor\n+    constructor(executor) { super(executor); }\n+  }\n+);\n+\n+primordials.PromisePrototypeCatch = (thisPromise, onRejected) =>\n+  PromisePrototypeThen(thisPromise, undefined, onRejected);\n+\n+primordials.PromisePrototypeFinally = (thisPromise, onFinally) =>\n+  new Promise((a, b) =>\n+    new SafePromise((a, b) => PromisePrototypeThen(thisPromise, a, b))\n+      .finally(onFinally)\n+      .then(a, b)",
+    "original_commit_id": "06e59ffe84368def52ad17f40dee138cdfdce26f",
+    "commit_id": "57b14cf04b6c5b2ff72c8645c15143a05e3bdc59",
+    "path": "lib/internal/per_context/primordials.js",
+    "body": "I think this creates too many promises to be usable in any hot code paths. I would recommend not adding this."
+  }
+]

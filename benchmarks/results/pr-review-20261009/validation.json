@@ -1,0 +1,232 @@
+{
+  "node": "v24.19.0",
+  "baselineRef": "8f38b32bae676c300d03191c2668e4f0c1271544",
+  "ruleCount": 43,
+  "paired": [
+    {
+      "path": "ordering-comment.ts",
+      "source": "// First, update the list because watched tests can have changed.\nawait refreshList();\nawait runWatchedTests();",
+      "before": [
+        {
+          "path": "ordering-comment.ts",
+          "line": 1,
+          "column": 1,
+          "rule": "no-narration-comments",
+          "message": "Possible narration comment (\"now we...\", \"first, ...\"). Verify ordering and other constraints before removing nonessential comments; explain relevant rationale in the final response.",
+          "severity": "review"
+        }
+      ],
+      "after": [
+        {
+          "path": "ordering-comment.ts",
+          "line": 1,
+          "column": 1,
+          "rule": "no-narration-comments",
+          "message": "Possible narration comment (\"now we...\", \"first, ...\"). Keep accurate non-obvious ordering constraints beside the code; remove only narration of code or edits.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "cancellation-sentinel.ts",
+      "source": "const { selectedProjects } = await prompt().catch(() => ({ selectedProjects: null }));\nif (!selectedProjects) return;",
+      "before": [],
+      "after": []
+    },
+    {
+      "path": "swallow-after-navigation.spec.ts",
+      "source": "setTimeout(async () => { await page.goto(url).catch(() => {}); }, 1000);",
+      "before": [],
+      "after": []
+    },
+    {
+      "path": "assert-count.spec.ts",
+      "source": "await expect.poll(() => events).toHaveLength(1);\nexpect(events).toEqual([[\"testFilesChanged\", { testFiles: [file] }]]);",
+      "before": [],
+      "after": []
+    },
+    {
+      "path": "table-driven-test.spec.ts",
+      "source": "for (const matcher of matchers) { const error = await matcher().catch(e => e); expect(error).toBeInstanceOf(Error); }",
+      "before": [],
+      "after": []
+    },
+    {
+      "path": "transport-boundary.ts",
+      "source": "interface Transport { send(data: string): void; close(): void; }\nclass Connection { constructor(private transport: Transport) {} send(data: string) { this.transport.send(data); } }",
+      "before": [],
+      "after": []
+    },
+    {
+      "path": "typed-array-wire.ts",
+      "source": "const outgoing = Buffer.from(value.buffer, value.byteOffset, value.length);\nconst ctor = constructors[kind] as any;\nreturn new ctor(buffer.buffer, buffer.byteOffset, buffer.length);",
+      "before": [
+        {
+          "path": "typed-array-wire.ts",
+          "line": 2,
+          "column": 36,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        }
+      ],
+      "after": [
+        {
+          "path": "typed-array-wire.ts",
+          "line": 2,
+          "column": 36,
+          "rule": "no-any",
+          "message": "`any` disables the type system. Use a precise type, or `unknown` plus parsing at the boundary.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "justified-best-effort.ts",
+      "source": "// The operation is optional and completion cannot affect the result.\ntry { await optionalCleanup(); } catch {}",
+      "before": [
+        {
+          "path": "justified-best-effort.ts",
+          "line": 2,
+          "column": 34,
+          "rule": "no-empty-catch",
+          "message": "An empty catch silently swallows failures. Handle the error, rethrow, or verify the failure contract and justify the swallow in the final response.",
+          "severity": "review"
+        }
+      ],
+      "after": [
+        {
+          "path": "justified-best-effort.ts",
+          "line": 2,
+          "column": 34,
+          "rule": "no-empty-catch",
+          "message": "An empty catch silently swallows failures. Handle the error, rethrow, or verify the failure contract and justify the swallow in the final response.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "loader-contract.spec.ts",
+      "source": "jest.mock(\"./dependency\", () => ({ run: mockRun }));\nconst result = runConsumer();\nexpect(mockRun).toHaveBeenCalledWith(\"selected\");",
+      "before": [
+        {
+          "path": "loader-contract.spec.ts",
+          "line": 1,
+          "column": 1,
+          "rule": "no-module-mocking",
+          "message": "Module mocks patch the loader instead of the design. Inject the dependency through a real seam.",
+          "severity": "review"
+        }
+      ],
+      "after": [
+        {
+          "path": "loader-contract.spec.ts",
+          "line": 1,
+          "column": 1,
+          "rule": "no-module-mocking",
+          "message": "Review whether this module mock bypasses the subject or isolates a package or loader contract. Use an existing seam when it fits; do not add production injection solely to remove the mock.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "required-timeout.spec.ts",
+      "source": "const pending = actionUnderTest();\nawait new Promise(resolve => setTimeout(resolve, 20));\nexpect(completed).toBe(false);\nreleaseAction();\nawait pending;",
+      "before": [
+        {
+          "path": "required-timeout.spec.ts",
+          "line": 2,
+          "column": 7,
+          "rule": "no-arbitrary-sleep",
+          "message": "A hard-coded sleep guesses at timing instead of waiting for the event. Await the real signal, or name the delay as a policy and say why.",
+          "severity": "review"
+        }
+      ],
+      "after": [
+        {
+          "path": "required-timeout.spec.ts",
+          "line": 2,
+          "column": 7,
+          "rule": "no-arbitrary-sleep",
+          "message": "A hard-coded sleep guesses at timing instead of waiting for the event. Await the real signal, or name the delay as a policy and say why.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "empty-event-guard.ts",
+      "source": "if (testFiles.length === 0) return;\nrunWatchedTests(testFiles);",
+      "before": [],
+      "after": []
+    },
+    {
+      "path": "same-boundary-guard.ts",
+      "source": "function process(items: string[]) { if (!items) return; return items.map(item => item.length); }",
+      "before": [],
+      "after": []
+    },
+    {
+      "path": "package-isolation.test.ts",
+      "source": "jest.mock('@wdio/config', () => ({ ConfigParser: class { autoCompile() {} getCapabilities() {} } }));",
+      "before": [
+        {
+          "path": "package-isolation.test.ts",
+          "line": 1,
+          "column": 1,
+          "rule": "no-module-mocking",
+          "message": "Module mocks patch the loader instead of the design. Inject the dependency through a real seam.",
+          "severity": "review"
+        }
+      ],
+      "after": [
+        {
+          "path": "package-isolation.test.ts",
+          "line": 1,
+          "column": 1,
+          "rule": "no-module-mocking",
+          "message": "Review whether this module mock bypasses the subject or isolates a package or loader contract. Use an existing seam when it fits; do not add production injection solely to remove the mock.",
+          "severity": "review"
+        }
+      ]
+    },
+    {
+      "path": "subject-bypass.test.ts",
+      "source": "vi.mock('./subject');",
+      "before": [
+        {
+          "path": "subject-bypass.test.ts",
+          "line": 1,
+          "column": 1,
+          "rule": "no-module-mocking",
+          "message": "Module mocks patch the loader instead of the design. Inject the dependency through a real seam.",
+          "severity": "review"
+        }
+      ],
+      "after": [
+        {
+          "path": "subject-bypass.test.ts",
+          "line": 1,
+          "column": 1,
+          "rule": "no-module-mocking",
+          "message": "Review whether this module mock bypasses the subject or isolates a package or loader contract. Use an existing seam when it fits; do not add production injection solely to remove the mock.",
+          "severity": "review"
+        }
+      ]
+    }
+  ],
+  "semantics": [
+    {
+      "case": "WDIO #14319 reduction",
+      "proves": "ID deduplication retains original object identity; JSON equality does not model node identity."
+    },
+    {
+      "case": "WDIO #8156/#8456 reduction",
+      "proves": "A call assertion catches skipped orchestration even when the returned capability value stays correct."
+    },
+    {
+      "case": "WDIO #15331 reduction",
+      "proves": "An intentional best-effort catch allows later work; removing it changes completion semantics."
+    }
+  ],
+  "limits": "Semantic cases are reductions, not upstream suite executions. Paired findings prove unchanged detection on these probes, not scanner completeness or AI code quality."
+}

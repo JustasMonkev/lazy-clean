@@ -1,0 +1,132 @@
+{
+  "repository": "nodejs/node",
+  "extraction": "Exact contiguous line excerpts of retrieved whole files. Source file hashes retain provenance; unavailable whole originals use raw review hunks separately.",
+  "excerpts": [
+    {
+      "name": "12712-callbackify",
+      "sourceFile": "12712-merged.js",
+      "startLine": 1051,
+      "endLine": 1099,
+      "sourceSha256": "496bc5637f37878e2cd863fe04bb338732872252b76acd103b851683019aa1ee",
+      "codeSha256": "4303854fc63cfe25ef5cbed49e359a979437aa806a861f7b9ca9d623ba0fb8a9",
+      "code": "function callbackifyOnRejected(reason, cb) {\n  // `!reason` guard inspired by bluebird (Ref: https://goo.gl/t5IS6M).\n  // Because `null` is a special error value in callbacks which means \"no error\n  // occurred\", we error-wrap so the callback consumer can distinguish between\n  // \"the promise rejected with null\" or \"the promise fulfilled with undefined\".\n  if (!reason) {\n    const newReason = new errors.Error('FALSY_VALUE_REJECTION');\n    newReason.reason = reason;\n    reason = newReason;\n    Error.captureStackTrace(reason, callbackifyOnRejected);\n  }\n  return cb(reason);\n}\n\n\nfunction callbackify(original) {\n  if (typeof original !== 'function') {\n    throw new errors.TypeError(\n      'ERR_INVALID_ARG_TYPE',\n      'original',\n      'function');\n  }\n\n  // We DO NOT return the promise as it gives the user a false sense that\n  // the promise is actually somehow related to the callback's execution\n  // and that the callback throwing will reject the promise.\n  function callbackified(...args) {\n    const maybeCb = args.pop();\n    if (typeof maybeCb !== 'function') {\n      throw new errors.TypeError(\n        'ERR_INVALID_ARG_TYPE',\n        'last argument',\n        'function');\n    }\n    const cb = (...args) => { Reflect.apply(maybeCb, this, args); };\n    // In true node style we process the callback on `nextTick` with all the\n    // implications (stack, `uncaughtException`, `async_hooks`)\n    Reflect.apply(original, this, args)\n      .then((ret) => process.nextTick(cb, null, ret),\n            (rej) => process.nextTick(callbackifyOnRejected, rej, cb));\n  }\n\n  Object.setPrototypeOf(callbackified, Object.getPrototypeOf(original));\n  Object.defineProperties(callbackified,\n                          Object.getOwnPropertyDescriptors(original));\n  return callbackified;\n}\n\nexports.callbackify = callbackify;\n"
+    },
+    {
+      "name": "12712-inspect-catch",
+      "sourceFile": "12712-merged.js",
+      "startLine": 352,
+      "endLine": 375,
+      "sourceSha256": "496bc5637f37878e2cd863fe04bb338732872252b76acd103b851683019aa1ee",
+      "codeSha256": "d29f9923dc426b2e98ff76340cef7e1523b90f985a8fc660ac3dbd6f646c3ede",
+      "code": "  var visibleKeys = arrayToHash(keys);\n  const symbolKeys = Object.getOwnPropertySymbols(value);\n  const enumSymbolKeys = symbolKeys\n      .filter((key) => Object.prototype.propertyIsEnumerable.call(value, key));\n  keys = keys.concat(enumSymbolKeys);\n\n  if (ctx.showHidden) {\n    keys = Object.getOwnPropertyNames(value).concat(symbolKeys);\n  }\n\n  // This could be a boxed primitive (new String(), etc.), check valueOf()\n  // NOTE: Avoid calling `valueOf` on `Date` instance because it will return\n  // a number which, when object has some additional user-stored `keys`,\n  // will be printed out.\n  var formatted;\n  var raw = value;\n  try {\n    // the .valueOf() call can fail for a multitude of reasons\n    if (!isDate(value))\n      raw = value.valueOf();\n  } catch (e) {\n    // ignore...\n  }\n\n"
+    },
+    {
+      "name": "12712-json-clone",
+      "sourceFile": "12712-merged.js",
+      "startLine": 1039,
+      "endLine": 1047,
+      "sourceSha256": "496bc5637f37878e2cd863fe04bb338732872252b76acd103b851683019aa1ee",
+      "codeSha256": "ab697189b3a380ba4c540b26fbfc917c1ca838485be9172b341a93ec307ec550",
+      "code": "  if (port) {\n    ex.port = port;\n  }\n  return ex;\n};\n\n// process.versions needs a custom function as some values are lazy-evaluated.\nprocess.versions[exports.inspect.custom] =\n  (depth) => exports.format(JSON.parse(JSON.stringify(process.versions)));\n"
+    },
+    {
+      "name": "44943-tracePromise",
+      "sourceFile": "44943-merged.js",
+      "startLine": 293,
+      "endLine": 348,
+      "sourceSha256": "802629c80228e3b123612407e0d20ac342464ad03ad8c077ff95540a3654d6cb",
+      "codeSha256": "fb9f751d8b24de9db7677350bf3b5b13446d3f7546a87ee59973c0a42692cc3f",
+      "code": "\n  traceSync(fn, context = {}, thisArg, ...args) {\n    const { start, end, error } = this;\n\n    return start.runStores(context, () => {\n      try {\n        const result = ReflectApply(fn, thisArg, args);\n        context.result = result;\n        return result;\n      } catch (err) {\n        context.error = err;\n        error.publish(context);\n        throw err;\n      } finally {\n        end.publish(context);\n      }\n    });\n  }\n\n  tracePromise(fn, context = {}, thisArg, ...args) {\n    const { start, end, asyncStart, asyncEnd, error } = this;\n\n    function reject(err) {\n      context.error = err;\n      error.publish(context);\n      asyncStart.publish(context);\n      // TODO: Is there a way to have asyncEnd _after_ the continuation?\n      asyncEnd.publish(context);\n      return PromiseReject(err);\n    }\n\n    function resolve(result) {\n      context.result = result;\n      asyncStart.publish(context);\n      // TODO: Is there a way to have asyncEnd _after_ the continuation?\n      asyncEnd.publish(context);\n      return result;\n    }\n\n    return start.runStores(context, () => {\n      try {\n        let promise = ReflectApply(fn, thisArg, args);\n        // Convert thenables to native promises\n        if (!(promise instanceof Promise)) {\n          promise = PromiseResolve(promise);\n        }\n        return PromisePrototypeThen(promise, resolve, reject);\n      } catch (err) {\n        context.error = err;\n        error.publish(context);\n        throw err;\n      } finally {\n        end.publish(context);\n      }\n    });\n  }\n"
+    },
+    {
+      "name": "57144-test",
+      "sourceFile": "57144-merged.js",
+      "startLine": 1,
+      "endLine": 24,
+      "sourceSha256": "30919acc935ae4804c2b45d981bcba39b98910648415657f4f78bf3b27de24bf",
+      "codeSha256": "30919acc935ae4804c2b45d981bcba39b98910648415657f4f78bf3b27de24bf",
+      "code": "'use strict';\n\nconst common = require('../common');\n\nif (!common.hasCrypto)\n  common.skip('missing crypto');\nconst assert = require('assert');\nconst http2 = require('http2');\nconst util = require('util');\n\nconst connect = util.promisify(http2.connect);\n\nconst error = new Error('Unable to resolve hostname');\n\nfunction lookup(hostname, options, callback) {\n  callback(error);\n}\n\nassert.rejects(\n  connect('http://hostname', { lookup }),\n  error,\n).then(common.mustCall());\n\n"
+    },
+    {
+      "name": "59700-reporter",
+      "sourceFile": "59700-merged.js",
+      "startLine": 58,
+      "endLine": 92,
+      "sourceSha256": "766026e03dbc3aa9cd380f0b54aff8427af276747f2a785ce4ff52729e3061cd",
+      "codeSha256": "c976a05aff172534f29bb0fe7242d2a7a184de585da80148b804bb02e322fafb",
+      "code": "}\n\nfunction formatError(error, indent) {\n  const err = error.code === 'ERR_TEST_FAILURE' ? error.cause : error;\n  const message = ArrayPrototypeJoin(\n    RegExpPrototypeSymbolSplit(\n      hardenRegExp(/\\r?\\n/),\n      inspectWithNoCustomRetry(err, inspectOptions),\n    ), `\\n${indent}  `);\n  return `\\n${indent}  ${message}\\n`;\n}\n\nfunction formatTestReport(type, data, showErrorDetails = true, prefix = '', indent = '') {\n  let color = reporterColorMap[type] ?? colors.white;\n  let symbol = reporterUnicodeSymbolMap[type] ?? ' ';\n  const { skip, todo, expectFailure } = data;\n  const duration_ms = data.details?.duration_ms ? ` ${colors.gray}(${data.details.duration_ms}ms)${colors.white}` : '';\n  let title = `${data.name}${duration_ms}`;\n\n  if (skip !== undefined) {\n    title += ` # ${typeof skip === 'string' && skip.length ? skip : 'SKIP'}`;\n  } else if (todo !== undefined) {\n    title += ` # ${typeof todo === 'string' && todo.length ? todo : 'TODO'}`;\n  } else if (expectFailure !== undefined) {\n    title += ` # EXPECTED FAILURE`;\n  }\n\n  const err = showErrorDetails && data.details?.error ? formatError(data.details.error, indent) : '';\n\n  if (skip !== undefined) {\n    color = colors.gray;\n    symbol = reporterUnicodeSymbolMap['hyphen:minus'];\n  }\n  return `${prefix}${indent}${color}${symbol}${title}${colors.white}${err}`;\n}\n"
+    },
+    {
+      "name": "61871-copyBytesFrom",
+      "sourceFile": "61871-merged.js",
+      "startLine": 366,
+      "endLine": 412,
+      "sourceSha256": "7850e6a8a41b14e21137117f34d9f66fde83dc93029053edaa3872c7d5ae2c85",
+      "codeSha256": "f684018c3d3568de862f782049256be70594e41a364da26af76aeff0faf6a705",
+      "code": "\n/**\n * Creates the Buffer as a copy of the underlying ArrayBuffer of the view\n * rather than the contents of the view.\n * @param {TypedArray} view\n * @param {number} [offset]\n * @param {number} [length]\n * @returns {Buffer}\n */\nBuffer.copyBytesFrom = function copyBytesFrom(view, offset, length) {\n  if (!isTypedArray(view)) {\n    throw new ERR_INVALID_ARG_TYPE('view', [ 'TypedArray' ], view);\n  }\n\n  const viewLength = TypedArrayPrototypeGetLength(view);\n  if (viewLength === 0) {\n    return new FastBuffer();\n  }\n\n  let start = 0;\n  let end = viewLength;\n\n  if (offset !== undefined) {\n    validateInteger(offset, 'offset', 0);\n    if (offset >= viewLength) return new FastBuffer();\n    start = offset;\n  }\n\n  if (length !== undefined) {\n    validateInteger(length, 'length', 0);\n    // The old code used TypedArrayPrototypeSlice which clamps internally.\n    end = MathMin(start + length, viewLength);\n  }\n\n  if (end <= start) return new FastBuffer();\n\n  const viewByteLength = TypedArrayPrototypeGetByteLength(view);\n  const elementSize = viewByteLength / viewLength;\n  const srcByteOffset = TypedArrayPrototypeGetByteOffset(view) +\n                        start * elementSize;\n  const srcByteLength = (end - start) * elementSize;\n\n  return fromArrayLike(new Uint8Array(\n    TypedArrayPrototypeGetBuffer(view),\n    srcByteOffset,\n    srcByteLength));\n};\n"
+    },
+    {
+      "name": "61871-swaps",
+      "sourceFile": "61871-merged.js",
+      "startLine": 1254,
+      "endLine": 1317,
+      "sourceSha256": "7850e6a8a41b14e21137117f34d9f66fde83dc93029053edaa3872c7d5ae2c85",
+      "codeSha256": "115e3406929304a2247b4d68a9bf9d5387e37a74064d39861af418d76e04a34f",
+      "code": "function swap(b, n, m) {\n  const i = b[n];\n  b[n] = b[m];\n  b[m] = i;\n}\n\nBuffer.prototype.swap16 = function swap16() {\n  // Ref: https://github.com/nodejs/node/pull/61871#discussion_r2889557696\n  // For Buffer.length <= 32, it's generally faster to\n  // do the swap in javascript. For larger buffers,\n  // dropping down to the native code is faster.\n  const len = TypedArrayPrototypeGetLength(this);\n  if (len % 2 !== 0)\n    throw new ERR_INVALID_BUFFER_SIZE('16-bits');\n  if (len <= 32) {\n    for (let i = 0; i < len; i += 2)\n      swap(this, i, i + 1);\n    return this;\n  }\n  _swap16(this);\n  return this;\n};\n\nBuffer.prototype.swap32 = function swap32() {\n  // Ref: https://github.com/nodejs/node/pull/61871#discussion_r2889557696\n  // For Buffer.length <= 32, it's generally faster to\n  // do the swap in javascript. For larger buffers,\n  // dropping down to the native code is faster.\n  const len = TypedArrayPrototypeGetLength(this);\n  if (len % 4 !== 0)\n    throw new ERR_INVALID_BUFFER_SIZE('32-bits');\n  if (len <= 32) {\n    for (let i = 0; i < len; i += 4) {\n      swap(this, i, i + 3);\n      swap(this, i + 1, i + 2);\n    }\n    return this;\n  }\n  _swap32(this);\n  return this;\n};\n\nBuffer.prototype.swap64 = function swap64() {\n  // Ref: https://github.com/nodejs/node/pull/61871#discussion_r2889557696\n  // For Buffer.length < 48, it's generally faster to\n  // do the swap in javascript. For larger buffers,\n  // dropping down to the native code is faster.\n  // Threshold differs from swap16/swap32 (<=32) because swap64's\n  // crossover is between 40 and 48 (native wins at 48, loses at 40).\n  const len = TypedArrayPrototypeGetLength(this);\n  if (len % 8 !== 0)\n    throw new ERR_INVALID_BUFFER_SIZE('64-bits');\n  if (len < 48) {\n    for (let i = 0; i < len; i += 8) {\n      swap(this, i, i + 7);\n      swap(this, i + 1, i + 6);\n      swap(this, i + 2, i + 5);\n      swap(this, i + 3, i + 4);\n    }\n    return this;\n  }\n  _swap64(this);\n  return this;\n};\n"
+    },
+    {
+      "name": "61871-ops",
+      "sourceFile": "61871-merged.js",
+      "startLine": 1038,
+      "endLine": 1065,
+      "sourceSha256": "7850e6a8a41b14e21137117f34d9f66fde83dc93029053edaa3872c7d5ae2c85",
+      "codeSha256": "a97dd741c255aed463bbbfb35de8bc60198ea2802cb29963ea78e640a21ab0d6",
+      "code": "  if (typeof byteOffset === 'string') {\n    encoding = byteOffset;\n    byteOffset = undefined;\n  } else if (byteOffset > 0x7fffffff) {\n    byteOffset = 0x7fffffff;\n  } else if (byteOffset < -0x80000000) {\n    byteOffset = -0x80000000;\n  }\n  // Coerce to Number. Values like null and [] become 0.\n  byteOffset = +byteOffset;\n  // If the offset is undefined, \"foo\", {}, coerces to NaN, search whole buffer.\n  if (NumberIsNaN(byteOffset)) {\n    byteOffset = dir ? 0 : (buffer.length || buffer.byteLength);\n  }\n  dir = !!dir;  // Cast to bool.\n\n  if (typeof val === 'number')\n    return indexOfNumber(buffer, val >>> 0, byteOffset, dir);\n\n  let ops;\n  if (encoding === undefined)\n    ops = encodingOps.utf8;\n  else\n    ops = getEncodingOps(encoding);\n\n  if (typeof val === 'string') {\n    if (ops === undefined)\n      throw new ERR_UNKNOWN_ENCODING(encoding);\n"
+    },
+    {
+      "name": "61871-fill-doc",
+      "sourceFile": "61871-merged.js",
+      "startLine": 1091,
+      "endLine": 1103,
+      "sourceSha256": "7850e6a8a41b14e21137117f34d9f66fde83dc93029053edaa3872c7d5ae2c85",
+      "codeSha256": "66f1a5d68805dbcacacab6f76a6a4f2f2050261e96e5dffe317d27316d795a81",
+      "code": "\n// Usage:\n//    buffer.fill(number[, offset[, end]])\n//    buffer.fill(buffer[, offset[, end]])\n//    buffer.fill(string[, offset[, end]][, encoding])\nBuffer.prototype.fill = function fill(value, offset, end, encoding) {\n  return _fill(this, value, offset, end, encoding);\n};\n\nfunction _fill(buf, value, offset, end, encoding) {\n  if (typeof value === 'string') {\n    if (offset === undefined || typeof offset === 'string') {\n      encoding = offset;\n"
+    },
+    {
+      "name": "61871-btoa",
+      "sourceFile": "61871-merged.js",
+      "startLine": 1352,
+      "endLine": 1364,
+      "sourceSha256": "7850e6a8a41b14e21137117f34d9f66fde83dc93029053edaa3872c7d5ae2c85",
+      "codeSha256": "1f3b2c4b3dd87548c2066d405b95154bb0656c9cb547f83395bcd1b5ad64efa5",
+      "code": "function btoa(input) {\n  // The implementation here has not been performance optimized in any way and\n  // should not be.\n  // Refs: https://github.com/nodejs/node/pull/38433#issuecomment-828426932\n  if (arguments.length === 0) {\n    throw new ERR_MISSING_ARGS('input');\n  }\n  const result = _btoa(`${input}`);\n  if (result === -1) {\n    throw lazyDOMException('Invalid character', 'InvalidCharacterError');\n  }\n  return result;\n}\n"
+    },
+    {
+      "name": "44943-intermediate",
+      "sourceFile": "44943-original.js",
+      "startLine": 278,
+      "endLine": 329,
+      "sourceSha256": "7c275cfd5cb22826d2ecdf52a3446b9f943c701cb4118c8d48ba9c339660940f",
+      "codeSha256": "197c1bc89d79b840f7702b69977bf3c7998b0fe10cddb12788c3e132cba691fb",
+      "code": "    return done;\n  }\n\n  traceSync(fn, ctx = {}, thisArg, ...args) {\n    const { start, end, error } = this;\n\n    try {\n      const result = start.runStores(ctx, fn, thisArg, ...args);\n      ctx.result = result;\n      return result;\n    } catch (err) {\n      ctx.error = err;\n      error.publish(ctx);\n      throw err;\n    } finally {\n      end.publish(ctx);\n    }\n  }\n\n  tracePromise(fn, ctx = {}, thisArg, ...args) {\n    const { start, end, asyncStart, asyncEnd, error } = this;\n\n    function reject(err) {\n      ctx.error = err;\n      error.publish(ctx);\n      asyncStart.publish(ctx);\n      // TODO: Is there a way to have asyncEnd _after_ the continuation?\n      asyncEnd.publish(ctx);\n      return PromiseReject(err);\n    }\n\n    function resolve(result) {\n      ctx.result = result;\n      asyncStart.publish(ctx);\n      // TODO: Is there a way to have asyncEnd _after_ the continuation?\n      asyncEnd.publish(ctx);\n      return result;\n    }\n\n    try {\n      const promise = start.runStores(ctx, fn, thisArg, ...args);\n      return PromisePrototypeThen(promise, resolve, reject);\n    } catch (err) {\n      ctx.error = err;\n      error.publish(ctx);\n      throw err;\n    } finally {\n      end.publish(ctx);\n    }\n  }\n\n  traceCallback(fn, position = 0, ctx = {}, thisArg, ...args) {\n"
+    },
+    {
+      "name": "59700-base",
+      "sourceFile": "59700-base.js",
+      "startLine": 60,
+      "endLine": 98,
+      "sourceSha256": "74e3dfd458072d4759c0a2f789b2b8892f297026cd565bb251af28c9d65c2ad9",
+      "codeSha256": "568dab5a4c39fa3b254b5a2c0d8d7a5aaa4d3991cadc1e06ca981a1cab0436ce",
+      "code": "function formatError(error, indent) {\n  if (!error) return '';\n  const err = error.code === 'ERR_TEST_FAILURE' ? error.cause : error;\n  const message = ArrayPrototypeJoin(\n    RegExpPrototypeSymbolSplit(\n      hardenRegExp(/\\r?\\n/),\n      inspectWithNoCustomRetry(err, inspectOptions),\n    ), `\\n${indent}  `);\n  return `\\n${indent}  ${message}\\n`;\n}\n\nfunction formatTestReport(type, data, prefix = '', indent = '', hasChildren = false, showErrorDetails = true) {\n  let color = reporterColorMap[type] ?? colors.white;\n  let symbol = reporterUnicodeSymbolMap[type] ?? ' ';\n  const { skip, todo } = data;\n  const duration_ms = data.details?.duration_ms ? ` ${colors.gray}(${data.details.duration_ms}ms)${colors.white}` : '';\n  let title = `${data.name}${duration_ms}`;\n\n  if (skip !== undefined) {\n    title += ` # ${typeof skip === 'string' && skip.length ? skip : 'SKIP'}`;\n  } else if (todo !== undefined) {\n    title += ` # ${typeof todo === 'string' && todo.length ? todo : 'TODO'}`;\n  }\n\n  const error = showErrorDetails ? formatError(data.details?.error, indent) : '';\n  const err = hasChildren ?\n    (!error || data.details?.error?.failureType === 'subtestsFailed' ? '' : `\\n${error}`) :\n    error;\n\n  if (skip !== undefined) {\n    color = colors.gray;\n    symbol = reporterUnicodeSymbolMap['hyphen:minus'];\n  }\n  return `${prefix}${indent}${color}${symbol}${title}${colors.white}${err}`;\n}\n\nmodule.exports = {\n  __proto__: null,\n  reporterUnicodeSymbolMap,\n"
+    },
+    {
+      "name": "12712-test-await",
+      "sourceFile": "12712-tests-final.js",
+      "startLine": 24,
+      "endLine": 49,
+      "sourceSha256": "ae438e6cd6f6bd663bda184235f2a1680dd7fe21424e44c8d3835ca358762df9",
+      "codeSha256": "d2a37bd67ec952ea6befa4cb5854b11cd8c3775027ca8abbdf80743b3aea7fb5",
+      "code": "];\n\n{\n  // Test that the resolution value is passed as second argument to callback\n  for (const value of values) {\n    // Test and `async function`\n    async function asyncFn() {\n      return await Promise.resolve(value);\n    }\n\n    const cbAsyncFn = callbackify(asyncFn);\n    cbAsyncFn(common.mustCall((err, ret) => {\n      assert.ifError(err);\n      assert.strictEqual(ret, value);\n    }));\n\n    // Test Promise factory\n    function promiseFn() {\n      return Promise.resolve(value);\n    }\n\n    const cbPromiseFn = callbackify(promiseFn);\n    cbPromiseFn(common.mustCall((err, ret) => {\n      assert.ifError(err);\n      assert.strictEqual(ret, value);\n    }));\n"
+    }
+  ]
+}

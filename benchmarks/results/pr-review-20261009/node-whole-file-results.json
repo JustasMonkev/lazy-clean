@@ -1,0 +1,438 @@
+{
+  "runtime": "v24.19.0",
+  "base": "8f38b32bae676c300d03191c2668e4f0c1271544",
+  "manifestDrift": [
+    {
+      "path": "tests/cli.test.mjs",
+      "expected": "9caae1f2bc6569ff6a6bb9dd5edc77f30d49bc59ca0244b7b72d857dd767b126",
+      "actual": "9b0d04a7cbc935e1583cc527b3b1bf149782d9660a0b4497d652c8296ae3050a"
+    }
+  ],
+  "files": [
+    {
+      "file": "12712-merged.js",
+      "sha256": "496bc5637f37878e2cd863fe04bb338732872252b76acd103b851683019aa1ee",
+      "scans": {
+        "baseline": {
+          "exit": 1,
+          "findings": [
+            {
+              "line": 372,
+              "column": 5,
+              "endLine": 374,
+              "rule": "no-empty-catch",
+              "message": "An empty catch silently swallows failures. Handle the error, rethrow, or verify the failure contract and justify the swallow in the final response.",
+              "severity": "review"
+            },
+            {
+              "line": 515,
+              "column": 10,
+              "rule": "no-boolean-literal-compare",
+              "message": "`x === true` restates the boolean. Use the value directly, or fix the type if it is not actually boolean.",
+              "severity": "review"
+            },
+            {
+              "line": 560,
+              "column": 6,
+              "rule": "no-boolean-literal-compare",
+              "message": "`x === true` restates the boolean. Use the value directly, or fix the type if it is not actually boolean.",
+              "severity": "review"
+            },
+            {
+              "line": 1047,
+              "column": 29,
+              "rule": "no-json-clone",
+              "message": "`JSON.parse(JSON.stringify(...))` is a lossy, slow clone: it drops undefined and functions, and turns a Date into a string. `structuredClone` keeps the Date but THROWS on a function, so it is not a drop-in — copy the fields you need, or confirm the value holds none before swapping.",
+              "severity": "review"
+            },
+            {
+              "line": 1085,
+              "column": 31,
+              "rule": "no-reflect",
+              "message": "`Reflect.get`/`Reflect.apply` bypass typed access. Use direct property access or a typed call.",
+              "severity": "review"
+            },
+            {
+              "line": 1088,
+              "column": 5,
+              "rule": "no-reflect",
+              "message": "`Reflect.get`/`Reflect.apply` bypass typed access. Use direct property access or a typed call.",
+              "severity": "review"
+            }
+          ]
+        },
+        "frozen": {
+          "exit": 1,
+          "findings": [
+            {
+              "line": 372,
+              "column": 5,
+              "endLine": 374,
+              "rule": "no-empty-catch",
+              "message": "An empty catch silently swallows failures. Handle the error, rethrow, or verify the failure contract and justify the swallow in the final response.",
+              "severity": "review"
+            },
+            {
+              "line": 515,
+              "column": 10,
+              "rule": "no-boolean-literal-compare",
+              "message": "`x === true` restates the boolean. Use the value directly, or fix the type if it is not actually boolean.",
+              "severity": "review"
+            },
+            {
+              "line": 560,
+              "column": 6,
+              "rule": "no-boolean-literal-compare",
+              "message": "`x === true` restates the boolean. Use the value directly, or fix the type if it is not actually boolean.",
+              "severity": "review"
+            },
+            {
+              "line": 1047,
+              "column": 29,
+              "rule": "no-json-clone",
+              "message": "`JSON.parse(JSON.stringify(...))` is a lossy, slow clone: it drops undefined and functions, and turns a Date into a string. `structuredClone` keeps the Date but THROWS on a function, so it is not a drop-in — copy the fields you need, or confirm the value holds none before swapping.",
+              "severity": "review"
+            },
+            {
+              "line": 1085,
+              "column": 31,
+              "rule": "no-reflect",
+              "message": "`Reflect.get`/`Reflect.apply` bypass typed access. Use direct property access or a typed call.",
+              "severity": "review"
+            },
+            {
+              "line": 1088,
+              "column": 5,
+              "rule": "no-reflect",
+              "message": "`Reflect.get`/`Reflect.apply` bypass typed access. Use direct property access or a typed call.",
+              "severity": "review"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "44943-merged.js",
+      "sha256": "802629c80228e3b123612407e0d20ac342464ad03ad8c077ff95540a3654d6cb",
+      "scans": {
+        "baseline": {
+          "exit": 0,
+          "findings": []
+        },
+        "frozen": {
+          "exit": 0,
+          "findings": []
+        }
+      }
+    },
+    {
+      "file": "57144-merged.js",
+      "sha256": "30919acc935ae4804c2b45d981bcba39b98910648415657f4f78bf3b27de24bf",
+      "scans": {
+        "baseline": {
+          "exit": 0,
+          "findings": []
+        },
+        "frozen": {
+          "exit": 0,
+          "findings": []
+        }
+      }
+    },
+    {
+      "file": "59700-merged.js",
+      "sha256": "766026e03dbc3aa9cd380f0b54aff8427af276747f2a785ce4ff52729e3061cd",
+      "scans": {
+        "baseline": {
+          "exit": 0,
+          "findings": []
+        },
+        "frozen": {
+          "exit": 0,
+          "findings": []
+        }
+      }
+    },
+    {
+      "file": "61871-merged.js",
+      "sha256": "7850e6a8a41b14e21137117f34d9f66fde83dc93029053edaa3872c7d5ae2c85",
+      "scans": {
+        "baseline": {
+          "exit": 1,
+          "findings": [
+            {
+              "line": 867,
+              "column": 1,
+              "rule": "no-backcompat-comments",
+              "message": "Review whether this compatibility shim is still required. Preserve published APIs, persisted data, and protocol compatibility; remove it only when callers and stored formats no longer need it.",
+              "severity": "review"
+            },
+            {
+              "line": 1057,
+              "column": 3,
+              "endLine": 1061,
+              "rule": "no-let-if-else-assign",
+              "message": "A `let` declared only to be assigned in both branches hides a single expression. Use `const` with a conditional expression, retaining any intentional type annotation.",
+              "severity": "fix"
+            },
+            {
+              "line": 1094,
+              "column": 1,
+              "rule": "no-restating-comments",
+              "message": "This comment restates the identifiers on the next line. It adds no information; delete it.",
+              "severity": "review"
+            },
+            {
+              "line": 1353,
+              "column": 3,
+              "rule": "no-filler-comments",
+              "message": "Filler comment: placeholder, simulation, or \"in a real app\" hand-waving. Ship the real thing or delete the comment and the code it excuses.",
+              "severity": "review"
+            }
+          ]
+        },
+        "frozen": {
+          "exit": 1,
+          "findings": [
+            {
+              "line": 867,
+              "column": 1,
+              "rule": "no-backcompat-comments",
+              "message": "Review whether this compatibility shim is still required. Preserve published APIs, persisted data, and protocol compatibility; remove it only when callers and stored formats no longer need it.",
+              "severity": "review"
+            },
+            {
+              "line": 1057,
+              "column": 3,
+              "endLine": 1061,
+              "rule": "no-let-if-else-assign",
+              "message": "A `let` declared only to be assigned in both branches hides a single expression. Use `const` with a conditional expression, retaining any intentional type annotation.",
+              "severity": "fix"
+            },
+            {
+              "line": 1094,
+              "column": 1,
+              "rule": "no-restating-comments",
+              "message": "This comment restates the identifiers on the next line. It adds no information; delete it.",
+              "severity": "review"
+            },
+            {
+              "line": 1353,
+              "column": 3,
+              "rule": "no-filler-comments",
+              "message": "Filler comment: placeholder, simulation, or \"in a real app\" hand-waving. Ship the real thing or delete the comment and the code it excuses.",
+              "severity": "review"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "44943-original.js",
+      "sha256": "7c275cfd5cb22826d2ecdf52a3446b9f943c701cb4118c8d48ba9c339660940f",
+      "scans": {
+        "baseline": {
+          "exit": 0,
+          "findings": []
+        },
+        "frozen": {
+          "exit": 0,
+          "findings": []
+        }
+      }
+    },
+    {
+      "file": "59700-base.js",
+      "sha256": "74e3dfd458072d4759c0a2f789b2b8892f297026cd565bb251af28c9d65c2ad9",
+      "scans": {
+        "baseline": {
+          "exit": 0,
+          "findings": []
+        },
+        "frozen": {
+          "exit": 0,
+          "findings": []
+        }
+      }
+    },
+    {
+      "file": "12712-tests-final.js",
+      "sha256": "ae438e6cd6f6bd663bda184235f2a1680dd7fe21424e44c8d3835ca358762df9",
+      "scans": {
+        "baseline": {
+          "exit": 1,
+          "findings": [
+            {
+              "line": 31,
+              "column": 14,
+              "rule": "no-await-promise-resolve",
+              "message": "`await Promise.resolve(x)` is `x` with extra steps. Await the real async value or drop the wrapper.",
+              "severity": "review"
+            },
+            {
+              "line": 145,
+              "column": 14,
+              "rule": "no-await-promise-resolve",
+              "message": "`await Promise.resolve(x)` is `x` with extra steps. Await the real async value or drop the wrapper.",
+              "severity": "review"
+            },
+            {
+              "line": 186,
+              "column": 16,
+              "rule": "no-await-promise-resolve",
+              "message": "`await Promise.resolve(x)` is `x` with extra steps. Await the real async value or drop the wrapper.",
+              "severity": "review"
+            }
+          ]
+        },
+        "frozen": {
+          "exit": 1,
+          "findings": [
+            {
+              "line": 31,
+              "column": 14,
+              "rule": "no-await-promise-resolve",
+              "message": "`await Promise.resolve(x)` is `x` with extra steps. Await the real async value or drop the wrapper.",
+              "severity": "review"
+            },
+            {
+              "line": 145,
+              "column": 14,
+              "rule": "no-await-promise-resolve",
+              "message": "`await Promise.resolve(x)` is `x` with extra steps. Await the real async value or drop the wrapper.",
+              "severity": "review"
+            },
+            {
+              "line": 186,
+              "column": 16,
+              "rule": "no-await-promise-resolve",
+              "message": "`await Promise.resolve(x)` is `x` with extra steps. Await the real async value or drop the wrapper.",
+              "severity": "review"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "44943-promise-test.js",
+      "sha256": "bcd33a65a060f8d591d5ab4eafcd38928013b648fc2c056928087ea40afab024",
+      "scans": {
+        "baseline": {
+          "exit": 0,
+          "findings": []
+        },
+        "frozen": {
+          "exit": 0,
+          "findings": []
+        }
+      }
+    },
+    {
+      "file": "44943-callback-test.js",
+      "sha256": "d3175d6091152fd0a429195e06025c54b83d7369cdced2c6cc5231a21f7d7f08",
+      "scans": {
+        "baseline": {
+          "exit": 0,
+          "findings": []
+        },
+        "frozen": {
+          "exit": 0,
+          "findings": []
+        }
+      }
+    },
+    {
+      "file": "12712-review-113844519.js",
+      "sha256": "318fcbd37f69432615290ab83eed09af291a0d42ed097e7d18a247239e2b10f4",
+      "scans": {
+        "baseline": {
+          "exit": 1,
+          "findings": [
+            {
+              "line": 3,
+              "column": 29,
+              "rule": "no-json-clone",
+              "message": "`JSON.parse(JSON.stringify(...))` is a lossy, slow clone: it drops undefined and functions, and turns a Date into a string. `structuredClone` keeps the Date but THROWS on a function, so it is not a drop-in — copy the fields you need, or confirm the value holds none before swapping.",
+              "severity": "review"
+            },
+            {
+              "line": 48,
+              "column": 47,
+              "startLine": 48,
+              "endLine": 48,
+              "rule": "no-reduce-accumulator-copy",
+              "message": "Copying the reducer accumulator each iteration can make growing results quadratic. Consider mutating a fresh, locally owned accumulator only when no caller or retained snapshot observes it; preserve ordering and sparse-array semantics.",
+              "severity": "review"
+            }
+          ]
+        },
+        "frozen": {
+          "exit": 1,
+          "findings": [
+            {
+              "line": 3,
+              "column": 29,
+              "rule": "no-json-clone",
+              "message": "`JSON.parse(JSON.stringify(...))` is a lossy, slow clone: it drops undefined and functions, and turns a Date into a string. `structuredClone` keeps the Date but THROWS on a function, so it is not a drop-in — copy the fields you need, or confirm the value holds none before swapping.",
+              "severity": "review"
+            },
+            {
+              "line": 48,
+              "column": 47,
+              "startLine": 48,
+              "endLine": 48,
+              "rule": "no-reduce-accumulator-copy",
+              "message": "Copying the reducer accumulator each iteration can make growing results quadratic. Consider mutating a fresh, locally owned accumulator only when no caller or retained snapshot observes it; preserve ordering and sparse-array semantics.",
+              "severity": "review"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "file": "57144-review-1963164451.js",
+      "sha256": "8fbb2ffc7479996216ae00afe01bf724dfe12f4ecc15b55c14f83c47b2fae801",
+      "scans": {
+        "baseline": {
+          "exit": 0,
+          "findings": []
+        },
+        "frozen": {
+          "exit": 0,
+          "findings": []
+        }
+      }
+    },
+    {
+      "file": "44943-review-993496790.js",
+      "sha256": "0e7583ef17a8f772fc42b6242b1cb3808d6f6d6b9768c38c392f0e42c3660b98",
+      "scans": {
+        "baseline": {
+          "exit": 0,
+          "findings": []
+        },
+        "frozen": {
+          "exit": 0,
+          "findings": []
+        }
+      }
+    }
+  ],
+  "reductions": [
+    {
+      "case": "12712",
+      "pass": true,
+      "claim": "Exact callbackify fragment preserves falsy rejection distinction and both receiver/argument contracts."
+    },
+    {
+      "case": "44943",
+      "pass": true,
+      "claim": "Exact final tracePromise fragment preserves rejection values and publishes end/error events with stub channels."
+    },
+    {
+      "case": "59700",
+      "pass": true,
+      "claim": "Exact final function handles missing details/error; counterfactual applying review suggestion throws."
+    }
+  ]
+}
