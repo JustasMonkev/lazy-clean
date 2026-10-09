@@ -31,14 +31,16 @@ and concurrent use. Fix the shared cause.
 
 1. Skip speculative features, config, abstractions, and impossible-state guards,
    never an explicit requirement.
-2. Reuse an existing helper or pattern.
+2. Reuse an existing helper or pattern when its contract fits: check callers,
+   ownership, errors, lifecycle, and availability. Similar syntax alone is not reuse.
 3. Prefer the standard library, native platform, or an installed dependency.
 4. Write a clear small solution.
 
 Preserve unrelated edits. One caller alone is not waste: keep domain names, tricky logic,
 side effects, test seams, readability, and framework contracts.
 No avoidable dependency.
-Do not add code comments; remove nonessential comments.
+Keep or add accurate comments for non-obvious constraints, workarounds, and ordering.
+Remove nonessential comments that only narrate code or edits.
 Keep required license notices and functional tool directives.
 Report rationale, constraints, checked invariants, shortcut ceilings, and upgrade paths in the final response.
 Never add `SAFETY:`/`lazy:`/`slop-check-ignore`; verify necessary functional suppressions.

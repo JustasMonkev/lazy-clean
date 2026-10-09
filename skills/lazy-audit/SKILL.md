@@ -18,7 +18,7 @@ Same as lazy-review:
 - `stdlib:` hand-rolled thing the standard library ships. Name the function.
 - `native:` dependency or code doing what the platform already does. Name the feature.
 - `yagni:` abstraction with no useful boundary, config nobody sets, layer that exposes no simpler contract.
-- `shrink:` same logic, fewer lines. Show the shorter form.
+- `shrink:` clearer equivalent logic. Show the simpler form and preserved contract.
 
 ## Hunt
 
@@ -43,7 +43,10 @@ hand-rolled stdlib.
 ## Output
 
 One line per finding, ranked: `<tag> <what to cut>. <replacement>. [path]`.
-End with `net: -<N> lines, -<M> deps possible.` Nothing to cut: `Lean already. Ship.`
+Rank findings by removed complexity and maintenance cost, not net lines or
+checker counts. Name what each simplification no longer requires callers to know.
+If none, report no unnecessary complexity found in the reviewed scope; this
+does not establish correctness.
 
 ## Boundaries
 

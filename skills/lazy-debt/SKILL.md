@@ -7,7 +7,8 @@ description: >
 ---
 
 Collect existing `lazy:` comments into a ledger. Do not add new markers:
-shortcut ceilings and upgrade paths now belong in the final response.
+report shortcut ceilings and upgrade paths in the final response. Accurate,
+non-obvious constraints may also belong beside the affected code without a marker.
 
 ## Scan
 

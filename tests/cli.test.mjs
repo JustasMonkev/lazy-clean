@@ -894,19 +894,18 @@ check("malformed-ignore findings never recommend replacement comments", () => {
   }
 });
 
-check("comment findings move useful rationale to the response", () => {
+check("comment findings preserve useful rationale beside the code", () => {
   for (const [rule, source] of [
     ["no-narration-comments", "// First, write the journal so crash recovery can replay an interrupted update.\nwriteJournal();\napplyUpdate();\n"],
     ["no-change-note-comments", "// As discussed in ADR-17, retry only idempotent requests\nretry(request);\n"],
     ["no-obvious-doc-comments", "/** Constructor */\nclass AuthClient {}\n"],
-    ["no-unjustified-suppression", "// @ts-expect-error\nconnect(options);\n"],
   ]) {
     const file = write(`${rule}.ts`, source);
     const result = run(["--json", file]);
     assert.equal(result.status, 1);
     const finding = JSON.parse(result.stdout).find(f => f.rule === rule);
-    assert.match(finding.message, /final response/u);
-    assert.doesNotMatch(finding.message, /retain reasons|retain enduring design rationale|Say why the code exists|on the same line/u);
+    assert.match(finding.message, /Keep accurate.*beside the code/u);
+    assert.doesNotMatch(finding.message, /final response/u);
   }
 });
 
@@ -973,7 +972,7 @@ check("--explain ignores paths and runs no scan", () => {
 
 check("--explain preserves durable contracts and sanitizing boundaries", () => {
   for (const [id, contract] of [
-    ["no-change-note-comments", /retain.*ADR/iu],
+    ["no-change-note-comments", /Keep.*lasting rationale.*referenced decision/iu],
     ["no-backcompat-comments", /persisted.*protocol/iu],
     ["no-let-if-else-assign", /retain.*annotation/iu],
     ["no-message-only-rethrow", /approved public error.*without.*cause/iu],

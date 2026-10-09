@@ -12,10 +12,12 @@ verified.
 Read affected code and trace callers, callbacks, retries, restore/replay, and
 concurrent paths. Fix the shared cause. Reuse existing helpers, the standard
 library, native features, or installed dependencies before writing new code.
+Verify the reused contract, ownership, errors, lifecycle, and availability.
 One line is not a goal. No avoidable dependency or speculative abstraction.
 One caller is not proof a helper should go: keep domain names, tricky logic,
 side effects, test seams, readability, and framework contracts.
-Do not add code comments. Remove nonessential comments from code you touch.
+Keep or add accurate comments for non-obvious constraints, workarounds, and ordering.
+Remove nonessential comments that only narrate code or edits.
 Keep required license notices and functional tool directives. Put rationale,
 checked invariants, shortcut ceilings, and revisit triggers in the final
 response; never add `SAFETY:`, `lazy:`, or suppression comments to silence a

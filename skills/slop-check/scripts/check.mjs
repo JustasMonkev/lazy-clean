@@ -817,7 +817,7 @@ const LINE_RULES = [
   {
     name: "no-module-mocking",
     pattern: /\b(?:vi|jest)\s*\.\s*(?:mock|doMock|unmock|setMock|requireMock)\s*\(/u,
-    message: "Module mocks patch the loader instead of the design. Inject the dependency through a real seam.",
+    message: "Review whether this module mock bypasses the subject or isolates a package or loader contract. Use an existing seam when it fits; do not add production injection solely to remove the mock.",
   },
   {
     name: "no-conditional-empty-object-spread",
@@ -2671,11 +2671,11 @@ function* iterateCommentFindings(ctx) {
       continue;
     }
     if (NARRATION_COMMENT_PATTERN.test(body)) {
-      yield { ...position, rule: "no-narration-comments", message: "Possible narration comment (\"now we...\", \"first, ...\"). Verify ordering and other constraints before removing nonessential comments; explain relevant rationale in the final response." };
+      yield { ...position, rule: "no-narration-comments", message: "Possible narration comment (\"now we...\", \"first, ...\"). Keep accurate non-obvious ordering constraints beside the code; remove only narration of code or edits." };
       continue;
     }
     if (CHANGE_NOTE_COMMENT_PATTERN.test(body)) {
-      yield { ...position, rule: "no-change-note-comments", message: "Possible edit narration. Verify lasting design decisions and constraints before removing nonessential comments; explain relevant rationale in the final response." };
+      yield { ...position, rule: "no-change-note-comments", message: "Possible edit narration. Keep accurate lasting design decisions, workaround references, and constraints beside the code; remove only obsolete change notes." };
       continue;
     }
     if (BACKCOMPAT_COMMENT_PATTERN.test(body) && !/@deprecated/u.test(comment.text)) {
@@ -2713,7 +2713,7 @@ function* iterateCommentFindings(ctx) {
       continue;
     }
     if (OBVIOUS_DOC_COMMENT_PATTERN.test(body) || accessorDocOnlyRestates(body)) {
-      yield { ...position, rule: "no-obvious-doc-comments", message: "This doc comment restates the declaration below it. Verify relevant contracts before removing nonessential documentation; explain useful constraints in the final response." };
+      yield { ...position, rule: "no-obvious-doc-comments", message: "This doc comment may restate the declaration below it. Keep accurate non-obvious contracts beside the code; remove only redundant documentation." };
       continue;
     }
 
@@ -2803,7 +2803,7 @@ const RULE_EXPLANATIONS = {
     slop: "vi.mock(\"./db\");",
     setup: { path: "user.mjs", code: "export function loadUser(db, id) { return db.findUser(id); }" },
     correct: "import assert from \"node:assert/strict\";\nimport { loadUser } from \"./user.mjs\";\nassert.deepEqual(loadUser({ findUser: id => ({ id }) }, 7), { id: 7 });",
-    exceptions: "The replacement is a separate test file importing the shown production module. Keep jest.unmock or vi.unmock when it restores the real module, especially under automocking; it is not a test-double substitution. Module mocking may also be necessary for legacy seams you cannot refactor. Preserve production coverage and explain necessary directives in the final response.",
+    exceptions: "The replacement is a separate test file importing the shown production module. Keep jest.unmock or vi.unmock when it restores the real module, especially under automocking; it is not a test-double substitution. Keep deliberate package isolation, loader-contract tests, and legacy seams when the production subject still runs and the mock preserves the tested collaborator contract. Call assertions can catch wrong routing, transformed arguments, ordering, or forbidden calls. Do not add production injection solely to remove a module mock; preserve integration coverage separately.",
   },
   "no-conditional-empty-object-spread": {
     why: "`...(cond ? {} : { a })` hides whether a field is present. The plain conditional spread says the same thing in the shape readers already know.",
@@ -2971,13 +2971,13 @@ const RULE_EXPLANATIONS = {
     why: "\"Now we fetch the data...\" narrates what the next line does. The code already shows it; the comment is a second voice reading the source aloud.",
     slop: "// first, we validate the input\nvalidate(input);",
     correct: "validate(input);",
-    exceptions: "The prefix matcher can flag useful constraints too. Verify ordering requirements before removing a comment and explain them in the final response; do not add a replacement comment.",
+    exceptions: "The prefix matcher can flag useful constraints too. Keep accurate non-obvious ordering requirements beside the code, including crash recovery and lifecycle sequencing. Remove only narration the code already expresses.",
   },
   "no-change-note-comments": {
     why: "\"As requested\", \"NEW:\", \"to make the linter happy\" often describe the edit rather than the code. The phrase matcher cannot distinguish obsolete change notes from enduring design rationale.",
     slop: "// UPDATED: retry count\nconst retries = 3;",
     correct: "const retries = 3;",
-    exceptions: "Verify lasting rationale and constraints before removing a comment. Retain relevant ADR decisions in the final response rather than adding code comments.",
+    exceptions: "Keep accurate lasting rationale, workaround references, and constraints beside the affected code. Verify the referenced decision still applies; remove obsolete edit history, not the reason a workaround remains.",
   },
   "no-backcompat-comments": {
     why: "A shim \"kept for backwards compatibility\" can be unnecessary when every caller is controlled and no existing data or protocol needs it. The comment alone does not establish that the shim is removable.",
@@ -3001,7 +3001,7 @@ const RULE_EXPLANATIONS = {
     why: "\"This function takes a user and returns a token\" restates the declaration below it. Verify relevant contracts, remove nonessential documentation, and explain useful constraints in the final response.",
     slop: "// Getter for the cached value.\nconst cached = { get value() { return cache; } };",
     correct: "const cached = { get value() { return cache; } };",
-    exceptions: "Verify invalidation, ownership, and other contracts before removing documentation. Explain relevant constraints in the final response; preserve required licenses and functional type or tool metadata.",
+    exceptions: "Keep accurate non-obvious invalidation, ownership, and other contracts beside the code. Remove redundant descriptions; preserve required licenses and functional type or tool metadata.",
   },
   "no-restating-comments": {
     why: "A comment made of the next line's own identifiers (\"// get user by id\" over `getUserById(id)`) adds zero information.",

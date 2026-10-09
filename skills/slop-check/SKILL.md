@@ -28,7 +28,7 @@ Everything runs from this skill directory with plain `node`. Do not install any 
 
 2. Triage every finding. The checker is heuristic, so findings are review prompts, not verdicts:
    - Fix real slop by removing the pointless code or restoring real type evidence — prefer inference, `as const`, `satisfies`, named owner contracts, and parsing at the boundary.
-   - Do not add code comments; remove nonessential comments from code you touch. Keep required license notices and functional tool directives.
+   - Keep or add accurate comments for non-obvious constraints, workarounds, and ordering. Remove nonessential comments that only narrate code or edits. Keep required license notices and functional tool directives.
    - Retain a necessary type assertion or swallowed error only after checking its invariant; explain it in the final response, never in a `SAFETY:`, `lazy:`, or suppression comment.
    - If a finding is a genuine false positive, leave the code alone and say so briefly. Never rewrite correct code into something worse just to silence the checker, and never weaken or disable a check.
 
@@ -56,13 +56,17 @@ For each item, the question is the same: does this code earn its place, or does 
 - **Speculative generality** — config options, flags, or abstraction layers nobody asked for. One caller alone is not evidence: keep a helper separate when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. Inline only when separation has none of that value.
 - **Defensive checks against impossible states** — `if (!items) return` when the type says `items: Item[]`; re-validating unchanged data within the same trust boundary; optional chaining on values that cannot be null. Keep runtime checks after parsing, persistence, redirects, or other trust boundaries; types do not validate external data.
 - **Reimplementing the platform** — hand-rolled `deepClone`, `debounce`, `isEmpty`, UUID generators, date formatting. Use the standard library or an existing project utility.
-- **Error handling that hides errors** — catch-log-continue, retries around non-transient failures, fallback values that turn failure into silently wrong behavior.
-- **Debug leftovers** — `console.log` tracing, timing code, temporary variables named `test`/`tmp`/`debug`.
+- **Error handling that hides errors** — retries around non-transient failures or fallback values that turn failure into silently wrong behavior. Keep catch-log-continue at an intentional best-effort boundary only when callers tolerate that failure and required later work and cleanup still run.
+- **Debug leftovers** — transient tracing, timing, or scaffolding left after debugging. A local `tmp`, `i`, or domain-specific name is not itself evidence of waste; follow the language and project conventions.
 - **Edit-artifacts** — old and new versions of a function both kept, re-export aliases "for compatibility" when every call site could just be updated, comments describing the diff instead of the code.
-- **Comment and doc bloat** — remove nonessential code comments, including JSDoc that restates the signature and section banners. Put useful constraints and rationale in the final response.
-- **Comments that explain what the code does** — use a better name or simpler shape, then delete the walkthrough without changing behavior. Do not add single-use helpers only to remove a comment. Explain tricky logic, constraints, and ordering in the final response.
+- **Comment and doc bloat** — remove nonessential code comments, including JSDoc that restates the signature and section banners. Keep accurate non-obvious constraints, workaround references, and ordering rationale beside the code that needs them.
+- **Comments that explain what the code does** — use a better name or simpler shape, then delete the walkthrough without changing behavior. Do not add single-use helpers only to remove a comment; a lasting reason the code exists is useful context.
 - **Python slop** — bare `except:` or `except Exception: pass`, mutable default arguments, `if not x` where `0` or `""` is valid, loose dicts where a dataclass names the shape, `utils.py` grab bags, and work done at import time. Verify existing functional `# type: ignore` or `# noqa` directives and necessary additions against the named diagnostic; explain the evidence in the final response. Never add them merely to silence findings.
-- **Test slop** — tests that assert a mock was called with the value it was just given, module-level mocks instead of real dependency seams, duplicated setup that hides what varies. Keep tests that catch real regressions; mutation evidence is optional when existing red-green checks already prove the risky behavior.
+- **Test slop** — setup-only assertions, mocks that bypass the subject, and duplicated setup that hides what varies. Mock-call assertions can protect routing, transformed arguments, ordering, or forbidden calls; identify a plausible fault they catch. Keep deliberate package or loader isolation; do not add production injection solely to remove a module mock. Keep tests that catch real regressions; mutation evidence is optional when existing red-green checks already prove the risky behavior.
+
+C receives manual review only. Preserve integer widths and signedness, pointer
+ownership, allocation failure, locking, and cleanup paths; TS/JS replacements
+and a zero-file checker run provide no evidence about C.
 
 ## Checker rules
 

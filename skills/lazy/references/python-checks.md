@@ -28,7 +28,7 @@ configures (look in `pyproject.toml`, `setup.cfg`, `tox.ini`, `noxfile.py`, the
 Makefile, or CI). Do not add a tool, loosen its config, or add
 `# type: ignore` / `# noqa` to silence it. Verify existing `# type: ignore` or
 `# noqa` directives and necessary additions against the named diagnostic;
-explain the evidence in the final response. Do not add code comments; remove nonessential comments.
+explain the evidence in the final response. Keep or add accurate comments for non-obvious constraints, workarounds, and ordering; remove nonessential comments that only narrate code or edits.
 Keep required license notices and functional tool directives.
 
 ## Check module shape

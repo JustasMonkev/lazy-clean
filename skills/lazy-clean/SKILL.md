@@ -27,7 +27,7 @@ node <skills-dir>/slop-check/scripts/check.mjs <changed files>
 Triage every finding per `<skills-dir>/slop-check/SKILL.md`:
 
 - Fix real slop — delete the pointless code, restore real type evidence.
-- Do not add code comments; remove nonessential comments from code you touch. Keep required license notices and functional tool directives.
+- Keep or add accurate comments for non-obvious constraints, workarounds, and ordering. Remove nonessential comments that only narrate code or edits. Keep required license notices and functional tool directives.
 - Report rationale and constraints in the final response.
 - Retain a necessary type assertion or swallowed error only after checking its invariant; explain it in the final response, never in a `SAFETY:`, `lazy:`, or suppression comment.
 - A genuine false positive stays as-is; say so briefly. Never rewrite correct code to silence the checker, and never weaken or disable a check.
@@ -37,7 +37,7 @@ platform, and edit-artifacts — to the task-owned diff. Report only findings th
 matter; this is a review pass, not a demand for extra prose or a net-negative
 feature change.
 
-The checker reads TypeScript and JavaScript only. Java, Python, Ruby, Rust, and Go
+The checker reads TypeScript and JavaScript only. C, Java, Python, Ruby, Rust, and Go
 get the same manual pass by hand — never report them clean on the strength of a
 scan that did not read them. For every language the change actually touches,
 read its pinned or installed version from the toolchain file, manifest, lockfile,
@@ -58,7 +58,10 @@ Before finishing a Python change, read and apply [Python checks](../lazy/referen
 List the changed behavior, its edge cases, and its failure modes, and cover each
 one. Use the repo's existing test tools. Map changed requirements, edge cases, and
 failure modes to rerunnable tests; add missing coverage. Inline probes alone are not coverage. Trivial edits need no new tests. Keep tests that can catch a real
-regression; drop tautologies and mock-call checks that only repeat setup. When
+regression; drop tautologies and setup-only checks. Mock-call assertions can
+protect routing, transformed arguments, ordering, or forbidden calls; name a
+plausible fault they catch. Do not add production injection solely to remove a
+module mock when an existing package or loader boundary is the subject. When
 existing red-green checks already prove the risky regression, mutation work is
 optional; otherwise a small meaningful mutation check can confirm the test
 earns its place. Never add a dependency for it.

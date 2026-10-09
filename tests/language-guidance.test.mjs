@@ -134,10 +134,10 @@ for (const file of BUILD_SURFACES) {
 // Both paths must still carry the guidance.
 const instructions = require(path.join(ROOT, "hooks", "lazy-instructions.js"));
 const COMMENT_CONTRACT = [
-  ["forbids added code comments", /do not add code comments/iu],
+  ["preserves useful code comments", /keep or add accurate comments for non-obvious constraints, workarounds, and ordering/iu],
   ["removes nonessential comments", /remove nonessential comments/iu],
   ["preserves licenses and tool directives", /required license notices and functional tool directives/iu],
-  ["reports rationale outside code", /(?:rationale|constraints)[^.]*final response/iu],
+  ["reports checked rationale and invariants", /(?:rationale|constraints|invariants)[^.]*final response/iu],
 ];
 for (const file of [...BUILD_SURFACES, "skills/slop-check/SKILL.md"])
   for (const [description, pattern] of COMMENT_CONTRACT)
@@ -228,7 +228,7 @@ const LANGUAGE_REFERENCES = [
   ]],
   ["python-checks.md", [
     /requires-python/u, /\(3\.10\)/u, /one reason to change/iu, /import-time side effects/iu,
-    /Do not add code comments/iu, /required license notices and functional tool directives/iu,
+    /Keep or add accurate comments for non-obvious constraints, workarounds, and ordering/iu, /required license notices and functional tool directives/iu,
     /existing `# type: ignore`.*final response/iu,
     /contextlib\.suppress\(SpecificError\).*verify.*final response/iu,
     /__name__ == "__main__"/u, /mutable default/iu, /`if not value`/u, /is None/u,

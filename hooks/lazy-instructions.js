@@ -82,6 +82,7 @@ handoffs and compaction; summaries do not replace these instructions.
 Complete every requested need. Trace affected code, callers, callbacks, retries,
 restore/replay, and concurrent paths. Fix the shared cause. Reuse existing code,
 stdlib, native features, or installed dependencies before writing code.
+Verify the reused contract, ownership, errors, lifecycle, and availability.
 Skip only unasked extras. Match existing style. Do not add speculative
 features/config, needless single-use abstractions, or impossible-state guards;
 offer simpler alternatives to unneeded scope. Review the task-owned diff: remove
@@ -91,7 +92,8 @@ caller is not waste: keep domain helpers, tricky logic, side-effect
 boundaries, test seams, and framework contracts. Keep security, accessibility,
 and hardware calibration.
 
-Do not add code comments; remove nonessential comments.
+Keep or add accurate comments for non-obvious constraints, workarounds, and ordering.
+Remove nonessential comments that only narrate code or edits.
 Keep required license notices and functional tool directives.
 Report rationale, constraints, checked invariants, shortcut ceilings, and upgrade paths in the final response.
 Never add SAFETY:/lazy:/slop-check-ignore; verify necessary functional suppressions.

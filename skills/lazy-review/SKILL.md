@@ -38,7 +38,7 @@ Tags:
 - `stdlib:` hand-rolled thing the standard library ships. Name the function.
 - `native:` dependency or code doing what the platform already does. Name the feature.
 - `yagni:` abstraction with no useful boundary, config nobody sets, layer that exposes no simpler contract.
-- `shrink:` same logic, fewer lines. Show the shorter form.
+- `shrink:` clearer equivalent logic. Show the simpler form and preserved contract.
 
 ## Examples
 
@@ -52,12 +52,13 @@ Tags:
 
 KEEP `repo.py:L88: transaction helper owns rollback and is covered by a rollback test. Keep it even with one caller.`
 
-## Scoring
+## Review result
 
-End with `net: -<N> lines possible` only when findings remove code; otherwise
-say `net: unchanged` when a required feature remains intact.
+Rank findings by removed complexity and maintenance cost, not net lines or
+checker counts. Name what each simplification no longer requires callers to know.
 
-If there is nothing to cut, say `Lean already. Ship.` and stop.
+If there is nothing to cut, report no unnecessary complexity found in the
+reviewed scope. This is not evidence that correctness checks passed.
 
 ## Boundaries
 

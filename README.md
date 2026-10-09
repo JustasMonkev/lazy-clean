@@ -206,7 +206,7 @@ Every subagent except the read-only Explore agents gets the ruleset (about 2,000
 
 The checker only looks at `.ts .tsx .mts .cts .js .jsx .mjs .cjs`; anything else is skipped silently. Files written through `Bash` — heredocs, `sed -i`, codemods — are not seen by the hook at all; run the checker on those yourself.
 
-Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. A failed checker run reports `check failed`; it does not claim the edit was clean. It reports findings on the lines attributed to that edit and counts findings elsewhere in the file whose origin is unknown. Those other findings may come from earlier edits in the same task; the final scan still covers them. Triage them per `skills/slop-check/SKILL.md`: fix real slop and report checked invariants for retained findings in the final response. Do not add code comments; remove nonessential comments from code you touch. Keep required license notices and functional tool directives. Never add `SAFETY:` or `lazy:` markers. Verify necessary functional suppressions and explain the evidence in the final response.
+Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. A failed checker run reports `check failed`; it does not claim the edit was clean. It reports findings on the lines attributed to that edit and counts findings elsewhere in the file whose origin is unknown. Those other findings may come from earlier edits in the same task; the final scan still covers them. Triage them per `skills/slop-check/SKILL.md`: fix real slop and report checked invariants for retained findings in the final response. Keep or add accurate comments for non-obvious constraints, workarounds, and ordering; remove nonessential comments that only narrate code or edits. Keep required license notices and functional tool directives. Never add `SAFETY:` or `lazy:` markers. Verify necessary functional suppressions and explain the evidence in the final response.
 
 ## Running the checker yourself
 
@@ -227,7 +227,7 @@ Findings are grouped by whether the fix needs judgment: mechanical ones have a s
 
 Assertion tallies display `type assertion review`. The legacy rule ID `require-safety-comment-for-type-assertion` remains accepted by `--explain`, `--disable`, and existing directives, and remains the ID in JSON output.
 
-Emoji, sequencing comments, change-note comments, and apparently obvious documentation comments are review findings. Retain symbols required by a specification; put useful contracts and rationale in the final response. Existing `SAFETY:` and `slop-check-ignore` directives remain supported for compatibility, but new ones are not a remedy for findings.
+Emoji, sequencing comments, change-note comments, and apparently obvious documentation comments are review findings. Retain symbols required by a specification and accurate non-obvious contracts or rationale beside the code; remove only redundant narration. Existing `SAFETY:` and `slop-check-ignore` directives remain supported for compatibility, but new ones are not a remedy for findings.
 
 `--explain=<rule-id>` prints one rule's reasoning — why it fires, a slop/instead pair, and when the rule is wrong — and runs no scan. Read it before rewriting code a finding landed on that you believe is correct:
 
