@@ -89,6 +89,13 @@ expectNoRule(
 );
 expectRule("flags vi.mock", 'vi.mock("./database");', "no-module-mocking");
 expectRule("flags jest.mock", 'jest.mock("./database");', "no-module-mocking", "sample.js");
+{
+  const mock = lintSource('vi.mock("./database");', "sample.ts").find(finding => finding.rule === "no-module-mocking");
+  assert.match(mock.message, /package or loader contract/u);
+  assert.match(mock.message, /do not add production injection solely to remove the mock/u);
+  assert.doesNotMatch(mock.message, /Inject the dependency through a real seam/u);
+  console.log("ok   no-module-mocking keeps package and loader contracts reviewable");
+}
 
 expectRule(
   "flags conditional empty-object spread",

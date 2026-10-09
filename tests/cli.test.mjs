@@ -987,6 +987,13 @@ check("--explain preserves durable contracts and sanitizing boundaries", () => {
   }
 });
 
+check("--explain keeps deliberate package isolation reviewable", () => {
+  const result = run(["--explain=no-module-mocking"]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /deliberate package isolation/u);
+  assert.match(result.stdout, /Do not add production injection solely to remove a module mock/u);
+});
+
 check("--explain with no value is an unknown option", () => {
   const result = run(["--explain"]);
   assert.equal(result.status, 2);
