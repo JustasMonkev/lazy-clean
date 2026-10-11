@@ -5,6 +5,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import os from "node:os";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
@@ -148,7 +149,33 @@ ok("Python slop distinguishes existing directives from new suppressions",
   && !/`# type: ignore` \/ `# noqa` without a code and reason/u.test(read("skills/slop-check/SKILL.md")));
 for (const file of ["skills/slop-check/SKILL.md", "skills/lazy/references/python-checks.md"])
   ok(`${file} verifies necessary new functional suppressions`, /necessary additions against the named diagnostic[^.]*final response/iu.test(flat(read(file))));
+const COMPLETION_CONTRACT = [
+  ["captures the completion contract in context", /working context.*requested deliverable.*task-owned scope.*required checks.*action limits/iu],
+  ["does not require a planning file", /no mandatory planning file/iu],
+  ["reviews once after implementation and checks", /after implementation(?: and checks|\/checks), review (?:the )?task-owned diff once/iu],
+  ["fixes reproducible findings and rechecks only with edit authorization", /fix reproducible in-scope findings and recheck affected behavior only with implementation\/edit authorization/iu],
+  ["keeps review-only and report-only requests non-mutating", /review-only\/report-only requests: report findings without modifications/iu],
+  ["bounds repeat review to evidence or required gates", /repeat review only for changed code, new concrete evidence, or mandatory repo\/user (?:review )?gates/iu],
+  ["rejects score-driven repeat review", /not (?:for )?(?:an )?(?:arbitrary )?scores? or unchanged findings/iu],
+  ["reconsiders scope before broader machinery", /reconsider scope.*broader guarantees or machinery/iu],
+  ["never budgets away required fixes", /review budget never excuses a known required fix/iu],
+  ["stops only at verified completion or reports limits", /stop only when requested needs and required checks are met.*report blocked or unverified work/iu],
+  ["limits what passing checks prove", /passed check proves its assertions, not general correctness/iu],
+  ["separates behavior evidence from findings", /distinguish behavior evidence from checker\/review findings/iu],
+];
+for (const file of BUILD_SURFACES)
+  for (const [description, pattern] of COMPLETION_CONTRACT)
+    ok(`${file} ${description}`, pattern.test(flat(read(file))));
+const SCANNER_SCOPE_CONTRACT = [
+  ["triages only task-owned scanner findings", /triage only task-owned findings/iu],
+  ["preserves pre-existing work during scanner triage", /do not alter pre-existing work/iu],
+];
+for (const file of BUILD_SURFACES)
+  for (const [description, pattern] of SCANNER_SCOPE_CONTRACT)
+    ok(`${file} ${description}`, pattern.test(flat(read(file))));
 const DELIVERY_CONTRACT = [
+  ...SCANNER_SCOPE_CONTRACT,
+  ...COMPLETION_CONTRACT,
   ...COMMENT_CONTRACT,
   ["bans plugin markers and verifies necessary functional suppressions", /never add[^.]*SAFETY:[^.]*lazy:[^.]*slop-check-ignore[^.]*verify necessary functional suppressions/iu],
   ["states material assumptions", /material assumptions/iu],
@@ -183,6 +210,34 @@ for (const mode of ["lite", "full", "ultra"]) {
     for (const [description, pattern] of DELIVERY_CONTRACT)
       ok(`${surface} ${description}`, pattern.test(text));
   }
+}
+
+const damagedInstall = fs.mkdtempSync(path.join(os.tmpdir(), "lazy-guidance-install-"));
+try {
+  fs.cpSync(path.join(ROOT, "hooks"), path.join(damagedInstall, "hooks"), { recursive: true });
+  const damagedInstructions = require(path.join(damagedInstall, "hooks", "lazy-instructions.js"));
+  for (const skillState of ["missing", "unreadable"]) {
+    if (skillState === "unreadable") {
+      fs.writeFileSync(path.join(damagedInstall, "skills"), "not a directory");
+      assert.throws(() => fs.readFileSync(path.join(damagedInstall, "skills", "lazy", "SKILL.md"), "utf8"),
+        (error) => ["ENOTDIR", "ENOENT"].includes(error.code),
+        "unreadable fixture must fail during path traversal, not a platform-specific directory read");
+    }
+    for (const mode of ["lite", "full", "ultra"]) {
+      for (const builder of ["getLazyInstructions", "getSubagentInstructions"]) {
+        const raw = damagedInstructions[builder](mode);
+        const surface = `${builder}(${mode}) with ${skillState} SKILL.md`;
+        ok(`${surface} uses the fallback`, raw === damagedInstructions.getFallbackInstructions(mode));
+        for (const [description, pattern] of [...SCANNER_SCOPE_CONTRACT, ...COMPLETION_CONTRACT])
+          ok(`${surface} ${description}`, pattern.test(flat(raw)));
+        ok(`${surface} stays below 700 words`, raw.split(/\s+/u).length < 700);
+      }
+    }
+    ok(`${skillState} SKILL.md still leaves off empty`,
+      damagedInstructions.getLazyInstructions("off") === "" && damagedInstructions.getSubagentInstructions("off") === "");
+  }
+} finally {
+  fs.rmSync(damagedInstall, { recursive: true, force: true });
 }
 
 // `off` is the one level with no instructions at all, so it must stay empty

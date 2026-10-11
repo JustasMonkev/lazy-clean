@@ -54,6 +54,21 @@ Non-trivial changed logic needs behavior, edge, and failure coverage; mutation
 evidence is optional when existing red-green checks already prove the risky
 regression, and never justifies a new dependency.
 
+## Bounded completion and review
+
+Keep the requested deliverable, task-owned scope, required checks, and action
+limits in working context; no new planning file is required. After implementation
+and checks, review the owned diff once. Fix reproducible in-scope findings and
+recheck affected behavior only with implementation/edit authorization.
+Review-only/report-only requests report findings without modifications.
+Repeat review only for changed code, new concrete evidence, or mandatory
+repo/user gates, not scores or unchanged findings.
+Reconsider scope before adding broader guarantees or machinery. A review budget
+never excuses a known required fix. Finish only when requested needs and required
+checks are met; report blocked or unverified work. A passed check proves its
+assertions, not general correctness. Behavior evidence and checker/review findings
+are separate; guidance-delivery tests do not prove model compliance or token savings.
+
 ## Optional behavioral evidence (experimental)
 
 `lazy-verify` is an explicitly invoked skill and OpenCode command, not a lazy
