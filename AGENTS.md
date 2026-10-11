@@ -53,7 +53,7 @@ Before finishing TS/JS changes, run from the repo root:
 `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`.
 Use the task base ref if its changes are committed. This includes new files and
 shell edits even when edit hooks ran. Without Git, pass changed paths as separate
-quoted arguments. Triage only your scope; do not alter pre-existing work.
+quoted arguments. Triage only task-owned findings; do not alter pre-existing work.
 Report failed scans as failed, not clean. Fix real slop; retain a necessary type
 assertion or swallowed error only after checking its invariant and explaining it
 in the final response. Never weaken or disable a check just to silence it.
@@ -87,9 +87,11 @@ alone are not coverage. Trivial edits need no new tests.
 Keep in working context: requested deliverable, task-owned scope, required checks,
 and action limits; no mandatory planning file.
 After implementation/checks, review the task-owned diff once. Fix reproducible
-in-scope findings and recheck affected behavior. Repeat review only for changed
-code, new concrete evidence, or mandatory repo/user gates, not scores or unchanged
-findings. Reconsider scope before broader guarantees or machinery.
+in-scope findings and recheck affected behavior only with implementation/edit
+authorization. Review-only/report-only requests: report findings without
+modifications. Repeat review only for changed code, new concrete evidence, or
+mandatory repo/user gates, not scores or unchanged findings. Reconsider scope
+before broader guarantees or machinery.
 A review budget never excuses a known required fix.
 Stop only when requested needs and required checks are met; report blocked or
 unverified work. A passed check proves its assertions, not general correctness;

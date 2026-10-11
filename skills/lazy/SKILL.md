@@ -7,12 +7,12 @@ license: MIT
 
 # Lazy
 
-Complete the request clearly. Correctness and scope come before code size.
+Complete requests clearly. Correctness and scope precede code size.
 
 ## Think, then act
 
 Before coding, state material assumptions, interpretations, and tradeoffs. Ask
-only when blocked. For multi-step tasks, give a step → check plan and verifiable
+only when blocked. For multi-step tasks: step → check plan and verifiable
 finish: bugs go red → green; refactors get before/after checks. Carry unfinished
 checks through handoffs and compaction; summaries do not replace these instructions.
 
@@ -69,20 +69,21 @@ For non-trivial code, read [risk checks](references/risk-checks.md).
 Use existing test tools. Map changed requirements, edge cases, and failure modes
 to rerunnable tests; add missing coverage. Inline probes alone are not coverage.
 Trivial edits need no new tests. If red-green checks prove the risky regression,
-skip old-code reruns; mutation work is optional; otherwise a meaningful mutation
-check is useful. Never add a dependency for it. For test tasks, cover every case.
+skip old-code reruns; mutation work is optional; otherwise meaningful mutation
+evidence helps. Never add a dependency for it. Test tasks cover every case.
 
 For TS/JS edits, run the bundled checker from the repo root with the final tests,
 even after edit hooks: `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`.
-Use the task base ref for committed changes, quoted changed paths without Git.
-Triage only your scope. Failed scans are not clean; never weaken checks.
+Use task-base ref for commits; quote changed paths without Git.
+Triage only task-owned findings; do not alter pre-existing work. Failed scans
+are not clean; never weaken checks.
 
 ## Language fit
 
 TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect languages in use;
 read versions from the toolchain file, manifest, lockfile, or runtime. Keep advice
 valid for the installed version. If unavailable, say so and do not guess;
-research latest versions only when asked.
+research latest only when asked.
 
 ## Intensity
 
@@ -104,9 +105,11 @@ Example: "60-second cache expiry."
 Keep in working context: requested deliverable, task-owned scope, required checks,
 and action limits; no mandatory planning file.
 After implementation/checks, review the task-owned diff once. Fix reproducible
-in-scope findings and recheck affected behavior. Repeat review only for changed
-code, new concrete evidence, or mandatory repo/user gates, not scores or unchanged
-findings. Reconsider scope before broader guarantees or machinery.
+in-scope findings and recheck affected behavior only with implementation/edit
+authorization. Review-only/report-only requests: report findings without
+modifications. Repeat review only for changed code, new concrete evidence, or
+mandatory repo/user gates, not scores or unchanged findings. Reconsider scope
+before broader guarantees or machinery.
 A review budget never excuses a known required fix.
 Stop only when requested needs and required checks are met; report blocked or
 unverified work. A passed check proves its assertions, not general correctness;

@@ -74,8 +74,9 @@ node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD
 
 This includes tracked changes, new untracked files, and edits made through shell
 commands. Use the task base ref if its changes are already committed. Findings
-can include pre-existing user edits: triage only your task's scope. Without Git,
-pass changed paths as separate quoted arguments. Exit 2 means the scan failed;
+can include pre-existing user edits: triage only task-owned findings; do not
+alter pre-existing work. Without Git, pass changed paths as separate quoted
+arguments. Exit 2 means the scan failed;
 report that, never claim it was clean.
 
 ## Preserve input contracts
@@ -111,9 +112,11 @@ a reviewed upstream revision is not proof of a pristine merge base.
 Keep in working context: requested deliverable, task-owned scope, required checks,
 and action limits; no mandatory planning file.
 After implementation/checks, review the task-owned diff once. Fix reproducible
-in-scope findings and recheck affected behavior. Repeat review only for changed
-code, new concrete evidence, or mandatory repo/user gates, not scores or unchanged
-findings. Reconsider scope before broader guarantees or machinery.
+in-scope findings and recheck affected behavior only with implementation/edit
+authorization. Review-only/report-only requests: report findings without
+modifications. Repeat review only for changed code, new concrete evidence, or
+mandatory repo/user gates, not scores or unchanged findings. Reconsider scope
+before broader guarantees or machinery.
 A review budget never excuses a known required fix.
 Stop only when requested needs and required checks are met; report blocked or
 unverified work. A passed check proves its assertions, not general correctness;

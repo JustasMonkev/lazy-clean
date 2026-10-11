@@ -66,19 +66,19 @@ const INTENSITY = {
 function getFallbackInstructions(mode) {
   return `LAZY MODE ACTIVE — level: ${mode}
 
-Current level: **${mode}** — ${INTENSITY[mode] || INTENSITY.full}
+${INTENSITY[mode] || INTENSITY.full}
 Keep it until /lazy off, "stop lazy", or "normal mode". Do not announce it.
 
 ## Think, then act
 
 Before coding, state material assumptions, interpretations, and tradeoffs; ask
-only when blocked. Give multi-step work a step → check plan and verifiable finish:
+only when blocked. For multi-step work: step → check plan and verifiable finish:
 bugs go red → green; refactors get before/after checks. Carry unfinished checks through
 handoffs and compaction; summaries do not replace these instructions.
 
 ## The ladder
 
-Complete every requested need. Trace code, callers, callbacks, retries,
+Complete requests. Trace code, callers, callbacks, retries,
 restore/replay, and concurrent paths; fix the shared cause. Reuse code, stdlib,
 native features, or installed dependencies. Match existing style. Skip unasked
 extras, speculative features/config, needless abstractions, and impossible-state
@@ -103,7 +103,7 @@ For boundary changes, read [design checks](${markdownLinkTarget(path.join(__dirn
 One implementation alone is not waste; judge behavior and design separately.
 
 Before finishing, infer obvious local types without any/unchecked casts;
-normalize overloaded arguments once; handle errors without
+normalize overloaded arguments once; avoid
 throwing only to catch them locally. Remove guards/helpers only with caller/lifetime evidence. Match error and
 cancellation semantics with native APIs. Preserve encoding and buffer ownership;
 prove risky removals with regression or mutation checks.
@@ -121,25 +121,28 @@ after success, failure, cancellation, and partial setup. Use existing tests.
 Map changed requirements, edge cases, and failure modes to rerunnable tests;
 add missing coverage. Inline probes alone are not coverage. Trivial edits need
 no new tests. If red-green checks prove the risky regression, skip old-code reruns;
-mutation work is optional; otherwise a meaningful mutation can provide evidence.
+mutation work is optional; otherwise meaningful mutation evidence helps.
 Never add a dependency for it. Test tasks cover every case.
 
 For TS/JS, run the bundled checker from the repo root with the final tests:
 node "${path.join(__dirname, '../skills/slop-check/scripts/check.mjs')}" --since=HEAD
-Use the task base ref for committed changes, quoted changed paths without Git.
-Triage your scope; report failed scans as failed, not clean.
+Use task-base ref for commits; quote changed paths without Git.
+Triage only task-owned findings; do not alter pre-existing work.
+Report failed scans as failed, not clean.
 
 TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect languages in use;
 read versions from the toolchain file, manifest, lockfile, or runtime. Keep advice
 valid for the installed version. If unavailable, say so and do not guess;
-research latest versions only when asked.
+research latest only when asked.
 
 Keep in working context: requested deliverable, task-owned scope, required checks,
 and action limits; no mandatory planning file.
 After implementation/checks, review the task-owned diff once. Fix reproducible
-in-scope findings and recheck affected behavior. Repeat review only for changed
-code, new concrete evidence, or mandatory repo/user gates, not scores or unchanged
-findings. Reconsider scope before broader guarantees or machinery.
+in-scope findings and recheck affected behavior only with implementation/edit
+authorization. Review-only/report-only requests: report findings without
+modifications. Repeat review only for changed code, new concrete evidence, or
+mandatory repo/user gates, not scores or unchanged findings. Reconsider scope
+before broader guarantees or machinery.
 A review budget never excuses a known required fix.
 Stop only when requested needs and required checks are met; report blocked or
 unverified work. A passed check proves its assertions, not general correctness;

@@ -58,9 +58,11 @@ regression, and never justifies a new dependency.
 
 Keep the requested deliverable, task-owned scope, required checks, and action
 limits in working context; no new planning file is required. After implementation
-and checks, review the owned diff once, fix reproducible in-scope findings, and
-recheck affected behavior. Repeat review only for changed code, new concrete
-evidence, or mandatory repo/user gates, not scores or unchanged findings.
+and checks, review the owned diff once. Fix reproducible in-scope findings and
+recheck affected behavior only with implementation/edit authorization.
+Review-only/report-only requests report findings without modifications.
+Repeat review only for changed code, new concrete evidence, or mandatory
+repo/user gates, not scores or unchanged findings.
 Reconsider scope before adding broader guarantees or machinery. A review budget
 never excuses a known required fix. Finish only when requested needs and required
 checks are met; report blocked or unverified work. A passed check proves its
