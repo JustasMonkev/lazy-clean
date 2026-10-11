@@ -148,7 +148,24 @@ ok("Python slop distinguishes existing directives from new suppressions",
   && !/`# type: ignore` \/ `# noqa` without a code and reason/u.test(read("skills/slop-check/SKILL.md")));
 for (const file of ["skills/slop-check/SKILL.md", "skills/lazy/references/python-checks.md"])
   ok(`${file} verifies necessary new functional suppressions`, /necessary additions against the named diagnostic[^.]*final response/iu.test(flat(read(file))));
+const COMPLETION_CONTRACT = [
+  ["captures the completion contract in context", /working context.*requested deliverable.*task-owned scope.*required checks.*action limits/iu],
+  ["does not require a planning file", /no mandatory planning file/iu],
+  ["reviews once after implementation and checks", /after implementation(?: and checks|\/checks), review (?:the )?task-owned diff once/iu],
+  ["fixes reproducible findings and rechecks", /fix reproducible in-scope findings.*recheck affected behavior/iu],
+  ["bounds repeat review to evidence or required gates", /repeat review only for changed code, new concrete evidence, or mandatory repo\/user (?:review )?gates/iu],
+  ["rejects score-driven repeat review", /not (?:for )?(?:an )?(?:arbitrary )?scores? or unchanged findings/iu],
+  ["reconsiders scope before broader machinery", /reconsider scope.*broader guarantees or machinery/iu],
+  ["never budgets away required fixes", /review budget never excuses a known required fix/iu],
+  ["stops only at verified completion or reports limits", /stop only when requested needs and required checks are met.*report blocked or unverified work/iu],
+  ["limits what passing checks prove", /passed check proves its assertions, not general correctness/iu],
+  ["separates behavior evidence from findings", /distinguish behavior evidence from checker\/review findings/iu],
+];
+for (const file of BUILD_SURFACES)
+  for (const [description, pattern] of COMPLETION_CONTRACT)
+    ok(`${file} ${description}`, pattern.test(flat(read(file))));
 const DELIVERY_CONTRACT = [
+  ...COMPLETION_CONTRACT,
   ...COMMENT_CONTRACT,
   ["bans plugin markers and verifies necessary functional suppressions", /never add[^.]*SAFETY:[^.]*lazy:[^.]*slop-check-ignore[^.]*verify necessary functional suppressions/iu],
   ["states material assumptions", /material assumptions/iu],

@@ -67,84 +67,88 @@ function getFallbackInstructions(mode) {
   return `LAZY MODE ACTIVE — level: ${mode}
 
 Current level: **${mode}** — ${INTENSITY[mode] || INTENSITY.full}
-Use this level until /lazy off, "stop lazy", or "normal mode". Do not announce it.
+Keep it until /lazy off, "stop lazy", or "normal mode". Do not announce it.
 
 ## Think, then act
 
-Before coding, state material assumptions, interpretations, and tradeoffs. Ask
-only when missing information blocks the result. For multi-step work, write a brief
-step → check plan. Define a verifiable finish: bugs go red → green, refactors get
-before/after checks; loop until verified. Carry unfinished checks through
+Before coding, state material assumptions, interpretations, and tradeoffs; ask
+only when blocked. Give multi-step work a step → check plan and verifiable finish:
+bugs go red → green; refactors get before/after checks. Carry unfinished checks through
 handoffs and compaction; summaries do not replace these instructions.
 
 ## The ladder
 
-Complete every requested need. Trace affected code, callers, callbacks, retries,
-restore/replay, and concurrent paths. Fix the shared cause. Reuse existing code,
-stdlib, native features, or installed dependencies before writing code.
-Skip only unasked extras. Match existing style. Do not add speculative
-features/config, needless single-use abstractions, or impossible-state guards;
-offer simpler alternatives to unneeded scope. Review the task-owned diff: remove
-only orphans created by this task and mention unrelated dead code. Simplify structure, not formatting; preserve
-behavior and do not force a net-negative diff. Preserve unrelated edits. One
-caller is not waste: keep domain helpers, tricky logic, side-effect
-boundaries, test seams, and framework contracts. Keep security, accessibility,
-and hardware calibration.
+Complete every requested need. Trace code, callers, callbacks, retries,
+restore/replay, and concurrent paths; fix the shared cause. Reuse code, stdlib,
+native features, or installed dependencies. Match existing style. Skip unasked
+extras, speculative features/config, needless abstractions, and impossible-state
+guards; offer simpler alternatives. Remove task-created orphans; mention unrelated
+dead code. Simplify structure, not formatting; preserve behavior; never force net-negative
+diffs. Preserve unrelated edits. One caller is not waste: keep domain helpers,
+tricky logic, side-effect boundaries, test seams, and framework contracts.
+Keep security, accessibility, and hardware calibration.
 
 Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
 Report rationale, constraints, checked invariants, shortcut ceilings, and upgrade paths in the final response.
 Never add SAFETY:/lazy:/slop-check-ignore; verify necessary functional suppressions.
 
-At changed boundaries: group behavior by reason to change; keep policy independent
-of external details through ordinary parameters; give callers only capabilities
-they need. Extend existing contracts for requested variations. Interchangeable
-implementations must preserve inputs, results, errors, and lifecycle; exercise
-the same contract against each. Do not add interfaces just to satisfy SOLID.
+At boundaries: group behavior by reason to change; keep policy independent
+of external details through ordinary parameters; give callers only needed
+capabilities. Extend contracts for requested variations. Interchangeable
+implementations preserve inputs, results, errors, and lifecycle; test the same
+contract against each. No interfaces just for SOLID.
 
 For boundary changes, read [design checks](${markdownLinkTarget(path.join(__dirname, "../skills/lazy/references/design-checks.md"))}).
 One implementation alone is not waste; judge behavior and design separately.
 
-Before finishing, simplify changed code: infer obvious local types without
-any or unchecked casts; normalize overloaded arguments once; handle returned
-errors directly instead of throwing only to catch them locally. Remove guards
-and helpers only with evidence from callers and lifetimes. Match error and
-cancellation semantics when using native APIs. Preserve encoding
-and buffer ownership; prove risky removals with regression or mutation checks.
-Keep modules to one reason to change; no I/O at import time. Model exclusive
-states as unions. On TypeScript 7 (native tsc) do not add baseUrl,
-moduleResolution node/node10, target es5, or outFile; keep a TypeScript 6 alias
-API tools need.
+Before finishing, infer obvious local types without any/unchecked casts;
+normalize overloaded arguments once; handle errors without
+throwing only to catch them locally. Remove guards/helpers only with caller/lifetime evidence. Match error and
+cancellation semantics with native APIs. Preserve encoding and buffer ownership;
+prove risky removals with regression or mutation checks.
+Keep modules to one reason to change; no import-time I/O. Use exclusive-state
+unions. On TypeScript 7 (native tsc) avoid baseUrl, moduleResolution node/node10,
+target es5, outFile; keep the TypeScript 6 alias API tools need.
 For TS/JS and tsconfig read [TS/JS checks](${markdownLinkTarget(path.join(__dirname, '../skills/lazy/references/simplification-checks.md'))}).
 For Python read [Python checks](${markdownLinkTarget(path.join(__dirname, '../skills/lazy/references/python-checks.md'))}):
 no mutable defaults, bare except, or \`if not x\` where 0 or "" is valid.
 
 Preserve defaults, explicit false/zero/empty values, accepted input formats,
-user state, metadata, errors, generated files, lockfiles, and platform behavior.
-Revalidate at trust boundaries; bound external work; clean up tasks, timers, and
-listeners after success, failure, cancellation, and partial setup. Use existing tests
-and map changed requirements, edge cases, and failure modes to rerunnable tests;
+state, metadata, errors, generated files, lockfiles, and platform behavior.
+Revalidate trust boundaries; bound external work; clean up tasks/timers/listeners
+after success, failure, cancellation, and partial setup. Use existing tests.
+Map changed requirements, edge cases, and failure modes to rerunnable tests;
 add missing coverage. Inline probes alone are not coverage. Trivial edits need
-no new tests. If red-green checks prove the risky regression, skip old-code
-reruns, and mutation work is optional; otherwise a meaningful mutation can provide evidence.
-Never add a dependency for it. If writing tests is the task, cover the full
-case list.
+no new tests. If red-green checks prove the risky regression, skip old-code reruns;
+mutation work is optional; otherwise a meaningful mutation can provide evidence.
+Never add a dependency for it. Test tasks cover every case.
 
-For TS/JS changes, finish with the bundled checker from the repo root with the final tests:
+For TS/JS, run the bundled checker from the repo root with the final tests:
 node "${path.join(__dirname, '../skills/slop-check/scripts/check.mjs')}" --since=HEAD
-Use the task base ref for committed changes, or quoted changed paths without Git.
-Triage only your scope. Report failed scans as failed, not clean.
+Use the task base ref for committed changes, quoted changed paths without Git.
+Triage your scope; report failed scans as failed, not clean.
 
-TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect only languages in use.
-Read each version from its toolchain file, manifest, lockfile, or runtime. Keep
-advice valid for the installed version. If a needed version fact cannot be checked, say so and do not guess; research latest
-versions only when asked.
+TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect languages in use;
+read versions from the toolchain file, manifest, lockfile, or runtime. Keep advice
+valid for the installed version. If unavailable, say so and do not guess;
+research latest versions only when asked.
 
-Before you report, check the diff, not memory: every requested need is done and
-nothing unasked was added; each changed line traces to the request or its
-verification; changed behavior has tests that ran; language checks were applied
-and checker findings triaged. Report changes, checks actually run, and limits.
-Never claim an unrun check.
+Keep in working context: requested deliverable, task-owned scope, required checks,
+and action limits; no mandatory planning file.
+After implementation/checks, review the task-owned diff once. Fix reproducible
+in-scope findings and recheck affected behavior. Repeat review only for changed
+code, new concrete evidence, or mandatory repo/user gates, not scores or unchanged
+findings. Reconsider scope before broader guarantees or machinery.
+A review budget never excuses a known required fix.
+Stop only when requested needs and required checks are met; report blocked or
+unverified work. A passed check proves its assertions, not general correctness;
+distinguish behavior evidence from checker/review findings.
+
+Check the diff, not memory: requested needs done; nothing unasked was added;
+each changed line traces to the request or its verification; changed behavior has
+tests that ran; language checks applied; checker findings triaged.
+Report changes, checks actually run, and limits. Never claim an unrun check.
 `;
 }
 

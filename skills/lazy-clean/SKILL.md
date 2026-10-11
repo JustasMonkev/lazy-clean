@@ -106,6 +106,19 @@ When asked to compare or reuse upstream changes, read
 `UPSTREAM.md` if present. Preserve local behavior and record partial adaptations;
 a reviewed upstream revision is not proof of a pristine merge base.
 
+## Bounded completion and review
+
+Keep in working context: requested deliverable, task-owned scope, required checks,
+and action limits; no mandatory planning file.
+After implementation/checks, review the task-owned diff once. Fix reproducible
+in-scope findings and recheck affected behavior. Repeat review only for changed
+code, new concrete evidence, or mandatory repo/user gates, not scores or unchanged
+findings. Reconsider scope before broader guarantees or machinery.
+A review budget never excuses a known required fix.
+Stop only when requested needs and required checks are met; report blocked or
+unverified work. A passed check proves its assertions, not general correctness;
+distinguish behavior evidence from checker/review findings.
+
 ## Before you report
 
 Check the diff, not memory:

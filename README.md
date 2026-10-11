@@ -21,7 +21,7 @@ Same ruleset, five levels of wiring — pick whatever your agent supports.
 | Plugin | OpenCode | Ruleset injected every turn plus nine slash commands | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
 | Rules file | Cursor, Copilot | Always-on ruleset for all seven supported languages; run the TS/JS-only checker by hand after TS/JS changes | `.cursor/rules/lazy-clean.mdc`, `.github/copilot-instructions.md` |
 | `AGENTS.md` | Everything else that reads it — Codex, Zed, Amp, Jules | The compact ruleset plus the post-edit checker step | `AGENTS.md` |
-| Skills only | Anything that reads `~/.claude/skills` | Every skill on demand, no automation | `skills/` |
+| Skills only | Prime Agent or anything that loads skills | Every skill on demand, no automation | `skills/` |
 
 Only the Claude Code and Codex tiers run the checker automatically. Everywhere else run it yourself, from wherever the skills live — `node ~/.claude/skills/slop-check/scripts/check.mjs <changed files>` after the skills-only install below, or `node skills/slop-check/scripts/check.mjs <changed files>` from a checkout.
 
@@ -53,6 +53,19 @@ an isolated side effect, test or readability value, or a framework contract).
 Non-trivial changed logic needs behavior, edge, and failure coverage; mutation
 evidence is optional when existing red-green checks already prove the risky
 regression, and never justifies a new dependency.
+
+## Bounded completion and review
+
+Keep the requested deliverable, task-owned scope, required checks, and action
+limits in working context; no new planning file is required. After implementation
+and checks, review the owned diff once, fix reproducible in-scope findings, and
+recheck affected behavior. Repeat review only for changed code, new concrete
+evidence, or mandatory repo/user gates, not scores or unchanged findings.
+Reconsider scope before adding broader guarantees or machinery. A review budget
+never excuses a known required fix. Finish only when requested needs and required
+checks are met; report blocked or unverified work. A passed check proves its
+assertions, not general correctness. Behavior evidence and checker/review findings
+are separate; guidance-delivery tests do not prove model compliance or token savings.
 
 ## Optional behavioral evidence (experimental)
 
@@ -175,7 +188,23 @@ cp -R /path/to/lazy-clean/skills/* ~/.claude/skills/
 
 That gives you all 11 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-verify`, `layz-test`, `test-quality-review`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
 
-What you DON'T get in skills-only mode: the automatic parts (ruleset injected every session, checker auto-run after every edit). Those need the hooks — install as a plugin for that:
+What you DON'T get in skills-only mode: the automatic parts (ruleset injected every session, checker auto-run after every edit). Those need the hooks; see the full plugin installation below.
+
+### Prime Agent — on demand
+
+From your project directory, load the skills from a checkout (replace
+`/path/to/lazy-clean` with its absolute path):
+
+```bash
+prime-agent \
+  --skill /path/to/lazy-clean/skills/lazy/SKILL.md \
+  --skill /path/to/lazy-clean/skills/lazy-clean/SKILL.md \
+  --skill /path/to/lazy-clean/skills/slop-check/SKILL.md
+```
+
+Request lazy-clean for the task and run the checker manually. The sibling skill
+folders and references must stay together. This is on-demand guidance, not
+always-on injection; this repository provides no automatic Prime Agent hooks.
 
 ## Install — full (hooks + auto-run)
 
