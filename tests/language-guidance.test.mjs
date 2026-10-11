@@ -217,8 +217,12 @@ try {
   fs.cpSync(path.join(ROOT, "hooks"), path.join(damagedInstall, "hooks"), { recursive: true });
   const damagedInstructions = require(path.join(damagedInstall, "hooks", "lazy-instructions.js"));
   for (const skillState of ["missing", "unreadable"]) {
-    if (skillState === "unreadable")
-      fs.mkdirSync(path.join(damagedInstall, "skills", "lazy", "SKILL.md"), { recursive: true });
+    if (skillState === "unreadable") {
+      fs.writeFileSync(path.join(damagedInstall, "skills"), "not a directory");
+      assert.throws(() => fs.readFileSync(path.join(damagedInstall, "skills", "lazy", "SKILL.md"), "utf8"),
+        (error) => ["ENOTDIR", "ENOENT"].includes(error.code),
+        "unreadable fixture must fail during path traversal, not a platform-specific directory read");
+    }
     for (const mode of ["lite", "full", "ultra"]) {
       for (const builder of ["getLazyInstructions", "getSubagentInstructions"]) {
         const raw = damagedInstructions[builder](mode);
