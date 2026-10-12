@@ -156,15 +156,17 @@ check("repository scan excludes only the two benchmark controls and still finds 
   const dir = mkdtempSync(join(tmpdir(), "slop-repo-scope-"));
   const packageRoot = join(dirname(CHECKER), "..", "..", "..");
   const script = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")).scripts["slop-check"];
-  const commands = script.split(" && ");
-  const args = commands.pop().split(" ").slice(2);
-  const guardArgs = commands[0]?.split(" ").slice(1);
-  const gate = (extra = []) => {
-    if (guardArgs) {
-      const result = spawnSync(process.execPath, guardArgs, { cwd: dir, encoding: "utf8", timeout: 5000 });
+  const commands = script.split(" && ").map(command => command.split(" ").slice(1));
+  const args = commands[1].slice(1);
+  const gate = (extra = [], scannerFlags = []) => {
+    let scan;
+    for (const [index, command] of commands.entries()) {
+      const argv = index === 1 ? [...scannerFlags, CHECKER, ...args, ...extra] : command;
+      const result = spawnSync(process.execPath, argv, { cwd: dir, encoding: "utf8", timeout: 5000 });
       if (result.status !== 0) return result;
+      if (index === 1) scan = result;
     }
-    return run([...args, ...extra], dir);
+    return scan;
   };
   try {
     for (const target of args.filter(arg => !arg.startsWith("-"))) {
@@ -172,7 +174,7 @@ check("repository scan excludes only the two benchmark controls and still finds 
       if (target.endsWith(".mjs")) writeFileSync(join(dir, target), "");
       else mkdirSync(join(dir, target), { recursive: true });
     }
-    if (guardArgs) writeFileSync(join(dir, guardArgs[0]), readFileSync(join(packageRoot, guardArgs[0])));
+    writeFileSync(join(dir, commands[0][0]), readFileSync(join(packageRoot, commands[0][0])));
     for (const variant of ["train", "heldout"]) {
       const path = `benchmarks/results/skill-tokens-20261006/grading/known-good-${variant}.ts`;
       mkdirSync(dirname(join(dir, path)), { recursive: true });
@@ -198,6 +200,12 @@ check("repository scan excludes only the two benchmark controls and still finds 
         assert.equal(edited.status, 1, `${variant} control edits must fail before exclusion`);
         assert.match(edited.stderr, /control changed/u);
       }
+      writeFileSync(path, original);
+      const preload = join(dir, "edit-control.cjs");
+      writeFileSync(preload, `require('node:fs').appendFileSync(${JSON.stringify(path)}, 'const clone = JSON.parse(JSON.stringify(input));\\n');\n`);
+      const during = gate([], ["--require", preload]);
+      assert.equal(during.status, 1, `${variant} control edits during the scan must fail`);
+      assert.match(during.stderr, /control changed/u);
       writeFileSync(path, original);
     }
     const violations = [
