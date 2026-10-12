@@ -3256,9 +3256,8 @@ function collectFiles(entry, scan) {
   // The same file can arrive twice (listed explicitly and again via its
   // directory); linting it twice would double every finding and the count.
   const key = identity(stats, entry);
-  if (scan.seen.has(key)) return;
-  scan.seen.add(key);
-  scan.files.push(entry);
+  if (scan.files.has(key)) return;
+  scan.files.set(key, entry);
 }
 
 // The path a change map is keyed by. Falls back to resolve() when the file is
@@ -3465,7 +3464,7 @@ function main() {
       process.exitCode = 2;
       return;
     }
-    excluded.add(realPath(file));
+    excluded.add(identity(stats, file));
   }
 
   let added = null;
@@ -3488,7 +3487,7 @@ function main() {
     const rel = relative(cwd, file);
     return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
   };
-  const scan = { files: [], seen: new Set(), seenDirs: new Set(), unreadable: 0 };
+  const scan = { files: new Map(), seenDirs: new Set(), unreadable: 0 };
   for (const target of targets.length > 0 ? targets : added ? [...added.keys()].filter(underCwd) : ["."]) {
     collectFiles(target, scan);
   }
@@ -3505,7 +3504,7 @@ function main() {
   let suppressed = 0;
   let excludedCount = 0;
   const scannedSources = new Map();
-  for (const file of files) {
+  for (const [key, file] of files) {
     // realpath, not resolve: addedLines() keys every change by its path under
     // the repository root, so an explicit target that is a SYMLINK to a tracked
     // directory looked up `alias/a.ts` and found nothing -- `--since=HEAD alias`
@@ -3513,7 +3512,7 @@ function main() {
     // the finding. A supported input spelling must not silently skip changes.
     const changed = added?.get(realPath(file));
     if (added && !changed) continue;
-    if (excluded.has(realPath(file))) {
+    if (excluded.has(key)) {
       excludedCount += 1;
       continue;
     }
