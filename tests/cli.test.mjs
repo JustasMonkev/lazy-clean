@@ -58,6 +58,101 @@ check("exit 0 for a clean file", () => {
   assert.match(result.stdout, /clean \(1 file checked\)/u);
 });
 
+check("--exclude-file matches exact files across relative and absolute paths", () => {
+  const dir = mkdtempSync(join(tmpdir(), "slop-exclude-"));
+  try {
+    mkdirSync(join(dir, "src"));
+    for (const name of ["fixture.ts", "src/fixture.ts", "fixture.ts.extra.ts"])
+      writeFileSync(join(dir, name), "export const value: any = 1;\n");
+    const exclusions = ["--exclude-file=./fixture.ts", `--exclude-file=${join(dir, "fixture.ts")}`];
+    const result = run([".", "--json", ...exclusions], dir);
+    assert.equal(result.status, 1, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout).map(finding => finding.path.replaceAll("\\", "/")).sort(),
+      ["fixture.ts.extra.ts", "src/fixture.ts"]);
+    assert.match(run([".", ...exclusions], dir).stdout, /1 excluded/u);
+    const explicit = run([join(dir, "fixture.ts"), "--exclude-file=fixture.ts"], dir);
+    assert.equal(explicit.status, 0, explicit.stderr);
+    assert.match(explicit.stdout, /0 files checked, 1 excluded/u);
+    try {
+      symlinkSync(join(dir, "fixture.ts"), join(dir, "alias.ts"), "file");
+    } catch (error) {
+      if (!["EPERM", "EACCES", "ENOSYS", "ENOTSUP", "EOPNOTSUPP"].includes(error.code)) throw error;
+      console.log("skip exclusion alias (symlinks unavailable)");
+      return;
+    }
+    assert.equal(run(["fixture.ts", "--exclude-file=alias.ts"], dir).status, 0);
+    assert.equal(run(["alias.ts", "--exclude-file=fixture.ts"], dir).status, 0);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+check("--exclude-file rejects missing files, directories, globs and empty paths", () => {
+  for (const path of ["absent.ts", ".", "*.ts", ""]) {
+    const result = run(["clean.ts", `--exclude-file=${path}`]);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /--exclude-file must name an existing file/u);
+    assert.doesNotMatch(result.stdout, /clean/u);
+  }
+});
+
+check("--exclude-file after -- remains a literal target path", () => {
+  const dir = mkdtempSync(join(tmpdir(), "slop-exclude-literal-"));
+  try {
+    writeFileSync(join(dir, "--exclude-file=fixture.ts"), "export const value: any = 1;\n");
+    const result = run(["--", "--exclude-file=fixture.ts"], dir);
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stdout, /no-any/u);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+check("repository scan excludes only the two benchmark controls and still finds new any", () => {
+  const dir = mkdtempSync(join(tmpdir(), "slop-repo-scope-"));
+  const packageRoot = join(dirname(CHECKER), "..", "..", "..");
+  const script = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8")).scripts["slop-check"];
+  const args = script.split(" ").slice(2);
+  try {
+    for (const target of args.filter(arg => !arg.startsWith("-"))) {
+      mkdirSync(dirname(join(dir, target)), { recursive: true });
+      if (target.endsWith(".mjs")) writeFileSync(join(dir, target), "");
+      else mkdirSync(join(dir, target), { recursive: true });
+    }
+    for (const variant of ["train", "heldout"]) {
+      const path = `benchmarks/results/skill-tokens-20261006/grading/known-good-${variant}.ts`;
+      mkdirSync(dirname(join(dir, path)), { recursive: true });
+      writeFileSync(join(dir, path), readFileSync(join(packageRoot, path)));
+    }
+    const controls = run(["benchmarks", "--json"], dir);
+    assert.equal(controls.status, 1, controls.stderr);
+    const findings = JSON.parse(controls.stdout);
+    assert.equal(findings.length, 12);
+    assert.equal(findings.every(finding => finding.rule === "no-any"), true);
+    const clean = run([...args, "--json"], dir);
+    assert.equal(clean.status, 0, clean.stderr);
+    assert.deepEqual(JSON.parse(clean.stdout), []);
+    assert.match(run(args, dir).stdout, /2 excluded/u);
+    const violations = [
+      "hooks/new-code.ts",
+      "benchmarks/new-code.ts",
+      "benchmarks/results/skill-tokens-20261006/grading/new-code.ts",
+      "benchmarks/results/other/grading/known-good-train.ts",
+      "tests/cli.test.mjs",
+    ];
+    for (const path of violations) {
+      mkdirSync(dirname(join(dir, path)), { recursive: true });
+      writeFileSync(join(dir, path), path.endsWith(".ts") ? "export const value: any = 1;\n" : "const value = JSON.parse(JSON.stringify(input));\n");
+    }
+    const failed = run([...args, "--json"], dir);
+    assert.equal(failed.status, 1, failed.stderr);
+    assert.deepEqual(JSON.parse(failed.stdout).map(finding => [finding.path.replaceAll("\\", "/"), finding.rule]).sort(),
+      violations.map(path => [path, path.endsWith(".ts") ? "no-any" : "no-json-clone"]).sort());
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 // The checker is a text scanner, not the compiler, so it is independent of the
 // installed TypeScript version, including the native TypeScript 7 `tsc`. Syntax
 // that current compilers accept must scan cleanly and must not hide slop after it.

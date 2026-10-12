@@ -3379,6 +3379,7 @@ Options:
   --json             Print findings as JSON.
   --summary          Replace findings with a rule tally; keep the run summary.
   --since=<ref>      Scan only lines added since <ref>.
+  --exclude-file=<path>  Skip one exact existing file; repeat for multiple files.
   --disable=<ids>    Disable comma-separated rule IDs.
   --explain=<rule>   Print one rule's explanation and exit.
   -h, --help         Show this help text.
@@ -3397,6 +3398,8 @@ function main() {
   const json = optionArgs.includes("--json");
   const summaryOnly = optionArgs.includes("--summary");
   const since = optionArgs.find((arg) => arg.startsWith("--since="))?.slice("--since=".length);
+  const exclusionPaths = optionArgs.filter((arg) => arg.startsWith("--exclude-file="))
+    .map((arg) => arg.slice("--exclude-file=".length));
   const explainArgs = optionArgs.filter((arg) => arg.startsWith("--explain="));
   const explain = explainArgs[0]?.slice("--explain=".length);
   const disabled = new Set(
@@ -3414,7 +3417,8 @@ function main() {
   // clean. 0 = clean, 1 = findings, 2 = scan failed.
   const unknown = optionArgs.filter(
     (arg) => arg.startsWith("-") && !["--json", "--summary", "-h", "--help"].includes(arg)
-      && !arg.startsWith("--since=") && !arg.startsWith("--disable=") && !arg.startsWith("--explain="),
+      && !arg.startsWith("--since=") && !arg.startsWith("--disable=") && !arg.startsWith("--explain=")
+      && !arg.startsWith("--exclude-file="),
   );
   if (unknown.length > 0) {
     console.error(`slop-check: unknown option ${unknown[0]} (use \`-- ${unknown[0]}\` to scan a file with that name)`);
@@ -3444,6 +3448,24 @@ function main() {
   // be dangerous -- it reads as "that rule is off now".
   for (const id of disabled) {
     if (!RULE_IDS.has(id)) console.error(`slop-check: --disable names ${id}, which is not a rule id`);
+  }
+
+  const excluded = new Set();
+  for (const file of exclusionPaths) {
+    let stats;
+    try {
+      stats = statSync(file);
+    } catch {
+      console.error(`slop-check: --exclude-file must name an existing file: ${file}`);
+      process.exitCode = 2;
+      return;
+    }
+    if (!stats.isFile()) {
+      console.error(`slop-check: --exclude-file must name an existing file: ${file}`);
+      process.exitCode = 2;
+      return;
+    }
+    excluded.add(realPath(file));
   }
 
   let added = null;
@@ -3481,6 +3503,7 @@ function main() {
   // Reported because the density is the signal: a tree whose findings all went
   // away under ignores has not been cleaned, and the summary is where that shows.
   let suppressed = 0;
+  let excludedCount = 0;
   const scannedSources = new Map();
   for (const file of files) {
     // realpath, not resolve: addedLines() keys every change by its path under
@@ -3490,6 +3513,10 @@ function main() {
     // the finding. A supported input spelling must not silently skip changes.
     const changed = added?.get(realPath(file));
     if (added && !changed) continue;
+    if (excluded.has(realPath(file))) {
+      excludedCount += 1;
+      continue;
+    }
     let source;
     try {
       source = readFileSync(file, "utf8");
@@ -3545,7 +3572,8 @@ function main() {
   // Appended rather than folded into each branch: "clean" earned under 40
   // ignores is a different sentence from "clean", and every branch needs to say
   // so, including the one that reports a failed scan.
-  const silenced = suppressed > 0 ? `, ${suppressed} suppressed` : "";
+  const silenced = (suppressed > 0 ? `, ${suppressed} suppressed` : "")
+    + (excludedCount > 0 ? `, ${excludedCount} excluded` : "");
   const summary = scan.unreadable > 0
     ? `slop-check: scan incomplete (${scan.unreadable} path${scan.unreadable === 1 ? "" : "s"} unreadable, ${scanned} file${scanned === 1 ? "" : "s"} checked, ${findings.length} finding${findings.length === 1 ? "" : "s"}${silenced})`
     : findings.length === 0
