@@ -69,7 +69,8 @@ function render(findings) {
       const key = `${f.rule}\0${f.message}`;
       const message = stated.has(key) ? '' : ` — ${f.message}`;
       stated.add(key);
-      lines.push(`  ${path.basename(f.path)}:${f.line}:${f.column} ${f.rule}${message}`);
+      const label = f.rule === 'require-safety-comment-for-type-assertion' ? 'type assertion review' : f.rule;
+      lines.push(`  ${path.basename(f.path)}:${f.line}:${f.column} ${label}${message}`);
     }
   }
   return lines.join('\n');

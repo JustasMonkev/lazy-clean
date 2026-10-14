@@ -1115,6 +1115,10 @@ for (const ext of ["js", "jsx", "mjs", "cjs"]) {
   ok(`edit-check checks .${ext}`, res.status === 0 && res.stdout.includes("no-reflect"));
 }
 
+const assertionEdit = contextOf(editCheck(toolPayload(write("assertion.ts", "const user = payload as User;\n"))));
+ok("edit-check labels assertion findings like the CLI", assertionEdit.includes("assertion.ts:1:22 type assertion review"), assertionEdit);
+ok("edit-check hides the legacy assertion rule id", !assertionEdit.includes("require-safety-comment"), assertionEdit);
+
 // A case-insensitive filesystem hands the hook PROBE.TS; the hook lowercases the
 // extension, and so must the checker, or it silently scans nothing.
 const upperTs = write("PROBE.TS", JS_SLOP + TS_SLOP);

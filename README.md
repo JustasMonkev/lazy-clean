@@ -229,7 +229,7 @@ Findings are **advisory** — they arrive as `additionalContext`, never as a blo
 node skills/slop-check/scripts/check.mjs [paths...] [--json] [--summary] [--since=<ref>] [--disable=<rule-id>,...] [--explain=<rule-id>]
 ```
 
-With no paths it scans the current directory. Exit code 1 means findings, 2 means a path could not be read, 0 means clean — so a failed scan is never mistaken for a clean one.
+With no paths it scans the current directory. Exit code 1 means findings, 2 means a path could not be read, 0 means clean — so a failed scan is never mistaken for a clean one. A run that checked zero files also exits 0, but its summary says `no coverage (0 files checked)` instead of `clean`.
 
 `--since=<ref>` keeps only findings on lines the diff against `<ref>` added. That is the whole adoption story for an existing codebase: there is no baseline file to generate or refresh, because git already holds the baseline.
 
@@ -240,7 +240,7 @@ node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
 
 Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. A message shared by several findings is printed once, on the first. `--summary` replaces the finding list with the per-rule tally, which is the number that tells you whether a codebase is worth a full pass. The run summary line still prints; `--json` is the machine-readable form.
 
-Assertion tallies display `type assertion review`. The legacy rule ID `require-safety-comment-for-type-assertion` remains accepted by `--explain`, `--disable`, and existing directives, and remains the ID in JSON output.
+Finding lines and tallies display `type assertion review`. The legacy rule ID `require-safety-comment-for-type-assertion` remains accepted by `--explain`, `--disable`, and existing directives, and remains the ID in JSON output.
 
 Emoji, sequencing comments, change-note comments, and apparently obvious documentation comments are review findings. Retain symbols required by a specification; put useful contracts and rationale in the final response. Existing `SAFETY:` and `slop-check-ignore` directives remain supported for compatibility, but new ones are not a remedy for findings.
 

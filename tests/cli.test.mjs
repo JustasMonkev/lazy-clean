@@ -48,7 +48,8 @@ write("big.ts", `${SLOP}${"// filler\n".repeat(120_000)}`);
 check("exit 1 and one finding for a sloppy file", () => {
   const result = run(["slop.ts"]);
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /slop\.ts:1:22 require-safety-comment-for-type-assertion/u);
+  assert.match(result.stdout, /slop\.ts:1:22 type assertion review/u);
+  assert.doesNotMatch(result.stdout, /require-safety-comment/u);
   assert.match(result.stdout, /1 finding in 1 file/u);
 });
 
@@ -271,7 +272,7 @@ check("current TypeScript syntax scans clean", () => {
 check("slop after current TypeScript syntax is still found", () => {
   const result = run(["modern-slop.mts"], modernRoot);
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /modern-slop\.mts:26:22 require-safety-comment-for-type-assertion/u);
+  assert.match(result.stdout, /modern-slop\.mts:26:22 type assertion review/u);
 });
 
 check("exit 2 when a path cannot be read", () => {
@@ -334,7 +335,7 @@ check("a directory that cannot be listed is a failed scan, not a crash", () => {
     assert.equal(result.status, 2, `${result.stdout}${result.stderr}`);
     assert.match(result.stderr, /cannot read/u);
     // The readable half of the tree is still reported, not thrown away.
-    assert.match(result.stdout, /top\.ts:1:22 require-safety-comment/u);
+    assert.match(result.stdout, /top\.ts:1:22 type assertion review/u);
   } finally {
     chmodSync(sub, 0o755);
     rmSync(dir, { recursive: true, force: true });
@@ -344,7 +345,8 @@ check("a directory that cannot be listed is a failed scan, not a crash", () => {
 check("files over the size cap are skipped", () => {
   const result = run(["big.ts"]);
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /clean \(0 files checked\)/u);
+  assert.match(result.stdout, /no coverage \(0 files checked\)/u);
+  assert.doesNotMatch(result.stdout, /clean/u);
 });
 
 check("--json emits parseable findings and stays quiet otherwise", () => {
@@ -511,7 +513,7 @@ check("--since keeps only findings on lines the diff added", () => {
   const since = run(["--since=HEAD"], repo);
   assert.equal(since.status, 1);
   assert.match(since.stdout, /no-json-clone/u);
-  assert.doesNotMatch(since.stdout, /require-safety-comment/u, "pre-existing findings stay out of scope");
+  assert.doesNotMatch(since.stdout, /type assertion review/u, "pre-existing findings stay out of scope");
 });
 
 check("--since preserves source coverage across Git presentation settings", () => {
@@ -677,7 +679,7 @@ check("--since survives a filename git has to quote or pad", () => {
   git("config", "diff.mnemonicprefix", "true");
   const result = run(["--since=HEAD"], repo);
   assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
-  assert.match(result.stdout, /my file\.ts:1:22 require-safety-comment/u);
+  assert.match(result.stdout, /my file\.ts:1:22 type assertion review/u);
   assert.doesNotMatch(result.stderr, /cannot read/u);
 });
 
@@ -702,7 +704,7 @@ check("--since sees a brand-new file git has never tracked", () => {
   writeFileSync(join(repo, "brand-new.ts"), SLOP);
   const result = run(["--since=HEAD"], repo);
   assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
-  assert.match(result.stdout, /brand-new\.ts:1:22 require-safety-comment/u);
+  assert.match(result.stdout, /brand-new\.ts:1:22 type assertion review/u);
 });
 
 check("--since ignores untracked names it would never lint", () => {
@@ -738,7 +740,7 @@ check("--since ignores untracked names it would never lint", () => {
   writeFileSync(join(repo, "node_modules", "pkg", "index.ts"), SLOP);
   const result = run(["--since=HEAD"], repo);
   assert.equal(result.status, 0, `${result.stdout}${result.stderr}`);
-  assert.match(result.stdout, /clean \(0 files checked\)/u);
+  assert.match(result.stdout, /no coverage \(0 files checked\)/u);
 });
 
 check("--since does not read added content as a diff header", () => {
@@ -764,7 +766,7 @@ check("--since does not read added content as a diff header", () => {
   const result = run(["--since=HEAD"], repo);
   assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
   assert.doesNotMatch(result.stderr, /cannot read/u);
-  assert.match(result.stdout, /a\.ts:3:22 require-safety-comment/u);
+  assert.match(result.stdout, /a\.ts:3:22 type assertion review/u);
 });
 
 check("--since does not read a removed/added line pair as a file header", () => {
@@ -791,7 +793,7 @@ check("--since does not read a removed/added line pair as a file header", () => 
   const result = run(["--since=HEAD"], repo);
   assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
   assert.doesNotMatch(result.stderr, /cannot read/u);
-  assert.match(result.stdout, /a\.ts:3:22 require-safety-comment/u);
+  assert.match(result.stdout, /a\.ts:3:22 type assertion review/u);
 });
 
 check("one file reached by two paths is linted once", () => {
@@ -835,7 +837,7 @@ check("runs when invoked through a symlinked path", () => {
   }
   const result = spawnSync(process.execPath, [link, "slop.ts"], { cwd: root, encoding: "utf8" });
   assert.equal(result.status, 1, `silent no-op through a symlink: ${JSON.stringify(result.stdout)}`);
-  assert.match(result.stdout, /require-safety-comment-for-type-assertion/u);
+  assert.match(result.stdout, /type assertion review/u);
 });
 
 check("a symlink loop terminates instead of hanging", () => {
@@ -937,7 +939,7 @@ check("--since counts only the files it linted, not the files it collected", () 
   git("add", "-A");
   git("commit", "-qm", "settle");
   const none = run(["--since=HEAD", "src"], repo);
-  assert.match(none.stdout, /clean \(0 files checked\)/u);
+  assert.match(none.stdout, /no coverage \(0 files checked\)/u);
   assert.equal(none.status, 0);
   rmSync(repo, { recursive: true, force: true });
 });
