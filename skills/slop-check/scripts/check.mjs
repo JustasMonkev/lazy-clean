@@ -11,7 +11,8 @@
  * keeps only findings on lines the diff against <ref> added, which is how an
  * existing codebase adopts the checker without a baseline file: `--since=HEAD`
  * before a commit, `--since=origin/main` in CI. Exit code 1 when findings
- * exist, 2 when a path could not be read, 0 when clean. Findings are
+ * exist, 2 when a path could not be read, 0 when clean or when no file was
+ * checked; the summary line says "no coverage" for the latter. Findings are
  * heuristic review prompts, not verdicts: fix real slop, and leave genuine
  * false positives alone with a short justification instead of contorting the
  * code.
@@ -3364,11 +3365,15 @@ function addedLines(ref) {
   return byFile;
 }
 
+function ruleLabel(rule) {
+  return rule === "require-safety-comment-for-type-assertion" ? "type assertion review" : rule;
+}
+
 function renderTally(findings) {
   const counts = new Map();
   for (const finding of findings) counts.set(finding.rule, (counts.get(finding.rule) ?? 0) + 1);
   return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([rule, count]) => `  ${count} ${rule === "require-safety-comment-for-type-assertion" ? "type assertion review" : rule}`).join("\n");
+    .map(([rule, count]) => `  ${count} ${ruleLabel(rule)}`).join("\n");
 }
 
 function printUsage() {
@@ -3575,6 +3580,8 @@ function main() {
     + (excludedCount > 0 ? `, ${excludedCount} excluded` : "");
   const summary = scan.unreadable > 0
     ? `slop-check: scan incomplete (${scan.unreadable} path${scan.unreadable === 1 ? "" : "s"} unreadable, ${scanned} file${scanned === 1 ? "" : "s"} checked, ${findings.length} finding${findings.length === 1 ? "" : "s"}${silenced})`
+    : scanned === 0
+    ? `slop-check: no coverage (0 files checked${silenced})`
     : findings.length === 0
     ? `slop-check: clean (${scanned} file${scanned === 1 ? "" : "s"} checked${silenced})`
     : `slop-check: ${findings.length} finding${findings.length === 1 ? "" : "s"} in ${new Set(findings.map((finding) => finding.path)).size} file${new Set(findings.map((finding) => finding.path)).size === 1 ? "" : "s"}${silenced}`;
@@ -3599,7 +3606,7 @@ function main() {
         const key = `${finding.rule}\0${finding.message}`;
         const message = statedMessages.has(key) ? "" : ` — ${finding.message}`;
         statedMessages.add(key);
-        console.log(`  ${finding.path}:${finding.line}:${finding.column} ${finding.rule}${message}`);
+        console.log(`  ${finding.path}:${finding.line}:${finding.column} ${ruleLabel(finding.rule)}${message}`);
       }
     }
     if (findings.length >= 10) console.log(renderTally(findings));
