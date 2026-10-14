@@ -11,8 +11,7 @@
  * keeps only findings on lines the diff against <ref> added, which is how an
  * existing codebase adopts the checker without a baseline file: `--since=HEAD`
  * before a commit, `--since=origin/main` in CI. Exit code 1 when findings
- * exist, 2 when a path could not be read, 0 when clean or when no file was
- * checked; the summary line says "no coverage" for the latter. Findings are
+ * exist, 2 when a path could not be read, 0 when clean. Findings are
  * heuristic review prompts, not verdicts: fix real slop, and leave genuine
  * false positives alone with a short justification instead of contorting the
  * code.
