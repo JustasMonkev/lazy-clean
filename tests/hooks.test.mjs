@@ -2296,6 +2296,85 @@ for (const [mode, timing] of [["off", "published"], ["off", "claimed"], ["off", 
   if (result.status !== 0) console.error(result.stderr);
 }
 
+for (const entry of ["off", "ultra", "report", "default", "transform", "timeout"]) {
+  const box = freshHome(`opencode-reservation-retry-${entry}`);
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
+    import assert from 'node:assert/strict';
+    import fs from 'node:fs';
+    import path from 'node:path';
+    import {spawn} from 'node:child_process';
+    import {once} from 'node:events';
+    import stateModule from ${JSON.stringify(pathToFileURL(path.join(HOOKS, 'lazy-state.js')).href)};
+    import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, '.opencode/plugins/lazy.mjs')).href)};
+    const entry = ${JSON.stringify(entry)};
+    const directory = path.join(process.env.XDG_CONFIG_HOME, 'opencode');
+    const scopedPath = path.join(directory, ${JSON.stringify(qoderStateFile('A'))});
+    const claimDirectory = scopedPath + '.migration';
+    const claimPath = path.join(claimDirectory, 'mode');
+    const ready = path.join(directory, 'contended');
+    const legacy = stateModule.modeState(directory);
+    legacy.setMode(entry === 'ultra' ? 'off' : 'ultra');
+    fs.mkdirSync(claimDirectory);
+    const owner = entry === 'timeout' ? null : spawn(process.execPath, ['--input-type=module', '-e', \`
+      import fs from 'node:fs';
+      import {setTimeout} from 'node:timers/promises';
+      const [ready, legacy, claim, scoped, reservation] = process.argv.slice(1);
+      for (let attempt = 0; !fs.existsSync(ready); attempt += 1) {
+        if (attempt === 500) throw new Error('contender never attempted migration');
+        await setTimeout(10);
+      }
+      fs.renameSync(legacy, claim);
+      fs.linkSync(claim, scoped);
+      fs.unlinkSync(claim);
+      fs.rmdirSync(reservation);
+    \`, ready, path.join(directory, '.lazy-active'), claimPath, scopedPath, claimDirectory], {stdio:'ignore'});
+    const finished = owner && once(owner, 'exit');
+    const mkdir = fs.mkdirSync;
+    let contended = false;
+    fs.mkdirSync = (target, options) => {
+      try { return mkdir(target, options); }
+      catch (error) {
+        if (target === claimDirectory && error.code === 'EEXIST') {
+          contended = true;
+          fs.writeFileSync(ready, 'ready');
+        }
+        throw error;
+      }
+    };
+    const logs = [];
+    const hooks = await plugin({client:{app:{log:({body}) => logs.push(body)}}});
+    const output = {system:[]};
+    try {
+      if (entry === 'transform') await hooks['experimental.chat.system.transform']({sessionID:'A'}, output);
+      else await hooks['command.execute.before']({command:'lazy', sessionID:'A',
+        arguments:entry === 'report' ? '' : entry === 'default' ? 'default lite' : entry === 'timeout' ? 'off' : entry});
+    } finally {
+      fs.mkdirSync = mkdir;
+      if (finished) {
+        assert.deepEqual(await finished, [0, null]);
+      }
+    }
+    assert.equal(contended, true);
+    if (entry === 'timeout') {
+      assert.equal(stateModule.modeState(directory, 'A').readMode(), null);
+      assert.equal(legacy.readMode(), 'ultra');
+      assert.ok(logs.some(log => log.level === 'error' && /migration.*busy/.test(log.message)));
+    } else {
+      assert.equal(stateModule.modeState(directory, 'A').readMode(), entry === 'off' ? 'off' : 'ultra');
+      assert.equal(legacy.readMode(), null);
+      assert.equal(logs.some(log => log.level === 'error'), false);
+      if (entry === 'report') assert.ok(logs.some(log => log.message === 'lazy ultra'));
+      if (entry === 'transform') assert.match(output.system.join('\\n'), /level: ultra/);
+      if (entry === 'default') {
+        assert.equal(JSON.parse(fs.readFileSync(${JSON.stringify(box.config)}, 'utf8')).defaultMode, 'lite');
+      }
+      assert.equal(fs.existsSync(claimDirectory), false);
+    }
+  `], {env:baseEnv(box.env), encoding:"utf8", timeout:10000});
+  eq(`OpenCode handles reservation contention for ${entry}`, result.status, 0);
+  if (result.status !== 0) console.error(result.stderr);
+}
+
 for (const scenario of ["absent", "corrupt", "oversized", "unscoped", "existing", "reservation-failure",
   "claim-failure", "publish-failure", "scoped-write", "invalid-claim", "claim-lost", "restore-failure", "legacy-recreated", "cleanup-failure"]) {
   const box = freshHome(`legacy-migration-${scenario}`);

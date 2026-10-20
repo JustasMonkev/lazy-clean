@@ -58,7 +58,12 @@ function modeState(directory, sessionId) {
     migrateLegacyMode() {
       if (!scoped || state.readMode() || !modeState(directory).readMode()) return;
       const legacyPath = path.join(directory, '.lazy-active');
-      fs.mkdirSync(claimDirectory, { mode: 0o700 });
+      try {
+        fs.mkdirSync(claimDirectory, { mode: 0o700 });
+      } catch (e) {
+        if (e.code === 'EEXIST') return false;
+        throw e;
+      }
       try {
         fs.renameSync(legacyPath, claimPath);
       } catch (e) {
