@@ -32,10 +32,14 @@ function readModeFile(file) {
 function modeState(directory, sessionId) {
   const scoped = validSessionId(sessionId);
   const statePath = path.join(directory, scoped ? sessionStateFile(sessionId) : '.lazy-active');
+  const claimDirectory = `${statePath}.migration`;
+  const claimPath = path.join(claimDirectory, 'mode');
   const state = {
     scoped,
     readMode() {
-      return readModeFile(statePath);
+      const mode = readModeFile(statePath);
+      if (mode || !scoped) return mode;
+      return readModeFile(claimPath) || readModeFile(statePath);
     },
     setMode(mode) {
       fs.mkdirSync(directory, { recursive: true });
@@ -54,10 +58,11 @@ function modeState(directory, sessionId) {
     migrateLegacyMode() {
       if (!scoped || state.readMode() || !modeState(directory).readMode()) return;
       const legacyPath = path.join(directory, '.lazy-active');
-      const claimPath = `${legacyPath}.${process.pid}.${crypto.randomBytes(6).toString('hex')}`;
+      fs.mkdirSync(claimDirectory, { mode: 0o700 });
       try {
         fs.renameSync(legacyPath, claimPath);
       } catch (e) {
+        fs.rmdirSync(claimDirectory);
         if (e.code === 'ENOENT') return;
         throw e;
       }
@@ -68,11 +73,12 @@ function modeState(directory, sessionId) {
           fs.linkSync(claimPath, statePath);
           migrated = true;
         } catch (e) {
-          if (e.code !== 'EEXIST' || !state.readMode()) throw e;
+          if (e.code !== 'EEXIST' || !readModeFile(statePath)) throw e;
         }
       } finally {
         if (!migrated) fs.linkSync(claimPath, legacyPath);
         fs.unlinkSync(claimPath);
+        fs.rmdirSync(claimDirectory);
       }
     },
   };

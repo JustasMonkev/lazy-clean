@@ -2226,17 +2226,20 @@ for (const mode of ["off", "ultra"]) {
   }
 }
 
-for (const mode of ["off", "ultra"]) {
-  const box = freshHome(`opencode-concurrent-migration-${mode}`);
+for (const [mode, timing] of [["off", "published"], ["off", "claimed"], ["off", "reserved"],
+  ["ultra", "published"], ["ultra", "claimed"], ["ultra", "reserved"]]) {
+  const sameSession = timing !== 'published';
+  const sessionID = sameSession ? 'A' : 'B';
+  const box = freshHome(`opencode-concurrent-migration-${mode}-${timing}`);
   const secondSession = `
     import path from 'node:path';
     import stateModule from ${JSON.stringify(pathToFileURL(path.join(HOOKS, 'lazy-state.js')).href)};
     import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, '.opencode/plugins/lazy.mjs')).href)};
     const hooks = await plugin();
     const output = {system:[]};
-    await hooks['experimental.chat.system.transform']({sessionID:'B'}, output);
+    await hooks['experimental.chat.system.transform']({sessionID:${JSON.stringify(sessionID)}}, output);
     console.log(JSON.stringify({
-      mode:stateModule.modeState(path.join(process.env.XDG_CONFIG_HOME, 'opencode'), 'B').readMode(),
+      mode:stateModule.modeState(path.join(process.env.XDG_CONFIG_HOME, 'opencode'), ${JSON.stringify(sessionID)}).readMode(),
       instructions:output.system.join('\\n')
     }));
   `;
@@ -2251,37 +2254,49 @@ for (const mode of ["off", "ultra"]) {
     const legacy = stateModule.modeState(directory);
     legacy.setMode(${JSON.stringify(mode)});
     const hooks = await plugin();
-    const link = fs.linkSync;
+    const link = fs.linkSync, mkdir = fs.mkdirSync;
     let second;
+    const runSecond = () => {
+      const child = spawnSync(process.execPath, ['--input-type=module', '-e', ${JSON.stringify(secondSession)}],
+        {env:process.env, encoding:'utf8', timeout:5000});
+      assert.equal(child.status, 0, child.stderr);
+      second = JSON.parse(child.stdout);
+    };
+    fs.mkdirSync = (target, options) => {
+      const result = mkdir(target, options);
+      if (${JSON.stringify(timing)} === 'reserved' && target === path.join(directory, ${JSON.stringify(qoderStateFile('A') + '.migration')})) runSecond();
+      return result;
+    };
     fs.linkSync = (source, target) => {
+      if (${sameSession} && !second) runSecond();
       link(source, target);
-      if (!second) {
-        const child = spawnSync(process.execPath, ['--input-type=module', '-e', ${JSON.stringify(secondSession)}],
-          {env:process.env, encoding:'utf8', timeout:5000});
-        assert.equal(child.status, 0, child.stderr);
-        second = JSON.parse(child.stdout);
-      }
+      if (!second) runSecond();
     };
     const output = {system:[]};
     try {
       await hooks['experimental.chat.system.transform']({sessionID:'A'}, output);
     } finally {
       fs.linkSync = link;
+      fs.mkdirSync = mkdir;
     }
     assert.equal(stateModule.modeState(directory, 'A').readMode(), ${JSON.stringify(mode)});
-    assert.equal(second.mode, 'full');
-    assert.match(second.instructions, /level: full/);
+    if (${timing === 'reserved'}) assert.ok(second.mode === null || second.mode === ${JSON.stringify(mode)});
+    else assert.equal(second.mode, ${JSON.stringify(sameSession ? mode : 'full')});
+    if (second.mode === null || ${sameSession && mode === 'off'}) assert.equal(second.instructions, '');
+    else assert.match(second.instructions, ${sameSession ? '/level: ultra/' : '/level: full/'});
     assert.equal(legacy.readMode(), null);
     if (${JSON.stringify(mode)} === 'off') assert.deepEqual(output.system, []);
     else assert.match(output.system.join('\\n'), /level: ultra/);
     assert.deepEqual(fs.readdirSync(directory).sort(),
-      [${JSON.stringify(qoderStateFile('A'))}, ${JSON.stringify(qoderStateFile('B'))}].sort());
+      ${JSON.stringify((sameSession ? [qoderStateFile('A')] : [qoderStateFile('A'), qoderStateFile('B')]).sort())});
   `], {env:baseEnv(box.env), encoding:"utf8", timeout:15000});
-  eq(`OpenCode migrates legacy ${mode} to only one concurrent process`, result.status, 0);
+  eq(timing === 'reserved' ? `OpenCode never saves a default during ${mode} migration reservation`
+    : sameSession ? `OpenCode keeps legacy ${mode} for same-session reads before publication`
+    : `OpenCode migrates legacy ${mode} to only one concurrent process`, result.status, 0);
   if (result.status !== 0) console.error(result.stderr);
 }
 
-for (const scenario of ["absent", "corrupt", "oversized", "unscoped", "existing",
+for (const scenario of ["absent", "corrupt", "oversized", "unscoped", "existing", "reservation-failure",
   "claim-failure", "publish-failure", "scoped-write", "invalid-claim", "claim-lost", "restore-failure", "legacy-recreated", "cleanup-failure"]) {
   const box = freshHome(`legacy-migration-${scenario}`);
   const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
@@ -2293,6 +2308,8 @@ for (const scenario of ["absent", "corrupt", "oversized", "unscoped", "existing"
     const directory = path.join(process.env.XDG_CONFIG_HOME, 'opencode');
     const legacyPath = path.join(directory, '.lazy-active');
     const scopedPath = path.join(directory, ${JSON.stringify(qoderStateFile('A'))});
+    const claimDirectory = scopedPath + '.migration';
+    const claimPath = path.join(claimDirectory, 'mode');
     const legacy = stateModule.modeState(directory);
     const state = stateModule.modeState(directory, 'A');
     const second = stateModule.modeState(directory, 'B');
@@ -2300,9 +2317,13 @@ for (const scenario of ["absent", "corrupt", "oversized", "unscoped", "existing"
     const original = scenario === 'corrupt' ? 'invalid' : scenario === 'oversized' ? ' '.repeat(4097) : 'ultra';
     if (scenario !== 'absent') fs.writeFileSync(legacyPath, original, {mode:0o600});
     if (scenario === 'existing') state.setMode('off');
-    const rename = fs.renameSync, link = fs.linkSync, unlink = fs.unlinkSync;
+    const rename = fs.renameSync, link = fs.linkSync, unlink = fs.unlinkSync, mkdir = fs.mkdirSync;
     const failure = Object.assign(new Error('injected migration failure'), {code:'EACCES'});
     let raced = false;
+    fs.mkdirSync = (target, options) => {
+      if (target === claimDirectory && scenario === 'reservation-failure') throw failure;
+      return mkdir(target, options);
+    };
     fs.renameSync = (from, to) => {
       if (from === legacyPath && scenario === 'claim-failure') throw failure;
       if (from === legacyPath && scenario === 'claim-lost' && !raced) {
@@ -2326,7 +2347,7 @@ for (const scenario of ["absent", "corrupt", "oversized", "unscoped", "existing"
     try {
       if (scenario === 'legacy-recreated') {
         assert.throws(() => state.migrateLegacyMode(), error => error.code === 'EEXIST');
-      } else if (['claim-failure', 'publish-failure', 'restore-failure', 'cleanup-failure'].includes(scenario)) {
+      } else if (['reservation-failure', 'claim-failure', 'publish-failure', 'restore-failure', 'cleanup-failure'].includes(scenario)) {
         assert.throws(() => state.migrateLegacyMode(), error => error === failure);
       } else {
         (scenario === 'unscoped' ? legacy : state).migrateLegacyMode();
@@ -2335,27 +2356,29 @@ for (const scenario of ["absent", "corrupt", "oversized", "unscoped", "existing"
       fs.renameSync = rename;
       fs.linkSync = link;
       fs.unlinkSync = unlink;
+      fs.mkdirSync = mkdir;
     }
     if (scenario === 'legacy-recreated') {
       const claims = fs.readdirSync(directory).filter(file => file !== '.lazy-active');
       assert.equal(claims.length, 1);
-      assert.equal(fs.readFileSync(path.join(directory, claims[0]), 'utf8'), 'ultra');
+      assert.equal(fs.readFileSync(claimPath, 'utf8'), 'ultra');
       assert.equal(legacy.readMode(), 'off');
-      assert.equal(state.readMode(), null);
+      assert.equal(state.readMode(), 'ultra');
       second.migrateLegacyMode();
       assert.equal(second.readMode(), 'off');
     } else if (scenario === 'restore-failure' || scenario === 'cleanup-failure') {
       const claims = fs.readdirSync(directory).filter(file => file !== path.basename(scopedPath));
       assert.equal(claims.length, 1);
-      const claim = path.join(directory, claims[0]);
-      assert.equal(fs.readFileSync(claim, 'utf8'), 'ultra');
+      assert.equal(fs.readFileSync(claimPath, 'utf8'), 'ultra');
       assert.equal(fs.existsSync(legacyPath), false);
-      assert.equal(state.readMode(), scenario === 'cleanup-failure' ? 'ultra' : null);
+      assert.equal(state.readMode(), 'ultra');
       if (scenario === 'restore-failure') {
-        fs.renameSync(claim, legacyPath);
+        fs.renameSync(claimPath, legacyPath);
+        fs.rmdirSync(claimDirectory);
         state.migrateLegacyMode();
       } else {
-        fs.unlinkSync(claim);
+        fs.unlinkSync(claimPath);
+        fs.rmdirSync(claimDirectory);
       }
       assert.equal(state.readMode(), 'ultra');
       assert.deepEqual(fs.readdirSync(directory), [path.basename(scopedPath)]);
@@ -2371,7 +2394,7 @@ for (const scenario of ["absent", "corrupt", "oversized", "unscoped", "existing"
         assert.equal(fs.readFileSync(legacyPath, 'utf8'), scenario === 'invalid-claim' ? 'invalid' : original);
       }
       assert.equal(fs.readdirSync(directory).length, ['existing', 'scoped-write'].includes(scenario) ? 2 : scenario === 'absent' ? 0 : 1);
-      if (['claim-failure', 'publish-failure'].includes(scenario)) {
+      if (['reservation-failure', 'claim-failure', 'publish-failure'].includes(scenario)) {
         state.migrateLegacyMode();
         assert.equal(state.readMode(), 'ultra');
         assert.equal(fs.existsSync(legacyPath), false);
@@ -2379,6 +2402,44 @@ for (const scenario of ["absent", "corrupt", "oversized", "unscoped", "existing"
     }
   `], {env:baseEnv(box.env), encoding:"utf8", timeout:10000});
   eq(`legacy migration preserves state for ${scenario}`, result.status, 0);
+  if (result.status !== 0) console.error(result.stderr);
+}
+
+for (const mode of ["off", "ultra"]) {
+  const box = freshHome(`migration-read-handoff-${mode}`);
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
+    import assert from 'node:assert/strict';
+    import fs from 'node:fs';
+    import path from 'node:path';
+    import stateModule from ${JSON.stringify(pathToFileURL(path.join(HOOKS, 'lazy-state.js')).href)};
+    const directory = path.join(process.env.XDG_CONFIG_HOME, 'opencode');
+    const scopedPath = path.join(directory, ${JSON.stringify(qoderStateFile('A'))});
+    const claimDirectory = scopedPath + '.migration';
+    const claimPath = path.join(claimDirectory, 'mode');
+    stateModule.modeState(directory).setMode(${JSON.stringify(mode)});
+    fs.mkdirSync(claimDirectory);
+    fs.renameSync(path.join(directory, '.lazy-active'), claimPath);
+    const stat = fs.statSync;
+    let published = false;
+    fs.statSync = (file, ...args) => {
+      if (file === scopedPath && !published) {
+        published = true;
+        fs.linkSync(claimPath, scopedPath);
+        fs.unlinkSync(claimPath);
+        fs.rmdirSync(claimDirectory);
+        throw Object.assign(new Error('scope was absent before publication'), {code:'ENOENT'});
+      }
+      return stat(file, ...args);
+    };
+    try {
+      assert.equal(stateModule.modeState(directory, 'A').readMode(), ${JSON.stringify(mode)});
+      assert.equal(published, true);
+    } finally {
+      fs.statSync = stat;
+    }
+    assert.deepEqual(fs.readdirSync(directory), [path.basename(scopedPath)]);
+  `], {env:baseEnv(box.env), encoding:"utf8", timeout:10000});
+  eq(`session read retains ${mode} when publication finishes between reads`, result.status, 0);
   if (result.status !== 0) console.error(result.stderr);
 }
 
