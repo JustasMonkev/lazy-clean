@@ -19,20 +19,23 @@ function validSessionId(id) {
   return typeof id === 'string' && id.length > 0;
 }
 
+function readModeFile(file) {
+  try {
+    const stat = fs.statSync(file);
+    if (!stat.isFile() || stat.size > 4096) return null;
+    return normalizePersistedMode(fs.readFileSync(file, 'utf8').trim());
+  } catch (e) {
+    return null;
+  }
+}
+
 function modeState(directory, sessionId) {
   const scoped = validSessionId(sessionId);
   const statePath = path.join(directory, scoped ? sessionStateFile(sessionId) : '.lazy-active');
   const state = {
     scoped,
     readMode() {
-      try {
-        const stat = fs.statSync(statePath);
-        if (!stat.isFile() || stat.size > 4096) return null;
-        return normalizePersistedMode(fs.readFileSync(statePath, 'utf8').trim());
-      } catch (e) {
-        // Missing, unreadable, or corrupt state supplies no level.
-        return null;
-      }
+      return readModeFile(statePath);
     },
     setMode(mode) {
       fs.mkdirSync(directory, { recursive: true });
@@ -51,17 +54,25 @@ function modeState(directory, sessionId) {
     migrateLegacyMode() {
       if (!scoped || state.readMode() || !modeState(directory).readMode()) return;
       const legacyPath = path.join(directory, '.lazy-active');
+      const claimPath = `${legacyPath}.${process.pid}.${crypto.randomBytes(6).toString('hex')}`;
       try {
-        // Publish the complete legacy file without overwriting a concurrent scoped write.
-        fs.linkSync(legacyPath, statePath);
+        fs.renameSync(legacyPath, claimPath);
       } catch (e) {
-        if (e.code === 'ENOENT' || (e.code === 'EEXIST' && state.readMode())) return;
+        if (e.code === 'ENOENT') return;
         throw e;
       }
+      let migrated = false;
       try {
-        fs.unlinkSync(legacyPath);
-      } catch (e) {
-        if (e.code !== 'ENOENT') throw e;
+        if (!readModeFile(claimPath)) return;
+        try {
+          fs.linkSync(claimPath, statePath);
+          migrated = true;
+        } catch (e) {
+          if (e.code !== 'EEXIST' || !state.readMode()) throw e;
+        }
+      } finally {
+        if (!migrated) fs.linkSync(claimPath, legacyPath);
+        fs.unlinkSync(claimPath);
       }
     },
   };
