@@ -19,20 +19,27 @@ function validSessionId(id) {
   return typeof id === 'string' && id.length > 0;
 }
 
+function readModeFile(file) {
+  try {
+    const stat = fs.statSync(file);
+    if (!stat.isFile() || stat.size > 4096) return null;
+    return normalizePersistedMode(fs.readFileSync(file, 'utf8').trim());
+  } catch (e) {
+    return null;
+  }
+}
+
 function modeState(directory, sessionId) {
   const scoped = validSessionId(sessionId);
   const statePath = path.join(directory, scoped ? sessionStateFile(sessionId) : '.lazy-active');
+  const claimDirectory = `${statePath}.migration`;
+  const claimPath = path.join(claimDirectory, 'mode');
   const state = {
     scoped,
     readMode() {
-      try {
-        const stat = fs.statSync(statePath);
-        if (!stat.isFile() || stat.size > 4096) return null;
-        return normalizePersistedMode(fs.readFileSync(statePath, 'utf8').trim());
-      } catch (e) {
-        // Missing, unreadable, or corrupt state supplies no level.
-        return null;
-      }
+      const mode = readModeFile(statePath);
+      if (mode || !scoped) return mode;
+      return readModeFile(claimPath) || readModeFile(statePath);
     },
     setMode(mode) {
       fs.mkdirSync(directory, { recursive: true });
@@ -52,16 +59,31 @@ function modeState(directory, sessionId) {
       if (!scoped || state.readMode() || !modeState(directory).readMode()) return;
       const legacyPath = path.join(directory, '.lazy-active');
       try {
-        // Publish the complete legacy file without overwriting a concurrent scoped write.
-        fs.linkSync(legacyPath, statePath);
+        fs.mkdirSync(claimDirectory, { mode: 0o700 });
       } catch (e) {
-        if (e.code === 'ENOENT' || (e.code === 'EEXIST' && state.readMode())) return;
+        if (e.code === 'EEXIST') return false;
         throw e;
       }
       try {
-        fs.unlinkSync(legacyPath);
+        fs.renameSync(legacyPath, claimPath);
       } catch (e) {
-        if (e.code !== 'ENOENT') throw e;
+        fs.rmdirSync(claimDirectory);
+        if (e.code === 'ENOENT') return;
+        throw e;
+      }
+      let migrated = false;
+      try {
+        if (!readModeFile(claimPath)) return;
+        try {
+          fs.linkSync(claimPath, statePath);
+          migrated = true;
+        } catch (e) {
+          if (e.code !== 'EEXIST' || !readModeFile(statePath)) throw e;
+        }
+      } finally {
+        if (!migrated) fs.linkSync(claimPath, legacyPath);
+        fs.unlinkSync(claimPath);
+        fs.rmdirSync(claimDirectory);
       }
     },
   };

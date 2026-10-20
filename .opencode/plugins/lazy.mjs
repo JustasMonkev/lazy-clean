@@ -13,6 +13,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { setTimeout } from 'timers/promises';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -44,11 +45,15 @@ export default async ({ client } = {}) => {
 
   const injected = new WeakMap();
   const lazySkillsDir = path.resolve(__dirname, '../../skills');
-  const sessionState = (sessionID) => {
+  const sessionState = async (sessionID) => {
     const state = modeState(stateDir, sessionID);
     try {
-      state.migrateLegacyMode();
-      return state;
+      for (let attempt = 0; attempt < 100; attempt += 1) {
+        if (state.migrateLegacyMode() !== false) return state;
+        await setTimeout(10);
+      }
+      log('error', 'lazy: legacy migration is still busy; retry this command or turn');
+      return null;
     } catch (e) {
       log('error', 'lazy: could not migrate the legacy session level (' + e.message + ')');
       return null;
@@ -80,7 +85,7 @@ export default async ({ client } = {}) => {
 
     // Append the ruleset to the system prompt every turn.
     'experimental.chat.system.transform': async (input, output) => {
-      const state = sessionState(input && input.sessionID);
+      const state = await sessionState(input && input.sessionID);
       if (!state) return;
       const mode = readMode(state);
       if (state.scoped && !normalizeMode(state.readMode())) {
@@ -100,7 +105,7 @@ export default async ({ client } = {}) => {
 
     'command.execute.before': async (input) => {
       if (!input || input.command !== 'lazy') return;
-      const state = sessionState(input.sessionID);
+      const state = await sessionState(input.sessionID);
       if (!state) return;
       const args = String(input.arguments || '').trim().split(/\s+/).filter(Boolean);
 
