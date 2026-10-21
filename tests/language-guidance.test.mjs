@@ -35,8 +35,7 @@ ok("Codex starter prompts are unique", new Set(starterPrompts).size === starterP
 
 const LANGUAGES = ["TypeScript", "JavaScript", "Java", "Python", "Ruby", "Rust", "Go"];
 const RULES_FILES = ["AGENTS.md", ".cursor/rules/lazy-clean.mdc", ".github/copilot-instructions.md"];
-// Verification delegates execution to its skill; it does not give coding advice.
-const OPENCODE_ONE_SHOTS = new Set(["lazy-debt.md", "lazy-gain.md", "lazy-help.md", "lazy-verify.md"]);
+const OPENCODE_ONE_SHOTS = new Set(["lazy-debt.md", "lazy-gain.md", "lazy-help.md", "lazy-verify.md", "lazy-quality-review.md"]);
 const OPENCODE_COMMANDS = fs
   .readdirSync(path.join(ROOT, ".opencode", "command"))
   .filter((file) => /^lazy(?:-.*)?\.md$/u.test(file) && !OPENCODE_ONE_SHOTS.has(file))

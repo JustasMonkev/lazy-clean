@@ -1,12 +1,12 @@
 ---
 name: lazy-clean
-description: The lazy ladder while writing, then the slop-check checker, on one change. Use for "lazy-clean" or code that must be both minimal and slop-free; use lazy or slop-check for one pass.
+description: The lazy ladder while writing, then slop-check and scoped test-quality review on one change. Use for "lazy-clean" or code that must be both minimal and slop-free; use lazy or slop-check for one pass.
 ---
 
 # lazy-clean
 
-Two passes over one change: build the minimum complete result, then cut slop
-from the task-owned diff.
+Build the minimum complete result, then cut slop from the task-owned diff and
+review the value of tests added or changed by the task.
 
 ## 1. While writing — the lazy ladder
 
@@ -58,10 +58,20 @@ Before finishing a Python change, read and apply [Python checks](../lazy/referen
 List the changed behavior, its edge cases, and its failure modes, and cover each
 one. Use the repo's existing test tools. Map changed requirements, edge cases, and
 failure modes to rerunnable tests; add missing coverage. Inline probes alone are not coverage. Trivial edits need no new tests. Keep tests that can catch a real
-regression; drop tautologies and mock-call checks that only repeat setup. When
+regression; drop tautologies and mock-call checks that only repeat setup, not
+checks of real forwarding or interaction contracts. When
 existing red-green checks already prove the risky regression, mutation work is
 optional; otherwise a small meaningful mutation check can confirm the test
 earns its place. Never add a dependency for it.
+
+When the task adds or changes tests, follow
+[lazy-quality-review](../lazy-quality-review/SKILL.md) before finishing, with an
+explicit scope of those task-owned tests and their base revision or starting
+state. It coordinates an independent reviewer, fresh-context tests-only fixes
+within existing edit authorization, and an independent judge of actual changes.
+Run this at task completion, not after every edit; do not turn a scoped change
+into a whole-suite audit. Review-only requests remain report-only. If delegation
+is unavailable, return the handoff and report the unfinished stage as unverified.
 
 ## When the manual run is needed
 

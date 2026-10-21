@@ -695,8 +695,7 @@ eq("/lazy <typo> no longer deactivates when the default is off", r.flag, "ultra"
 r = track({ prompt: "/lazy UTRA" }, { flag: "ultra", config: null });
 eq("/lazy <TYPO> is echoed lowercased", r.stdout, 'LAZY: unknown level "utra" — use lite|full|ultra|off.');
 
-// Other lazy-* skills own their own dispatch: the tracker stays out of the way.
-for (const other of ["/lazy-help", "/lazy-audit", "/lazy-clean", "/layz-test", "/lazyfoo bar"]) {
+for (const other of ["/lazy-help", "/lazy-audit", "/lazy-clean", "/lazy-quality-review", "/layz-test", "/lazyfoo bar"]) {
   r = track({ prompt: other }, { flag: "ultra" });
   eq(`${other} is left to its own skill`, [r.status, r.stdout, r.flag], [0, "", "ultra"]);
 }
@@ -1525,8 +1524,6 @@ ok("a failed default write keeps the level the user already had",
     res.stdout.includes("no-any"), res.stdout.slice(0, 200) || "<no output>");
 }
 
-// OpenCode sends a registered template to the model verbatim, so `<skills-dir>`
-// links must be expanded at registration into files that actually exist.
 {
   const probe = spawnSync(process.execPath, ["--input-type=module", "-e", `
     import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, ".opencode", "plugins", "lazy.mjs")).href)};
@@ -1537,11 +1534,13 @@ ok("a failed default write keeps the level the user already had",
   `], { encoding: "utf8", env: baseEnv(freshHome("opencode-skills-dir").env), timeout: 20000 });
   const commands = probe.status === 0 ? JSON.parse(probe.stdout.trim()) : {};
   const skillsDir = path.join(ROOT, "skills");
-  const testCommand = commands["layz-test"];
-  const testSkill = path.join(skillsDir, "layz-test", "SKILL.md");
-  ok("OpenCode /layz-test resolves its installed skill",
-    testCommand?.template.includes(testSkill) && !testCommand.template.includes("<skills-dir>") && fs.existsSync(testSkill));
-  ok("OpenCode /layz-test preserves arguments for the model", testCommand?.template.includes("$ARGUMENTS"));
+  for (const name of ["layz-test", "lazy-quality-review"]) {
+    const command = commands[name];
+    const skill = path.join(skillsDir, name, "SKILL.md");
+    ok(`OpenCode /${name} resolves its installed skill`,
+      command?.template.includes(skill) && !command.template.includes("<skills-dir>") && fs.existsSync(skill));
+    ok(`OpenCode /${name} preserves arguments for the model`, command?.template.includes("$ARGUMENTS"));
+  }
   for (const name of ["lazy", "lazy-review", "lazy-audit"]) {
     const template = commands[name]?.template || "";
     ok(`OpenCode /${name} resolves <skills-dir>`, template && !template.includes("<skills-dir>"), probe.stderr.slice(0, 200));
