@@ -143,6 +143,27 @@ production code to make strengthened tests pass; exposed product bugs are
 reported separately with their failing reproducer. No fixer starts automatically
 for a review-only request.
 
+## Review, fix, and judge with lazy-quality-review
+
+Use [lazy-quality-review](skills/lazy-quality-review/SKILL.md) for the coordinated
+test-cleanup workflow: independent reviewer → fresh-context tests-only fixer →
+independent change judge. It reuses `test-quality-review` and its fixer contract;
+the existing report-only skill and commands remain available.
+
+Invoke `/lazy-quality-review <scope>` in OpenCode or a skills-only Claude Code
+install, `/lazy-clean:lazy-quality-review <scope>` in the Claude Code plugin, or
+`$lazy-quality-review <scope>` in Codex CLI. Codex also lists Lazy Quality Review
+in its skill picker. Both plugins discover the bundled skill directory.
+
+`lazy-clean` now routes tests added or changed by the current task through this
+workflow before finishing, with an explicit task scope and base. It is not an
+edit hook or a whole-suite audit on every change. Standalone use without a
+narrower scope reviews the whole suite. Review-only requests stop at the report;
+authorized fixes preserve useful coverage, change only tests, and explain every
+deletion or consolidation. The judge inspects actual before/after tests and check
+evidence, not just test counts or another agent's verdict. Without clean-context
+delegation, return the next-stage handoff and mark that stage unverified.
+
 ## Install — skills only
 
 No npm packages or plugin needed. Install with GitHub CLI to keep source metadata
@@ -161,10 +182,10 @@ Check and apply updates to that installation:
 ```sh
 gh skill update --dir ~/.claude/skills --dry-run \
   layz-test lazy lazy-audit lazy-clean lazy-debt lazy-gain lazy-help \
-  lazy-review lazy-verify slop-check test-quality-review
+  lazy-review lazy-quality-review lazy-verify slop-check test-quality-review
 gh skill update --dir ~/.claude/skills \
   layz-test lazy lazy-audit lazy-clean lazy-debt lazy-gain lazy-help \
-  lazy-review lazy-verify slop-check test-quality-review
+  lazy-review lazy-quality-review lazy-verify slop-check test-quality-review
 ```
 
 For user-scope Codex skills, use `--dir ~/.agents/skills`. For project-scope
@@ -188,7 +209,7 @@ Without GitHub CLI, manual copying still works, but does not enable
 cp -R /path/to/lazy-clean/skills/* ~/.claude/skills/
 ```
 
-That gives you all 11 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-verify`, `layz-test`, `test-quality-review`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
+That gives you all 12 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-quality-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-verify`, `layz-test`, `test-quality-review`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
 
 What you DON'T get in skills-only mode: the automatic parts (ruleset injected every session, checker auto-run after every edit). Those need the hooks — install as a plugin for that:
 
@@ -290,7 +311,7 @@ Existing justified `slop-check-ignore` directives remain supported for compatibi
 
 An existing ignore with no reason after `--`, an unknown rule ID, or a file-level directive below line 10 suppresses nothing and is reported as `no-unjustified-ignore`. The run summary counts suppressions; a clean result with suppressions is not evidence that the ignored code was checked.
 
-Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `slop-check`, `lazy-clean` (the main workflow), `lazy-verify`, `layz-test`, `test-quality-review`.
+Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `lazy-quality-review`, `slop-check`, `lazy-clean` (the main workflow), `lazy-verify`, `layz-test`, `test-quality-review`.
 
 ## Intensity
 

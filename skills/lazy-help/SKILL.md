@@ -26,14 +26,15 @@ Persists until changed/session end. "Stop lazy", "normal mode", `/lazy off`: off
 | lazy-debt | `/lazy-debt` | `lazy:` comments → debt ledger. |
 | lazy-gain | `/lazy-gain` | Recorded evidence, not project savings. |
 | lazy-help | `/lazy-help` | This card. |
-| lazy-clean | `/lazy-clean` | Write with ladder, then check. |
+| lazy-clean | `/lazy-clean` | Write with ladder, check slop, review changed tests. |
+| lazy-quality-review | `/lazy-quality-review` | Independent test reviewer → authorized fresh-context tests-only fixer → change judge; mode-independent. |
 | slop-check | `/slop-check` | TS/JS checker + manual checklist. |
 | lazy-verify | `/lazy-verify` | Experimental opt-in fix/preserve evidence; requires reviewed local engine/policy; mode-independent. |
 | **layz-test** | `/layz-test` | Run tests, fill gaps, explain manual checks. |
 | test-quality-review | `/test-quality-review` | Whole-suite test-value audit; report-only, fresh-context tests-only fixer when requested; mode-independent. |
 
-Codex: `@lazy`, `@lazy-review`, `@lazy-help`, `@layz-test`, `@test-quality-review`. Claude Code: slash
-forms. OpenCode: seven `/lazy*` commands + `/layz-test` + `/test-quality-review`; `lazy-clean`/`slop-check`
+Codex: `@lazy`, `@lazy-review`, `@lazy-quality-review`, `@lazy-help`, `@layz-test`, `@test-quality-review`. Claude Code: slash
+forms. OpenCode: eight `/lazy*` commands + `/layz-test` + `/test-quality-review`; `lazy-clean`/`slop-check`
 are name/description-invoked skills.
 
 For test-quality-review, Codex CLI also supports `$test-quality-review`; select
@@ -41,6 +42,12 @@ Test Quality Review in Codex's skill picker. Claude plugin installs use
 `/lazy-clean:test-quality-review`; skills-only installs use `/test-quality-review`.
 All hosts share the same instructions. Without clean-context delegation, pass
 the report and fixer instructions to a new session instead of editing as reviewer.
+
+Use `$lazy-quality-review` in Codex CLI or select Lazy Quality Review in the skill
+picker for the coordinated workflow. Claude plugin installs use
+`/lazy-clean:lazy-quality-review`; skills-only installs use `/lazy-quality-review`.
+`lazy-clean` invokes it for task-owned added/changed tests at completion. It does
+not turn report-only requests into edit permission or run after every edit.
 
 Test-quality findings explain the defect a check can miss and recommend keeping,
 strengthening, replacing, or removing it. Mocks, snapshots, and shape assertions

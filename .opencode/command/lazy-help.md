@@ -12,6 +12,11 @@ Mocks, snapshots, and shape assertions are not inherently wrong. It is a
 whole-suite review by default, independent of lazy mode. This agent reports only;
 requested fixes use a fresh-context, tests-only agent that explains every deletion.
 
+Also show `/lazy-quality-review`: coordinate an independent test-quality reviewer,
+an authorized fresh-context tests-only fixer, and an independent change judge.
+It is one-shot and mode-independent; review-only requests remain report-only.
+`lazy-clean` uses it for tests added or changed by the current task at completion.
+
 Also show `/lazy-verify`: experimental, explicitly opt-in fix/preserve evidence
 through a separately reviewed local engine and policy. It is not a lazy level,
 does not change persisted mode, and never runs automatically.

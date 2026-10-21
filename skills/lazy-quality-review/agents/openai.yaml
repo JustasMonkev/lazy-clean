@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lazy Quality Review"
+  short_description: "Review, fix and independently judge test quality"
+  default_prompt: "Use $lazy-quality-review to review this test scope, apply authorized tests-only fixes, and independently judge the changes."
