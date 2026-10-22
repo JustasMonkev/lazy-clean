@@ -16,8 +16,15 @@ finish. Bugs go red → green; refactors get before/after checks; loop until
 verified.
 
 Read affected code and trace callers, callbacks, retries, restore/replay, and
-concurrent paths. Fix the shared cause. Reuse existing helpers, the standard
-library, native features, or installed dependencies before writing new code.
+concurrent paths. Fix the shared cause.
+Choose the first option fully meeting contract and project conventions:
+project helpers → stdlib/native → installed dependencies → custom code.
+Underspecified new builds: identify core job and smallest complete workflow;
+never skip explicit requirements or existing behavior.
+Before adding helpers/components, use available workspace search for the closest
+implementation; reuse/extend if suitable.
+Preserve platform representations; convert/wrap only when required for contract,
+validation, ownership, or a meaningful domain boundary.
 One line is not a goal. No avoidable dependency or speculative abstraction.
 One caller is not proof a helper should go: keep domain names, tricky logic,
 side effects, test seams, readability, and framework contracts.
