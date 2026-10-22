@@ -11,7 +11,9 @@ export const tasks = [
     check: `const {encodeQuery} = require('./query.cjs');
 const pairs = Object.freeze([Object.freeze(['tag', 'a b']), Object.freeze(['tag', 'a+b']), Object.freeze(['', '']), Object.freeze(['x&=', '/~'])]);
 assert.equal(encodeQuery(pairs), 'tag=a+b&tag=a%2Bb&=&x%26%3D=%2F%7E');
-assert.equal(encodeQuery([['city', 'Vilnius ☕'], ['*.-_', '*.-_']]), 'city=Vilnius+%E2%98%95&*.-_=*.-_');
+const mutablePairs = [['city', 'Vilnius ☕'], ['*.-_', '*.-_']];
+assert.equal(encodeQuery(mutablePairs), 'city=Vilnius+%E2%98%95&*.-_=*.-_');
+assert.deepEqual(mutablePairs, [['city', 'Vilnius ☕'], ['*.-_', '*.-_']]);
 assert.equal(encodeQuery([['é', '雪'], ['tag', ''], ['tag', 'last']]), '%C3%A9=%E9%9B%AA&tag=&tag=last');
 assert.equal(encodeQuery([]), '');`,
     design: 'Record native URLSearchParams delegation versus a custom encoder as a descriptive choice. Correct alternative implementations pass; syntax is not a behavior requirement.',
@@ -60,7 +62,17 @@ const empty = Object.freeze([]);
 assert.deepEqual(tags(empty), []); assert.notEqual(tags(empty), empty);
 const unique = Object.freeze(['one']);
 const result = tags(unique); assert.deepEqual(result, ['one']); assert.notEqual(result, unique);
-result.push('two'); assert.deepEqual(unique, ['one']);`,
+result.push('two'); assert.deepEqual(unique, ['one']);
+const mutableLabels = ['z', '', 'A', 'z', 'a', '', 'A'];
+const first = tags(mutableLabels);
+const second = tags(mutableLabels);
+assert.deepEqual(first, ['z', '', 'A', 'a']);
+assert.deepEqual(second, ['z', '', 'A', 'a']);
+assert.notEqual(first, second);
+first.push('new');
+assert.deepEqual(second, ['z', '', 'A', 'a']);
+assert.deepEqual(tags(mutableLabels), ['z', '', 'A', 'a']);
+assert.deepEqual(mutableLabels, ['z', '', 'A', 'z', 'a', '', 'A']);`,
     design: 'Leaving production source unchanged is a valid result. Record unchanged, justified simplification, or unnecessary churn separately from behavior; never require an edit or award size gains for deleting behavior.',
   },
 ];

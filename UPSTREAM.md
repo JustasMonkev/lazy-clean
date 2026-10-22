@@ -93,7 +93,7 @@ simplification and boundary checks were applied. The task-base slop scan
 reported one existing `isMainModule` catch-to-false fallback after comment
 removal. It is retained intentionally: an import with a non-file entry point
 must not invoke the CLI, as exercised by the runner tests. Both new JS files
-scanned clean. The new checks cover five baseline verdicts, passing references, eleven broken variants,
+scanned clean. The new checks cover five baseline verdicts, passing references, fourteen broken variants,
 and unchanged passing output through both off/on arms without model calls.
 Node 18 execution and actual model comparisons remain unrun.
 

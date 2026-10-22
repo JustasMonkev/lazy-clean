@@ -17,6 +17,7 @@ const mutations = {
     'exports.encodeQuery = pairs => new URLSearchParams(Object.fromEntries(pairs)).toString();',
     'exports.encodeQuery = pairs => pairs.map(pair => pair.map(encodeURIComponent).join("=")).join("&");',
     'exports.encodeQuery = pairs => new URLSearchParams(pairs.sort()).toString();',
+    "exports.encodeQuery = pairs => {const result = new URLSearchParams(pairs).toString(); if (pairs.length) pairs[0][0] = 'changed'; return result;};",
   ],
   'existing-component': [
     fixes['existing-component'][1].replace('exports.renderStatus = badge;', "exports.renderStatus = (label, tone) => badge(label || 'unknown', tone || 'neutral');"),
@@ -29,6 +30,8 @@ const mutations = {
     'exports.tags = labels => [...new Set(labels)].filter(Boolean);',
     'exports.tags = labels => [...new Set(labels)].sort();',
     'exports.tags = labels => labels;',
+    'exports.tags = labels => {const seen = new Set(); let index = 0; for (const label of labels) {if (!seen.has(label)) {seen.add(label); labels[index++] = label;}} return [...seen];};',
+    'const cache = new WeakMap(); exports.tags = labels => {if (!cache.has(labels)) cache.set(labels, [...new Set(labels)]); return cache.get(labels);};',
   ],
 };
 
@@ -69,7 +72,7 @@ try {
   assert.match(on, /LAZY MODE ACTIVE/u);
   assert.doesNotMatch(off, /LAZY MODE ACTIVE/u);
   for (const prompt of [on, off]) assert.equal(prompt.includes(tasks.at(-1).design), false, 'manual rubric leaked');
-  console.log('implementation benchmarks: five baselines, reference fixes, eleven bad variants, selection, and no-change reporting passed');
+  console.log('implementation benchmarks: five baselines, reference fixes, fourteen bad variants, selection, and no-change reporting passed');
 } finally {
   rmSync(root, {recursive: true, force: true});
 }

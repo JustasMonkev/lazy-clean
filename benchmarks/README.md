@@ -155,7 +155,7 @@ correct alternative implementations: a handwritten encoder can pass while
 still missing the native-reuse objective. Do not combine these judgments into
 one automatic score or reward a change merely for being an edit.
 
-`npm test` validates the initial fixtures, reference fixes, eleven deliberately
+`npm test` validates the initial fixtures, reference fixes, fourteen deliberately
 broken variants, and a fake-client no-change run. These are grader/harness
 checks, **not model-performance results**. Keep graders, references, and mutants
 fixed before collecting worker outcomes. Do not tune them against a particular
