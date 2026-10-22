@@ -134,3 +134,81 @@ contract-breaking mutations, and selection of the SOLID set without AI calls.
 The runner compares rules off/on. The [recorded Luna experiment](solid-guidance.md)
 compares the existing and revised rules using fresh subagents; it is a separate
 protocol, with shared host instructions and six tasks per agent.
+
+## Implementation-choice task set
+
+Set `"taskSet": "implementation"` in the same config. The default core/off-on
+protocol is unchanged. This set makes 30 calls at three trials:
+
+| Task | Behavior checked | Separate manual implementation observation |
+| --- | --- | --- |
+| query-pairs | Ordered duplicate keys, empty fields, form encoding, UTF-8, immutable input | Native API reuse or custom encoder |
+| existing-component | Escaping in text/attributes, explicit empty values, conversion errors, existing preview and component exports | Existing component reuse or duplicate rendering |
+| shared-cause (existing core task) | Button and restore normalization | Shared helper or caller-specific repair |
+| trust-boundary (existing core task) | Parsed numeric values without coercion | Preserved validation or unsafe shortening |
+| already-minimal | Fresh output, first-seen order, case-sensitive deduplication, empty strings | Unchanged, justified edit, or unnecessary churn |
+
+The first, second, and last tasks are new; the middle two reuse frozen core
+contracts rather than duplicate them. `implementation-tasks.mjs` holds the
+manual `design` rubrics outside worker prompts. Behavioral grading accepts
+correct alternative implementations: a handwritten encoder can pass while
+still missing the native-reuse objective. Do not combine these judgments into
+one automatic score or reward a change merely for being an edit.
+
+`npm test` validates the initial fixtures, reference fixes, eleven deliberately
+broken variants, and a fake-client no-change run. These are grader/harness
+checks, **not model-performance results**. Keep graders, references, and mutants
+fixed before collecting worker outcomes. Do not tune them against a particular
+arm's answer without declaring an amendment and regrading every arm uniformly.
+The harness rejects installed dependencies, so this set intentionally does not
+simulate an installed-package workload or relax that boundary. Real UI/browser
+behavior and dependency integration remain outside these small Node fixtures.
+
+### Reproduce current-versus-candidate rules
+
+Use two clean, detached worktrees with the **same harness revision and config**.
+Only substitute the compact rules producer, its skill/references, and checker.
+The benchmark measures this delivery path, not changes confined to unrelated
+skills or host hooks. Replace the three revision values below with immutable
+commits available in this repository, and create the config as above with
+`"taskSet": "implementation"`. Use an absolute agent executable path if needed.
+
+```bash
+HARNESS_REV=COMMIT_WITH_THIS_TASK_SET
+CURRENT_RULES=IMMUTABLE_CURRENT_COMMIT
+CANDIDATE_RULES=IMMUTABLE_CANDIDATE_COMMIT
+EVAL_ROOT=$(mktemp -d /tmp/lazy-choice.XXXXXX)
+git worktree add --detach "$EVAL_ROOT/current" "$HARNESS_REV"
+git worktree add --detach "$EVAL_ROOT/candidate" "$HARNESS_REV"
+git -C "$EVAL_ROOT/current" restore --source="$CURRENT_RULES" --worktree -- hooks/lazy-instructions.js skills/lazy skills/slop-check
+git -C "$EVAL_ROOT/candidate" restore --source="$CANDIDATE_RULES" --worktree -- hooks/lazy-instructions.js skills/lazy skills/slop-check
+git rev-parse "$HARNESS_REV" "$CURRENT_RULES" "$CANDIDATE_RULES" > "$EVAL_ROOT/revisions.txt"
+git -C "$EVAL_ROOT/current" diff --binary > "$EVAL_ROOT/current-rules.patch"
+git -C "$EVAL_ROOT/candidate" diff --binary > "$EVAL_ROOT/candidate-rules.patch"
+cp /tmp/lazy-eval-config.json "$EVAL_ROOT/config.json"
+node "$EVAL_ROOT/current/benchmarks/run.mjs" "$EVAL_ROOT/config.json" "$EVAL_ROOT/current-results"
+node "$EVAL_ROOT/candidate/benchmarks/run.mjs" "$EVAL_ROOT/config.json" "$EVAL_ROOT/candidate-results"
+```
+
+Both reports identify the harness commit; `dirty` records substituted rule files,
+not a candidate rule SHA. Retain `revisions.txt`, both patches, the config,
+prompts, grader output, and workspaces together to identify the actual inputs.
+Check that these old/new paths exist at both revisions before substitution.
+Disable global instructions/plugins identically and inspect denied calls and
+prompt leakage. Run current/candidate in reversed order in a second experiment
+with new output directories if making an order-sensitive claim; within each
+experiment the runner still counterbalances off/on task pairs.
+
+Compare **on** rows by task and trial across the two reports; keep each run's
+**off** rows as controls, not extra candidate observations. Compare size, cost,
+and time only where both on rows passed and reported model evidence matches.
+Report pass denominators and failures first, then descriptive reuse/no-change
+observations from retained diffs, including justified boundaries. Do not infer
+reuse from byte counts alone.
+
+The existing `sourceBytesBefore/After` counters include all `.js`, `.cjs`, and
+`.mjs` files, **including tests**; they are aggregate JavaScript bytes, not
+production-only size. For a source/test comparison, classify retained files
+manually and report production and test bytes separately with the classification;
+do not subtract guessed test sizes or label the aggregate as production savings.
+No model trials or savings are claimed by adding this task set.

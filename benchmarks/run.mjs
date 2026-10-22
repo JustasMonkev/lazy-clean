@@ -7,6 +7,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tasks as coreTasks } from './tasks.mjs';
 import { tasks as solidTasks } from './solid-tasks.mjs';
+import { tasks as implementationTasks } from './implementation-tasks.mjs';
 
 const require = createRequire(import.meta.url);
 const { getLazyInstructions } = require('../hooks/lazy-instructions.js');
@@ -52,7 +53,6 @@ process.stdout.write(${JSON.stringify(complete)});`], cwd, '', 10000);
     error: result.error || (result.status === 0 && !completed ? 'incomplete grader' : null) };
 }
 
-// No shell interpolation. Kill the process tree on timeout or output overflow.
 export function runAgent(command, cwd, prompt, timeoutMs) {
   return new Promise((done) => {
     const child = spawn(command[0], command.slice(1), { cwd, detached: process.platform !== 'win32', stdio: 'pipe' });
@@ -71,7 +71,6 @@ export function runAgent(command, cwd, prompt, timeoutMs) {
           try { process.kill(-child.pid, 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') child.kill('SIGKILL'); }
         }
       }
-      // Descendants outside the process group must not hold our pipes forever.
       killTimer = setTimeout(() => { child.stdout.destroy(); child.stderr.destroy(); }, 1000);
     };
     const interrupt = () => stop('interrupted');
@@ -145,13 +144,12 @@ export async function main(args) {
   const { command, model, trials = 3, timeoutMs = 180000, mode = 'full', taskSet = 'core' } = config;
   if (!Array.isArray(command) || !command.length || command.some(x => typeof x !== 'string' || x.includes('\0')) || !command[0]
     || typeof model !== 'string' || !model.trim() || !Number.isInteger(trials) || trials < 1 || trials > 10
-    || !Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 600000 || !['lite', 'full', 'ultra'].includes(mode) || !['core', 'solid'].includes(taskSet)) {
+    || !Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 600000 || !['lite', 'full', 'ultra'].includes(mode) || !['core', 'solid', 'implementation'].includes(taskSet)) {
     throw new Error('invalid command, model, trials (1–10), timeoutMs (100–600000), mode, or taskSet');
   }
-  const tasks = taskSet === 'solid' ? solidTasks : coreTasks;
+  const tasks = {core: coreTasks, solid: solidTasks, implementation: implementationTasks}[taskSet];
   const selected = args[2] ? tasks.filter(task => task.id === args[2]) : tasks;
   if (!selected.length) throw new Error('unknown task id');
-  // Refuse to overwrite prior evidence. Workspaces are retained for inspection.
   const output = args[1] ? resolve(args[1]) : mkdtempSync(join(tmpdir(), 'lazy-eval-'));
   if (args[1]) mkdirSync(output);
   const report = { schema: 1, created: new Date().toISOString(), commit: git(root, ['rev-parse', 'HEAD']).trim(),
@@ -160,7 +158,6 @@ export async function main(args) {
   save();
   for (const [taskIndex, task] of selected.entries()) {
     for (let trial = 1; trial <= trials; trial++) {
-      // Counterbalance across tasks as well as trials, including odd trial counts.
       for (const arm of (trial + taskIndex) % 2 ? ['off', 'on'] : ['on', 'off']) {
         const dir = join(output, `${task.id}-${trial}-${arm}`);
         const cwd = join(dir, 'work');
@@ -195,7 +192,7 @@ function isMainModule() {
   try {
     return import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
   } catch {
-    return false; // Programmatic entry points need not name a file.
+    return false;
   }
 }
 

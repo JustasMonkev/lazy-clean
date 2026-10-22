@@ -65,6 +65,38 @@ Validated on Node.js v24.19.0 on 2026-09-12:
 - Skill metadata validation and whitespace checks passed. No dependency or
   runtime-version requirement changed; Node 18 execution is left to CI.
 
+## Implementation-choice benchmark adaptation (2026-10-22)
+
+Reviewed Ponytail at
+[`09c434ab73ca43761c5d8b0c5d341926c2fba710`](https://github.com/DietrichGebert/ponytail/commit/09c434ab73ca43761c5d8b0c5d341926c2fba710),
+including its [agentic evaluation report](https://github.com/DietrichGebert/ponytail/blob/09c434ab73ca43761c5d8b0c5d341926c2fba710/benchmarks/results/2026-10-07-agentic.md)
+and existing-component reuse example in the README. No pristine upstream base
+was established; this is a local adaptation of the implementation-choice
+question, not a copied benchmark, full synchronization, or baseline advance.
+
+- Added three local workloads in `benchmarks/implementation-tasks.mjs` for
+  native query encoding, existing component reuse, and already-minimal code;
+  reused core shared-caller and parsed-boundary tasks in the same optional set.
+- Extended only task-set selection in `benchmarks/run.mjs`, retaining the
+  default core off/on protocol and dependency-free Node >=18 harness. Added
+  reference/bad-variant checks and a reproducible same-harness, two-run rules
+  comparison recipe in `benchmarks/README.md`.
+- Runtime correctness and manual reuse/design judgments remain separate.
+  Existing aggregate JavaScript byte metrics still include tests; documentation
+  requires separate source/test classification before production-size claims.
+- Deferred installed-package and real browser workloads because the existing
+  fixtures prohibit installed dependencies. No upstream model results, new
+  benchmark runner, telemetry, dependency, or model-performance claim adopted.
+
+Checks: `npm test` and `git diff --check` passed on Node v26.5.0; TS/JS
+simplification and boundary checks were applied. The task-base slop scan
+reported one existing `isMainModule` catch-to-false fallback after comment
+removal. It is retained intentionally: an import with a non-file entry point
+must not invoke the CLI, as exercised by the runner tests. Both new JS files
+scanned clean. The new checks cover five baseline verdicts, passing references, eleven broken variants,
+and unchanged passing output through both off/on arms without model calls.
+Node 18 execution and actual model comparisons remain unrun.
+
 ## Local optional verification integration
 
 The experimental `lazy-verify` bridge, skill, command, protocol fixtures and
