@@ -74,6 +74,31 @@ upstream revisions above. Real-engine qualification, preservation and reviewed
 historical-fix pilots, and independent replay remain outstanding; protocol
 fixtures do not qualify a release.
 
+## Implementation-elimination examples (2026-10-22)
+
+Partially adapted from [Ponytail](https://github.com/DietrichGebert/ponytail) at
+[`09c434ab73ca43761c5d8b0c5d341926c2fba710`](https://github.com/DietrichGebert/ponytail/commit/09c434ab73ca43761c5d8b0c5d341926c2fba710):
+the README's house `Input` plus native date example, and
+`examples/url-params.md` / `examples/number-formatting.md` illustrate replacing
+whole implementations with existing capabilities.
+
+`skills/lazy/references/implementation-elimination.md`, linked from the existing
+TS/JS simplification reference, adapts only that teaching approach. Unlike the
+upstream examples, it conditions reuse on actual component APIs, supported
+platforms, query encoding/duplicate/error contracts, and money-formatting policy.
+It makes no universal accessibility, locale-support, dependency-removal, or
+performance claims. No runtime, dependency, mandatory pass, or core skill rule
+changed. The pristine upstream merge base remains unknown; this partial port
+does not advance any baseline. Other upstream examples remain outside this port.
+
+Validation: Node.js v26.5.0 probes checked duplicate/empty/missing query values,
+plus and percent encoding, malformed-escape tolerance, and explicit USD display
+including rounding and negative zero. `npm test` (including the existing
+language-guidance/link checks) and `git diff --check` passed. The changed-file
+slop scan reported no coverage because this port changes only Markdown.
+No browser/component integration was executed;
+the JSX is conditional guidance, not a verified house-component implementation.
+
 ## Attribution
 
 Ponytail: Copyright (c) 2026 DietrichGebert.
