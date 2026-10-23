@@ -10,9 +10,9 @@ review the value of tests added or changed by the task.
 
 ## 1. While writing — the lazy ladder
 
-Follow `<skills-dir>/lazy/SKILL.md` as written: think first, climb the ladder
-(YAGNI → reuse → stdlib → platform → installed dep → clear minimum code), and
-verify the goal before shipping. Do not restate the rules here; read that file.
+Follow `<skills-dir>/lazy/SKILL.md` as written: think first, use its first-fit
+ladder (project helpers → stdlib/native → installed dependencies → custom code),
+and verify the complete contract before shipping. Do not restate the rules here; read that file.
 
 If your context contains the full injected ruleset, apply it without rereading. A `LAZY MODE ACTIVE` header alone, a skill description, or a compacted summary is not the ruleset: read that file when the body is missing. Carry unfinished checks through handoffs and compaction. Intensity is `/lazy lite|full|ultra`.
 

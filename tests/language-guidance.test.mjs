@@ -172,7 +172,19 @@ const SCANNER_SCOPE_CONTRACT = [
 for (const file of BUILD_SURFACES)
   for (const [description, pattern] of SCANNER_SCOPE_CONTRACT)
     ok(`${file} ${description}`, pattern.test(flat(read(file))));
+const FIRST_FIT_CONTRACT = [
+  ["chooses the first complete, conventional option", /first option fully meeting (?:the )?contract and project conventions/iu],
+  ["orders project reuse before platform, dependencies, and custom code", /project helpers → stdlib\/native → installed dependencies → custom code/iu],
+  ["bounds only underspecified new builds to a complete core workflow", /underspecified new builds: identify core job and smallest complete workflow; never skip explicit requirements or existing behavior/iu],
+  ["searches before adding helpers or components", /before adding helpers\/components, use available workspace search for the closest implementation; reuse\/extend if suitable/iu],
+  ["retains platform values with contract and boundary exceptions", /preserve platform representations; convert\/wrap only when required for contract, validation, ownership, or a meaningful domain boundary/iu],
+];
+for (const file of ["skills/lazy/SKILL.md", ...RULES_FILES, ".opencode/command/lazy.md"])
+  for (const [description, pattern] of FIRST_FIT_CONTRACT)
+    ok(`${file} ${description}`, pattern.test(flat(read(file))));
+
 const DELIVERY_CONTRACT = [
+  ...FIRST_FIT_CONTRACT,
   ...SCANNER_SCOPE_CONTRACT,
   ...COMPLETION_CONTRACT,
   ...COMMENT_CONTRACT,
@@ -227,7 +239,7 @@ try {
         const raw = damagedInstructions[builder](mode);
         const surface = `${builder}(${mode}) with ${skillState} SKILL.md`;
         ok(`${surface} uses the fallback`, raw === damagedInstructions.getFallbackInstructions(mode));
-        for (const [description, pattern] of [...SCANNER_SCOPE_CONTRACT, ...COMPLETION_CONTRACT])
+        for (const [description, pattern] of [...FIRST_FIT_CONTRACT, ...SCANNER_SCOPE_CONTRACT, ...COMPLETION_CONTRACT])
           ok(`${surface} ${description}`, pattern.test(flat(raw)));
         ok(`${surface} stays below 700 words`, raw.split(/\s+/u).length < 700);
       }
