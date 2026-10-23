@@ -6,6 +6,10 @@ not a requirement for Java, Python, Ruby, Rust, or Go; apply the same reasoning
 in the language being changed. Python changes have their own
 [Python checks](python-checks.md).
 
+For examples of removing a custom implementation through reuse, see
+[implementation elimination](implementation-elimination.md); these are
+contract-aware illustrations of the existing ladder, not another review pass.
+
 ## Check the TypeScript version and tsconfig
 
 Read the `typescript` version from the lockfile,
