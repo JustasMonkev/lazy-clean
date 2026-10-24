@@ -30,7 +30,7 @@ Persists until changed/session end. "Stop lazy", "normal mode", `/lazy off`: off
 | lazy-quality-review | `/lazy-quality-review` | Independent test reviewer → authorized fresh-context tests-only fixer → change judge; mode-independent. |
 | slop-check | `/slop-check` | TS/JS checker + manual checklist. |
 | lazy-verify | `/lazy-verify` | Experimental opt-in fix/preserve evidence; requires reviewed local engine/policy; mode-independent. |
-| lazy-mutation | `/lazy-mutation` | Targeted behavioral fault challenge; baseline, mutant, restoration evidence. |
+| lazy-mutation | `/lazy-mutation` | Fresh-context mutation worker; handoff under 400 words; baseline, mutant, restoration evidence. |
 | **layz-test** | `/layz-test` | Run tests, fill gaps, explain manual checks. |
 | test-quality-review | `/test-quality-review` | Whole-suite test-value audit; report-only, fresh-context tests-only fixer when requested; mode-independent. |
 

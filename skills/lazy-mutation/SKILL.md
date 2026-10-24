@@ -1,6 +1,6 @@
 ---
 name: lazy-mutation
-description: Challenge test effectiveness with targeted production mutations and public-entry-point checks. Use for "lazy mutation", mutation testing, or proving a test catches a specified behavioral fault. Not a general test-suite audit or routine test run.
+description: Delegate targeted production mutations and public-entry-point checks to a fresh-context agent. Use for "lazy mutation", mutation testing, or proving a test catches a specified behavioral fault. Not a general test-suite audit or routine test run.
 ---
 
 # Lazy Mutation
@@ -8,6 +8,40 @@ description: Challenge test effectiveness with targeted production mutations and
 Prove that a test detects a concrete contract violation, not merely that the
 suite runs. This is a scoped, one-shot workflow; it does not change lazy mode,
 hooks, dependencies, or runner policy.
+
+## Delegate with a compact handoff
+
+The calling agent coordinates; a separate fresh-context agent executes the
+challenge. Start a new agent without inherited conversation history (for example,
+`fork_turns: "none"` where supported), not a reused agent or a full-history fork.
+Pass one self-contained handoff of **fewer than 400 words** (at most 399,
+counted as whitespace-separated words). Count the entire task message, including
+paths and appended instructions, before sending it. Keep repository and skill
+instructions in files the worker can read instead of pasting them into the brief.
+
+Include:
+
+- The goal, selected contracts, repository root, and exact source state or diff.
+- What the caller changed or investigated, with useful entry points, test paths,
+  and known commands so the worker can navigate.
+- The absolute path to this skill and relevant repository instructions.
+- Edit authority, exclusions, evidence destination, and completion criteria.
+- An explicit assignment as the mutation worker: execute the sections below
+  directly and do not delegate this skill again.
+
+Navigation hints are leads, not verdicts. Do not pass prior mutation outcomes,
+desired kill counts, or conclusions the worker should independently establish.
+The worker verifies the brief against source and tests. It does not need the
+caller's transcript; shared files and a new agent alone do not imply isolation.
+
+If fresh-context delegation is unavailable, return the counted handoff and mark
+execution blocked; do not silently run it in the caller or claim independence.
+The worker owns its disposable probe and evidence, not the shared checkout.
+
+## Worker: execute the challenge
+
+When explicitly assigned as the mutation worker, do not spawn another agent.
+Follow the remaining procedure and return the evidence to the caller.
 
 ## Select the contract
 
@@ -88,13 +122,21 @@ an expectation merely to kill a mutant or weaken it to obtain a baseline pass.
 
 Keep synthetic faults separate from real defects found on unmodified production.
 Report those with a reproducer; fix production only within the user's task.
-Apply reviewed test changes as ordinary scoped edits, not by copying the probe
-back wholesale. Stop when the selected risks are accounted for; broader testing
-or a deletion campaign belongs to a separate task.
+Return proposed test changes as a scoped patch for caller review; never copy
+the probe back wholesale. Stop when the selected risks are accounted for;
+broader testing or a deletion campaign belongs to a separate task.
 
 Report **contract → fault → test/assertion → baseline/mutant/restored results**,
 the tested source state, exact commands, evidence paths, cleanup outcome, and
 remaining uncertainty. Claim only the behaviors actually challenged.
+
+## Caller: verify and report
+
+Check the worker's returned source state, actual assertion failures, baseline
+and restoration results, and cleanup evidence before accepting its verdict.
+Resolve missing evidence with the worker; do not infer success from its summary.
+Report the handoff word count, fresh-context execution, outcomes, and limits.
+Apply any authorized test changes only after reviewing their scoped diff.
 
 ## Related workflows
 

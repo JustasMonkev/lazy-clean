@@ -114,9 +114,10 @@ runner or dependencies and does not change lazy mode.
 ## Challenging tests with lazy-mutation
 
 Use [lazy-mutation](skills/lazy-mutation/SKILL.md) to prove that a test catches a
-specified behavioral fault through the public entry point. It owns the targeted
-mutation procedure shared by lazy-clean and layz-test; it adds no runner or
-dependency and does not change lazy mode. Existing red-green proof can satisfy
+specified behavioral fault through the public entry point. The caller delegates
+to a fresh-context mutation agent with a navigation handoff under 400 words.
+It owns the targeted mutation procedure shared by lazy-clean and layz-test;
+it adds no runner or dependency and does not change lazy mode. Existing red-green proof can satisfy
 incidental verification; an explicit mutation request still requires a challenge.
 
 Invoke `$lazy-mutation <scope>` in Codex, `/lazy-clean:lazy-mutation <scope>`
