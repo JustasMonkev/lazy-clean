@@ -102,10 +102,9 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   copy against the pre-fix product state needed for that behavior, including
   relevant dependency and configuration versions. Its intended assertion fails
   there and passes against the fix; if that state cannot be supplied, report
-  regression proof as blocked. Alternatively, in a disposable copy, leave a
-  passing test unchanged, mutate a relevant production branch/boundary, and
-  observe that test's intended assertion fail; revert and rerun green. A
-  mutation of the test itself or a setup/import failure is not proof.
+  regression proof as blocked. For the alternative targeted-mutation workflow, follow
+  [lazy-mutation](../lazy-mutation/SKILL.md), which owns fault selection,
+  baseline/mutant/restoration evidence, and result classification.
 - Do not weaken assertions, skip failing cases, or change production behavior
   just to get green. Fix product defects only when the user has requested fixes
   for this task; a supplied file or diff is testing scope, not authorization to

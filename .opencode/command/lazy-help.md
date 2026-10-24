@@ -17,6 +17,9 @@ an authorized fresh-context tests-only fixer, and an independent change judge.
 It is one-shot and mode-independent; review-only requests remain report-only.
 `lazy-clean` uses it for tests added or changed by the current task at completion.
 
+Also show `/lazy-mutation`: run a scoped behavioral fault challenge with existing
+test tools. The shared skill owns mutation evidence; this does not change mode.
+
 Also show `/lazy-verify`: experimental, explicitly opt-in fix/preserve evidence
 through a separately reviewed local engine and policy. It is not a lazy level,
 does not change persisted mode, and never runs automatically.

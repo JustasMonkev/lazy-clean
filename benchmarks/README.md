@@ -212,3 +212,10 @@ production-only size. For a source/test comparison, classify retained files
 manually and report production and test bytes separately with the classification;
 do not subtract guessed test sizes or label the aggregate as production savings.
 No model trials or savings are claimed by adding this task set.
+
+## Targeted lazy-mutation validation
+
+The [accessibility-scanner run](results/lazy-mutation-scanner-20261024/README.md)
+challenges four public contracts in a disposable copy. All four faults were
+killed; 56 helper tests still passed with the wrapper mapping broken while its
+public-tool test failed. This is execution evidence, not a skill-on/off score.

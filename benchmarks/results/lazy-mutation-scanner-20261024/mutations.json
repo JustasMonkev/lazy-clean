@@ -1,0 +1,42 @@
+[
+  {
+    "id": "selector-mapping",
+    "contract": "The public scan tool forwards includeSelectors to Axe.",
+    "file": "src/tools/axe.ts",
+    "before": "include: params.includeSelectors,",
+    "after": "include: undefined,",
+    "testFile": "tests/tools-scanPageMatrix.test.ts",
+    "test": "passes tags, rule filters and scope selectors through to the axe scan",
+    "assertion": "forwarded include equals ['#checkout']"
+  },
+  {
+    "id": "incomplete-filter",
+    "contract": "includeIncomplete=false excludes incomplete findings from the report.",
+    "file": "src/tools/scanPageMatrix.ts",
+    "before": "incomplete: params.includeIncomplete\n",
+    "after": "incomplete: true\n",
+    "testFile": "tests/tools-scanPageMatrix.test.ts",
+    "test": "records incomplete results per variant only when enabled",
+    "assertion": "disabled variant incomplete list equals []"
+  },
+  {
+    "id": "viewport-restoration",
+    "contract": "The matrix tool restores the caller's original viewport.",
+    "file": "src/tools/scanPageMatrix.ts",
+    "before": "      await tab.page.setViewportSize(originalViewport);\n",
+    "after": "",
+    "testFile": "tests/tools-scanPageMatrix.test.ts",
+    "test": "restores viewport, media emulation, and zoom in finally",
+    "assertion": "last viewport equals 1280x720, not the mobile variant"
+  },
+  {
+    "id": "serialized-error",
+    "contract": "Serialized MCP responses preserve the error flag.",
+    "file": "src/response.ts",
+    "before": "isError: this._isError,",
+    "after": "isError: undefined,",
+    "testFile": "tests/response.test.ts",
+    "test": "should include error flag when error occurred",
+    "assertion": "serialized.isError is true"
+  }
+]

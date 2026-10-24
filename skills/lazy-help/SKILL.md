@@ -30,12 +30,17 @@ Persists until changed/session end. "Stop lazy", "normal mode", `/lazy off`: off
 | lazy-quality-review | `/lazy-quality-review` | Independent test reviewer → authorized fresh-context tests-only fixer → change judge; mode-independent. |
 | slop-check | `/slop-check` | TS/JS checker + manual checklist. |
 | lazy-verify | `/lazy-verify` | Experimental opt-in fix/preserve evidence; requires reviewed local engine/policy; mode-independent. |
+| lazy-mutation | `/lazy-mutation` | Targeted behavioral fault challenge; baseline, mutant, restoration evidence. |
 | **layz-test** | `/layz-test` | Run tests, fill gaps, explain manual checks. |
 | test-quality-review | `/test-quality-review` | Whole-suite test-value audit; report-only, fresh-context tests-only fixer when requested; mode-independent. |
 
 Codex: `@lazy`, `@lazy-review`, `@lazy-quality-review`, `@lazy-help`, `@layz-test`, `@test-quality-review`. Claude Code: slash
-forms. OpenCode: eight `/lazy*` commands + `/layz-test` + `/test-quality-review`; `lazy-clean`/`slop-check`
+forms. OpenCode: `/lazy*` commands + `/layz-test` + `/test-quality-review`; `lazy-clean`/`slop-check`
 are name/description-invoked skills.
+
+For lazy-mutation, use `$lazy-mutation <scope>` in Codex,
+`/lazy-clean:lazy-mutation <scope>` in the Claude plugin, or
+`/lazy-mutation <scope>` in skills-only Claude and OpenCode.
 
 For test-quality-review, Codex CLI also supports `$test-quality-review`; select
 Test Quality Review in Codex's skill picker. Claude plugin installs use

@@ -69,9 +69,9 @@ or [Python](references/python-checks.md) checks for changed languages.
 For non-trivial code, read [risk checks](references/risk-checks.md).
 Use existing test tools. Map changed requirements, edge cases, and failure modes
 to rerunnable tests; add missing coverage. Inline probes alone are not coverage.
-Trivial edits need no new tests. If red-green checks prove the risky regression,
-skip old-code reruns; mutation work is optional; otherwise meaningful mutation
-evidence helps. Never add a dependency for it. Test tasks cover every case.
+Trivial edits need no new tests. If red-green checks prove the risky regression, skip old-code reruns;
+mutation work is optional; otherwise meaningful mutation helps:
+[lazy-mutation](../lazy-mutation/SKILL.md). Never add a dependency for it. Test tasks cover every case.
 
 For TS/JS edits, run the bundled checker from the repo root with the final tests,
 even after edit hooks: `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`.

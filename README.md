@@ -111,6 +111,21 @@ missing dependencies or browsers are listed as blocked automation. Passing
 checks apply only to the stated scope. This instruction-only skill adds no
 runner or dependencies and does not change lazy mode.
 
+## Challenging tests with lazy-mutation
+
+Use [lazy-mutation](skills/lazy-mutation/SKILL.md) to prove that a test catches a
+specified behavioral fault through the public entry point. It owns the targeted
+mutation procedure shared by lazy-clean and layz-test; it adds no runner or
+dependency and does not change lazy mode. Existing red-green proof can satisfy
+incidental verification; an explicit mutation request still requires a challenge.
+
+Invoke `$lazy-mutation <scope>` in Codex, `/lazy-clean:lazy-mutation <scope>`
+in the Claude plugin, or `/lazy-mutation <scope>` in skills-only Claude and
+OpenCode. See the skill for evidence requirements and outcome classification.
+Test-value review remains in test-quality-review/lazy-quality-review; broader
+testing remains in layz-test; engine-based fix/preserve evidence stays in
+lazy-verify.
+
 ## Reviewing tests with test-quality-review
 
 Use the shared `test-quality-review` skill in OpenCode, Codex, or Claude Code
@@ -182,10 +197,10 @@ Check and apply updates to that installation:
 ```sh
 gh skill update --dir ~/.claude/skills --dry-run \
   layz-test lazy lazy-audit lazy-clean lazy-debt lazy-gain lazy-help \
-  lazy-review lazy-quality-review lazy-verify slop-check test-quality-review
+  lazy-review lazy-quality-review lazy-mutation lazy-verify slop-check test-quality-review
 gh skill update --dir ~/.claude/skills \
   layz-test lazy lazy-audit lazy-clean lazy-debt lazy-gain lazy-help \
-  lazy-review lazy-quality-review lazy-verify slop-check test-quality-review
+  lazy-review lazy-quality-review lazy-mutation lazy-verify slop-check test-quality-review
 ```
 
 For user-scope Codex skills, use `--dir ~/.agents/skills`. For project-scope
@@ -209,7 +224,7 @@ Without GitHub CLI, manual copying still works, but does not enable
 cp -R /path/to/lazy-clean/skills/* ~/.claude/skills/
 ```
 
-That gives you all 12 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-quality-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-verify`, `layz-test`, `test-quality-review`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
+That gives you all 13 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-quality-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-mutation`, `lazy-verify`, `layz-test`, `test-quality-review`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
 
 What you DON'T get in skills-only mode: the automatic parts (ruleset injected every session, checker auto-run after every edit). Those need the hooks — install as a plugin for that:
 
@@ -311,7 +326,7 @@ Existing justified `slop-check-ignore` directives remain supported for compatibi
 
 An existing ignore with no reason after `--`, an unknown rule ID, or a file-level directive below line 10 suppresses nothing and is reported as `no-unjustified-ignore`. The run summary counts suppressions; a clean result with suppressions is not evidence that the ignored code was checked.
 
-Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `lazy-quality-review`, `slop-check`, `lazy-clean` (the main workflow), `lazy-verify`, `layz-test`, `test-quality-review`.
+Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `lazy-quality-review`, `slop-check`, `lazy-clean` (the main workflow), `lazy-mutation`, `lazy-verify`, `layz-test`, `test-quality-review`.
 
 ## Intensity
 

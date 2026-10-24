@@ -35,7 +35,7 @@ ok("Codex starter prompts are unique", new Set(starterPrompts).size === starterP
 
 const LANGUAGES = ["TypeScript", "JavaScript", "Java", "Python", "Ruby", "Rust", "Go"];
 const RULES_FILES = ["AGENTS.md", ".cursor/rules/lazy-clean.mdc", ".github/copilot-instructions.md"];
-const OPENCODE_ONE_SHOTS = new Set(["lazy-debt.md", "lazy-gain.md", "lazy-help.md", "lazy-verify.md", "lazy-quality-review.md"]);
+const OPENCODE_ONE_SHOTS = new Set(["lazy-debt.md", "lazy-gain.md", "lazy-help.md", "lazy-verify.md", "lazy-quality-review.md", "lazy-mutation.md"]);
 const OPENCODE_COMMANDS = fs
   .readdirSync(path.join(ROOT, ".opencode", "command"))
   .filter((file) => /^lazy(?:-.*)?\.md$/u.test(file) && !OPENCODE_ONE_SHOTS.has(file))
@@ -386,7 +386,6 @@ for (const [description, pattern] of [
   ["keeps setup services alive for dependent checks", /Keep setup services alive until their dependent checks finish/u],
   ["never calls live third-party accounts unapproved", /Never call a live payment, email, SMS, or other third-party account unless it is an isolated sandbox or the user approves/u],
   ["requires the same test and relevant pre-fix product state", /same new test, unchanged.*pre-fix product state needed for that behavior.*intended assertion fails.*passes against the fix.*report regression proof as blocked/u],
-  ["mutates production code in a copy with an unchanged passing test", /in a disposable copy, leave a passing test unchanged, mutate a relevant production branch\/boundary.*intended assertion fail; revert and rerun green.*mutation of the test itself or a setup\/import failure is not proof/u],
   ["reports changed source as untested rather than claiming current results", /source changed after testing, rerun affected checks or report the newer state as untested/u],
   ["redacts saved patches and kept tests and snapshots", /Before saving, applying, or sharing.*patches, tests, or snapshots, redact credentials and sensitive data.*report the affected output as blocked/u],
   ["confirms bugs on unmodified code", /Confirm each bug with a minimal failing assertion on the unmodified code/u],
