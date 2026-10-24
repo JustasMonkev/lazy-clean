@@ -59,10 +59,10 @@ List the changed behavior, its edge cases, and its failure modes, and cover each
 one. Use the repo's existing test tools. Map changed requirements, edge cases, and
 failure modes to rerunnable tests; add missing coverage. Inline probes alone are not coverage. Trivial edits need no new tests. Keep tests that can catch a real
 regression; drop tautologies and mock-call checks that only repeat setup, not
-checks of real forwarding or interaction contracts. When
-existing red-green checks already prove the risky regression, mutation work is
-optional; otherwise a small meaningful mutation check can confirm the test
-earns its place. Never add a dependency for it.
+checks of real forwarding or interaction contracts. When existing red-green checks already prove the risky
+regression, mutation work is optional; otherwise meaningful mutation evidence
+can help. Never add a dependency for it. Follow
+[lazy-mutation](../lazy-mutation/SKILL.md) for that scoped challenge.
 
 When the task adds or changes tests, follow
 [lazy-quality-review](../lazy-quality-review/SKILL.md) before finishing, with an

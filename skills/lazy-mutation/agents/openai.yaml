@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lazy Mutation"
+  short_description: "Prove tests catch targeted behavioral faults"
+  default_prompt: "Use $lazy-mutation to challenge the tests for this change through its public entry points and report baseline, mutant, and restored results."

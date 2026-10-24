@@ -19,10 +19,8 @@ add infrastructure or harden unrelated code.
   reapplying security policy.
 - **Evidence:** cover behavior, edges, and failure modes using the repo's tests.
   Include the riskiest alternate path. If existing red-green checks already
-  prove the risky regression, mutation work is optional; otherwise flip one
-  meaningful branch, boundary, operator, or return value, confirm a test fails,
-  revert it, and rerun. Do not count an unrelated failure as proof or add a
-  dependency just for mutation evidence.
+  prove the risky regression, mutation work is optional. For a targeted
+  challenge, follow [lazy-mutation](../../lazy-mutation/SKILL.md).
 
 ## Decision examples
 
