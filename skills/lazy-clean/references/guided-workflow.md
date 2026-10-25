@@ -123,8 +123,17 @@ Give a fresh final judge the original request, starting state, final integrated
 candidate, task diff, requirement/check record, and raw check evidence. It reads
 the actual changes and verifies that requested behavior, preserved contracts,
 findings, and reported checks agree on the same state. It is not a second
-whole-suite test audit and must not accept worker summaries as proof. Require
-one outcome: complete, concrete in-scope fixes needed, or blocked/unverified with
+whole-suite test audit and must not accept worker summaries as proof.
+
+Compare task-owned additions across all slices for duplicated functions, helpers,
+and domain rules, including equivalents already available in the project. Trace
+callers and contracts before recommending reuse: share logic when it represents
+the same rule that should change together, not merely similar-looking code.
+Report concrete locations and the smallest compatible consolidation; do not
+invent abstractions to reduce line count or refactor unrelated duplication.
+Route justified consolidation to one owner and recheck every affected caller.
+
+Require one outcome: complete, concrete in-scope fixes needed, or blocked/unverified with
 missing evidence. Fix concrete defects through the appropriate owner and repeat
 only affected gates; a deadline or review budget does not erase a required fix.
 
