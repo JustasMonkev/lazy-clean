@@ -1534,7 +1534,7 @@ ok("a failed default write keeps the level the user already had",
   `], { encoding: "utf8", env: baseEnv(freshHome("opencode-skills-dir").env), timeout: 20000 });
   const commands = probe.status === 0 ? JSON.parse(probe.stdout.trim()) : {};
   const skillsDir = path.join(ROOT, "skills");
-  for (const name of ["layz-test", "lazy-quality-review", "lazy-mutation"]) {
+  for (const name of ["lazy-clean", "layz-test", "lazy-quality-review", "lazy-mutation"]) {
     const command = commands[name];
     const skill = path.join(skillsDir, name, "SKILL.md");
     ok(`OpenCode /${name} resolves its installed skill`,

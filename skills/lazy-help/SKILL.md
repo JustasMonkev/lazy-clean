@@ -26,7 +26,7 @@ Persists until changed/session end. "Stop lazy", "normal mode", `/lazy off`: off
 | lazy-debt | `/lazy-debt` | `lazy:` comments → debt ledger. |
 | lazy-gain | `/lazy-gain` | Recorded evidence, not project savings. |
 | lazy-help | `/lazy-help` | This card. |
-| lazy-clean | `/lazy-clean` | Write with ladder, check slop, review changed tests. |
+| lazy-clean | `/lazy-clean` | Guided A-to-Z implementation: work → right → practice with bounded subagents. |
 | lazy-quality-review | `/lazy-quality-review` | Independent test reviewer → authorized fresh-context tests-only fixer → change judge; mode-independent. |
 | slop-check | `/slop-check` | TS/JS checker + manual checklist. |
 | lazy-verify | `/lazy-verify` | Experimental opt-in fix/preserve evidence; requires reviewed local engine/policy; mode-independent. |
@@ -35,8 +35,16 @@ Persists until changed/session end. "Stop lazy", "normal mode", `/lazy off`: off
 | test-quality-review | `/test-quality-review` | Whole-suite test-value audit; report-only, fresh-context tests-only fixer when requested; mode-independent. |
 
 Codex: `@lazy`, `@lazy-review`, `@lazy-quality-review`, `@lazy-help`, `@layz-test`, `@test-quality-review`. Claude Code: slash
-forms. OpenCode: `/lazy*` commands + `/layz-test` + `/test-quality-review`; `lazy-clean`/`slop-check`
-are name/description-invoked skills.
+forms. OpenCode: `/lazy*` commands (including `/lazy-clean`) + `/layz-test` +
+`/test-quality-review`; `slop-check` is a name/description-invoked skill.
+
+Use `$lazy-clean <task>` in Codex or select Lazy Clean in its skill picker.
+Claude plugin installs use `/lazy-clean:lazy-clean <task>`; skills-only Claude
+and OpenCode use `/lazy-clean <task>`. It coordinates discovery, implementation,
+independent review, checks, and real-use verification without changing lazy mode.
+Unavailable stages stay blocked or unverified; commits, pushes, deployments,
+and tool installations are not mandatory steps. Authorized PRs are draft-only; never mark
+ready, merge, or push directly to main/the default branch.
 
 For lazy-mutation, use `$lazy-mutation <scope>` in Codex,
 `/lazy-clean:lazy-mutation <scope>` in the Claude plugin, or
