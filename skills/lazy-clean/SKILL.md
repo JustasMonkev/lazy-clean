@@ -1,136 +1,113 @@
 ---
 name: lazy-clean
-description: The lazy ladder while writing, then slop-check and scoped test-quality review on one change. Use for "lazy-clean" or code that must be both minimal and slop-free; use lazy or slop-check for one pass.
+description: Guides a coding task from requirements through implementation, independent subagent verification, review, fixes, and a final evidence-based handoff. Use for lazy-clean, guided A-to-Z implementation, or a coordinated multi-agent build. Use lazy for ordinary coding guidance and focused review skills for report-only audits.
 ---
 
 # lazy-clean
 
-Build the minimum complete result, then cut slop from the task-owned diff and
-review the value of tests added or changed by the task.
+One entry point for a complete implementation: **first make it work, then make
+it right, then hand it over with evidence**. Coordinate the work, not just a
+collection of reviews. This replaces the former ladder-plus-checker workflow;
+it does not change persistent lazy levels, hooks, or the user's task scope.
 
-## 1. While writing — the lazy ladder
+Read and execute [the guided workflow](references/guided-workflow.md). It defines
+phase gates, subagent assignments, integration, failure recovery, and completion.
+Keep the engineering rules below throughout. Supporting skills are procedures
+inside this workflow, not additional user commands required to finish it.
 
-Follow `<skills-dir>/lazy/SKILL.md` as written: think first, use its first-fit
-ladder (project helpers → stdlib/native → installed dependencies → custom code),
-and verify the complete contract before shipping. Do not restate the rules here; read that file.
+## Engineering contract
 
-If your context contains the full injected ruleset, apply it without rereading. A `LAZY MODE ACTIVE` header alone, a skill description, or a compacted summary is not the ruleset: read that file when the body is missing. Carry unfinished checks through handoffs and compaction. Intensity is `/lazy lite|full|ultra`.
+Follow [lazy](../lazy/SKILL.md): think first and use project helpers → stdlib/native → installed dependencies → custom code.
+If the full ruleset is already in context, do not reread it. A header, description,
+or compacted summary is not the full ruleset. State material assumptions and a
+brief step → check plan before coding. Ask only when a missing answer blocks work.
 
-## 2. After writing or editing TS/JS — the checker
+Model the data and invariants before splitting implementation. Keep one decision
+in one place. Search for the closest existing implementation before adding one;
+reuse or extend it when it meets the contract. Remove replaced task-owned paths,
+not unrelated features. Consider the design that would naturally accommodate the
+requirement, then deliver it in small compatible slices rather than a rewrite.
 
-```bash
-node <skills-dir>/slop-check/scripts/check.mjs <changed files>
-```
+Keep independent mutable state separate; assign one writer when sharing is
+necessary. Validate external data at its boundary and revalidate after parsing,
+persistence, redirects, or replay when trust changes. Preserve explicit false/zero/empty
+values, accepted input formats, defaults, errors, metadata, and user state.
+Test retry/crash idempotency when the operation promises it; do not retrofit it
+everywhere. Keep cancellation, cleanup, accessibility, and platform behavior.
 
-`--json` for machine-readable findings. Exit code 1 means findings exist.
+One caller alone does not make a helper waste: preserve a domain name, tricky
+logic, side effect, test seam, readability, or framework contract. At changed
+boundaries read [design checks](../lazy/references/design-checks.md). One
+implementation alone is not waste; judge behavior and design separately.
+Do not add code comments; remove nonessential comments from touched code.
+Keep required license notices and functional tool directives. Report rationale
+and constraints in the final response, not suppression comments.
 
-Triage every finding per `<skills-dir>/slop-check/SKILL.md`:
+## Verification tools
 
-- Fix real slop — delete the pointless code, restore real type evidence.
-- Do not add code comments; remove nonessential comments from code you touch. Keep required license notices and functional tool directives.
-- Report rationale and constraints in the final response.
-- Retain a necessary type assertion or swallowed error only after checking its invariant; explain it in the final response, never in a `SAFETY:`, `lazy:`, or suppression comment.
-- A genuine false positive stays as-is; say so briefly. Never rewrite correct code to silence the checker, and never weaken or disable a check.
+Detect only the changed languages: TypeScript, JavaScript, Java, Python, Ruby,
+Rust, Go. Read each pinned or installed version from its toolchain file, manifest, lockfile,
+or runtime; keep advice compatible. If a needed version cannot be checked,
+say so and do not guess. Research latest versions only when requested.
+Before finishing TS/JS read [simplification checks](../lazy/references/simplification-checks.md);
+for Python read [Python checks](../lazy/references/python-checks.md).
+Other languages get the same behavior/design review in their own idioms.
 
-Apply the manual checklist — dead code, speculative generality, reimplemented
-platform, and edit-artifacts — to the task-owned diff. Report only findings that
-matter; this is a review pass, not a demand for extra prose or a net-negative
-feature change.
+Use existing test tools. Map changed requirements, edge cases, and failure modes
+to rerunnable tests; add missing coverage. Inline probes alone are not coverage.
+Trivial edits need no new tests. Write the failing behavioral test first, confirm
+its intended failure, then implement. Refactors need before/after checks. When
+an honest automated test is impractical, record the specific manual check and
+limit instead of inventing a tautology or claiming automation passed.
 
-The checker reads TypeScript and JavaScript only. Java, Python, Ruby, Rust, and Go
-get the same manual pass by hand — never report them clean on the strength of a
-scan that did not read them. For every language the change actually touches,
-read its pinned or installed version from the toolchain file, manifest, lockfile,
-or runtime and keep replacements compatible. If a needed version fact cannot be
-checked, say so and do not guess; latest-version research is only needed when
-the user asks for current-version advice.
+The guided workflow runs [lazy-quality-review](../lazy-quality-review/SKILL.md)
+for task-owned added/changed tests, not a whole-suite audit. Preserve useful
+assertions; do not weaken expectations to hide a production bug.
+Mutation work is optional when existing red-green checks already prove the risky
+regression; otherwise meaningful mutation evidence can help. Use
+[lazy-mutation](../lazy-mutation/SKILL.md) for the scoped, isolated challenge;
+never add a dependency for it. Keep tests that catch real regressions.
 
-One caller alone is not a reason to inline or delete a function or file. Keep it separate when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. Inline or delete only when none of those hold.
-
-## Manual simplification pass
-
-Before finishing a TypeScript or JavaScript change, read and apply [TS/JS simplification checks](../lazy/references/simplification-checks.md). It is a concise pre-finish review with small before/after examples: infer obvious local types without `any` or bypass casts, normalize arguments once, handle returned errors directly, and compare lifetimes, callers, and error/cancellation/cleanup semantics before replacing or deleting code. Keep useful domain helpers and explicit multi-step control flow. It also covers module shape (one reason to change, minimal exports, no import-time side effects) and type modeling (unions over optional-field bags, `unknown` parsed at the boundary). Its TS/JS examples are illustrative; other languages keep their own syntax and idioms.
-
-Before finishing a Python change, read and apply [Python checks](../lazy/references/python-checks.md): the version gates for newer syntax, the project's configured linter and type checker, module shape, dataclasses over loose dicts, `Protocol` for new typing-only interfaces while existing runtime ABCs stay, and the idioms that silently change behavior (mutable defaults, `if not x` on valid zero or empty values, bare `except:` outside cleanup-and-re-raise paths).
-
-## Tests that earn their place
-
-List the changed behavior, its edge cases, and its failure modes, and cover each
-one. Use the repo's existing test tools. Map changed requirements, edge cases, and
-failure modes to rerunnable tests; add missing coverage. Inline probes alone are not coverage. Trivial edits need no new tests. Keep tests that can catch a real
-regression; drop tautologies and mock-call checks that only repeat setup, not
-checks of real forwarding or interaction contracts. When existing red-green checks already prove the risky
-regression, mutation work is optional; otherwise meaningful mutation evidence
-can help. Never add a dependency for it. Follow
-[lazy-mutation](../lazy-mutation/SKILL.md) for that scoped challenge.
-
-When the task adds or changes tests, follow
-[lazy-quality-review](../lazy-quality-review/SKILL.md) before finishing, with an
-explicit scope of those task-owned tests and their base revision or starting
-state. It coordinates an independent reviewer, fresh-context tests-only fixes
-within existing edit authorization, and an independent judge of actual changes.
-Run this at task completion, not after every edit; do not turn a scoped change
-into a whole-suite audit. Review-only requests remain report-only. If delegation
-is unavailable, return the handoff and report the unfinished stage as unverified.
-
-## When the manual run is needed
-
-Edit hooks give quick feedback, not final coverage. Before finishing, run from
-the repo root, even if those hooks ran:
+For TS/JS changes run from the target repo root, even after edit hooks:
 
 ```bash
 node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD
 ```
 
-This includes tracked changes, new untracked files, and edits made through shell
-commands. Use the task base ref if its changes are already committed. Findings
-can include pre-existing user edits: triage only task-owned findings; do not
-alter pre-existing work. Without Git, pass changed paths as separate quoted
-arguments. Exit 2 means the scan failed;
-report that, never claim it was clean.
+Resolve `<skills-dir>` to this installation. Use the task base ref for committed
+changes; without Git pass changed paths as separate quoted arguments. The scan
+includes new untracked files and shell edits. Triage only task-owned findings;
+do not alter pre-existing work. Follow [slop-check](../slop-check/SKILL.md): fix
+real slop, never weaken checks. Exit 1 means findings; exit 2 means scan failure,
+not clean. The scanner reads only TS/JS; zero files checked proves nothing about
+other languages. Explain retained assertions or swallowed errors with checked
+invariants in the final response, never `SAFETY:`, `lazy:`, or suppression markers.
 
-## Preserve input contracts
+[lazy-verify](../lazy-verify/SKILL.md) remains experimental and explicitly opt-in;
+never install or execute its separate engine automatically. Missing prerequisites
+cannot satisfy a required gate. Do not require crapper, dryer, mutator, arbitrary
+complexity scores, or new infrastructure to complete this workflow.
 
-For new input formats, implement the specified contract without inventing extra
-formats. For existing parsers, preserve accepted formats unless the task changes
-them. An omitted detail in a new task is not permission to reject inputs that
-already worked. Preserve explicit false/zero/empty values. Revalidate after a
-trust boundary without changing that contract.
-
-## Optional behavioral verification
-
-When explicitly requested or authorized for the selected task/profile, follow
-the independent [lazy-verify skill](../lazy-verify/SKILL.md) after ordinary final
-review. It is experimental and needs a separately reviewed engine and policy;
-never install or execute it automatically. Fix/preserve evidence is separate
-from static findings. Missing prerequisites cannot satisfy a required gate.
-It does not change lazy intensity or replace the final checker scan.
-
-## Order matters
-
-Ladder first. The checker finds slop in code that exists; the ladder stops the code from being written at all, and code never written has no findings.
-
-## Upstream comparisons and ports
-
-When asked to compare or reuse upstream changes, read
-[upstream updates](references/upstream-updates.md) and the repository's
-`UPSTREAM.md` if present. Preserve local behavior and record partial adaptations;
-a reviewed upstream revision is not proof of a pristine merge base.
-
-## Bounded completion and review
+## Completion boundary
 
 Keep in working context: requested deliverable, task-owned scope, required checks,
-and action limits; no mandatory planning file.
-After implementation/checks, review the task-owned diff once. Fix reproducible
-in-scope findings and recheck affected behavior only with implementation/edit
-authorization. Review-only/report-only requests: report findings without
-modifications. Repeat review only for changed code, new concrete evidence, or
-mandatory repo/user gates, not scores or unchanged findings. Reconsider scope
-before broader guarantees or machinery.
-A review budget never excuses a known required fix.
-Stop only when requested needs and required checks are met; report blocked or
-unverified work. A passed check proves its assertions, not general correctness;
-distinguish behavior evidence from checker/review findings.
+and action limits; no mandatory planning file. Carry unfinished checks through
+handoffs and compaction. After implementation/checks, review the task-owned diff once.
+Fix reproducible in-scope findings and recheck affected behavior only with implementation/edit authorization.
+Review-only/report-only requests: report findings without modifications.
+Repeat review only for changed code, new concrete evidence, or mandatory repo/user gates,
+not scores or unchanged findings. Reconsider scope before broader guarantees or machinery.
+A review budget never excuses a known required fix. Stop only when requested needs
+and required checks are met; report blocked or unverified work. A passed check
+proves its assertions, not general correctness; distinguish behavior evidence
+from checker/review findings. No commit, push, deployment, or deletion of unrelated
+worktrees is implied by invoking this skill. When PR creation is authorized,
+create draft PRs only. Never create a ready-for-review PR, mark one ready, merge
+a PR, or push directly to main/the default branch. This applies to every worker;
+if draft creation is unavailable, report the blocker rather than open a normal PR.
+
+For upstream comparisons or ports, also read [upstream updates](references/upstream-updates.md)
+and the repository's `UPSTREAM.md` when present; preserve local behavior and record partial adaptations.
 
 ## Before you report
 

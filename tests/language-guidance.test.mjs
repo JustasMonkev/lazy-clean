@@ -35,7 +35,7 @@ ok("Codex starter prompts are unique", new Set(starterPrompts).size === starterP
 
 const LANGUAGES = ["TypeScript", "JavaScript", "Java", "Python", "Ruby", "Rust", "Go"];
 const RULES_FILES = ["AGENTS.md", ".cursor/rules/lazy-clean.mdc", ".github/copilot-instructions.md"];
-const OPENCODE_ONE_SHOTS = new Set(["lazy-debt.md", "lazy-gain.md", "lazy-help.md", "lazy-verify.md", "lazy-quality-review.md", "lazy-mutation.md"]);
+const OPENCODE_ONE_SHOTS = new Set(["lazy-clean.md", "lazy-debt.md", "lazy-gain.md", "lazy-help.md", "lazy-verify.md", "lazy-quality-review.md", "lazy-mutation.md"]);
 const OPENCODE_COMMANDS = fs
   .readdirSync(path.join(ROOT, ".opencode", "command"))
   .filter((file) => /^lazy(?:-.*)?\.md$/u.test(file) && !OPENCODE_ONE_SHOTS.has(file))

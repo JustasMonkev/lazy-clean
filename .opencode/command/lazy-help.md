@@ -2,6 +2,13 @@
 description: Quick reference for lazy levels, skills, and commands
 ---
 
+Also show `/lazy-clean <task>`: guided A-to-Z implementation through work → right
+→ practice, coordinating implementation, independent review, behavioral checks,
+and real-use verification with bounded subagents. It does not change lazy mode;
+unavailable stages stay blocked or unverified. No mandatory commits, pushes,
+deployments, or tool installations. Authorized PRs are draft-only; never mark
+ready, merge, or push directly to main/the default branch.
+
 Also show `/layz-test`: test the requested code across applicable layers, add
 missing behavioral checks, and end with manual steps and automation limits.
 It is a one-shot skill and never changes lazy mode.

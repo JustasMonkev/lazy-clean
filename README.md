@@ -1,6 +1,8 @@
 # lazy-clean
 
-One skill package for coding agents: write the least code that works, then delete the slop that crept in anyway.
+One guided implementation skill for coding agents: make it work, make it right,
+then verify it in practice. `lazy-clean` coordinates the A-to-Z workflow;
+the focused skills and runtime hooks remain available independently.
 
 - **While writing** — a lazy-senior-dev ruleset (YAGNI ladder, risk gate) is injected at session start, into subagents, and adjustable via `/lazy` commands.
 - **After writing** — a heuristic slop checker runs on every TS/JS file Claude writes or edits, and hands findings back as review context.
@@ -11,6 +13,32 @@ For upstream comparisons and selective ports, follow the
 [update procedure](skills/lazy-clean/references/upstream-updates.md) and record
 the reviewed revisions and local differences in [UPSTREAM.md](UPSTREAM.md).
 
+## Guided implementation
+
+Invoke `$lazy-clean <task>` in Codex, `/lazy-clean <task>` in OpenCode or a
+skills-only Claude Code install, or `/lazy-clean:lazy-clean <task>` in the
+Claude Code plugin. Codex also lists Lazy Clean in its skill picker.
+
+The coordinator establishes scope and acceptance checks, inspects existing
+solutions, plans owned implementation slices, and delegates implementation,
+independent review, behavioral verification, and real-use checks to subagents.
+It integrates their evidence and fixes in-scope findings before handing back
+the result. Work moves through **work → right → practice**: a complete working
+path, checked behavior and maintainability, then evidence-based handoff of the verified user workflow. The phase structure
+adapts the local `ub-mode` idea without requiring its companion tools.
+
+Concurrency is bounded by host capacity and non-overlapping ownership, not an
+agent-count target. Missing delegation, credentials, hardware, or runtime access
+leave the affected stages explicitly blocked or unverified, never silently
+passed. Small tasks use fewer agents; unrelated edits and report-only scopes
+stay intact. Commits, pushes, deployments, and tool installations are not
+mandatory steps. When PR creation is authorized, PRs are **draft-only**: no
+ready-for-review PRs, marking ready, merges, or direct pushes to main/the default
+branch. The coordinator verifies draft status and gives every worker the same
+restriction. The existing language, slop, mutation, and test-quality guides
+still apply where relevant; this replaces the old write-then-check coordinator,
+not those focused skills.
+
 ## Works with
 
 Same ruleset, five levels of wiring — pick whatever your agent supports.
@@ -18,7 +46,7 @@ Same ruleset, five levels of wiring — pick whatever your agent supports.
 | Tier | Platforms | What you get | Files |
 | --- | --- | --- | --- |
 | Full hooks | Claude Code, Codex | Compact ruleset injected at session and subagent start, `/lazy` level switching, slop-check auto-run after every Write/Edit | `hooks/lazy-clean.json` via `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` |
-| Plugin | OpenCode | Ruleset injected every turn plus nine slash commands | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
+| Plugin | OpenCode | Ruleset injected every turn plus slash commands, including `/lazy-clean` | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
 | Rules file | Cursor, Copilot | Always-on ruleset for all seven supported languages; run the TS/JS-only checker by hand after TS/JS changes | `.cursor/rules/lazy-clean.mdc`, `.github/copilot-instructions.md` |
 | `AGENTS.md` | Everything else that reads it — Codex, Zed, Amp, Jules | The compact ruleset plus the post-edit checker step | `AGENTS.md` |
 | Skills only | Anything that reads `~/.claude/skills` | Every skill on demand, no automation | `skills/` |

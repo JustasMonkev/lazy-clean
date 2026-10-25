@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lazy Clean"
+  short_description: "Guided multi-agent implementation from A to Z"
+  default_prompt: "Use $lazy-clean to guide this implementation from A to Z with independent subagent checks."
