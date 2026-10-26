@@ -26,11 +26,24 @@ tests. Keep this a one-shot testing workflow; do not change lazy mode or hooks.
    checks that rely on locked dependencies, use the repository's documented
    locked install in a disposable copy when permitted; otherwise report those
    checks as blocked.
-3. Make a compact behavior → test → result table. Enumerate happy paths,
-   boundaries (including false/zero/empty), invalid inputs, and failure modes.
-   Trace retries, restore/replay, cancellation, concurrency, and cleanup where
-   relevant. Derive expected results from requirements or established contracts;
-   label unclear expectations rather than copying the implementation into tests.
+3. Before generating tests, map contract → input/event → path → expected
+   observable result → test. Derive expectations from requirements or established
+   contracts, not the current implementation; label unclear expectations. Include
+   representative happy paths alongside relevant boundaries and failure modes.
+   - For each parameter, choose relevant equivalence classes and boundaries:
+     missing/null, false/zero/empty, negative, and just below/at/above meaningful
+     limits where the input contract permits them or defines their rejection.
+     Account for interacting parameters when they change behavior; do not force
+     irrelevant categories or generate a Cartesian product.
+   - For relevant rejection, catch, fallback, and default paths, identify a
+     concrete trigger and the observable outcome that distinguishes correct
+     handling from silently taking the wrong path. Trace retries, restore/replay,
+     cancellation, concurrency, and cleanup where relevant.
+   - Assert contract-relevant values, object contents, state changes, and error
+     semantics. Presence, type, length, or “throws something” alone is insufficient
+     when the contract promises more; avoid incidental internal details.
+   Keep this mapping compact, reuse existing tests where they prove the case,
+   and record execution results alongside it.
 
 Honor explicit exclusions, including requests for no security testing. Mark
 excluded layers not run and do not execute them through a bundled suite.
