@@ -95,6 +95,10 @@ not run, or not applicable with a concrete reason. Add domain-specific risks.
   malformed input, generated cases, and adverse event ordering as applicable.
   Use an independent oracle or invariant; a test that repeats the implementation
   cannot establish correctness. Follow suspicious results through real callers.
+- For generated cases, use the repository's existing property-testing tool or
+  plain loops; do not add a dependency for them. Fix or record the seed so a
+  failure replays, and keep each failing generated input as a fixed regression
+  test.
 - Confirm each bug with a minimal failing assertion on the unmodified code:
   record the contract, input or event sequence, expected and actual behavior,
   and affected caller. Separate confirmed defects from unclear requirements,

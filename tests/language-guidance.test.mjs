@@ -388,6 +388,7 @@ for (const [description, pattern] of [
   ["requires the same test and relevant pre-fix product state", /same new test, unchanged.*pre-fix product state needed for that behavior.*intended assertion fails.*passes against the fix.*report regression proof as blocked/u],
   ["reports changed source as untested rather than claiming current results", /source changed after testing, rerun affected checks or report the newer state as untested/u],
   ["redacts saved patches and kept tests and snapshots", /Before saving, applying, or sharing.*patches, tests, or snapshots, redact credentials and sensitive data.*report the affected output as blocked/u],
+  ["keeps generated cases on existing tools, replayable, and pinned", /generated cases, use the repository's existing property-testing tool.*do not add a dependency.*Fix or record the seed.*keep each failing generated input as a fixed regression test/iu],
   ["confirms bugs on unmodified code", /Confirm each bug with a minimal failing assertion on the unmodified code/u],
   ["never invents findings", /never invent a finding/u],
   ["keeps a flaky pass from erasing a failure", /a flaky pass does not erase an earlier failure/u],
