@@ -55,9 +55,19 @@ For wrappers and adapters, ask: **Would this test still pass if the wrapper were
 replaced by its underlying dependency?** Bypass only behavior the wrapper is
 required to add; transparent delegation can itself be the contract.
 
-Choose a plausible fault and predict the named test and observable assertion
-that should fail. Examples: ignore a public option, return live data instead of
-persisted data, drop a required header, or skip cleanup. Prefer assertions about
+Choose a plausible fault a real developer could write, and predict the named
+test and observable assertion that should fail. Draw from these kinds, most
+revealing first, changing one line of executable logic where possible:
+
+- Drop a side effect: a write, append, cache fill, required header, or cleanup.
+- Invert a condition, or swap `and`/`or`.
+- Shift a boundary or operator: `<` to `<=`, `+` to `-`, an off-by-one range.
+- Hardcode or swap a return value, such as live data instead of persisted data.
+- Remove a guard clause or early return.
+- Ignore a public option, or change a default or constant.
+- Swap the arguments or operands of a non-commutative call.
+
+Prefer assertions about
 status, headers, bytes, fallback behavior, persistence, and resource lifecycle as
 applicable. Keep the real public-to-implementation mapping in the exercised path;
 mocking away that mapping cannot prove it.
