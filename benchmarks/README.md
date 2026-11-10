@@ -164,6 +164,35 @@ The harness rejects installed dependencies, so this set intentionally does not
 simulate an installed-package workload or relax that boundary. Real UI/browser
 behavior and dependency integration remain outside these small Node fixtures.
 
+## Hidden-defect task set
+
+Set `"taskSet": "hidden"` in the same config. Each prompt asks for one small
+change and never names a second defect on the same path; the held-out check
+exercises both. A full run makes 60 calls (10 tasks × 3 trials × 2 arms).
+
+| Task | Defect the prompt does not name |
+| --- | --- |
+| reused-helper | The existing helper's plain-object keys reorder integer-like words and miscount inherited names |
+| in-path-defect | The edited function sorts numbers as text |
+| stale-result | An answer still in flight lands after the box is cleared or after a newer answer |
+| sibling-site | The neighbouring export crashes on the same input |
+| fail-open | An unreadable expiry compares as never expired; rejecting or throwing both pass |
+| key-collision | Joined tenant and ID text shares one cache key between different users |
+| helper-rounding | The existing page counter rounds to nearest, so reusing it loses a short last page |
+| reentrant-listener | Removing a listener while emit walks the live array skips the next one |
+| failed-update | A rejected take has already consumed its units, so the new reading is wrong afterwards |
+| necessary-guard (existing core task) | None: the control stays correct only when left alone |
+
+`hidden-tasks.mjs` keeps each `hidden` note outside worker prompts. The runtime
+check passes only when the defect is fixed. Read the client's final message
+separately: a run that reports the defect with a failing input but leaves it
+unfixed found it and still fails the check, and a run that hides it behind a
+clamp or fallback did neither. Record fixed, reported-only, and missed counts
+separately, and compare added test lines only between passing runs.
+`npm test` validates the initial fixtures, reference fixes, and thirteen
+symptom-only changes without AI calls. These are grader checks, **not
+model-performance results**.
+
 ### Reproduce current-versus-candidate rules
 
 Use two clean, detached worktrees with the **same harness revision and config**.

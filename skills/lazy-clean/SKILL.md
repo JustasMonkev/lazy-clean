@@ -27,6 +27,9 @@ in one place. Search for the closest existing implementation before adding one;
 reuse or extend it when it meets the contract. Remove replaced task-owned paths,
 not unrelated features. Consider the design that would naturally accommodate the
 requirement, then deliver it in small compatible slices rather than a rewrite.
+Fix the shared cause: a defect that breaks the request, recurs at a sibling site,
+or sits in a function you edit, even if unrequested. Report other defects with a
+failing input instead of fixing them.
 
 Keep independent mutable state separate; assign one writer when sharing is
 necessary. Validate external data at its boundary and revalidate after parsing,
@@ -54,7 +57,8 @@ for Python read [Python checks](../lazy/references/python-checks.md).
 Other languages get the same behavior/design review in their own idioms.
 
 Use existing test tools. Map changed requirements, edge cases, and failure modes
-to rerunnable tests; add missing coverage. Inline probes alone are not coverage.
+to rerunnable tests; add missing coverage: the fewest cases that each catch a
+distinct bug; no test scaffolding. Inline probes alone are not coverage.
 Trivial edits need no new tests. Write the failing behavioral test first, confirm
 its intended failure, then implement. Refactors need before/after checks. When
 an honest automated test is impractical, record the specific manual check and
