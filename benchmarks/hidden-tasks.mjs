@@ -14,6 +14,8 @@ export const tasks = [
     },
     check: `const {tally, top} = require('./tally.cjs');
 assert.deepEqual({...tally(['a', 'b', 'a'])}, {a: 2, b: 1});
+assert.deepEqual({...tally(['constructor', '__proto__', 'constructor', '__proto__', 'toString'])},
+  {constructor: 2, ['__proto__']: 2, toString: 1});
 assert.deepEqual(top(['a', 'b', 'a', 'c'], 2), [['a', 2], ['b', 1]]);
 assert.deepEqual(top([], 3), []); assert.deepEqual(top(['a'], 0), []);
 assert.deepEqual(top(['b', '10', '2'], 3), [['b', 1], ['10', 1], ['2', 1]]);
@@ -56,7 +58,10 @@ assert.equal(pending.length, 2); assert.deepEqual(shown.at(-1), []);
 pending[1](['abacus']);
 assert.deepEqual(shown.at(-1), [], 'a late answer must not replace the cleared box');
 search('b'); search('bc'); pending[3](['bcd']); pending[2](['bee']);
-assert.deepEqual(shown.at(-1), ['bcd'], 'an older answer must not replace a newer one');`,
+assert.deepEqual(shown.at(-1), ['bcd'], 'an older answer must not replace a newer one');
+const first = pending.length;
+search('a'); search('b'); search('a'); pending[first + 2](['newer a']); pending[first](['older a']);
+assert.deepEqual(shown.at(-1), ['newer a'], 'the same query text still identifies different requests');`,
     hidden: 'An answer still in flight lands after the box is cleared or after a newer answer.',
   },
   {
@@ -107,11 +112,14 @@ const load = (tenant, id) => ({tenant, id, version: ++loads});
 assert.equal(getUser('acme', '1', load).version, 1); assert.equal(getUser('acme', '1', load).version, 1);
 invalidate('acme', '1'); assert.equal(getUser('acme', '1', load).version, 2);
 invalidate('acme', 'missing');
-const left = getUser('a', 'bc', load), right = getUser('ab', 'c', load);
-assert.deepEqual([left.tenant, left.id, right.tenant, right.id], ['a', 'bc', 'ab', 'c']);
-invalidate('a', 'bc');
-assert.equal(getUser('ab', 'c', load), right, 'dropping one user must not drop another');
-assert.notEqual(getUser('a', 'bc', load), left);`,
+for (const separator of ['', ':', '|', '\\0']) {
+  const leftKey = ['a' + separator + 'b', 'c'], rightKey = ['a', 'b' + separator + 'c'];
+  const left = getUser(...leftKey, load), right = getUser(...rightKey, load);
+  assert.deepEqual([left.tenant, left.id, right.tenant, right.id], [...leftKey, ...rightKey]);
+  invalidate(...leftKey);
+  assert.equal(getUser(...rightKey, load), right, 'dropping one user must not drop another');
+  assert.notEqual(getUser(...leftKey, load), left);
+}`,
     hidden: 'Joined tenant and ID text shares one cache key between different users.',
   },
   {
@@ -122,12 +130,14 @@ assert.notEqual(getUser('a', 'bc', load), left);`,
 exports.page = (items, index, size) => items.slice(index * size, (index + 1) * size);
 `,
     },
-    check: `const {hasNext, page} = require('./pages.cjs');
+    check: `const {hasNext, page, pageCount} = require('./pages.cjs');
 const items = [1, 2, 3, 4, 5, 6, 7];
 assert.deepEqual(page(items, 2, 3), [7]);
 assert.equal(hasNext(items, 0, 3), true); assert.equal(hasNext(items, 1, 3), true); assert.equal(hasNext(items, 2, 3), false);
 assert.equal(hasNext(items, 5, 3), false); assert.equal(hasNext([], 0, 3), false);
-assert.equal(hasNext([1, 2, 3], 0, 3), false); assert.equal(hasNext([1, 2, 3, 4], 0, 3), true);`,
+assert.equal(hasNext([1, 2, 3], 0, 3), false); assert.equal(hasNext([1, 2, 3, 4], 0, 3), true);
+assert.equal(pageCount(items, 3), 3);
+assert.equal(pageCount([1, 2, 3], 3), 1); assert.equal(pageCount([], 3), 0);`,
     hidden: 'The existing page counter rounds to nearest, so reusing it loses a short last page.',
   },
   {
@@ -161,7 +171,19 @@ emitter.off(first); emitter.emit(3);
 assert.deepEqual(seen.slice(5), ['last:3']);
 const only = createEmitter(); let count = 0;
 only.once(() => count++); only.emit(); only.emit();
-assert.equal(count, 1);`,
+assert.equal(count, 1);
+const nested = createEmitter(), nestedValues = [];
+nested.on(value => { if (value === 'outer') nested.emit('inner'); });
+nested.once(value => nestedValues.push(value));
+nested.emit('outer');
+assert.deepEqual(nestedValues, ['inner'], 'the outer snapshot must skip a one-time listener already called by a nested emit');
+const recursive = createEmitter(), recursiveValues = [];
+recursive.once(value => {
+  recursiveValues.push(value);
+  if (value === 'outer') recursive.emit('inner');
+});
+recursive.emit('outer');
+assert.deepEqual(recursiveValues, ['outer'], 'a one-time listener must be removed before it emits recursively');`,
     hidden: 'Removing a listener while emit walks the live array skips the next listener.',
   },
   {

@@ -166,41 +166,40 @@ behavior and dependency integration remain outside these small Node fixtures.
 
 ## Hidden-defect task set
 
-Set `"taskSet": "hidden"` in the same config. Each prompt asks for one small
-change and never names a second defect on the same path; the held-out check
-exercises both. A full run makes 60 calls (10 tasks × 3 trials × 2 arms).
+Set `"taskSet": "hidden"` in the same config. Nine prompts ask for one small
+change and leave a second defect unnamed. The held-out checks exercise both.
+The tenth task checks preservation of an existing guard. A full run makes 60
+calls (10 tasks × 3 trials × 2 arms).
 
 | Task | Defect the prompt does not name |
 | --- | --- |
-| reused-helper | The existing helper's plain-object keys reorder integer-like words and miscount inherited names |
+| reused-helper | The existing tally miscounts inherited names, and object enumeration breaks first-seen ties for integer-like words |
 | in-path-defect | The edited function sorts numbers as text |
-| stale-result | An answer still in flight lands after the box is cleared or after a newer answer |
+| stale-result | An answer still in flight lands after the box is cleared or after a newer answer, including a repeated query |
 | sibling-site | The neighbouring export crashes on the same input |
 | fail-open | An unreadable expiry compares as never expired; rejecting or throwing both pass |
-| key-collision | Joined tenant and ID text shares one cache key between different users |
-| helper-rounding | The existing page counter rounds to nearest, so reusing it loses a short last page |
-| reentrant-listener | Removing a listener while emit walks the live array skips the next one |
+| key-collision | Joined tenant and ID text shares one cache key between different users, even with common separators |
+| helper-rounding | The existing page counter rounds to nearest and drops a short last page |
+| reentrant-listener | Removing a listener can skip the next one, and nested emissions can invoke a one-time listener twice |
 | failed-update | A rejected take has already consumed its units, so the new reading is wrong afterwards |
-| necessary-guard (existing core task) | None: the control stays correct only when left alone |
+| necessary-guard (existing core task) | Control for preserving the existing invalid-JSON guard |
 
-`hidden-tasks.mjs` keeps each `hidden` note outside worker prompts. The runtime
-check passes only when the defect is fixed. Read the client's final message
-separately: a run that reports the defect with a failing input but leaves it
-unfixed found it and still fails the check, and a run that hides it behind a
-clamp or fallback did neither. Record fixed, reported-only, and missed counts
-separately, and compare added test lines only between passing runs.
-`npm test` validates the initial fixtures, reference fixes, and thirteen
-symptom-only changes without AI calls. These are grader checks, **not
-model-performance results**.
+`hidden-tasks.mjs` keeps each `hidden` note outside worker prompts. A runtime
+pass requires the requested behavior and the held-out cases to work. Review the
+patch and the client's final message to distinguish fixes, reports with a
+failing input, and misses. Compare added test lines only between passing runs.
+`npm test` validates the ten initial fixtures, reference fixes, and twenty
+rejected variants without AI calls.
 
-### Reproduce current-versus-candidate rules
+## Reproduce current-versus-candidate rules
 
 Use two clean, detached worktrees with the **same harness revision and config**.
 Only substitute the compact rules producer, its skill/references, and checker.
 The benchmark measures this delivery path, not changes confined to unrelated
 skills or host hooks. Replace the three revision values below with immutable
-commits available in this repository, and create the config as above with
-`"taskSet": "implementation"`. Use an absolute agent executable path if needed.
+commits available in this repository. Set `"taskSet": "implementation"` or
+`"taskSet": "hidden"` in the config, depending on the task set under comparison.
+Use an absolute agent executable path if needed.
 
 ```bash
 HARNESS_REV=COMMIT_WITH_THIS_TASK_SET
