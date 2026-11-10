@@ -76,7 +76,7 @@ mutation work is optional; otherwise meaningful mutation helps:
 
 TS/JS edits: run the bundled checker from the repo root with the final tests:
 `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`
-(task-base ref for commits; quoted paths without Git).
+(task-base ref for commits; quoted changed paths without Git).
 Triage only task-owned findings; do not alter pre-existing work. Failed scans
 are not clean; never weaken checks.
 

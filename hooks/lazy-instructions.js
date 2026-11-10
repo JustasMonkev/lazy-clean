@@ -112,7 +112,7 @@ Finally, infer obvious local types without any/unchecked casts;
 normalize overloaded arguments once; avoid
 throwing only to catch them locally. Remove guards/helpers only with caller/lifetime evidence. Match error and
 cancellation semantics with native APIs. Preserve encoding and buffer ownership.
-No import-time I/O. TypeScript 7 (native tsc): avoid
+TypeScript 7 (native tsc): avoid
 baseUrl, moduleResolution node/node10,
 target es5, outFile; keep API tools' TypeScript 6 alias.
 TS/JS/tsconfig: read [TS/JS checks](${markdownLinkTarget(path.join(__dirname, '../skills/lazy/references/simplification-checks.md'))}).
@@ -132,12 +132,13 @@ Never add dependencies for it. Test tasks: every case.
 
 TS/JS: run the bundled checker from the repo root with the final tests:
 node "${path.join(__dirname, '../skills/slop-check/scripts/check.mjs')}" --since=HEAD
+Use task-base for commits; quote changed paths without Git.
 Triage only task-owned findings; do not alter pre-existing work.
 Failed scans are not clean.
 
 TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect languages used;
 read toolchain file, manifest, lockfile, or runtime versions. Match installed version;
-if unavailable, say so; do not guess. Research latest only when asked.
+if unavailable, say so; do not guess.
 
 Keep in working context: requested deliverable, task-owned scope, required checks,
 and action limits; no mandatory planning file.

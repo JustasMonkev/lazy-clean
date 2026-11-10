@@ -218,6 +218,8 @@ const DELIVERY_CONTRACT = [
   ["reports shortcut ceilings and upgrade paths", /shortcut ceilings, and upgrade paths in the final response/iu],
   ["collects red-green proof once", /red-green checks prove the risky regression, skip old-code reruns/iu],
   ["runs the checker with the final tests", /bundled checker from the repo root with the final tests/iu],
+  ["scans committed task changes from the task base", /task-base (?:ref )?for commits/iu],
+  ["names the changed-path scan without Git", /quoted? changed paths without Git/iu],
 ];
 for (const mode of ["lite", "full", "ultra"]) {
   for (const [surface, text] of [
