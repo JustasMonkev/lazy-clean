@@ -183,8 +183,22 @@ for (const file of ["skills/lazy/SKILL.md", ...RULES_FILES, ".opencode/command/l
   for (const [description, pattern] of FIRST_FIT_CONTRACT)
     ok(`${file} ${description}`, pattern.test(flat(read(file))));
 
+const HIDDEN_DEFECT_CONTRACT = [
+  ["fixes defects on the changed path even when unrequested", /fix the shared cause: (?:a )?defects? that breaks? the request, recurs? at a sibling site, or sits? in (?:an edited function|a function you edit), even if unrequested/iu],
+  ["reports other defects with a failing input", /report other(?:s| defects) with a failing input/iu],
+  ["keeps added tests to the fewest distinct cases", /fewest cases(?: that|,) each catch(?:ing)? a distinct bug; no (?:test )?scaffolding/iu],
+];
+for (const file of BUILD_SURFACES)
+  for (const [description, pattern] of HIDDEN_DEFECT_CONTRACT)
+    ok(`${file} ${description}`, pattern.test(flat(read(file))));
+const riskChecks = flat(read("skills/lazy/references/risk-checks.md"));
+ok("risk checks list inputs the request did not name", /inputs the request did not name:.*integer-like keys.*NaN.*reordered callbacks.*failure midway/iu.test(riskChecks));
+ok("risk checks reject masking a defect", /clamp or fallback that hides it is not a fix/iu.test(riskChecks));
+ok("risk checks keep relied-on behavior", /behavior callers or tests rely on is contract/iu.test(riskChecks));
+
 const DELIVERY_CONTRACT = [
   ...FIRST_FIT_CONTRACT,
+  ...HIDDEN_DEFECT_CONTRACT,
   ...SCANNER_SCOPE_CONTRACT,
   ...COMPLETION_CONTRACT,
   ...COMMENT_CONTRACT,
@@ -204,6 +218,8 @@ const DELIVERY_CONTRACT = [
   ["reports shortcut ceilings and upgrade paths", /shortcut ceilings, and upgrade paths in the final response/iu],
   ["collects red-green proof once", /red-green checks prove the risky regression, skip old-code reruns/iu],
   ["runs the checker with the final tests", /bundled checker from the repo root with the final tests/iu],
+  ["scans committed task changes from the task base", /task-base (?:ref )?for commits/iu],
+  ["names the changed-path scan without Git", /quoted? changed paths without Git/iu],
 ];
 for (const mode of ["lite", "full", "ultra"]) {
   for (const [surface, text] of [

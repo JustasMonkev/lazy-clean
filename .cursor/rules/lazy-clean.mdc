@@ -16,7 +16,9 @@ finish. Bugs go red → green; refactors get before/after checks; loop until
 verified.
 
 Read affected code and trace callers, callbacks, retries, restore/replay, and
-concurrent paths. Fix the shared cause.
+concurrent paths. Fix the shared cause: a defect that breaks the request, recurs
+at a sibling site, or sits in a function you edit, even if unrequested. Report
+other defects with a failing input instead of fixing them.
 Choose the first option fully meeting contract and project conventions:
 project helpers → stdlib/native → installed dependencies → custom code.
 Underspecified new builds: identify core job and smallest complete workflow;
@@ -50,7 +52,8 @@ trust boundaries. Bound external work; clean up timers, listeners, and tasks
 after success, failure, cancellation, and partial setup. Prevent stale results.
 
 Use the repo's existing test tools. For non-trivial logic, cover changed
-behavior, edge cases, and failure modes, including the riskiest alternate path.
+behavior, edge cases, and failure modes, including the riskiest alternate path:
+the fewest cases that each catch a distinct bug; no test scaffolding.
 If existing red-green checks already prove the risky regression, mutation work
 is optional; otherwise a small meaningful mutation can provide evidence. Never
 add a dependency for it. When writing tests is the task, cover the full case

@@ -59,7 +59,7 @@ function markdownLinkTarget(filePath) {
 
 const INTENSITY = {
   lite: 'Complete tasks; suggest simpler options.',
-  full: 'Use the ladder; verify completion.',
+  full: 'Use the ladder; smallest diff; verify completion.',
   ultra: 'Cut unasked extras, never requested behavior/checks.',
 };
 
@@ -77,7 +77,9 @@ handoffs and compaction; summaries do not replace these instructions.
 
 ## The ladder
 
-Trace code, callers, callbacks, retries, restore/replay, concurrent paths; fix the shared cause.
+Trace callers, callbacks, retries, restore/replay, concurrent paths.
+Fix the shared cause: defects that break the request, recur at a sibling site,
+or sit in an edited function, even if unrequested. Report others with a failing input.
 Choose the first option fully meeting contract and project conventions:
 project helpers → stdlib/native → installed dependencies → custom code.
 Underspecified new builds: identify core job and smallest complete workflow;
@@ -88,21 +90,20 @@ Preserve platform representations; convert/wrap only when required for contract,
 validation, ownership, or a meaningful domain boundary.
 Skip speculative features/config/abstractions and impossible-state guards; offer simpler alternatives.
 Remove task-created orphans; mention unrelated dead code.
-Simplify structure, not formatting; preserve behavior; no forced net-negative diffs.
+Simplify structure, not formatting; no forced net-negative diffs.
 Preserve unrelated edits. One caller is not waste: keep domain helpers,
 tricky logic, side-effect boundaries, test seams, framework contracts.
 Preserve security, accessibility, hardware calibration.
 
 Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
-Report rationale, constraints, checked invariants, shortcut ceilings, and upgrade paths in the final response.
+Report rationale, checked invariants, shortcut ceilings, and upgrade paths in the final response.
 Never add SAFETY:/lazy:/slop-check-ignore; verify necessary functional suppressions.
 
 Group behavior by reason to change; keep policy independent
 of external details through ordinary parameters; give callers only needed
-capabilities. Extend contracts for requested variations. Interchangeable
-implementations preserve inputs, results, errors, and lifecycle; test the same
-contract against each. No interfaces just for SOLID.
+capabilities. Interchangeable implementations preserve inputs, results, errors,
+and lifecycle.
 
 Boundary changes: read [design checks](${markdownLinkTarget(path.join(__dirname, "../skills/lazy/references/design-checks.md"))}).
 One implementation alone is not waste; judge behavior and design separately.
@@ -111,21 +112,22 @@ Finally, infer obvious local types without any/unchecked casts;
 normalize overloaded arguments once; avoid
 throwing only to catch them locally. Remove guards/helpers only with caller/lifetime evidence. Match error and
 cancellation semantics with native APIs. Preserve encoding and buffer ownership.
-No import-time I/O. Use exclusive-state unions. TypeScript 7 (native tsc): avoid
+TypeScript 7 (native tsc): avoid
 baseUrl, moduleResolution node/node10,
 target es5, outFile; keep API tools' TypeScript 6 alias.
 TS/JS/tsconfig: read [TS/JS checks](${markdownLinkTarget(path.join(__dirname, '../skills/lazy/references/simplification-checks.md'))}).
 Python: read [Python checks](${markdownLinkTarget(path.join(__dirname, '../skills/lazy/references/python-checks.md'))}):
-no mutable defaults, bare except, or \`if not x\` where 0 or "" is valid.
+no mutable defaults, bare except, or \`if not x\` when 0/"" is valid.
 
 Preserve defaults, explicit false/zero/empty values, accepted input formats,
 state, metadata, errors, generated files, lockfiles, and platform behavior.
 Revalidate trust boundaries; bound external work; clean up tasks/timers/listeners
 after success, failure, cancellation, and partial setup. Reuse existing tests.
 Map changed requirements, edge cases, and failure modes to rerunnable tests;
-add missing coverage. Inline probes alone are not coverage. Trivial edits need
+add missing coverage: fewest cases, each catching a distinct bug; no scaffolding.
+Inline probes alone are not coverage. Trivial edits need
 no new tests. If red-green checks prove the risky regression, skip old-code reruns;
-mutation work is optional; otherwise meaningful mutation evidence helps.
+mutation work is optional; otherwise meaningful mutation helps.
 Never add dependencies for it. Test tasks: every case.
 
 TS/JS: run the bundled checker from the repo root with the final tests:
@@ -136,7 +138,7 @@ Failed scans are not clean.
 
 TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect languages used;
 read toolchain file, manifest, lockfile, or runtime versions. Match installed version;
-if unavailable, say so; do not guess. Research latest only when asked.
+if unavailable, say so; do not guess.
 
 Keep in working context: requested deliverable, task-owned scope, required checks,
 and action limits; no mandatory planning file.

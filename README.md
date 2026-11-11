@@ -78,9 +78,16 @@ The rulesets think before coding, state material assumptions when they matter,
 match existing style, cut only task-owned orphans, and define a verifiable goal.
 One-caller helpers stay when they carry real value (a domain name, tricky logic,
 an isolated side effect, test or readability value, or a framework contract).
-Non-trivial changed logic needs behavior, edge, and failure coverage; mutation
+Non-trivial changed logic needs behavior, edge, and failure coverage from the
+fewest cases that each catch a distinct bug, without test scaffolding; mutation
 evidence is optional when existing red-green checks already prove the risky
 regression, and never justifies a new dependency.
+
+A defect that breaks the request, recurs at a sibling site, or sits in a
+function the task edits is fixed at its cause even when the request did not name
+it. Any other defect found is reported with a failing input and left alone.
+The [risk checks](skills/lazy/references/risk-checks.md) list the inputs worth
+trying on the changed path.
 
 ## Bounded completion and review
 
@@ -342,7 +349,8 @@ input formats, and the repo's test tools; none treats one-line code as a goal.
 
 [Run the AI behavior checks](benchmarks/README.md) to compare fourteen core tasks with the
 rules off/on, three trials each. A separate six-task SOLID set checks module
-boundaries and contracts; see [the design experiment](benchmarks/solid-guidance.md). Compare correctness first, then time, cost,
+boundaries and contracts; see [the design experiment](benchmarks/solid-guidance.md). A ten-task hidden-defect set checks whether a
+defect the prompt never names is fixed or reported. Compare correctness first, then time, cost,
 and size for paired passing runs. This fork makes no measured improvement
 claim without real comparable runs. `npm test` checks the benchmark machinery
 without calling an AI service.

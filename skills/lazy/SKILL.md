@@ -10,7 +10,7 @@ license: MIT
 Correctness and scope precede code size.
 
 Before coding, state material assumptions, interpretations, tradeoffs; ask only when blocked.
-Multi-step tasks: step → check plan and verifiable
+Multi-step: step → check plan and verifiable
 finish: bugs go red → green; refactors get before/after checks. Carry unfinished
 checks through handoffs and compaction; summaries do not replace these instructions.
 
@@ -23,7 +23,9 @@ Do not announce the mode during ordinary work.
 ## The ladder
 
 Trace affected code, callers, callbacks, retries, restore/replay, and concurrent
-use. Fix the shared cause.
+use. Fix the shared cause: defects that break the request, recur at a sibling
+site, or sit in an edited function, even if unrequested. Report others with a
+failing input.
 
 Choose the first option fully meeting contract and project conventions:
 project helpers → stdlib/native → installed dependencies → custom code.
@@ -36,23 +38,21 @@ validation, ownership, or a meaningful domain boundary.
 
 Preserve unrelated edits. One caller is not waste: keep domain names, tricky
 logic, side effects, test seams, readability, and framework contracts.
-No needless dependencies.
 Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
-Report rationale, constraints, checked invariants, shortcut ceilings, and upgrade paths in the final response.
+Report rationale, checked invariants, shortcut ceilings, and upgrade paths in the final response.
 Never add `SAFETY:`/`lazy:`/`slop-check-ignore`; verify necessary functional suppressions.
 
 Skip speculative features/config/abstractions and impossible-state guards; offer simpler alternatives.
-Remove task-created orphans and unasked additions; mention unrelated dead code.
-Simplify structure, not formatting; preserve behavior; never force net-negative diffs.
+Remove task-created orphans; mention unrelated dead code.
+Simplify structure, not formatting; never force net-negative diffs.
 
 ## Boundaries
 
 Group behavior by reason to change; keep policy independent
 of external details through ordinary parameters; give callers only needed
-capabilities. Extend contracts for requested variations. Interchangeable
-implementations preserve inputs, results, errors, and lifecycle; test the same
-contract against each. No interfaces just for SOLID.
+capabilities. Interchangeable implementations preserve inputs, results, errors,
+and lifecycle.
 Boundary changes: read [design checks](references/design-checks.md).
 One implementation alone is not waste; judge behavior and design separately.
 
@@ -64,18 +64,19 @@ requested. Keep security, accessibility, and real-hardware calibration.
 Revalidate trust boundaries. Bound external work; clean up timers/listeners/tasks.
 
 Read [TS/JS and tsconfig](references/simplification-checks.md)
-or [Python](references/python-checks.md) checks for changed languages.
+or [Python](references/python-checks.md) checks for changed languages;
+[risk checks](references/risk-checks.md) for non-trivial code.
 
-For non-trivial code, read [risk checks](references/risk-checks.md).
 Use existing test tools. Map changed requirements, edge cases, and failure modes
-to rerunnable tests; add missing coverage. Inline probes alone are not coverage.
+to rerunnable tests; add missing coverage: fewest cases, each catching a
+distinct bug; no scaffolding. Inline probes alone are not coverage.
 Trivial edits need no new tests. If red-green checks prove the risky regression, skip old-code reruns;
 mutation work is optional; otherwise meaningful mutation helps:
 [lazy-mutation](../lazy-mutation/SKILL.md). Never add a dependency for it. Test tasks cover every case.
 
-For TS/JS edits, run the bundled checker from the repo root with the final tests,
-even after edit hooks: `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`.
-Use task-base ref for commits; quote changed paths without Git.
+TS/JS edits: run the bundled checker from the repo root with the final tests:
+`node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`
+(task-base ref for commits; quoted changed paths without Git).
 Triage only task-owned findings; do not alter pre-existing work. Failed scans
 are not clean; never weaken checks.
 
@@ -90,10 +91,10 @@ if unavailable, say so; do not guess. Research latest only when asked.
 | Level | What changes |
 |-------|------------|
 | **lite** | Complete tasks; suggest simpler options. |
-| **full** | Use the ladder. Default. |
-| **ultra** | Aggressively cut unasked extras, never requested behavior/checks. |
+| **full** | Use the ladder; smallest diff. Default. |
+| **ultra** | Cut unasked extras, never requested behavior/checks. |
 
-Example: "60-second cache expiry."
+Example: "60-second expiry."
 - lite: "Keep expiry; suggest the existing helper."
 - full: "Reuse the helper with 60-second expiry."
 - ultra: "Keep expiry; skip unasked metrics/config."

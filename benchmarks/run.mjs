@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { tasks as coreTasks } from './tasks.mjs';
 import { tasks as solidTasks } from './solid-tasks.mjs';
 import { tasks as implementationTasks } from './implementation-tasks.mjs';
+import { tasks as hiddenTasks } from './hidden-tasks.mjs';
 
 const require = createRequire(import.meta.url);
 const { getLazyInstructions } = require('../hooks/lazy-instructions.js');
@@ -144,10 +145,10 @@ export async function main(args) {
   const { command, model, trials = 3, timeoutMs = 180000, mode = 'full', taskSet = 'core' } = config;
   if (!Array.isArray(command) || !command.length || command.some(x => typeof x !== 'string' || x.includes('\0')) || !command[0]
     || typeof model !== 'string' || !model.trim() || !Number.isInteger(trials) || trials < 1 || trials > 10
-    || !Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 600000 || !['lite', 'full', 'ultra'].includes(mode) || !['core', 'solid', 'implementation'].includes(taskSet)) {
+    || !Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 600000 || !['lite', 'full', 'ultra'].includes(mode) || !['core', 'solid', 'implementation', 'hidden'].includes(taskSet)) {
     throw new Error('invalid command, model, trials (1–10), timeoutMs (100–600000), mode, or taskSet');
   }
-  const tasks = {core: coreTasks, solid: solidTasks, implementation: implementationTasks}[taskSet];
+  const tasks = {core: coreTasks, solid: solidTasks, implementation: implementationTasks, hidden: hiddenTasks}[taskSet];
   const selected = args[2] ? tasks.filter(task => task.id === args[2]) : tasks;
   if (!selected.length) throw new Error('unknown task id');
   const output = args[1] ? resolve(args[1]) : mkdtempSync(join(tmpdir(), 'lazy-eval-'));
