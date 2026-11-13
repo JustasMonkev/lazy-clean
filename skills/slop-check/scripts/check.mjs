@@ -1097,9 +1097,37 @@ function rethrowsPrimaryError(body, binding) {
     const end = balancedEnd(body, start);
     if (end !== -1) own = own.slice(0, start) + " ".repeat(end - start) + own.slice(end);
   }
-  const rethrow = String.raw`throw\s+${name}\s*;?`;
-  const errorTypeGate = new RegExp(String.raw`\bif\s*\([^;{}]*${name}[^;{}]*\)\s*(?:${rethrow}|\{\s*${rethrow}\s*\})`, "gu");
-  return new RegExp(String.raw`\bthrow\b[^;]*${name}`, "u").test(own.replace(errorTypeGate, ""));
+  const errorTest = new RegExp(String.raw`${name}(?:\s*instanceof\s+[\w$.]+|(?:\s*\??\.\s*[\w$]+)*)`, "gu");
+  const gatedRethrow = new RegExp(String.raw`\s*\{?\s*throw\s+${name}`, "uy");
+  for (const gate of own.matchAll(/\bif\s*\(/gu)) {
+    const conditionEnd = balancedEnd(own, gate.index + gate[0].length - 1);
+    if (conditionEnd === -1) continue;
+    gatedRethrow.lastIndex = conditionEnd;
+    if (!gatedRethrow.exec(own)) continue;
+    const condition = own.slice(gate.index + gate[0].length, conditionEnd - 1);
+    if (/[^\s!()|&=]/u.test(condition.replace(errorTest, "").replace(/(["'`])[^"'`]*\1/gu, ""))) continue;
+    own = own.slice(0, gate.index) + " ".repeat(gatedRethrow.lastIndex - gate.index) + own.slice(gatedRethrow.lastIndex);
+  }
+  const usesBinding = new RegExp(name, "u");
+  return throwStatements(own).some((statement) => usesBinding.test(statement));
+}
+
+function throwStatements(text) {
+  const statements = [];
+  for (const keyword of text.matchAll(/\bthrow\b/gu)) {
+    let depth = 0;
+    let end = keyword.index + keyword[0].length;
+    for (; end < text.length; end += 1) {
+      const ch = text[end];
+      if (ch === "(" || ch === "[" || ch === "{") depth += 1;
+      else if (ch === ")" || ch === "]" || ch === "}") {
+        if (depth === 0) break;
+        depth -= 1;
+      } else if (depth === 0 && (ch === ";" || ch === "\n")) break;
+    }
+    statements.push(text.slice(keyword.index, end));
+  }
+  return statements;
 }
 
 const CATCH_HEAD_AT = /\s*catch\s*(?:\(\s*([\w$]*)\s*(?::[^)]*)?\))?\s*\{/uy;
