@@ -245,7 +245,8 @@ assert.deepEqual(loadConfig('{"port": 8080, "host": "a"}'), {port: 8080, host: '
 assert.deepEqual({...loadConfig('# old\\nport=8080\\n\\nhost=a\\n')}, {port: '8080', host: 'a'});
 const jsonError = text => { try { JSON.parse(text); } catch (error) { return error.message; } };
 for (const corrupt of ['{"port": 8080,}', '{"url": "a=b",}', '  {"port": 80']) {
-  assert.throws(() => loadConfig(corrupt), error => [error.message, error.cause?.message].includes(jsonError(corrupt)),
+  const accepted = [corrupt, corrupt.trim()].map(jsonError);
+  assert.throws(() => loadConfig(corrupt), error => [error.message, error.cause?.message].some(message => accepted.includes(message)),
     'corrupt JSON must report its own JSON error');
 }`,
     hidden: 'Corrupt JSON falls through to the legacy parser, which either accepts it as wrong settings or replaces the JSON error with its own.',

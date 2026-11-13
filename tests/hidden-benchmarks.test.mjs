@@ -186,6 +186,14 @@ try {
   ));
   const nullPrototype = await grade(tallyTask, tallyCwd);
   assert.equal(nullPrototype.pass, true, `a null-prototype tally record must pass: ${nullPrototype.output}`);
+  const fallbackTask = tasks.find(task => task.id === 'fallback-parse');
+  const fallbackCwd = join(root, fallbackTask.id);
+  writeFileSync(join(fallbackCwd, 'config.cjs'), fallbackFix.replace(
+    "text.trimStart().startsWith('{') ? JSON.parse(text)",
+    "text.trim().startsWith('{') ? JSON.parse(text.trim())",
+  ));
+  const trimmedJson = await grade(fallbackTask, fallbackCwd);
+  assert.equal(trimmedJson.pass, true, `parsing trimmed JSON must pass: ${trimmedJson.output}`);
   const configPath = join(root, 'config.json');
   writeFileSync(configPath, JSON.stringify({command: [process.execPath, '-e', ''], model: 'fake-test-only', trials: 1, taskSet: 'hidden'}));
   const output = join(root, 'selected-results');
