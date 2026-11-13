@@ -81,8 +81,8 @@ exports.hasNext = (items, index, size) => index + 1 < exports.pageCount(items, s
 exports.postPath = post => \`/posts/\${post.id}\`;
 exports.postUrl = post => \`/posts/\${slugify(post.title)}\`;`],
   'fallback-parse': ['config.cjs', `const ENTRY = /^([\\w.-]+)=(.*)$/u;
-const legacyEntries = text => text.split('\\n').map(line => line.trim())
-  .filter(line => line !== '' && !line.startsWith('#')).map(line => ENTRY.exec(line));
+const legacyEntries = text => text.split(/\\r?\\n/)
+  .filter(line => line.trim() !== '' && !line.startsWith('#')).map(line => ENTRY.exec(line));
 exports.loadConfig = text => {
   try {
     return JSON.parse(text);
@@ -97,11 +97,10 @@ exports.loadConfig = text => {
 const fallbackFix = fixes['fallback-parse'][1];
 const strictLegacy = `const parseLegacy = text => {
   const config = {};
-  for (const line of text.split('\\n')) {
-    const entry = line.trim();
-    if (entry === '' || entry.startsWith('#')) continue;
-    const match = /^([\\w.-]+)=(.*)$/u.exec(entry);
-    if (!match) throw new SyntaxError(\`invalid config line: \${entry}\`);
+  for (const line of text.split(/\\r?\\n/)) {
+    if (line.trim() === '' || line.startsWith('#')) continue;
+    const match = /^([\\w.-]+)=(.*)$/u.exec(line);
+    if (!match) throw new SyntaxError(\`invalid config line: \${line}\`);
     config[match[1]] = match[2];
   }
   return config;
@@ -159,6 +158,7 @@ const badVariants = {
       "post.title.normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')"),
   ],
   'fallback-parse': [
+    fallbackFix.replace(/text\.split\([^)]*\)/u, "text.split('\\n').map(line => line.trim())"),
     strictLegacy + tryJsonFirst,
     lenientLegacy + tryJsonFirst,
     strictLegacy + "exports.loadConfig = text => text.trimStart().startsWith('{') ? JSON.parse(text) : parseLegacy(text);",

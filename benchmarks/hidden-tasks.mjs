@@ -243,6 +243,7 @@ assert.equal(postUrl({title: '  --Łódź 2026--  '}), '/posts/lodz-2026');`,
     check: `const {loadConfig} = require('./config.cjs');
 assert.deepEqual(loadConfig('{"port": 8080, "host": "a"}'), {port: 8080, host: 'a'});
 assert.deepEqual({...loadConfig('# old\\nport=8080\\n\\ndb.host=a\\n')}, {port: '8080', 'db.host': 'a'});
+assert.deepEqual({...loadConfig('token=  abc  \\nempty=\\n')}, {token: '  abc  ', empty: ''}, 'a legacy value is the rest of its line');
 for (const json of ['[]', 'null', '0', 'false', '"a=b"', '[1, "x=y"]']) {
   assert.deepEqual(loadConfig(json), JSON.parse(json), \`valid JSON stays JSON: \${json}\`);
 }
