@@ -1079,14 +1079,24 @@ function* iterateBlockFindings(ctx) {
     const body = masked.slice(bodyStart, bodyEnd);
     if (!PARSE_CALL.test(masked.slice(match.index, tryEnd)) || !PARSE_CALL.test(body)) continue;
     const binding = handler[1];
-    if (binding && new RegExp(`${IDENT_BEFORE}${escapeForRegExp(binding)}${IDENT_AFTER}`, "u").test(body)) continue;
+    if (binding && new RegExp(`${IDENT_BEFORE}${escapeForRegExp(binding)}${IDENT_AFTER}`, "u").test(withoutNestedCatches(body))) continue;
     if (hasCommentInRange(bodyStart, bodyEnd)) continue;
     yield {
       ...offsetSpan(lineStarts, match.index, bodyEnd - 1),
       rule: "no-fallback-parse",
-      message: "This catch drops the first parse error and parses again, so a failure reports only the fallback's error. Rethrow the primary error when the input is not the fallback's format, or keep it as `cause`.",
+      message: "This catch parses again after the first parse failed, so corrupt input in the first format is read by the fallback or reported with the fallback's error. Choose the format from the input before parsing, or rethrow the first error when the input is not the fallback's format.",
     };
   }
+}
+
+function withoutNestedCatches(body) {
+  let outside = body;
+  for (const nested of body.matchAll(/\bcatch\s*(?:\([^)]*\))?\s*\{/gu)) {
+    const start = nested.index + nested[0].length - 1;
+    const end = balancedEnd(body, start);
+    if (end !== -1) outside = outside.slice(0, start) + " ".repeat(end - start) + outside.slice(end);
+  }
+  return outside;
 }
 
 const CATCH_HEAD_AT = /\s*catch\s*(?:\(\s*([\w$]*)\s*(?::[^)]*)?\))?\s*\{/uy;
@@ -2942,10 +2952,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "Preserve documented sentinel-result contracts, such as null for a failed optional lookup, when callers distinguish them from success. Optional best-effort features may also deliberately swallow errors. Only propagate when the sentinel is accidental; preserve finally cleanup and the awaited operation.",
   },
   "no-fallback-parse": {
-    why: "A catch that ignores the first parse error and parses again reports only the fallback's failure. Corrupt input in the primary format surfaces as a confusing legacy-format error, or as legacy data that parsed by accident.",
+    why: "A catch that parses again after the first parse failed lets corrupt primary-format input reach the fallback: it surfaces as a confusing legacy-format error, or as legacy data that parsed by accident. Rethrowing the first error only when the fallback also fails still accepts the accidental parse.",
     slop: "try { return JSON.parse(raw); } catch { return parseLegacy(raw); }",
     correct: "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw error; return parseLegacy(raw); }",
-    exceptions: "A fallback that keeps the primary error is fine: rethrow it when the input is not the fallback's format, or attach it as `cause`. A first parse that is only a cheap format probe may discard its error deliberately; verify that and explain it in the final response.",
+    exceptions: "A fallback that decides the format from the input first is fine, as is one that rethrows the first error when the input is not the fallback's format. A first parse that is only a cheap format probe may discard its error deliberately; verify that and explain it in the final response.",
   },
   "no-log-and-rethrow": {
     why: "Logging then rethrowing reports the same failure at every layer. A boundary handler that logs once is the design; a chain of log-and-rethrow is a stack trace printed five times.",

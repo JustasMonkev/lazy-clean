@@ -191,7 +191,7 @@ pass requires the requested behavior and the held-out cases to work. Review the
 patch and the client's final message to distinguish fixes, reports with a
 failing input, and misses. Compare added test lines only between passing runs.
 `npm test` validates the twelve initial fixtures, reference fixes, and
-twenty-five rejected variants without AI calls. `slugkit.cjs` is a vendored
+twenty-six rejected variants without AI calls. `slugkit.cjs` is a vendored
 surrogate: the grader rejects `node_modules`, so it does not model package
 resolution.
 

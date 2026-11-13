@@ -148,6 +148,9 @@ const badVariants = {
     tryJsonFirst,
     tryJsonFirst.replace("throw new SyntaxError(`invalid config line: ${entry}`)", 'continue'),
     fallbackFix.replace('text.trimStart().startsWith', 'text.startsWith'),
+    fallbackFix.replace(/exports\.loadConfig.*$/u, `exports.loadConfig = text => {
+  try { return JSON.parse(text); } catch (error) { try { return parseLegacy(text); } catch { throw error; } }
+};`),
   ],
   'necessary-guard': [guard.replace('  if (body === undefined) return;\n', '')],
 };

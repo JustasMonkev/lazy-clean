@@ -741,7 +741,8 @@ expectNoRule(
 expectRule("flags a fallback parse without the primary error", "try { return JSON.parse(raw); } catch { return parseLegacy(raw); }", "no-fallback-parse");
 expectRule("flags a fallback parse with an unused binding", "try { return decodeV2(buf); } catch (_error) { log.warn('v2 failed'); return decodeV1(buf); }", "no-fallback-parse");
 expectRule("flags a multiline fallback parse", "try {\n  config = yaml.parse(text);\n} catch (e) {\n  config = JSON.parse(text);\n}", "no-fallback-parse");
-expectNoRule("allows a fallback that keeps the primary error", "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw error; return parseLegacy(raw); }", "no-fallback-parse");
+expectRule("flags a fallback that rethrows only when it also fails", "try { return JSON.parse(raw); } catch (error) { try { return parseLegacy(raw); } catch { throw error; } }", "no-fallback-parse");
+expectNoRule("allows a fallback that keeps the primary error","try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw error; return parseLegacy(raw); }", "no-fallback-parse");
 expectNoRule("allows a catch that does not parse again", "try { return JSON.parse(raw); } catch { return defaults(); }", "no-fallback-parse");
 expectNoRule("allows a parse fallback after a non-parse attempt", "try { return fetchConfig(); } catch { return parseConfig(cached); }", "no-fallback-parse");
 expectNoRule("ignores parse names inside strings", "try { return JSON.parse(raw); } catch { return show('parse(raw) failed'); }", "no-fallback-parse");
