@@ -1078,9 +1078,7 @@ function* iterateBlockFindings(ctx) {
     if (bodyEnd === -1) continue;
     const body = masked.slice(bodyStart, bodyEnd);
     if (!PARSE_CALL.test(masked.slice(match.index, tryEnd)) || !PARSE_CALL.test(body)) continue;
-    const binding = handler[1];
-    if (binding && new RegExp(`${IDENT_BEFORE}${escapeForRegExp(binding)}${IDENT_AFTER}`, "u").test(withoutNestedCatches(body))) continue;
-    if (hasCommentInRange(bodyStart, bodyEnd)) continue;
+    if (rethrowsBeforeFallback(body.slice(0, body.search(PARSE_CALL)), handler[1])) continue;
     yield {
       ...offsetSpan(lineStarts, match.index, bodyEnd - 1),
       rule: "no-fallback-parse",
@@ -1089,14 +1087,11 @@ function* iterateBlockFindings(ctx) {
   }
 }
 
-function withoutNestedCatches(body) {
-  let outside = body;
-  for (const nested of body.matchAll(/\bcatch\s*(?:\([^)]*\))?\s*\{/gu)) {
-    const start = nested.index + nested[0].length - 1;
-    const end = balancedEnd(body, start);
-    if (end !== -1) outside = outside.slice(0, start) + " ".repeat(end - start) + outside.slice(end);
-  }
-  return outside;
+function rethrowsBeforeFallback(beforeFallback, binding) {
+  if (!binding) return false;
+  const name = `${IDENT_BEFORE}${escapeForRegExp(binding)}${IDENT_AFTER}`;
+  const errorTypeGate = new RegExp(String.raw`\bif\s*\([^;{}]*${name}[^;{}]*\)\s*throw\s+${name}\s*;?`, "gu");
+  return new RegExp(String.raw`\bthrow\b[^;]*${name}`, "u").test(beforeFallback.replace(errorTypeGate, ""));
 }
 
 const CATCH_HEAD_AT = /\s*catch\s*(?:\(\s*([\w$]*)\s*(?::[^)]*)?\))?\s*\{/uy;
@@ -2952,7 +2947,7 @@ const RULE_EXPLANATIONS = {
     exceptions: "Preserve documented sentinel-result contracts, such as null for a failed optional lookup, when callers distinguish them from success. Optional best-effort features may also deliberately swallow errors. Only propagate when the sentinel is accidental; preserve finally cleanup and the awaited operation.",
   },
   "no-fallback-parse": {
-    why: "A catch that parses again after the first parse failed lets corrupt primary-format input reach the fallback: it surfaces as a confusing legacy-format error, or as legacy data that parsed by accident. Rethrowing the first error only when the fallback also fails still accepts the accidental parse.",
+    why: "A catch that parses again after the first parse failed lets corrupt primary-format input reach the fallback: it surfaces as a confusing legacy-format error, or as legacy data that parsed by accident. Rethrowing the first error only when the fallback also fails, or gating on the error's type, still accepts the accidental parse.",
     slop: "try { return JSON.parse(raw); } catch { return parseLegacy(raw); }",
     correct: "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw error; return parseLegacy(raw); }",
     exceptions: "A fallback that decides the format from the input first is fine, as is one that rethrows the first error when the input is not the fallback's format. A first parse that is only a cheap format probe may discard its error deliberately; verify that and explain it in the final response.",
