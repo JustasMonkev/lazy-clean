@@ -176,7 +176,7 @@ const FIRST_FIT_CONTRACT = [
   ["chooses the first complete, conventional option", /first option fully meeting (?:the )?contract and project conventions/iu],
   ["orders project reuse before platform, dependencies, and custom code", /project helpers → stdlib\/native → installed dependencies → custom code/iu],
   ["bounds only underspecified new builds to a complete core workflow", /underspecified new builds: identify core job and smallest complete workflow; never skip explicit requirements or existing behavior/iu],
-  ["searches before adding helpers or components", /before adding helpers\/components, use available workspace search for the closest implementation; reuse\/extend if suitable/iu],
+  ["searches before adding helpers or components", /before adding helpers\/components, search workspace and installed-dependency APIs for closest implementation; reuse\/extend if suitable/iu],
   ["retains platform values with contract and boundary exceptions", /preserve platform representations; convert\/wrap only when required for contract, validation, ownership, or a meaningful domain boundary/iu],
 ];
 for (const file of ["skills/lazy/SKILL.md", ...RULES_FILES, ".opencode/command/lazy.md"])

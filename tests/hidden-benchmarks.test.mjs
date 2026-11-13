@@ -77,8 +77,40 @@ exports.hasNext = (items, index, size) => index + 1 < exports.pageCount(items, s
     remaining() { return limit - used; },
   };
 };`],
+  'installed-library': ['posts.cjs', `const {slugify} = require('./slugkit.cjs');
+exports.postPath = post => \`/posts/\${post.id}\`;
+exports.postUrl = post => \`/posts/\${slugify(post.title)}\`;`],
+  'fallback-parse': ['config.cjs', `const ENTRY = /^([\\w.-]+)=(.*)$/u;
+const legacyEntries = text => text.split(/\\r?\\n/)
+  .filter(line => line.trim() !== '' && !line.startsWith('#')).map(line => ENTRY.exec(line));
+exports.loadConfig = text => {
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    const entries = legacyEntries(text);
+    if (entries.includes(null)) throw error;
+    return Object.fromEntries(entries.map(([, key, value]) => [key, value]));
+  }
+};`],
   'necessary-guard': ['route.cjs', guard],
 };
+const fallbackFix = fixes['fallback-parse'][1];
+const strictLegacy = `const parseLegacy = text => {
+  const config = {};
+  for (const line of text.split(/\\r?\\n/)) {
+    if (line.trim() === '' || line.startsWith('#')) continue;
+    const match = /^([\\w.-]+)=(.*)$/u.exec(line);
+    if (!match) throw new SyntaxError(\`invalid config line: \${line}\`);
+    config[match[1]] = match[2];
+  }
+  return config;
+};
+`;
+const lenientLegacy = `const parseLegacy = text => Object.fromEntries(text.split('\\n').map(line => line.trim())
+  .filter(line => line.includes('=') && !line.startsWith('#'))
+  .map(line => [line.slice(0, line.indexOf('=')), line.slice(line.indexOf('=') + 1)]));
+`;
+const tryJsonFirst = 'exports.loadConfig = text => { try { return JSON.parse(text); } catch { return parseLegacy(text); } };';
 const badVariants = {
   'reused-helper': [
     fixes['reused-helper'][1].replace(/exports\.top[\s\S]*$/u, 'exports.top = (words, n) => Object.entries(exports.tally(words)).sort((a, b) => b[1] - a[1]).slice(0, n);'),
@@ -120,6 +152,18 @@ const badVariants = {
     ),
   ],
   'failed-update': [fixes['failed-update'][1].replace("if (used + units > limit) throw new RangeError('quota exceeded');\n      used += units;", "used += units;\n      if (used > limit) throw new RangeError('quota exceeded');")],
+  'installed-library': [
+    fixes['installed-library'][1].replace('slugify(post.title)', "post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')"),
+    fixes['installed-library'][1].replace('slugify(post.title)',
+      "post.title.normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')"),
+  ],
+  'fallback-parse': [
+    fallbackFix.replace(/text\.split\([^)]*\)/u, "text.split('\\n').map(line => line.trim())"),
+    strictLegacy + tryJsonFirst,
+    lenientLegacy + tryJsonFirst,
+    strictLegacy + "exports.loadConfig = text => text.trimStart().startsWith('{') ? JSON.parse(text) : parseLegacy(text);",
+    lenientLegacy + 'exports.loadConfig = text => { try { return JSON.parse(text); } catch (error) { try { return parseLegacy(text); } catch { throw error; } } };',
+  ],
   'necessary-guard': [guard.replace('  if (body === undefined) return;\n', '')],
 };
 
@@ -154,6 +198,19 @@ try {
   ));
   const nullPrototype = await grade(tallyTask, tallyCwd);
   assert.equal(nullPrototype.pass, true, `a null-prototype tally record must pass: ${nullPrototype.output}`);
+  const fallbackTask = tasks.find(task => task.id === 'fallback-parse');
+  const fallbackCwd = join(root, fallbackTask.id);
+  writeFileSync(join(fallbackCwd, 'config.cjs'), fallbackFix.replace('JSON.parse(text)', 'JSON.parse(text.trim())'));
+  const trimmedJson = await grade(fallbackTask, fallbackCwd);
+  assert.equal(trimmedJson.pass, true, `parsing trimmed JSON must pass: ${trimmedJson.output}`);
+  writeFileSync(join(fallbackCwd, 'config.cjs'), fallbackFix.replace(
+    'throw error;', "throw new SyntaxError(`Config is neither JSON (${error.message}) nor legacy`);"));
+  const wrappedJson = await grade(fallbackTask, fallbackCwd);
+  assert.equal(wrappedJson.pass, true, `an error that reports the JSON message must pass: ${wrappedJson.output}`);
+  writeFileSync(join(fallbackCwd, 'config.cjs'), strictLegacy
+    + 'exports.loadConfig = text => { try { return JSON.parse(text); } catch (error) { try { return parseLegacy(text); } catch { throw error; } } };');
+  const strictRethrow = await grade(fallbackTask, fallbackCwd);
+  assert.equal(strictRethrow.pass, true, `a grammar-strict fallback that rethrows the JSON error must pass: ${strictRethrow.output}`);
   const configPath = join(root, 'config.json');
   writeFileSync(configPath, JSON.stringify({command: [process.execPath, '-e', ''], model: 'fake-test-only', trials: 1, taskSet: 'hidden'}));
   const output = join(root, 'selected-results');

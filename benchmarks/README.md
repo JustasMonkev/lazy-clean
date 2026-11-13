@@ -166,10 +166,10 @@ behavior and dependency integration remain outside these small Node fixtures.
 
 ## Hidden-defect task set
 
-Set `"taskSet": "hidden"` in the same config. Nine prompts ask for one small
+Set `"taskSet": "hidden"` in the same config. Eleven prompts ask for one small
 change and leave a second defect unnamed. The held-out checks exercise both.
-The tenth task checks preservation of an existing guard. A full run makes 60
-calls (10 tasks × 3 trials × 2 arms).
+The twelfth task checks preservation of an existing guard. A full run makes 72
+calls (12 tasks × 3 trials × 2 arms).
 
 | Task | Defect the prompt does not name |
 | --- | --- |
@@ -182,14 +182,18 @@ calls (10 tasks × 3 trials × 2 arms).
 | helper-rounding | The existing page counter rounds to nearest and drops a short last page |
 | reentrant-listener | Removing a listener can skip the next one, and nested emissions can invoke a one-time listener twice |
 | failed-update | A rejected take has already consumed its units, so the new reading is wrong afterwards |
+| installed-library | A hand-written slug differs from the vendored `slugkit.cjs` on accents, `&`, and letters such as ß; a copied implementation also passes, so inspect reuse |
+| fallback-parse | Corrupt JSON falls through to the legacy parser, which accepts it as wrong settings or replaces the JSON error; valid non-object JSON must stay JSON |
 | necessary-guard (existing core task) | Control for preserving the existing invalid-JSON guard |
 
 `hidden-tasks.mjs` keeps each `hidden` note outside worker prompts. A runtime
 pass requires the requested behavior and the held-out cases to work. Review the
 patch and the client's final message to distinguish fixes, reports with a
 failing input, and misses. Compare added test lines only between passing runs.
-`npm test` validates the ten initial fixtures, reference fixes, and twenty
-rejected variants without AI calls.
+`npm test` validates the twelve initial fixtures, reference fixes, and
+twenty-seven rejected variants without AI calls. `slugkit.cjs` is a vendored
+surrogate: the grader rejects `node_modules`, so it does not model package
+resolution.
 
 ## Reproduce current-versus-candidate rules
 

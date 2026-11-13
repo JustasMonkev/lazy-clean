@@ -84,8 +84,8 @@ Choose the first option fully meeting contract and project conventions:
 project helpers → stdlib/native → installed dependencies → custom code.
 Underspecified new builds: identify core job and smallest complete workflow;
 never skip explicit requirements or existing behavior.
-Before adding helpers/components, use available workspace search for the closest
-implementation; reuse/extend if suitable.
+Before adding helpers/components, search workspace and installed-dependency APIs
+for closest implementation; reuse/extend if suitable.
 Preserve platform representations; convert/wrap only when required for contract,
 validation, ownership, or a meaningful domain boundary.
 Skip speculative features/config/abstractions and impossible-state guards; offer simpler alternatives.

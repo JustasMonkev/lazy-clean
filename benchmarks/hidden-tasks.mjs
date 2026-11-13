@@ -1,5 +1,10 @@
 import { tasks as core } from './tasks.mjs';
 
+const slugkitSource = `const SPELLED = {'&': ' and ', 'ß': 'ss', 'æ': 'ae', 'ø': 'o', 'œ': 'oe', 'ł': 'l', 'đ': 'd'};
+exports.slugify = text => text.normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()
+  .replace(/[&ßæøœłđ]/g, letter => SPELLED[letter]).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+`;
+
 export const tasks = [
   {
     id: 'reused-helper',
@@ -210,6 +215,45 @@ assert.equal(quota.remaining(), 2, 'a rejected take must not consume units');
 assert.equal(quota.take(2), 0); assert.equal(quota.remaining(), 0);
 assert.throws(() => quota.take(1), RangeError); assert.equal(quota.remaining(), 0);`,
     hidden: 'A rejected take has already consumed its units, so the new reading is wrong afterwards.',
+  },
+  {
+    id: 'installed-library',
+    prompt: 'Add postUrl(post) to posts.cjs: it returns "/posts/" followed by the slug of post.title. Post URLs must use the same slugs as the rest of the blog. Keep postPath.',
+    files: {
+      'slugkit.cjs': slugkitSource,
+      'posts.cjs': `exports.postPath = post => \`/posts/\${post.id}\`;
+`,
+    },
+    check: `assert.equal(fs.readFileSync('slugkit.cjs', 'utf8'), ${JSON.stringify(slugkitSource)});
+const {postPath, postUrl} = require('./posts.cjs');
+assert.equal(postPath({id: 7}), '/posts/7');
+assert.equal(postUrl({title: 'Hello, World!'}), '/posts/hello-world');
+assert.equal(postUrl({title: 'Crème Brûlée & Café'}), '/posts/creme-brulee-and-cafe');
+assert.equal(postUrl({title: 'Straße nach Ærø'}), '/posts/strasse-nach-aero');
+assert.equal(postUrl({title: '  --Łódź 2026--  '}), '/posts/lodz-2026');`,
+    hidden: 'A hand-written slug treats accents, "&", and letters such as ß differently from the vendored slug library the blog uses.',
+  },
+  {
+    id: 'fallback-parse',
+    prompt: 'Older deployments store config in a legacy format: one key=value pair per line, where a key is one or more letters, digits, underscores, dots, or hyphens and the value is the rest of the line as a string. Blank lines and lines starting with # are ignored. Make loadConfig(text) in config.cjs accept that legacy format as well as JSON. Keep the exported API.',
+    files: {
+      'config.cjs': `exports.loadConfig = text => JSON.parse(text);
+`,
+    },
+    check: `const {loadConfig} = require('./config.cjs');
+assert.deepEqual(loadConfig('{"port": 8080, "host": "a"}'), {port: 8080, host: 'a'});
+assert.deepEqual({...loadConfig('# old\\nport=8080\\n\\ndb.host=a\\n')}, {port: '8080', 'db.host': 'a'});
+assert.deepEqual({...loadConfig('token=  abc  \\nempty=\\n')}, {token: '  abc  ', empty: ''}, 'a legacy value is the rest of its line');
+for (const json of ['[]', 'null', '0', 'false', '"a=b"', '[1, "x=y"]']) {
+  assert.deepEqual(loadConfig(json), JSON.parse(json), \`valid JSON stays JSON: \${json}\`);
+}
+const jsonError = text => { try { JSON.parse(text); } catch (error) { return error.message; } };
+for (const corrupt of ['{"port": 8080,}', '{"url": "a=b",}', '  {"port": 80']) {
+  const accepted = [corrupt, corrupt.trim()].map(jsonError);
+  assert.throws(() => loadConfig(corrupt), error => [error.message, error.cause?.message].some(message => accepted.some(json => message?.includes(json))),
+    'corrupt JSON must report its own JSON error');
+}`,
+    hidden: 'Corrupt JSON falls through to the legacy parser, which either accepts it as wrong settings or replaces the JSON error with its own; a dispatch on a leading { breaks valid non-object JSON.',
   },
   core.find(task => task.id === 'necessary-guard'),
 ];

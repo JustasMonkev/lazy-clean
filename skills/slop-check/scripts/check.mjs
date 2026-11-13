@@ -594,8 +594,12 @@ function offsetToPosition(lineStarts, offset) {
 // consumer scoping by edited lines know an edit inside the body created the
 // finding. Single-line matches carry no endLine.
 function matchSpan(lineStarts, match) {
-  const start = offsetToPosition(lineStarts, match.index);
-  const end = offsetToPosition(lineStarts, match.index + match[0].length - 1);
+  return offsetSpan(lineStarts, match.index, match.index + match[0].length - 1);
+}
+
+function offsetSpan(lineStarts, startOffset, lastOffset) {
+  const start = offsetToPosition(lineStarts, startOffset);
+  const end = offsetToPosition(lineStarts, lastOffset);
   return end.line > start.line ? { ...start, endLine: end.line } : start;
 }
 
@@ -1062,6 +1066,81 @@ function* iterateBlockFindings(ctx) {
       message: "Returning a default from catch disguises failure as success. Propagate the error or return an explicit failure value.",
     };
   }
+
+  for (const match of masked.matchAll(/\btry\s*\{/gu)) {
+    const tryEnd = balancedEnd(masked, match.index + match[0].length - 1);
+    if (tryEnd === -1) continue;
+    CATCH_HEAD_AT.lastIndex = tryEnd;
+    const handler = CATCH_HEAD_AT.exec(masked);
+    if (!handler) continue;
+    const bodyStart = CATCH_HEAD_AT.lastIndex - 1;
+    const bodyEnd = balancedEnd(masked, bodyStart);
+    if (bodyEnd === -1) continue;
+    const body = masked.slice(bodyStart, bodyEnd);
+    const fallbackAt = firstParseCall(body);
+    if (fallbackAt === -1 || firstParseCall(masked.slice(match.index, tryEnd)) === -1) continue;
+    if (rethrowsPrimaryError(body, handler[1])) continue;
+    yield {
+      ...offsetSpan(lineStarts, match.index, bodyEnd - 1),
+      rule: "no-fallback-parse",
+      message: "This catch parses again and never rethrows the first parse error, so a failure reports only the fallback's error, and first-format input the fallback happens to accept is read as wrong data. Rethrow the first error when the input is not the fallback's format or the fallback rejects it.",
+    };
+  }
+}
+
+function rethrowsPrimaryError(body, binding) {
+  if (!binding) return false;
+  const name = `${IDENT_BEFORE}${escapeForRegExp(binding)}${IDENT_AFTER}`;
+  let own = body;
+  for (const shadow of body.matchAll(new RegExp(String.raw`\bcatch\s*\(\s*${escapeForRegExp(binding)}\s*(?::[^)]*)?\)\s*\{`, "gu"))) {
+    const start = shadow.index + shadow[0].length - 1;
+    const end = balancedEnd(body, start);
+    if (end !== -1) own = own.slice(0, start) + " ".repeat(end - start) + own.slice(end);
+  }
+  const errorTest = new RegExp(String.raw`${name}(?:\s*instanceof\s+[\w$.]+|(?:\s*\??\.\s*[\w$]+)*)`, "gu");
+  const gatedRethrow = new RegExp(String.raw`\s*\{?\s*throw\s+${name}`, "uy");
+  for (const gate of own.matchAll(/\bif\s*\(/gu)) {
+    const conditionEnd = balancedEnd(own, gate.index + gate[0].length - 1);
+    if (conditionEnd === -1) continue;
+    gatedRethrow.lastIndex = conditionEnd;
+    if (!gatedRethrow.exec(own)) continue;
+    const condition = own.slice(gate.index + gate[0].length, conditionEnd - 1);
+    if (/[^\s!()|&=]/u.test(condition.replace(errorTest, "").replace(/(["'`])[^"'`]*\1/gu, ""))) continue;
+    own = own.slice(0, gate.index) + " ".repeat(gatedRethrow.lastIndex - gate.index) + own.slice(gatedRethrow.lastIndex);
+  }
+  const usesBinding = new RegExp(name, "u");
+  return throwStatements(own).some((statement) => usesBinding.test(statement));
+}
+
+function throwStatements(text) {
+  const statements = [];
+  for (const keyword of text.matchAll(/\bthrow\b/gu)) {
+    let depth = 0;
+    let end = keyword.index + keyword[0].length;
+    for (; end < text.length; end += 1) {
+      const ch = text[end];
+      if (ch === "(" || ch === "[" || ch === "{") depth += 1;
+      else if (ch === ")" || ch === "]" || ch === "}") {
+        if (depth === 0) break;
+        depth -= 1;
+      } else if (depth === 0 && (ch === ";" || ch === "\n")) break;
+    }
+    statements.push(text.slice(keyword.index, end));
+  }
+  return statements;
+}
+
+const CATCH_HEAD_AT = /\s*catch\s*(?:\(\s*([\w$]*)\s*(?::[^)]*)?\))?\s*\{/uy;
+const PARSE_NAME = /(?<![\w$])[\w$]*(?:parse|Parse|decode|Decode|deserialize|Deserialize)[\w$]*(?=\s*(?:<[^<>()]*>\s*)?(?:\?\.\s*)?\()/gu;
+
+function firstParseCall(text) {
+  for (const match of text.matchAll(PARSE_NAME)) {
+    if (/\bfunction\s*\*?\s*$/u.test(text.slice(Math.max(0, match.index - 12), match.index))) continue;
+    const argsEnd = balancedEnd(text, text.indexOf("(", match.index + match[0].length));
+    if (argsEnd !== -1 && /^\s*\{/u.test(text.slice(argsEnd, argsEnd + 20))) continue;
+    return match.index;
+  }
+  return -1;
 }
 
 // `import {` / `export {` opening a specifier list that continues on later
@@ -2913,6 +2992,12 @@ const RULE_EXPLANATIONS = {
     correct: "try { return await loadUser(id); } finally { release(); }",
     exceptions: "Preserve documented sentinel-result contracts, such as null for a failed optional lookup, when callers distinguish them from success. Optional best-effort features may also deliberately swallow errors. Only propagate when the sentinel is accidental; preserve finally cleanup and the awaited operation.",
   },
+  "no-fallback-parse": {
+    why: "A catch that parses again and never rethrows the first parse error loses it: a failure surfaces as a confusing legacy-format error, and primary-format input the fallback happens to accept becomes wrong data with no error at all. Logging the error or rethrowing only other error types does not keep it.",
+    slop: "try { return JSON.parse(raw); } catch { return parseLegacy(raw); }",
+    correct: "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw error; return parseLegacy(raw); }",
+    exceptions: "A first parse that is only a cheap format probe may discard its error deliberately; verify that and explain it in the final response. A clean result is not proof: the rule accepts any rethrow of the first error, including one after the fallback rejects, so review whether the fallback's grammar is strict enough to reject corrupt first-format input. It reads only calls named parse, decode, or deserialize; an inline fallback or a destructured catch binding is not detected.",
+  },
   "no-log-and-rethrow": {
     why: "Logging then rethrowing reports the same failure at every layer. A boundary handler that logs once is the design; a chain of log-and-rethrow is a stack trace printed five times.",
     slop: "try { save(); } catch (e) { logger.error(e); throw e; }",
@@ -3036,7 +3121,7 @@ const RULE_EXPLANATIONS = {
 const STANDALONE_RULE_IDS = [
   "no-arbitrary-sleep", "no-array-filter-map", "no-backcompat-comments", "no-boolean-return-branches",
   "no-catch-fake-success", "no-change-note-comments", "no-emoji",
-  "no-empty-catch", "no-empty-type-declaration", "no-filler-comments",
+  "no-empty-catch", "no-empty-type-declaration", "no-fallback-parse", "no-filler-comments",
   "no-foreach-push", "no-let-if-else-assign", "no-log-and-rethrow",
   "no-message-only-rethrow", "no-narration-comments", "no-obvious-doc-comments",
   "no-promise-constructor-wrapper", "no-reduce-accumulator-copy", "no-restating-comments",

@@ -23,10 +23,10 @@ or compacted summary is not the full ruleset. State material assumptions and a
 brief step → check plan before coding. Ask only when a missing answer blocks work.
 
 Model the data and invariants before splitting implementation. Keep one decision
-in one place. Search for the closest existing implementation before adding one;
-reuse or extend it when it meets the contract. Remove replaced task-owned paths,
-not unrelated features. Consider the design that would naturally accommodate the
-requirement, then deliver it in small compatible slices rather than a rewrite.
+in one place. Search the workspace and installed-dependency APIs for the
+closest existing implementation before adding one; reuse or extend it when it
+meets the contract. Remove replaced task-owned paths, not unrelated features.
+Consider the design that would naturally accommodate the requirement, then deliver it in small compatible slices rather than a rewrite.
 Fix the shared cause: a defect that breaks the request, recurs at a sibling site,
 or sits in a function you edit, even if unrequested. Report other defects with a
 failing input instead of fixing them.

@@ -738,6 +738,33 @@ expectNoRule(
   "try { return load(); } catch { /* offline mode falls back to empty state */ return null; }",
   "no-catch-fake-success",
 );
+expectRule("flags a fallback parse without the primary error", "try { return JSON.parse(raw); } catch { return parseLegacy(raw); }", "no-fallback-parse");
+expectRule("flags a fallback parse with an unused binding", "try { return decodeV2(buf); } catch (_error) { log.warn('v2 failed'); return decodeV1(buf); }", "no-fallback-parse");
+expectRule("flags a multiline fallback parse", "try {\n  config = yaml.parse(text);\n} catch (e) {\n  config = JSON.parse(text);\n}", "no-fallback-parse");
+expectNoRule("allows a fallback that rethrows the primary error when it rejects", "try { return JSON.parse(raw); } catch (error) { try { return parseLegacy(raw); } catch { throw error; } }", "no-fallback-parse");
+expectRule("a narration comment does not exempt a fallback parse", "try { return JSON.parse(raw); } catch (jsonError) {\n  // not JSON, try the legacy format\n  return parseLegacy(raw);\n}", "no-fallback-parse");
+expectNoRule("allows a fallback that rethrows the primary error when it returns nothing", "try { return JSON.parse(raw); } catch (err) { const config = parseLegacy(raw); if (!config) throw err; return config; }", "no-fallback-parse");
+expectRule("flags a fallback gated only on the error type", "try { return JSON.parse(raw); } catch (err) { if (!(err instanceof SyntaxError)) throw err; return parseLegacy(raw); }", "no-fallback-parse");
+expectRule("flags a fallback that only logs the primary error", "try { return JSON.parse(raw); } catch (err) { log.warn(err); return parseLegacy(raw); }", "no-fallback-parse");
+expectNoRule("allows an input-gated fallback that keeps the primary error as cause", "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw new ConfigError('bad config', { cause: error }); return parseLegacy(raw); }", "no-fallback-parse");
+expectRule("flags a braced error-type gate", "try { return JSON.parse(raw); } catch (err) { if (!(err instanceof SyntaxError)) { throw err; } return parseLegacy(raw); }", "no-fallback-parse");
+expectRule("an inner binding does not stand in for the primary error", "try { return JSON.parse(raw); } catch (error) { try { return parseLegacy(raw); } catch (error) { throw error; } }", "no-fallback-parse");
+expectRule("an unrelated comment does not exempt a fallback parse", "try { return JSON.parse(raw); } catch { /* retain ordering */ return parseLegacy(raw); }", "no-fallback-parse");
+expectRule("flags a generic fallback parser call", "try { return JSON.parse(raw); } catch { return parse<Config>(raw); }", "no-fallback-parse");
+expectRule("flags an optional fallback parser call", "try { return JSON.parse(raw); } catch { return legacy.parse?.(raw); }", "no-fallback-parse");
+expectNoRule("allows a format assertion that rethrows the primary error before the fallback", "try { return JSON.parse(raw); } catch (error) { try { assertLegacy(raw); } catch { throw error; } return parseLegacy(raw); }", "no-fallback-parse");
+expectNoRule("a parse-named function declared in the try is not a parse attempt", "try { function parseUnused() {} return load(); } catch { return parseLegacy(raw); }", "no-fallback-parse");
+expectNoRule("a parse-named method declared in the try is not a parse attempt", "try { const codec = { parse(text) { return text; } }; return load(codec); } catch { return parseLegacy(raw); }", "no-fallback-parse");
+expectRule("flags a gate that only compares the error name", "try { return JSON.parse(raw); } catch (error) { if (error.name !== \"SyntaxError\") throw error; return parseLegacy(raw); }", "no-fallback-parse");
+expectNoRule("allows a compound error-type and format guard", "try { return JSON.parse(raw); }\ncatch (error) {\n  if (!(error instanceof SyntaxError) || !isLegacy(raw)) throw error;\n  return parseLegacy(raw);\n}", "no-fallback-parse");
+expectNoRule("allows a format guard that receives the primary error", "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw, error)) throw error; return parseLegacy(raw); }", "no-fallback-parse");
+expectRule("a later log line is not part of a semicolon-free throw", "try { return JSON.parse(raw); }\ncatch (error) {\n  if (!isLegacy(raw)) throw new Error(\"not legacy\")\n  logger.warn(error)\n  return parseLegacy(raw)\n}", "no-fallback-parse");
+expectNoRule("allows a semicolon-free rethrow of the primary error", "try { return JSON.parse(raw) }\ncatch (error) {\n  if (!isLegacy(raw)) throw error\n  return parseLegacy(raw)\n}", "no-fallback-parse");
+expectNoRule("allows a multiline throw that keeps the primary error as cause", "try { return JSON.parse(raw); }\ncatch (error) {\n  if (!isLegacy(raw)) throw new ConfigError(\"bad config\", {\n    cause: error,\n  });\n  return parseLegacy(raw);\n}", "no-fallback-parse");
+expectNoRule("allows a fallback that keeps the primary error", "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw error; return parseLegacy(raw); }", "no-fallback-parse");
+expectNoRule("allows a catch that does not parse again", "try { return JSON.parse(raw); } catch { return defaults(); }", "no-fallback-parse");
+expectNoRule("allows a parse fallback after a non-parse attempt", "try { return fetchConfig(); } catch { return parseConfig(cached); }", "no-fallback-parse");
+expectNoRule("ignores parse names inside strings", "try { return JSON.parse(raw); } catch { return show('parse(raw) failed'); }", "no-fallback-parse");
 
 expectRule("flags JSON clone", "const copy = JSON.parse(JSON.stringify(state));", "no-json-clone");
 expectRule("flags ?? undefined", "const value = input ?? undefined;", "no-redundant-fallback");
@@ -1323,6 +1350,7 @@ for (const [label, source, budget = REDOS_BUDGET_MS] of [
   ["an unclosed type opener", `const a = payload as ${"<".repeat(20_000)}\n`],
   ["many assertion candidates", `const a = ${"payload as X ".repeat(4_000)};\n`],
   ["deeply nested generics", `const a = payload as ${"A<".repeat(2_000)}B${">".repeat(2_000)};\n`],
+  ["unclosed try openers", "try {\n".repeat(20_000)],
   // The later-write check bounds its scan by the next write to that name, not
   // by the end of the file. Scanning the rest of the source per match instead
   // put this at 3.0s against 0.15s before the guard existed -- a rule guard is

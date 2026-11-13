@@ -57,7 +57,7 @@ For each item, the question is the same: does this code earn its place, or does 
 - **Speculative generality** — config options, flags, or abstraction layers nobody asked for. One caller alone is not evidence: keep a helper separate when it names a domain idea, hides tricky logic, isolates a side effect or boundary, earns its keep in tests or readability, or is required by a framework contract. Inline only when separation has none of that value.
 - **Defensive checks against impossible states** — `if (!items) return` when the type says `items: Item[]`; re-validating unchanged data within the same trust boundary; optional chaining on values that cannot be null. Keep runtime checks after parsing, persistence, redirects, or other trust boundaries; types do not validate external data.
 - **Reimplementing the platform** — hand-rolled `deepClone`, `debounce`, `isEmpty`, UUID generators, date formatting. Use the standard library or an existing project utility.
-- **Error handling that hides errors** — catch-log-continue, retries around non-transient failures, fallback values that turn failure into silently wrong behavior.
+- **Error handling that hides errors** — catch-log-continue, retries around non-transient failures, fallback values that turn failure into silently wrong behavior. A narrower catch still fails open if it returns a default; a fallback parser must rethrow the first error when the fallback rejects the input, and its grammar must be strict enough to reject corrupt first-format input.
 - **Debug leftovers** — `console.log` tracing, timing code, temporary variables named `test`/`tmp`/`debug`.
 - **Edit-artifacts** — old and new versions of a function both kept, re-export aliases "for compatibility" when every call site could just be updated, comments describing the diff instead of the code.
 - **Comment and doc bloat** — remove nonessential code comments, including JSDoc that restates the signature and section banners. Put useful constraints and rationale in the final response.
@@ -69,7 +69,7 @@ For each item, the question is the same: does this code earn its place, or does 
 
 Type evidence: `no-any`, `no-chained-type-assertions`, `no-unknown-alias`, `no-object-type`, `no-unsafe-dictionary-type`, `no-known-value-widening`, `no-empty-type-declaration`, `no-reflect`, `no-shape-in-symbol-names`, `require-safety-comment-for-type-assertion`.
 
-Pointless code: `no-useless-rethrow`, `no-empty-catch`, `no-catch-fake-success`, `no-log-and-rethrow`, `no-message-only-rethrow`, `no-json-clone`, `no-redundant-fallback`, `no-boolean-literal-compare`, `no-boolean-literal-ternary`, `no-boolean-return-branches`, `no-double-negation-condition`, `no-await-promise-resolve`, `no-promise-constructor-wrapper`, `no-conditional-empty-object-spread`, `no-let-if-else-assign`, `no-foreach-push`, `no-slop-symbol-names`.
+Pointless code: `no-useless-rethrow`, `no-empty-catch`, `no-catch-fake-success`, `no-fallback-parse`, `no-log-and-rethrow`, `no-message-only-rethrow`, `no-json-clone`, `no-redundant-fallback`, `no-boolean-literal-compare`, `no-boolean-literal-ternary`, `no-boolean-return-branches`, `no-double-negation-condition`, `no-await-promise-resolve`, `no-promise-constructor-wrapper`, `no-conditional-empty-object-spread`, `no-let-if-else-assign`, `no-foreach-push`, `no-slop-symbol-names`.
 
 Faked behavior and test slop: `no-arbitrary-sleep`, `no-env-secret-fallback`, `no-module-mocking`, `no-tautological-assertion`.
 
