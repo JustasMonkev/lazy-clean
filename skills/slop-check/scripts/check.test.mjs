@@ -747,6 +747,14 @@ expectRule("flags a fallback that rethrows only when it returns nothing", "try {
 expectRule("flags a fallback gated only on the error type", "try { return JSON.parse(raw); } catch (err) { if (!(err instanceof SyntaxError)) throw err; return parseLegacy(raw); }", "no-fallback-parse");
 expectRule("flags a fallback that only logs the primary error", "try { return JSON.parse(raw); } catch (err) { log.warn(err); return parseLegacy(raw); }", "no-fallback-parse");
 expectNoRule("allows an input-gated fallback that keeps the primary error as cause", "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw new ConfigError('bad config', { cause: error }); return parseLegacy(raw); }", "no-fallback-parse");
+expectRule("flags a braced error-type gate", "try { return JSON.parse(raw); } catch (err) { if (!(err instanceof SyntaxError)) { throw err; } return parseLegacy(raw); }", "no-fallback-parse");
+expectRule("an inner binding does not stand in for the primary error", "try { return JSON.parse(raw); } catch (error) { try { return parseLegacy(raw); } catch (error) { throw error; } }", "no-fallback-parse");
+expectRule("an unrelated comment does not exempt a fallback parse", "try { return JSON.parse(raw); } catch { /* retain ordering */ return parseLegacy(raw); }", "no-fallback-parse");
+expectRule("flags a generic fallback parser call", "try { return JSON.parse(raw); } catch { return parse<Config>(raw); }", "no-fallback-parse");
+expectRule("flags an optional fallback parser call", "try { return JSON.parse(raw); } catch { return legacy.parse?.(raw); }", "no-fallback-parse");
+expectNoRule("allows a format assertion that rethrows the primary error before the fallback", "try { return JSON.parse(raw); } catch (error) { try { assertLegacy(raw); } catch { throw error; } return parseLegacy(raw); }", "no-fallback-parse");
+expectNoRule("a parse-named function declared in the try is not a parse attempt", "try { function parseUnused() {} return load(); } catch { return parseLegacy(raw); }", "no-fallback-parse");
+expectNoRule("a parse-named method declared in the try is not a parse attempt", "try { const codec = { parse(text) { return text; } }; return load(codec); } catch { return parseLegacy(raw); }", "no-fallback-parse");
 expectNoRule("allows a fallback that keeps the primary error", "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw error; return parseLegacy(raw); }", "no-fallback-parse");
 expectNoRule("allows a catch that does not parse again", "try { return JSON.parse(raw); } catch { return defaults(); }", "no-fallback-parse");
 expectNoRule("allows a parse fallback after a non-parse attempt", "try { return fetchConfig(); } catch { return parseConfig(cached); }", "no-fallback-parse");
@@ -1336,6 +1344,7 @@ for (const [label, source, budget = REDOS_BUDGET_MS] of [
   ["an unclosed type opener", `const a = payload as ${"<".repeat(20_000)}\n`],
   ["many assertion candidates", `const a = ${"payload as X ".repeat(4_000)};\n`],
   ["deeply nested generics", `const a = payload as ${"A<".repeat(2_000)}B${">".repeat(2_000)};\n`],
+  ["unclosed try openers", "try {\n".repeat(20_000)],
   // The later-write check bounds its scan by the next write to that name, not
   // by the end of the file. Scanning the rest of the source per match instead
   // put this at 3.0s against 0.15s before the guard existed -- a rule guard is

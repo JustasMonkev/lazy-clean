@@ -1077,8 +1077,9 @@ function* iterateBlockFindings(ctx) {
     const bodyEnd = balancedEnd(masked, bodyStart);
     if (bodyEnd === -1) continue;
     const body = masked.slice(bodyStart, bodyEnd);
-    if (!PARSE_CALL.test(masked.slice(match.index, tryEnd)) || !PARSE_CALL.test(body)) continue;
-    if (rethrowsBeforeFallback(body.slice(0, body.search(PARSE_CALL)), handler[1])) continue;
+    const fallbackAt = firstParseCall(body);
+    if (fallbackAt === -1 || firstParseCall(masked.slice(match.index, tryEnd)) === -1) continue;
+    if (rethrowsBeforeFallback(body.slice(0, fallbackAt), handler[1])) continue;
     yield {
       ...offsetSpan(lineStarts, match.index, bodyEnd - 1),
       rule: "no-fallback-parse",
@@ -1090,12 +1091,23 @@ function* iterateBlockFindings(ctx) {
 function rethrowsBeforeFallback(beforeFallback, binding) {
   if (!binding) return false;
   const name = `${IDENT_BEFORE}${escapeForRegExp(binding)}${IDENT_AFTER}`;
-  const errorTypeGate = new RegExp(String.raw`\bif\s*\([^;{}]*${name}[^;{}]*\)\s*throw\s+${name}\s*;?`, "gu");
+  const rethrow = String.raw`throw\s+${name}\s*;?`;
+  const errorTypeGate = new RegExp(String.raw`\bif\s*\([^;{}]*${name}[^;{}]*\)\s*(?:${rethrow}|\{\s*${rethrow}\s*\})`, "gu");
   return new RegExp(String.raw`\bthrow\b[^;]*${name}`, "u").test(beforeFallback.replace(errorTypeGate, ""));
 }
 
 const CATCH_HEAD_AT = /\s*catch\s*(?:\(\s*([\w$]*)\s*(?::[^)]*)?\))?\s*\{/uy;
-const PARSE_CALL = /(?<![\w$])[\w$]*(?:parse|Parse|decode|Decode|deserialize|Deserialize)[\w$]*\s*\(/u;
+const PARSE_NAME = /(?<![\w$])[\w$]*(?:parse|Parse|decode|Decode|deserialize|Deserialize)[\w$]*(?=\s*(?:<[^<>()]*>\s*)?(?:\?\.\s*)?\()/gu;
+
+function firstParseCall(text) {
+  for (const match of text.matchAll(PARSE_NAME)) {
+    if (/\bfunction\s*\*?\s*$/u.test(text.slice(Math.max(0, match.index - 12), match.index))) continue;
+    const argsEnd = balancedEnd(text, text.indexOf("(", match.index + match[0].length));
+    if (argsEnd !== -1 && /^\s*\{/u.test(text.slice(argsEnd, argsEnd + 20))) continue;
+    return match.index;
+  }
+  return -1;
+}
 
 // `import {` / `export {` opening a specifier list that continues on later
 // lines. Only real specifier-list syntax counts: matching any export ending in
@@ -2950,7 +2962,7 @@ const RULE_EXPLANATIONS = {
     why: "A catch that parses again after the first parse failed lets corrupt primary-format input reach the fallback: it surfaces as a confusing legacy-format error, or as legacy data that parsed by accident. Rethrowing the first error only when the fallback also fails, or gating on the error's type, still accepts the accidental parse.",
     slop: "try { return JSON.parse(raw); } catch { return parseLegacy(raw); }",
     correct: "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw error; return parseLegacy(raw); }",
-    exceptions: "A fallback that decides the format from the input first is fine, as is one that rethrows the first error when the input is not the fallback's format. A first parse that is only a cheap format probe may discard its error deliberately; verify that and explain it in the final response.",
+    exceptions: "A fallback that decides the format from the input first is fine, as is one that rethrows the first error when the input is not the fallback's format, including a fallback whose grammar cannot accept first-format input and that rethrows the first error when it rejects. A first parse that is only a cheap format probe may discard its error deliberately; verify that and explain it in the final response. The rule reads only calls named parse, decode, or deserialize and a `throw` of the catch binding before the fallback call; an inline fallback, a destructured catch binding, or another form of guard is not detected, so a clean scan is not proof.",
   },
   "no-log-and-rethrow": {
     why: "Logging then rethrowing reports the same failure at every layer. A boundary handler that logs once is the design; a chain of log-and-rethrow is a stack trace printed five times.",

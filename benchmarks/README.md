@@ -182,8 +182,8 @@ calls (12 tasks × 3 trials × 2 arms).
 | helper-rounding | The existing page counter rounds to nearest and drops a short last page |
 | reentrant-listener | Removing a listener can skip the next one, and nested emissions can invoke a one-time listener twice |
 | failed-update | A rejected take has already consumed its units, so the new reading is wrong afterwards |
-| installed-library | A hand-written slug differs from the vendored `slugkit.cjs` on accents, `&`, and letters such as ß |
-| fallback-parse | Corrupt JSON falls through to the legacy parser, which accepts it as wrong settings or replaces the JSON error |
+| installed-library | A hand-written slug differs from the vendored `slugkit.cjs` on accents, `&`, and letters such as ß; a copied implementation also passes, so inspect reuse |
+| fallback-parse | Corrupt JSON falls through to the legacy parser, which accepts it as wrong settings or replaces the JSON error; valid non-object JSON must stay JSON |
 | necessary-guard (existing core task) | Control for preserving the existing invalid-JSON guard |
 
 `hidden-tasks.mjs` keeps each `hidden` note outside worker prompts. A runtime
