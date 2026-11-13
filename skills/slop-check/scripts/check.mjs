@@ -594,8 +594,12 @@ function offsetToPosition(lineStarts, offset) {
 // consumer scoping by edited lines know an edit inside the body created the
 // finding. Single-line matches carry no endLine.
 function matchSpan(lineStarts, match) {
-  const start = offsetToPosition(lineStarts, match.index);
-  const end = offsetToPosition(lineStarts, match.index + match[0].length - 1);
+  return offsetSpan(lineStarts, match.index, match.index + match[0].length - 1);
+}
+
+function offsetSpan(lineStarts, startOffset, lastOffset) {
+  const start = offsetToPosition(lineStarts, startOffset);
+  const end = offsetToPosition(lineStarts, lastOffset);
   return end.line > start.line ? { ...start, endLine: end.line } : start;
 }
 
@@ -1062,7 +1066,31 @@ function* iterateBlockFindings(ctx) {
       message: "Returning a default from catch disguises failure as success. Propagate the error or return an explicit failure value.",
     };
   }
+
+  for (const match of masked.matchAll(/\btry\s*\{/gu)) {
+    const tryEnd = balancedEnd(masked, match.index + match[0].length - 1);
+    if (tryEnd === -1) continue;
+    CATCH_HEAD_AT.lastIndex = tryEnd;
+    const handler = CATCH_HEAD_AT.exec(masked);
+    if (!handler) continue;
+    const bodyStart = CATCH_HEAD_AT.lastIndex - 1;
+    const bodyEnd = balancedEnd(masked, bodyStart);
+    if (bodyEnd === -1) continue;
+    const body = masked.slice(bodyStart, bodyEnd);
+    if (!PARSE_CALL.test(masked.slice(match.index, tryEnd)) || !PARSE_CALL.test(body)) continue;
+    const binding = handler[1];
+    if (binding && new RegExp(`${IDENT_BEFORE}${escapeForRegExp(binding)}${IDENT_AFTER}`, "u").test(body)) continue;
+    if (hasCommentInRange(bodyStart, bodyEnd)) continue;
+    yield {
+      ...offsetSpan(lineStarts, match.index, bodyEnd - 1),
+      rule: "no-fallback-parse",
+      message: "This catch drops the first parse error and parses again, so a failure reports only the fallback's error. Rethrow the primary error when the input is not the fallback's format, or keep it as `cause`.",
+    };
+  }
 }
+
+const CATCH_HEAD_AT = /\s*catch\s*(?:\(\s*([\w$]*)\s*(?::[^)]*)?\))?\s*\{/uy;
+const PARSE_CALL = /(?<![\w$])[\w$]*(?:parse|Parse|decode|Decode|deserialize|Deserialize)[\w$]*\s*\(/u;
 
 // `import {` / `export {` opening a specifier list that continues on later
 // lines. Only real specifier-list syntax counts: matching any export ending in
@@ -2913,6 +2941,12 @@ const RULE_EXPLANATIONS = {
     correct: "try { return await loadUser(id); } finally { release(); }",
     exceptions: "Preserve documented sentinel-result contracts, such as null for a failed optional lookup, when callers distinguish them from success. Optional best-effort features may also deliberately swallow errors. Only propagate when the sentinel is accidental; preserve finally cleanup and the awaited operation.",
   },
+  "no-fallback-parse": {
+    why: "A catch that ignores the first parse error and parses again reports only the fallback's failure. Corrupt input in the primary format surfaces as a confusing legacy-format error, or as legacy data that parsed by accident.",
+    slop: "try { return JSON.parse(raw); } catch { return parseLegacy(raw); }",
+    correct: "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw error; return parseLegacy(raw); }",
+    exceptions: "A fallback that keeps the primary error is fine: rethrow it when the input is not the fallback's format, or attach it as `cause`. A first parse that is only a cheap format probe may discard its error deliberately; verify that and explain it in the final response.",
+  },
   "no-log-and-rethrow": {
     why: "Logging then rethrowing reports the same failure at every layer. A boundary handler that logs once is the design; a chain of log-and-rethrow is a stack trace printed five times.",
     slop: "try { save(); } catch (e) { logger.error(e); throw e; }",
@@ -3036,7 +3070,7 @@ const RULE_EXPLANATIONS = {
 const STANDALONE_RULE_IDS = [
   "no-arbitrary-sleep", "no-array-filter-map", "no-backcompat-comments", "no-boolean-return-branches",
   "no-catch-fake-success", "no-change-note-comments", "no-emoji",
-  "no-empty-catch", "no-empty-type-declaration", "no-filler-comments",
+  "no-empty-catch", "no-empty-type-declaration", "no-fallback-parse", "no-filler-comments",
   "no-foreach-push", "no-let-if-else-assign", "no-log-and-rethrow",
   "no-message-only-rethrow", "no-narration-comments", "no-obvious-doc-comments",
   "no-promise-constructor-wrapper", "no-reduce-accumulator-copy", "no-restating-comments",
