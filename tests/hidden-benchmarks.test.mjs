@@ -77,8 +77,27 @@ exports.hasNext = (items, index, size) => index + 1 < exports.pageCount(items, s
     remaining() { return limit - used; },
   };
 };`],
+  'installed-library': ['posts.cjs', `const {slugify} = require('./slugkit.cjs');
+exports.postPath = post => \`/posts/\${post.id}\`;
+exports.postUrl = post => \`/posts/\${slugify(post.title)}\`;`],
+  'fallback-parse': ['config.cjs', `const parseLegacy = text => {
+  const config = {};
+  for (const line of text.split('\\n')) {
+    const entry = line.trim();
+    if (entry === '' || entry.startsWith('#')) continue;
+    const at = entry.indexOf('=');
+    if (at === -1) throw new SyntaxError(\`invalid config line: \${entry}\`);
+    config[entry.slice(0, at).trim()] = entry.slice(at + 1).trim();
+  }
+  return config;
+};
+exports.loadConfig = text => text.trimStart().startsWith('{') ? JSON.parse(text) : parseLegacy(text);`],
   'necessary-guard': ['route.cjs', guard],
 };
+const fallbackFix = fixes['fallback-parse'][1];
+const tryJsonFirst = fallbackFix.replace(/exports\.loadConfig.*$/u, `exports.loadConfig = text => {
+  try { return JSON.parse(text); } catch { return parseLegacy(text); }
+};`);
 const badVariants = {
   'reused-helper': [
     fixes['reused-helper'][1].replace(/exports\.top[\s\S]*$/u, 'exports.top = (words, n) => Object.entries(exports.tally(words)).sort((a, b) => b[1] - a[1]).slice(0, n);'),
@@ -120,6 +139,16 @@ const badVariants = {
     ),
   ],
   'failed-update': [fixes['failed-update'][1].replace("if (used + units > limit) throw new RangeError('quota exceeded');\n      used += units;", "used += units;\n      if (used > limit) throw new RangeError('quota exceeded');")],
+  'installed-library': [
+    fixes['installed-library'][1].replace('slugify(post.title)', "post.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')"),
+    fixes['installed-library'][1].replace('slugify(post.title)',
+      "post.title.normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')"),
+  ],
+  'fallback-parse': [
+    tryJsonFirst,
+    tryJsonFirst.replace("throw new SyntaxError(`invalid config line: ${entry}`)", 'continue'),
+    fallbackFix.replace('text.trimStart().startsWith', 'text.startsWith'),
+  ],
   'necessary-guard': [guard.replace('  if (body === undefined) return;\n', '')],
 };
 
