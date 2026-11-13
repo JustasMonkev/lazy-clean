@@ -1079,21 +1079,27 @@ function* iterateBlockFindings(ctx) {
     const body = masked.slice(bodyStart, bodyEnd);
     const fallbackAt = firstParseCall(body);
     if (fallbackAt === -1 || firstParseCall(masked.slice(match.index, tryEnd)) === -1) continue;
-    if (rethrowsBeforeFallback(body.slice(0, fallbackAt), handler[1])) continue;
+    if (rethrowsPrimaryError(body, handler[1])) continue;
     yield {
       ...offsetSpan(lineStarts, match.index, bodyEnd - 1),
       rule: "no-fallback-parse",
-      message: "This catch parses again after the first parse failed, so corrupt input in the first format is read by the fallback or reported with the fallback's error. Choose the format from the input before parsing, or rethrow the first error when the input is not the fallback's format.",
+      message: "This catch parses again and never rethrows the first parse error, so a failure reports only the fallback's error, and first-format input the fallback happens to accept is read as wrong data. Rethrow the first error when the input is not the fallback's format or the fallback rejects it.",
     };
   }
 }
 
-function rethrowsBeforeFallback(beforeFallback, binding) {
+function rethrowsPrimaryError(body, binding) {
   if (!binding) return false;
   const name = `${IDENT_BEFORE}${escapeForRegExp(binding)}${IDENT_AFTER}`;
+  let own = body;
+  for (const shadow of body.matchAll(new RegExp(String.raw`\bcatch\s*\(\s*${escapeForRegExp(binding)}\s*(?::[^)]*)?\)\s*\{`, "gu"))) {
+    const start = shadow.index + shadow[0].length - 1;
+    const end = balancedEnd(body, start);
+    if (end !== -1) own = own.slice(0, start) + " ".repeat(end - start) + own.slice(end);
+  }
   const rethrow = String.raw`throw\s+${name}\s*;?`;
   const errorTypeGate = new RegExp(String.raw`\bif\s*\([^;{}]*${name}[^;{}]*\)\s*(?:${rethrow}|\{\s*${rethrow}\s*\})`, "gu");
-  return new RegExp(String.raw`\bthrow\b[^;]*${name}`, "u").test(beforeFallback.replace(errorTypeGate, ""));
+  return new RegExp(String.raw`\bthrow\b[^;]*${name}`, "u").test(own.replace(errorTypeGate, ""));
 }
 
 const CATCH_HEAD_AT = /\s*catch\s*(?:\(\s*([\w$]*)\s*(?::[^)]*)?\))?\s*\{/uy;
@@ -2959,10 +2965,10 @@ const RULE_EXPLANATIONS = {
     exceptions: "Preserve documented sentinel-result contracts, such as null for a failed optional lookup, when callers distinguish them from success. Optional best-effort features may also deliberately swallow errors. Only propagate when the sentinel is accidental; preserve finally cleanup and the awaited operation.",
   },
   "no-fallback-parse": {
-    why: "A catch that parses again after the first parse failed lets corrupt primary-format input reach the fallback: it surfaces as a confusing legacy-format error, or as legacy data that parsed by accident. Rethrowing the first error only when the fallback also fails, or gating on the error's type, still accepts the accidental parse.",
+    why: "A catch that parses again and never rethrows the first parse error loses it: a failure surfaces as a confusing legacy-format error, and primary-format input the fallback happens to accept becomes wrong data with no error at all. Logging the error or rethrowing only other error types does not keep it.",
     slop: "try { return JSON.parse(raw); } catch { return parseLegacy(raw); }",
     correct: "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw error; return parseLegacy(raw); }",
-    exceptions: "A fallback that decides the format from the input first is fine, as is one that rethrows the first error when the input is not the fallback's format, including a fallback whose grammar cannot accept first-format input and that rethrows the first error when it rejects. A first parse that is only a cheap format probe may discard its error deliberately; verify that and explain it in the final response. The rule reads only calls named parse, decode, or deserialize and a `throw` of the catch binding before the fallback call; an inline fallback, a destructured catch binding, or another form of guard is not detected, so a clean scan is not proof.",
+    exceptions: "A first parse that is only a cheap format probe may discard its error deliberately; verify that and explain it in the final response. A clean result is not proof: the rule accepts any rethrow of the first error, including one after the fallback rejects, so review whether the fallback's grammar is strict enough to reject corrupt first-format input. It reads only calls named parse, decode, or deserialize; an inline fallback or a destructured catch binding is not detected.",
   },
   "no-log-and-rethrow": {
     why: "Logging then rethrowing reports the same failure at every layer. A boundary handler that logs once is the design; a chain of log-and-rethrow is a stack trace printed five times.",

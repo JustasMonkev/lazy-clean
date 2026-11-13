@@ -250,7 +250,7 @@ for (const json of ['[]', 'null', '0', 'false', '"a=b"', '[1, "x=y"]']) {
 const jsonError = text => { try { JSON.parse(text); } catch (error) { return error.message; } };
 for (const corrupt of ['{"port": 8080,}', '{"url": "a=b",}', '  {"port": 80']) {
   const accepted = [corrupt, corrupt.trim()].map(jsonError);
-  assert.throws(() => loadConfig(corrupt), error => [error.message, error.cause?.message].some(message => accepted.includes(message)),
+  assert.throws(() => loadConfig(corrupt), error => [error.message, error.cause?.message].some(message => accepted.some(json => message?.includes(json))),
     'corrupt JSON must report its own JSON error');
 }`,
     hidden: 'Corrupt JSON falls through to the legacy parser, which either accepts it as wrong settings or replaces the JSON error with its own; a dispatch on a leading { breaks valid non-object JSON.',

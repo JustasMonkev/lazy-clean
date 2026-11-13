@@ -203,6 +203,10 @@ try {
   writeFileSync(join(fallbackCwd, 'config.cjs'), fallbackFix.replace('JSON.parse(text)', 'JSON.parse(text.trim())'));
   const trimmedJson = await grade(fallbackTask, fallbackCwd);
   assert.equal(trimmedJson.pass, true, `parsing trimmed JSON must pass: ${trimmedJson.output}`);
+  writeFileSync(join(fallbackCwd, 'config.cjs'), fallbackFix.replace(
+    'throw error;', "throw new SyntaxError(`Config is neither JSON (${error.message}) nor legacy`);"));
+  const wrappedJson = await grade(fallbackTask, fallbackCwd);
+  assert.equal(wrappedJson.pass, true, `an error that reports the JSON message must pass: ${wrappedJson.output}`);
   writeFileSync(join(fallbackCwd, 'config.cjs'), strictLegacy
     + 'exports.loadConfig = text => { try { return JSON.parse(text); } catch (error) { try { return parseLegacy(text); } catch { throw error; } } };');
   const strictRethrow = await grade(fallbackTask, fallbackCwd);

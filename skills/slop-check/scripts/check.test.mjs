@@ -741,9 +741,9 @@ expectNoRule(
 expectRule("flags a fallback parse without the primary error", "try { return JSON.parse(raw); } catch { return parseLegacy(raw); }", "no-fallback-parse");
 expectRule("flags a fallback parse with an unused binding", "try { return decodeV2(buf); } catch (_error) { log.warn('v2 failed'); return decodeV1(buf); }", "no-fallback-parse");
 expectRule("flags a multiline fallback parse", "try {\n  config = yaml.parse(text);\n} catch (e) {\n  config = JSON.parse(text);\n}", "no-fallback-parse");
-expectRule("flags a fallback that rethrows only when it also fails", "try { return JSON.parse(raw); } catch (error) { try { return parseLegacy(raw); } catch { throw error; } }", "no-fallback-parse");
-expectRule("a narration comment does not exempt a fallback parse", "try { return JSON.parse(raw); } catch (jsonError) {\n  // not JSON, try the legacy format\n  try { return parseLegacy(raw); } catch (legacyError) { throw jsonError; }\n}", "no-fallback-parse");
-expectRule("flags a fallback that rethrows only when it returns nothing", "try { return JSON.parse(raw); } catch (err) { const config = parseLegacy(raw); if (!config) throw err; return config; }", "no-fallback-parse");
+expectNoRule("allows a fallback that rethrows the primary error when it rejects", "try { return JSON.parse(raw); } catch (error) { try { return parseLegacy(raw); } catch { throw error; } }", "no-fallback-parse");
+expectRule("a narration comment does not exempt a fallback parse", "try { return JSON.parse(raw); } catch (jsonError) {\n  // not JSON, try the legacy format\n  return parseLegacy(raw);\n}", "no-fallback-parse");
+expectNoRule("allows a fallback that rethrows the primary error when it returns nothing", "try { return JSON.parse(raw); } catch (err) { const config = parseLegacy(raw); if (!config) throw err; return config; }", "no-fallback-parse");
 expectRule("flags a fallback gated only on the error type", "try { return JSON.parse(raw); } catch (err) { if (!(err instanceof SyntaxError)) throw err; return parseLegacy(raw); }", "no-fallback-parse");
 expectRule("flags a fallback that only logs the primary error", "try { return JSON.parse(raw); } catch (err) { log.warn(err); return parseLegacy(raw); }", "no-fallback-parse");
 expectNoRule("allows an input-gated fallback that keeps the primary error as cause", "try { return JSON.parse(raw); } catch (error) { if (!isLegacy(raw)) throw new ConfigError('bad config', { cause: error }); return parseLegacy(raw); }", "no-fallback-parse");
