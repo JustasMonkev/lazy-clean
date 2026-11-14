@@ -1,409 +1,324 @@
 # lazy-clean
 
-One guided implementation skill for coding agents: make it work, make it right,
-then verify it in practice. `lazy-clean` coordinates the A-to-Z workflow;
-the focused skills and runtime hooks remain available independently.
+Skills and hooks that keep coding agents small and honest: write the least code
+that works, check it, and prove it before handing it back.
 
-- **While writing** — a lazy-senior-dev ruleset (YAGNI ladder, risk gate) is injected at session start, into subagents, and adjustable via `/lazy` commands.
-- **After writing** — a heuristic slop checker runs on every TS/JS file Claude writes or edits, and hands findings back as review context.
+It works with Claude Code, Codex, OpenCode, Cursor, Copilot, and any agent that
+reads `AGENTS.md` or a skills folder. It needs only `node` 18+. No dependencies.
 
-(A renamed hard fork of two upstream projects; this package is standalone and self-contained.)
+## What it does
 
-For upstream comparisons and selective ports, follow the
-[update procedure](skills/lazy-clean/references/upstream-updates.md) and record
-the reviewed revisions and local differences in [UPSTREAM.md](UPSTREAM.md).
+1. **While writing:** a short ruleset tells the agent to reuse what exists,
+   skip unasked features, and keep tests honest. A bug that breaks the request,
+   repeats at a sibling site, or sits in an edited function gets fixed at its
+   cause. Other bugs get reported with a failing input and left alone.
+2. **After every edit:** a checker scans changed TypeScript and JavaScript for
+   slop (filler code, pointless comments, needless copies) and hands the
+   findings back to the agent. It never blocks.
+3. **On request:** skills for guided builds, testing, mutation checks, and
+   test-quality review.
 
-## Guided implementation
+```mermaid
+flowchart LR
+    A[Session starts] --> B[Ruleset injected]
+    B --> C[Agent writes code]
+    C --> D[Checker scans the edit]
+    D -- findings --> C
+    D -- clean --> E[Agent proves it works]
+    E --> F[Handoff with evidence]
+```
 
-Invoke `$lazy-clean <task>` in Codex, `/lazy-clean <task>` in OpenCode or a
-skills-only Claude Code install, or `/lazy-clean:lazy-clean <task>` in the
-Claude Code plugin. Codex also lists Lazy Clean in its skill picker.
+## Install
 
-The coordinator establishes scope and acceptance checks, inspects existing
-solutions, plans owned implementation slices, and delegates implementation,
-independent review, behavioral verification, and real-use checks to subagents.
-It integrates their evidence and fixes in-scope findings before handing back
-the result. Work moves through **work → right → practice**: a complete working
-path, checked behavior and maintainability, then evidence-based handoff of the verified user workflow. The phase structure
-adapts the local `ub-mode` idea without requiring its companion tools.
-
-Concurrency is bounded by host capacity and non-overlapping ownership, not an
-agent-count target. Missing delegation, credentials, hardware, or runtime access
-leave the affected stages explicitly blocked or unverified, never silently
-passed. Small tasks use fewer agents; unrelated edits and report-only scopes
-stay intact. Commits, pushes, deployments, and tool installations are not
-mandatory steps. When PR creation is authorized, PRs are **draft-only**: no
-ready-for-review PRs, marking ready, merges, or direct pushes to main/the default
-branch. The coordinator verifies draft status and gives every worker the same
-restriction. The existing language, slop, mutation, and test-quality guides
-still apply where relevant; this replaces the old write-then-check coordinator,
-not those focused skills.
-
-## Works with
-
-Same ruleset, five levels of wiring — pick whatever your agent supports.
-
-| Tier | Platforms | What you get | Files |
-| --- | --- | --- | --- |
-| Full hooks | Claude Code, Codex | Compact ruleset injected at session and subagent start, `/lazy` level switching, slop-check auto-run after every Write/Edit | `hooks/lazy-clean.json` via `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` |
-| Plugin | OpenCode | Ruleset injected every turn plus slash commands, including `/lazy-clean` | `.opencode/` + `opencode.json` + `hooks/` + `skills/` — the plugin loads the shared builder from `hooks/`, so copying only `.opencode/` gives you a plugin that fails to load |
-| Rules file | Cursor, Copilot | Always-on ruleset for all seven supported languages; run the TS/JS-only checker by hand after TS/JS changes | `.cursor/rules/lazy-clean.mdc`, `.github/copilot-instructions.md` |
-| `AGENTS.md` | Everything else that reads it — Codex, Zed, Amp, Jules | The compact ruleset plus the post-edit checker step | `AGENTS.md` |
-| Skills only | Anything that reads `~/.claude/skills` | Every skill on demand, no automation | `skills/` |
-
-Only the Claude Code and Codex tiers run the checker automatically. Everywhere else run it yourself, from wherever the skills live — `node ~/.claude/skills/slop-check/scripts/check.mjs <changed files>` after the skills-only install below, or `node skills/slop-check/scripts/check.mjs <changed files>` from a checkout.
-
-Qoder and VS Code Copilot are detected by the hooks and get the right output shape, but neither is wired up here as its own tier. Upstream also ships adapters this fork skips (MCP server, pi extension, Hermes, Devin, openclaw). Add them from upstream if you need them.
-
-## Languages and review scope
-
-The rulesets cover TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go. The agent detects the ones your project actually uses, reads their pinned or installed versions, and keeps advice compatible with them. If a needed version fact cannot be checked, it says so instead of guessing; latest-release research is only used when current-version advice is requested.
-
-The bundled checker reads source text rather than calling the compiler, so it
-works the same on every TypeScript version, including TypeScript 7. It stays TS/JS-only; the other five languages get the manual review, because a zero-dependency scanner is not a parser.
-HTML is not scanned either: extract inline `<script>` code to a temporary `.js`
-or report a manual review. Zero files checked is no coverage, not a clean result.
-
-TypeScript/JavaScript and Python also get a pre-finish reference with before/after
-examples: [TS/JS checks](skills/lazy/references/simplification-checks.md) cover
-TypeScript 6/7 (the native `tsc`: removed tsconfig options, new defaults, and the
-TypeScript 6 alias API-based tools still need), module shape, exports, import-time side effects, discriminated unions, and
-boundary parsing; [Python checks](skills/lazy/references/python-checks.md) cover
-version gates, the project's configured linter and type checker, module shape,
-dataclasses and `Protocol`, and the idioms that silently change behavior
-(mutable defaults, `if not x`, bare `except:`). The rules files inline the key
-points for agents that never open a reference.
-
-The rulesets think before coding, state material assumptions when they matter,
-match existing style, cut only task-owned orphans, and define a verifiable goal.
-One-caller helpers stay when they carry real value (a domain name, tricky logic,
-an isolated side effect, test or readability value, or a framework contract).
-Non-trivial changed logic needs behavior, edge, and failure coverage from the
-fewest cases that each catch a distinct bug, without test scaffolding; mutation
-evidence is optional when existing red-green checks already prove the risky
-regression, and never justifies a new dependency.
-
-A defect that breaks the request, recurs at a sibling site, or sits in a
-function the task edits is fixed at its cause even when the request did not name
-it. Any other defect found is reported with a failing input and left alone.
-The [risk checks](skills/lazy/references/risk-checks.md) list the inputs worth
-trying on the changed path.
-
-## Bounded completion and review
-
-Keep the requested deliverable, task-owned scope, required checks, and action
-limits in working context; no new planning file is required. After implementation
-and checks, review the owned diff once. Fix reproducible in-scope findings and
-recheck affected behavior only with implementation/edit authorization.
-Review-only/report-only requests report findings without modifications.
-Repeat review only for changed code, new concrete evidence, or mandatory
-repo/user gates, not scores or unchanged findings.
-Reconsider scope before adding broader guarantees or machinery. A review budget
-never excuses a known required fix. Finish only when requested needs and required
-checks are met; report blocked or unverified work. A passed check proves its
-assertions, not general correctness. Behavior evidence and checker/review findings
-are separate; guidance-delivery tests do not prove model compliance or token savings.
-
-## Optional behavioral evidence (experimental)
-
-`lazy-verify` is an explicitly invoked skill and OpenCode command, not a lazy
-intensity or hook. **Fix** checks for the approved assertion failure before and
-a pass after. **Preserve** checks the same approved behavior on both snapshots.
-Neither a successful project command nor a clean static scan is assertion-level
-evidence; execution, behavior, supporting checks, gate and applicability are
-reported separately.
-
-The dependency-free Node >=18 bridge is self-contained under
-[`skills/lazy-verify/`](skills/lazy-verify/SKILL.md), including skills-only copies.
-Rules-only users can invoke `node /installed/skills/lazy-verify/scripts/verify.mjs`
-directly; a native slash command depends on the client. It needs an explicitly
-selected, reviewed local engine and policy. No engine is installed/downloaded
-automatically. A separate approved Node executable can run a Node 24 engine
-without changing lazy-clean's runtime or private package status.
-
-**No real engine is qualified yet.** Bridge fixtures do not establish behavioral
-correctness or release readiness. Planned engine qualification is Linux/macOS
-on Node 24; Windows target execution returns an explicit unsupported result.
-Core Node 18/22 and Windows checks remain unchanged. Existing usage works without
-verification installed; missing prerequisites cannot pass a required gate.
-
-Use explicit base/head selectors (`worktree` for actual uncommitted edits), a
-reviewed contract and `--trust-code`. Local execution is not a security sandbox.
-`report` renders recorded evidence without executing it; `replay` uses fresh
-policy selection and saved exact inputs. Generated `.lazy-verify/runs/` output
-is private/ignored in this repository; contracts remain reviewable. See the
-[installed protocol reference](skills/lazy-verify/references/contract.md) for
-commands, policy schema, limits and exits, and the
-[RFC](docs/specs/lazy-verify-integration.md) for engine/release acceptance gates.
-
-## Testing code with layz-test
-
-Invoke `/layz-test <files or change>` (Codex: `@layz-test`) to map behaviors,
-find reproducible bugs, run applicable checks with existing tools, and add missing
-regression coverage.
-The report ends with manual steps and why automation cannot settle each check;
-missing dependencies or browsers are listed as blocked automation. Passing
-checks apply only to the stated scope. This instruction-only skill adds no
-runner or dependencies and does not change lazy mode.
-
-## Challenging tests with lazy-mutation
-
-Use [lazy-mutation](skills/lazy-mutation/SKILL.md) to prove that a test catches a
-specified behavioral fault through the public entry point. The caller delegates
-to a fresh-context mutation agent with a navigation handoff under 400 words.
-It owns the targeted mutation procedure shared by lazy-clean and layz-test;
-it adds no runner or dependency and does not change lazy mode. Existing red-green proof can satisfy
-incidental verification; an explicit mutation request still requires a challenge.
-
-Invoke `$lazy-mutation <scope>` in Codex, `/lazy-clean:lazy-mutation <scope>`
-in the Claude plugin, or `/lazy-mutation <scope>` in skills-only Claude and
-OpenCode. See the skill for evidence requirements and outcome classification.
-Test-value review remains in test-quality-review/lazy-quality-review; broader
-testing remains in layz-test; engine-based fix/preserve evidence stays in
-lazy-verify.
-
-## Reviewing tests with test-quality-review
-
-Use the shared `test-quality-review` skill in OpenCode, Codex, or Claude Code
-to review pointless tests or assertions, implementation coupling, and weak
-oracles that can pass despite broken behavior. Findings need concrete evidence
-and a recommendation to keep, strengthen, replace, or remove the check; mocks,
-snapshots, and shape assertions are not inherently wrong when they verify a
-real contract. This [instruction-only review](skills/test-quality-review/SKILL.md)
-is one-shot and independent of lazy mode. With no narrower scope it reviews the
-entire suite, records reviewed and unfinished scope, and can prioritize recent
-additions without silently excluding older tests. An explicit recent-tests audit
-uses an established base revision or date.
-
-| Platform | Invocation | Discovery |
-| --- | --- | --- |
-| OpenCode | `/test-quality-review <scope>` | Existing OpenCode plugin registers the command and shared skills directory. |
-| Codex | Select Test Quality Review in the skill picker; CLI: `$test-quality-review <scope>` | `.codex-plugin/plugin.json` registers `./skills/`; the skill includes Codex UI metadata. |
-| Claude Code plugin | `/lazy-clean:test-quality-review <scope>` | `.claude-plugin/plugin.json` explicitly registers `./skills/`. |
-| Claude Code skills-only | `/test-quality-review <scope>` | Install the skill in `.claude/skills` or `~/.claude/skills`. |
-
-All entry points load the same review and fixer instructions. If the host cannot
-start a separate agent without reviewer history, use the self-contained report
-and bundled fixer instructions in a new session; do not edit in reviewer context.
-
-The reviewer reports only. When findings are applied, a separate fresh-context
-agent receives the self-contained report and makes tests-only changes. It may
-delete genuinely pointless tests without replacement, but must explain each
-deletion in its final report and preserve useful coverage. It must not change
-production code to make strengthened tests pass; exposed product bugs are
-reported separately with their failing reproducer. No fixer starts automatically
-for a review-only request.
-
-## Review, fix, and judge with lazy-quality-review
-
-Use [lazy-quality-review](skills/lazy-quality-review/SKILL.md) for the coordinated
-test-cleanup workflow: independent reviewer → fresh-context tests-only fixer →
-independent change judge. It reuses `test-quality-review` and its fixer contract;
-the existing report-only skill and commands remain available.
-
-Invoke `/lazy-quality-review <scope>` in OpenCode or a skills-only Claude Code
-install, `/lazy-clean:lazy-quality-review <scope>` in the Claude Code plugin, or
-`$lazy-quality-review <scope>` in Codex CLI. Codex also lists Lazy Quality Review
-in its skill picker. Both plugins discover the bundled skill directory.
-
-`lazy-clean` now routes tests added or changed by the current task through this
-workflow before finishing, with an explicit task scope and base. It is not an
-edit hook or a whole-suite audit on every change. Standalone use without a
-narrower scope reviews the whole suite. Review-only requests stop at the report;
-authorized fixes preserve useful coverage, change only tests, and explain every
-deletion or consolidation. The judge inspects actual before/after tests and check
-evidence, not just test counts or another agent's verdict. Without clean-context
-delegation, return the next-stage handoff and mark that stage unverified.
-
-## Install — skills only
-
-No npm packages or plugin needed. Install with GitHub CLI to keep source metadata
-for future updates:
+Skills only, for any agent that reads a skills folder:
 
 ```sh
 gh skill install JustasMonkev/lazy-clean --all --agent claude-code --scope user
 ```
 
-For Codex, use `--agent codex` instead. Omit `--scope user` for a project-local
-installation. GitHub CLI selects the latest tagged release, or the default
-branch when there are no releases.
+Use `--agent codex` for Codex. Drop `--scope user` for a project-only install.
 
-Check and apply updates to that installation:
+Full plugin with hooks, for Claude Code:
 
 ```sh
-gh skill update --dir ~/.claude/skills --dry-run \
-  layz-test lazy lazy-audit lazy-clean lazy-debt lazy-gain lazy-help \
-  lazy-review lazy-quality-review lazy-mutation lazy-verify slop-check test-quality-review
+claude --plugin-dir /path/to/lazy-clean
+# or install it from the checkout as a marketplace
+claude plugin marketplace add /path/to/lazy-clean
+claude plugin install lazy-clean@lazy-clean
+```
+
+Skills-only mode gives you every skill on demand. Only the plugin runs the
+ruleset and the checker automatically.
+
+Update a skills-only install:
+
+```sh
 gh skill update --dir ~/.claude/skills \
   layz-test lazy lazy-audit lazy-clean lazy-debt lazy-gain lazy-help \
   lazy-review lazy-quality-review lazy-mutation lazy-verify slop-check test-quality-review
 ```
 
-For user-scope Codex skills, use `--dir ~/.agents/skills`. For project-scope
-Claude Code use `--dir .claude/skills`; for project-scope Codex use
-`--dir .agents/skills`. These explicit directories also avoid scanning this
-checkout's source `skills/` directory, which has no installation metadata.
+Add `--dry-run` to preview. Other folders: `~/.agents/skills` (Codex, user),
+`.claude/skills` (Claude Code, project), `.agents/skills` (Codex, project).
+Without GitHub CLI, copy by hand: `cp -R /path/to/lazy-clean/skills/* ~/.claude/skills/`.
+Hand copies cannot use `gh skill update`.
 
-If you previously copied these skills manually, back up any local edits, then
-reinstall once with metadata:
+## Supported agents
+
+| Level | Agents | What you get |
+| --- | --- | --- |
+| Full hooks | Claude Code, Codex | Ruleset at session and subagent start, `/lazy` commands, checker after every edit |
+| Plugin | OpenCode | Ruleset every turn, slash commands. Needs `.opencode/`, `opencode.json`, `hooks/`, and `skills/` together |
+| Rules file | Cursor, Copilot | Always-on ruleset in `.cursor/rules/lazy-clean.mdc` and `.github/copilot-instructions.md` |
+| `AGENTS.md` | Codex, Zed, Amp, Jules, others | Ruleset plus the checker step |
+| Skills only | Anything that reads `~/.claude/skills` | Every skill on demand, no automation |
+
+Outside the full-hooks level, run the checker yourself after TS/JS changes:
 
 ```sh
-gh skill install JustasMonkev/lazy-clean --all --agent claude-code --scope user --force
+node ~/.claude/skills/slop-check/scripts/check.mjs --since=HEAD
 ```
 
-These commands install and update this repository's skills only.
+## Skills
 
-Without GitHub CLI, manual copying still works, but does not enable
-`gh skill update`:
-
-```
-cp -R /path/to/lazy-clean/skills/* ~/.claude/skills/
-```
-
-That gives you all 13 skills (`lazy-clean`, `lazy`, `lazy-review`, `lazy-quality-review`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `slop-check`, `lazy-mutation`, `lazy-verify`, `layz-test`, `test-quality-review`). Claude picks them up by description or by `/lazy-clean` etc.; `lazy-help`, `lazy-gain`, and `lazy-verify` are slash-only in Claude Code (`disable-model-invocation`), so their descriptions cost no context. The checker script travels inside the `slop-check` skill and runs with plain `node` — zero dependencies.
-
-What you DON'T get in skills-only mode: the automatic parts (ruleset injected every session, checker auto-run after every edit). Those need the hooks — install as a plugin for that:
-
-## Install — full (hooks + auto-run)
-
-Local checkout:
-
-```
-claude --plugin-dir /path/to/lazy-clean
-```
-
-Or add the checkout as a marketplace and enable it with `/plugin`:
-
-```
-claude plugin marketplace add /path/to/lazy-clean
-```
-
-Requires `node` 18+ on `PATH`. No dependencies to install.
-
-## What runs when
-
-| Event | What happens |
+| Skill | What it does |
 | --- | --- |
-| `SessionStart` | startup/clear initialize the default; resume/compact restore the session level |
-| `SubagentStart` | same ruleset injected into the subagent, except read-only Explore agents |
-| `UserPromptSubmit` | `/lazy …` commands parsed, level flag updated |
-| `PostToolUse` on `Write`/`Edit`/`MultiEdit` | `skills/slop-check/scripts/check.mjs` runs on the edited file |
+| `lazy-clean` | Guided build from scope to verified handoff, using subagents |
+| `lazy` | The core ruleset: least code that works, reuse first |
+| `slop-check` | Scan TS/JS for slop and explain each finding |
+| `lazy-review` | Review a diff for over-engineering only |
+| `lazy-audit` | Whole-repo report of what to delete or simplify |
+| `layz-test` | Find and reproduce bugs, add coverage, list manual checks |
+| `lazy-mutation` | Break the code on purpose to prove a test catches it |
+| `test-quality-review` | Find tests that pass even when the code is broken |
+| `lazy-quality-review` | Review, fix, and judge tests in three separate agents |
+| `lazy-verify` | Experimental. Fix/preserve evidence from a local engine |
+| `lazy-debt` | List every deliberate shortcut marked `lazy:` |
+| `lazy-help` | Quick card of modes and commands |
+| `lazy-gain` | Show recorded benchmark results |
 
-Every subagent except the read-only Explore agents gets the ruleset (about 2,000 tokens on each of its requests). To choose which `agent_type`s get it, set `LAZY_SUBAGENT_MATCHER` to a case-insensitive regex; `.` injects it into Explore too.
+How to call a skill:
 
-The checker only looks at `.ts .tsx .mts .cts .js .jsx .mjs .cjs`; anything else is skipped silently. Files written through `Bash` — heredocs, `sed -i`, codemods — are not seen by the hook at all; run the checker on those yourself.
+| Host | Example |
+| --- | --- |
+| Claude Code plugin | `/lazy-clean:lazy-clean <task>` |
+| Claude Code skills-only, OpenCode | `/lazy-clean <task>` |
+| Codex | `$lazy-clean <task>`, or pick it in the skill picker |
 
-Findings are **advisory** — they arrive as `additionalContext`, never as a block, and the hook always exits 0. A failed checker run reports `check failed`; it does not claim the edit was clean. It reports findings on the lines attributed to that edit and counts findings elsewhere in the file whose origin is unknown. Those other findings may come from earlier edits in the same task; the final scan still covers them. Triage them per `skills/slop-check/SKILL.md`: fix real slop and report checked invariants for retained findings in the final response. Do not add code comments; remove nonessential comments from code you touch. Keep required license notices and functional tool directives. Never add `SAFETY:` or `lazy:` markers. Verify necessary functional suppressions and explain the evidence in the final response.
+## The guided build: `lazy-clean`
 
-## Running the checker yourself
+One coordinator plans the work and hands slices to subagents. Each phase must
+pass before the next starts.
 
+```mermaid
+flowchart TD
+    S[Scope and acceptance checks] --> R[Look for existing solutions]
+    R --> P[Plan owned slices]
+    P --> W
+
+    subgraph W[1. Make it work]
+        I[Implement slices]
+    end
+
+    W --> RT
+
+    subgraph RT[2. Make it right]
+        V[Independent review]
+        B[Behavior checks]
+        Q[Test-quality pass]
+    end
+
+    RT -- findings --> W
+    RT --> PR
+
+    subgraph PR[3. Prove it in practice]
+        U[Real-use check]
+    end
+
+    PR --> H[Handoff with evidence]
 ```
-node skills/slop-check/scripts/check.mjs [paths...] [--json] [--summary] [--since=<ref>] [--disable=<rule-id>,...] [--explain=<rule-id>]
+
+Rules it keeps:
+
+- Small tasks use fewer agents.
+- Missing access, hardware, or credentials mark a step **blocked**, never passed.
+- Commits, pushes, and deploys are never automatic. Allowed PRs are draft-only.
+- A passed check proves its own assertions, not general correctness.
+
+## Test skills
+
+Four skills, each with one job:
+
+```mermaid
+flowchart LR
+    T[layz-test<br/>find bugs, add coverage] --> M[lazy-mutation<br/>prove a test catches a fault]
+    T --> QR
+
+    subgraph QR[lazy-quality-review]
+        direction LR
+        R1[Reviewer<br/>test-quality-review] --> F1[Fresh fixer<br/>tests only] --> J1[Judge<br/>before vs after]
+    end
 ```
 
-With no paths it scans the current directory. Exit code 1 means findings, 2 means a path could not be read, 0 means clean — so a failed scan is never mistaken for a clean one. A run that checked zero files also exits 0, but its summary says `no coverage (0 files checked)` instead of `clean`.
+- The reviewer only reports. A separate fresh agent makes the fixes.
+- The fixer changes tests only. Product bugs get reported with a failing test.
+- Every deleted test is explained.
 
-`--since=<ref>` keeps only findings on lines the diff against `<ref>` added. That is the whole adoption story for an existing codebase: there is no baseline file to generate or refresh, because git already holds the baseline.
+## Languages
 
+The rules cover TypeScript, JavaScript, Java, Python, Ruby, Rust, and Go. The
+agent reads the installed version from your toolchain file, manifest, or
+lockfile, and keeps advice valid for it. If it cannot check a version fact, it
+says so instead of guessing.
+
+The checker reads source text, so it works on every TypeScript version,
+including 7. It scans TS/JS only. The other five languages get the written
+checklists. Extra references: [TS/JS checks](skills/lazy/references/simplification-checks.md),
+[Python checks](skills/lazy/references/python-checks.md),
+[design checks](skills/lazy/references/design-checks.md).
+
+## The checker
+
+```sh
+node skills/slop-check/scripts/check.mjs [paths...] [--since=<ref>] [--summary] [--json] [--explain=<rule-id>] [--disable=<rule-id>,...]
 ```
-node skills/slop-check/scripts/check.mjs --since=HEAD          # before committing
+
+| Exit | Meaning |
+| --- | --- |
+| 0 | Clean, or zero files checked (the summary then says `no coverage`) |
+| 1 | Findings |
+| 2 | A path could not be read |
+
+`--since=<ref>` reports only lines added since that ref. Git is the baseline,
+so there is no baseline file to keep up to date.
+
+```sh
+node skills/slop-check/scripts/check.mjs --since=HEAD          # before a commit
 node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
-```
-
-Findings are grouped by whether the fix needs judgment: mechanical ones have a single correct answer, review ones are heuristics where "this is deliberate, leaving it" is a legitimate reply. A message shared by several findings is printed once, on the first. `--summary` replaces the finding list with the per-rule tally, which is the number that tells you whether a codebase is worth a full pass. The run summary line still prints; `--json` is the machine-readable form.
-
-Finding lines and tallies display `type assertion review`. The legacy rule ID `require-safety-comment-for-type-assertion` remains accepted by `--explain`, `--disable`, and existing directives, and remains the ID in JSON output.
-
-Emoji, sequencing comments, change-note comments, and apparently obvious documentation comments are review findings. Retain symbols required by a specification; put useful contracts and rationale in the final response. Existing `SAFETY:` and `slop-check-ignore` directives remain supported for compatibility, but new ones are not a remedy for findings.
-
-`--explain=<rule-id>` prints one rule's reasoning — why it fires, a slop/instead pair, and when the rule is wrong — and runs no scan. Read it before rewriting code a finding landed on that you believe is correct:
-
-```
 node skills/slop-check/scripts/check.mjs --explain=no-json-clone
 ```
 
-Array performance findings are review prompts too: `no-reduce-accumulator-copy`
-detects repeated copies of reducer accumulators, including spread, and
-`no-array-filter-map` checks adjacent eager passes on locally evidenced arrays.
-These checks are conservative and have no autofix. Before rewriting, preserve
-accumulator ownership, callback order and indexes, and sparse-array behavior.
+Findings are advice. Mechanical ones have one right fix. Review ones may be
+deliberate, and "leaving it, here is why" is a valid answer. Do not add
+suppression comments to make a scan clean. Old `slop-check-ignore` directives
+still work but count as suppressions in the summary.
 
-Before finishing any TS/JS task, run `node skills/slop-check/scripts/check.mjs --since=HEAD`
-from the repo root even if edit hooks ran. It includes new untracked files and
-shell edits without fragile shell path splitting. Use the task base ref for
-already-committed changes. Triage only the task's scope, not unrelated user edits.
-Without Git, pass each changed path as a separate quoted argument.
+## When the hooks run
 
-## Improving AI behavior
-
-The main and subagent prompts use the same compact rules. They include a brief
-think → plan → check loop for multi-step work and a strong cut pass over the
-task-owned diff without forcing net-negative feature changes. Every build
-surface (the `lazy` and `lazy-clean` skills, the injected ruleset, the rules
-files, and OpenCode's `/lazy`) ends with the same four-item finish checklist, checked against the diff rather
-than memory: requested needs done and nothing unasked added, each changed line
-traceable, tests that ran, and language checks applied. Detailed
-[risk checks](skills/lazy/references/risk-checks.md) are loaded for non-trivial
-code changes, not every task. All levels preserve requested scope, existing
-input formats, and the repo's test tools; none treats one-line code as a goal.
-
-[Run the AI behavior checks](benchmarks/README.md) to compare fourteen core tasks with the
-rules off/on, three trials each. A separate six-task SOLID set checks module
-boundaries and contracts; see [the design experiment](benchmarks/solid-guidance.md). A ten-task hidden-defect set checks whether a
-defect the prompt never names is fixed or reported. Compare correctness first, then time, cost,
-and size for paired passing runs. This fork makes no measured improvement
-claim without real comparable runs. `npm test` checks the benchmark machinery
-without calling an AI service.
-
-## Review findings and existing suppressions
-
-For a genuine false positive, verify the invariant and explain the evidence in the final response. Do not add suppression comments to make the scan clean. Remove ineffective existing ignores and address the underlying findings.
-
-Existing justified `slop-check-ignore` directives remain supported for compatibility. They cover their line and the next and accept several rule IDs separated by commas. Existing `slop-check-ignore-file` directives in a file's first 10 lines cover the whole file. `--disable=<rule-id>,...` turns rules off for one run; it does not verify that a finding is harmless.
-
-An existing ignore with no reason after `--`, an unknown rule ID, or a file-level directive below line 10 suppresses nothing and is reported as `no-unjustified-ignore`. The run summary counts suppressions; a clean result with suppressions is not evidence that the ignored code was checked.
-
-Skills available: `lazy`, `lazy-audit`, `lazy-debt`, `lazy-gain`, `lazy-help`, `lazy-review`, `lazy-quality-review`, `slop-check`, `lazy-clean` (the main workflow), `lazy-mutation`, `lazy-verify`, `layz-test`, `test-quality-review`.
-
-## Intensity
-
-```
-/lazy lite     # gentle
-/lazy full     # default
-/lazy ultra    # YAGNI extremist
-/lazy          # report current level
+```mermaid
+sequenceDiagram
+    participant H as Host (Claude Code / Codex)
+    participant L as lazy-clean hooks
+    participant C as Checker
+    H->>L: SessionStart
+    L-->>H: Ruleset (new) or saved level (resume)
+    H->>L: SubagentStart
+    L-->>H: Same ruleset (not Explore agents)
+    H->>L: UserPromptSubmit "/lazy ultra"
+    L-->>H: Level saved for this session
+    H->>C: PostToolUse on Write / Edit
+    C-->>H: Findings as context, always exit 0
 ```
 
-`/lazy default <lite|full|ultra|off>` sets the default for new sessions. When the
-host supplies a session ID, each session retains its own level (including `off`)
-across resume, compaction, and process restarts. Changing the default does not
-change already initialized sessions. Subagents and the badge use the same session
-state when the host supplies that identity.
+- Only `.ts .tsx .mts .cts .js .jsx .mjs .cjs` are checked.
+- Edits made through `Bash` (heredocs, `sed -i`) are not seen. Run the checker
+  yourself, or run `--since=HEAD` before finishing.
+- The ruleset adds about 2,000 tokens to each subagent request.
 
-On OpenCode upgrades, the first session needing initial state inherits the legacy
-global mode. Successful migration removes the global flag; later sessions use the
-configured default. Existing scoped modes are never overwritten.
+## Settings
 
-Hosts without session IDs retain the legacy global flag: concurrent chats cannot
-be isolated there. On no-ID OpenCode, changing the default clears that global
-override and affects the current chat too; the command reports this explicitly.
-Session files are not expired by age, because an old session can still be resumed.
+| What | How |
+| --- | --- |
+| Change level | `/lazy lite`, `/lazy full` (default), `/lazy ultra`, `/lazy off` |
+| Show level | `/lazy` |
+| Default for new sessions | `/lazy default <lite\|full\|ultra\|off>` |
+| Pick which subagents get the ruleset | `LAZY_SUBAGENT_MATCHER=<regex>` (`.` includes Explore) |
+| Hide the status badge | `LAZY_HIDE_STATUS=1`, or `"hideStatus": true` in `~/.config/lazy/config.json` |
+| Turn off the checker | Remove the `PostToolUse` entry from `hooks/lazy-clean.json` |
+| Turn off everything | Disable the plugin in `/plugin` |
 
-## Statusline badge
+Each session keeps its own level across resume and compaction when the host
+gives a session ID. The status badge script is `hooks/lazy-statusline.sh`
+(`.ps1` on Windows). The plugin offers to add it once.
 
-The Bash and PowerShell statusline launchers use the shared Node state/config reader. The plugin ships a statusline script that shows the active level (`[LAZY]`, `[LAZY:ULTRA]`). It is not wired up automatically: on first session the hook offers to add a `statusLine` entry to your `settings.json` pointing at `hooks/lazy-statusline.sh` (or `.ps1` on Windows), and it makes that offer at most once.
+## Benchmarks
 
-Hide the badge while keeping lazy active with `LAZY_HIDE_STATUS=1`, or `"hideStatus": true` in `~/.config/lazy/config.json` (`%APPDATA%\lazy\config.json` on Windows).
+All results below are recorded in this repo with raw data. Read the linked file
+before quoting a number. Small task sets cannot prove broad quality gains, and
+none of these claim to.
 
-## Disable
+### Token cost on Claude Opus 5.5 and Sonnet 5.5
 
-- Lazy only: `/lazy off` (or say "stop lazy" / "normal mode"). It stays off in that session, including after resume/compaction; new sessions use the default.
-- Slop-check only: remove the `PostToolUse` entry from `hooks/lazy-clean.json`.
-- Everything: disable the plugin in `/plugin`, or drop the `--plugin-dir` flag.
+14 tasks, real plugin install, 3 trials per arm, 252 runs. Every run passed its
+hidden check, with or without the plugin.
 
-## Developing
+| Model | Arm | Pass | Mean tokens | Mean turns | Mean cost USD |
+| --- | --- | --: | --: | --: | --: |
+| Opus 5.5 | no plugin | 42/42 | 55,415 | 6.1 | 0.098 |
+| Opus 5.5 | plugin | 42/42 | 100,901 | 8.5 | 0.161 |
+| Sonnet 5.5 | no plugin | 42/42 | 60,387 | 6.0 | 0.051 |
+| Sonnet 5.5 | plugin | 42/42 | 82,058 | 6.7 | 0.071 |
 
+The plugin costs more tokens. Most of it buys evidence: a failing test before
+the fix, the checker run, and mutation checks. These tasks are easy enough to
+pass without the plugin, so this run cannot show a quality gain or loss.
+[Full report](benchmarks/results/plugin-tokens-20261007/README.md).
+
+### Skill on vs off, three models
+
+Two real Appium bug fixes, three models, 3 repeats each, 36 runs. Blind
+10-point scores, medians.
+
+| Model | Task | Off | On | Strict gates (off to on) |
+| --- | --- | --: | --: | --- |
+| Luna | URL | 9.50 | 9.80 | 3/3 to 3/3 |
+| Luna | CLI | 9.75 | 9.65 | 3/3 to 3/3 |
+| Sol | URL | 10.00 | 10.00 | 3/3 to 3/3 |
+| Sol | CLI | 9.80 | 9.80 | 3/3 to 3/3 |
+| GLM | URL | 9.90 | 9.70 | 3/3 to 3/3 |
+| GLM | CLI | 9.60 | 9.50 | 2/3 to 3/3 |
+
+All 18 skill-on runs passed every strict gate. 17 of 18 controls did. Score
+changes are small and go both ways. [Full report](benchmarks/paired-models.md).
+
+### Other recorded runs
+
+| Study | Result | Report |
+| --- | --- | --- |
+| SOLID guidance pilot (Luna, 54 task runs) | Revised rules passed 18/18 hidden checks vs 17/18. No arm saved regression tests. | [solid-guidance.md](benchmarks/solid-guidance.md) |
+| Real PR regressions (Luna, 4 cases) | Both arms passed all 4. Manual review found one case where the rules-on run missed reusing an existing method. | [luna-pr-regressions.md](benchmarks/luna-pr-regressions.md) |
+| All-skill token cut (Sol and Luna) | Goal was 20% fewer tokens. Not reached: final candidate used 1.30% more. | [skill-tokens](benchmarks/results/skill-tokens-20261006/README.md) |
+| Skill retention and Appium smoke | Lifecycle and state fixes, with red-green logs. | [skill-reliability.md](benchmarks/skill-reliability.md) |
+
+### Run them yourself
+
+```sh
+node benchmarks/run.mjs /tmp/lazy-eval-config.json /tmp/lazy-eval-results
 ```
-npm test              # rule, CLI, and hook suites — no dependencies
-npm run slop-check    # the checker over this repo, which it has to survive
+
+The default run is 84 agent calls (14 tasks, 3 trials, rules off and on). Set
+`"taskSet"` in the config to pick another set:
+
+| `taskSet` | What it checks |
+| --- | --- |
+| `core` (default) | 14 tasks: explicit values, user edits, trust boundaries, cleanup |
+| `solid` | 6 tasks: module boundaries and contracts |
+| `implementation` | 5 tasks: reuse of native APIs and existing code |
+| `hidden` | 12 tasks: is a bug the prompt never names fixed or reported |
+
+Setup and how to read results: [benchmarks/README.md](benchmarks/README.md).
+
+## Develop
+
+```sh
+npm test              # rules, CLI, hooks, benchmark machinery. No AI calls.
+npm run slop-check    # the checker on this repo
 ```
+
+This is a renamed hard fork of two upstream projects. To compare or port
+upstream changes, follow the [update procedure](skills/lazy-clean/references/upstream-updates.md)
+and record it in [UPSTREAM.md](UPSTREAM.md).
+
+## License
+
+MIT
