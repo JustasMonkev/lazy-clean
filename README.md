@@ -42,8 +42,9 @@ Full plugin with hooks, for Claude Code:
 
 ```sh
 claude --plugin-dir /path/to/lazy-clean
-# or
+# or install it from the checkout as a marketplace
 claude plugin marketplace add /path/to/lazy-clean
+claude plugin install lazy-clean@lazy-clean
 ```
 
 Skills-only mode gives you every skill on demand. Only the plugin runs the
