@@ -9,20 +9,22 @@ license: MIT
 
 Correctness and scope precede code size.
 
-Before coding, state material assumptions, interpretations, tradeoffs; ask only when blocked.
+Before coding, state material assumptions and tradeoffs; ask only when blocked.
 Multi-step: step → check plan and verifiable
-finish: bugs go red → green; refactors get before/after checks. Carry unfinished
+finish: bugs go red → green; refactors get before/after checks. Run checks first;
+note pre-existing failures; never delete, skip, or weaken tests to pass.
+Carry unfinished
 checks through handoffs and compaction; summaries do not replace these instructions.
 
 ## Persistence
 
-Keep level until `/lazy off`, "stop lazy", or "normal mode".
-Switch: `/lazy lite|full|ultra`; bare `/lazy` reports.
+Keep level until `/lazy off`, "stop lazy", or "normal mode";
+`/lazy lite|full|ultra` switches; bare `/lazy` reports.
 Do not announce the mode during ordinary work.
 
 ## The ladder
 
-Trace affected code, callers, callbacks, retries, restore/replay, and concurrent
+Trace callers, callbacks, retries, restore/replay, and concurrent
 use. Fix the shared cause: defects that break the request, recur at a sibling
 site, or sit in an edited function, even if unrequested. Report others with a
 failing input.
@@ -37,10 +39,10 @@ Preserve platform representations; convert/wrap only when required for contract,
 validation, ownership, or a meaningful domain boundary.
 
 Preserve unrelated edits. One caller is not waste: keep domain names, tricky
-logic, side effects, test seams, readability, and framework contracts.
+logic, seams, and framework contracts.
 Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
-Report rationale, checked invariants, shortcut ceilings, and upgrade paths in the final response.
+Report rationale, shortcut ceilings, and upgrade paths in the final response.
 Never add `SAFETY:`/`lazy:`/`slop-check-ignore`; verify necessary functional suppressions.
 
 Skip speculative features/config/abstractions and impossible-state guards; offer simpler alternatives.
@@ -62,6 +64,7 @@ Preserve defaults, explicit false/zero/empty values, accepted input formats,
 state, errors, metadata, generated files, lockfiles, and platform behavior unless
 requested. Keep security, accessibility, and real-hardware calibration.
 Revalidate trust boundaries. Bound external work; clean up timers/listeners/tasks.
+Follow repo instructions; update docs for changed contracts.
 
 Read [TS/JS and tsconfig](references/simplification-checks.md)
 or [Python](references/python-checks.md) checks for changed languages;
@@ -76,13 +79,13 @@ mutation work is optional; otherwise meaningful mutation helps:
 
 TS/JS edits: run the bundled checker from the repo root with the final tests:
 `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`
-(task-base ref for commits; quoted changed paths without Git).
+(task-base for commits; quoted changed paths without Git).
 Triage only task-owned findings; do not alter pre-existing work. Failed scans
 are not clean; never weaken checks.
 
 TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect languages used;
 read toolchain file, manifest, lockfile, or runtime versions. Match installed version;
-if unavailable, say so; do not guess. Research latest only when asked.
+if unavailable, say so; do not guess.
 
 ## Intensity
 
@@ -114,8 +117,7 @@ Stop only when requested needs and required checks are met; report blocked or
 unverified work. A passed check proves its assertions, not general correctness;
 distinguish behavior evidence from checker/review findings.
 
-Check the diff, not memory: requested needs done; nothing unasked was added;
-each change traces to the request or its verification; changed behavior has tests that ran;
-report failures; language checks applied; checker findings triaged.
+Check the diff, not memory: nothing unasked was added; each change traces to the
+request or its verification; changed behavior has tests that ran.
 
 Report changes, checks actually run, and limits; never claim an unrun check.

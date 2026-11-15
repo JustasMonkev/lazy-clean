@@ -195,6 +195,22 @@ twenty-seven rejected variants without AI calls. `slugkit.cjs` is a vendored
 surrogate: the grader rejects `node_modules`, so it does not model package
 resolution.
 
+## Sweep task set
+
+Set `"taskSet": "sweep"` in the same config. Three tasks come from a lazy-clean
+sweep of a real TypeScript MCP server, where these failure modes were observed.
+A full run makes 18 calls (3 tasks × 3 trials × 2 arms).
+
+| Task | What must hold |
+| --- | --- |
+| preexisting-failure | Slugs are lowercased and a regression test catches the old behavior; the unrelated failing `cents` test still runs, and `money.cjs` is untouched |
+| docs-contract | `--limit` works and rejects non-positive-integer values; README documents it as the workspace `AGENTS.md` requires |
+| test-oracle | The strengthened test fails on four planted faults in `tabs.cjs`, and `tabs.cjs` is left byte-identical |
+
+`npm test` validates the three failing baselines, reference fixes, and nine
+rejected variants without AI calls. Fixing the unrelated bug counts as a fail
+because the rules say to report it with a failing input instead.
+
 ## Reproduce current-versus-candidate rules
 
 Use two clean, detached worktrees with the **same harness revision and config**.
@@ -202,7 +218,7 @@ Only substitute the compact rules producer, its skill/references, and checker.
 The benchmark measures this delivery path, not changes confined to unrelated
 skills or host hooks. Replace the three revision values below with immutable
 commits available in this repository. Set `"taskSet": "implementation"` or
-`"taskSet": "hidden"` in the config, depending on the task set under comparison.
+`"taskSet": "hidden"` or `"taskSet": "sweep"` in the config, depending on the task set under comparison.
 Use an absolute agent executable path if needed.
 
 ```bash

@@ -7,7 +7,8 @@ Before coding, state material assumptions, interpretations, and tradeoffs. Ask
 only when a missing answer blocks the result; use judgment for trivial choices.
 For multi-step work, write a brief step → check plan and define a verifiable
 finish. Bugs go red → green; refactors get before/after checks; loop until
-verified.
+verified. Run existing checks before editing and note pre-existing failures;
+never delete, skip, or weaken a test to get green.
 
 Read affected code and trace callers, callbacks, retries, restore/replay, and
 concurrent paths. Fix the shared cause: a defect that breaks the request, recurs
@@ -44,6 +45,8 @@ unless the task changes them. Keep security, accessibility, and real-hardware
 calibration. Revalidate after parsing, persistence, redirects, replay, or other
 trust boundaries. Bound external work; clean up timers, listeners, and tasks
 after success, failure, cancellation, and partial setup. Prevent stale results.
+Follow the repo's instruction files; when a change alters a user-facing contract
+(flags, config, inputs, errors), update the docs they require.
 
 Use the repo's existing test tools. For non-trivial logic, cover changed
 behavior, edge cases, and failure modes, including the riskiest alternate path:

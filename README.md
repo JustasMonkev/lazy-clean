@@ -83,7 +83,7 @@ node ~/.claude/skills/slop-check/scripts/check.mjs --since=HEAD
 
 | Skill | What it does |
 | --- | --- |
-| `lazy-clean` | Guided build from scope to verified handoff, using subagents |
+| `lazy-clean` | Guided build from scope to verified handoff, or a repo-wide audit-and-fix sweep, using subagents |
 | `lazy` | The core ruleset: least code that works, reuse first |
 | `slop-check` | Scan TS/JS for slop and explain each finding |
 | `lazy-review` | Review a diff for over-engineering only |
@@ -180,7 +180,7 @@ checklists. Extra references: [TS/JS checks](skills/lazy/references/simplificati
 ## The checker
 
 ```sh
-node skills/slop-check/scripts/check.mjs [paths...] [--since=<ref>] [--summary] [--json] [--explain=<rule-id>] [--disable=<rule-id>,...]
+node skills/slop-check/scripts/check.mjs [paths...] [--since=<ref>] [--summary] [--source-only] [--json] [--explain=<rule-id>] [--disable=<rule-id>,...]
 ```
 
 | Exit | Meaning |
@@ -188,6 +188,10 @@ node skills/slop-check/scripts/check.mjs [paths...] [--since=<ref>] [--summary] 
 | 0 | Clean, or zero files checked (the summary then says `no coverage`) |
 | 1 | Findings |
 | 2 | A path could not be read |
+
+`--source-only` skips test files and fixtures and reports how many it skipped;
+every summary also counts findings in test files. On an existing repo, triage
+`--source-only --summary` first.
 
 `--since=<ref>` reports only lines added since that ref. Git is the baseline,
 so there is no baseline file to keep up to date.

@@ -397,6 +397,33 @@ check("assertion tallies use a neutral display name while retaining the legacy I
   const disabled = run(["slop.ts", "--summary", "--disable=require-safety-comment-for-type-assertion"]);
   assert.equal(disabled.status, 0);
   assert.match(disabled.stdout, /1 suppressed/u);
+  const alias = run(["slop.ts", "--summary", "--disable=type-assertion-review"]);
+  assert.equal(alias.status, 0, alias.stderr);
+  assert.equal(alias.stderr, "");
+  assert.match(alias.stdout, /1 suppressed/u);
+  const explained = run(["--explain=type-assertion-review"]);
+  assert.equal(explained.status, 0, explained.stderr);
+  assert.match(explained.stdout, /^slop-check: require-safety-comment-for-type-assertion\n/u);
+});
+
+check("--source-only skips test files and reports how many it skipped", () => {
+  const dir = mkdtempSync(join(root, "split-"));
+  writeFileSync(join(dir, "app.ts"), SLOP);
+  writeFileSync(join(dir, "app.test.ts"), SLOP);
+  mkdirSync(join(dir, "tests"));
+  writeFileSync(join(dir, "tests", "helper.ts"), SLOP);
+  const all = run([dir]);
+  assert.equal(all.status, 1);
+  assert.match(all.stdout, /3 findings in 3 files, 2 in test files\n$/u);
+  const source = run([dir, "--source-only"]);
+  assert.equal(source.status, 1);
+  assert.match(source.stdout, /app\.ts:1:22/u);
+  assert.doesNotMatch(source.stdout, /app\.test\.ts|helper\.ts/u);
+  assert.match(source.stdout, /1 finding in 1 file, 2 test files skipped\n$/u);
+  rmSync(join(dir, "app.ts"));
+  const none = run([dir, "--source-only"]);
+  assert.equal(none.status, 0);
+  assert.match(none.stdout, /no coverage \(0 files checked, 2 test files skipped\)/u);
 });
 
 check("--json on a clean file is an empty array", () => {

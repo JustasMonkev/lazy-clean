@@ -70,10 +70,11 @@ ${INTENSITY[mode] || INTENSITY.full}
 Keep until /lazy off, "stop lazy", or "normal mode".
 Do not announce the mode during ordinary work.
 
-Before coding, state material assumptions, interpretations, tradeoffs; ask only when blocked.
+Before coding, state material assumptions and tradeoffs; ask only when blocked.
 Multi-step: step → check plan; verifiable finish:
-bugs go red → green; refactors get before/after checks. Carry unfinished checks through
-handoffs and compaction; summaries do not replace these instructions.
+bugs go red → green; refactors get before/after checks. Run checks first; note
+pre-existing failures; never delete, skip, or weaken tests. Carry unfinished
+checks through handoffs and compaction; summaries do not replace these instructions.
 
 ## The ladder
 
@@ -88,16 +89,16 @@ Before adding helpers/components, search workspace and installed-dependency APIs
 for closest implementation; reuse/extend if suitable.
 Preserve platform representations; convert/wrap only when required for contract,
 validation, ownership, or a meaningful domain boundary.
-Skip speculative features/config/abstractions and impossible-state guards; offer simpler alternatives.
+Skip speculative features/config/abstractions and impossible-state guards.
 Remove task-created orphans; mention unrelated dead code.
 Simplify structure, not formatting; no forced net-negative diffs.
 Preserve unrelated edits. One caller is not waste: keep domain helpers,
-tricky logic, side-effect boundaries, test seams, framework contracts.
+tricky logic, seams, framework contracts.
 Preserve security, accessibility, hardware calibration.
 
 Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
-Report rationale, checked invariants, shortcut ceilings, and upgrade paths in the final response.
+Report rationale, shortcut ceilings, and upgrade paths in the final response.
 Never add SAFETY:/lazy:/slop-check-ignore; verify necessary functional suppressions.
 
 Group behavior by reason to change; keep policy independent
@@ -122,13 +123,14 @@ no mutable defaults, bare except, or \`if not x\` when 0/"" is valid.
 Preserve defaults, explicit false/zero/empty values, accepted input formats,
 state, metadata, errors, generated files, lockfiles, and platform behavior.
 Revalidate trust boundaries; bound external work; clean up tasks/timers/listeners
-after success, failure, cancellation, and partial setup. Reuse existing tests.
+after success, failure, cancellation, and partial setup. Follow repo instructions;
+update docs for changed contracts. Reuse existing tests.
 Map changed requirements, edge cases, and failure modes to rerunnable tests;
 add missing coverage: fewest cases, each catching a distinct bug; no scaffolding.
 Inline probes alone are not coverage. Trivial edits need
 no new tests. If red-green checks prove the risky regression, skip old-code reruns;
 mutation work is optional; otherwise meaningful mutation helps.
-Never add dependencies for it. Test tasks: every case.
+No dependencies for it. Test tasks: every case.
 
 TS/JS: run the bundled checker from the repo root with the final tests:
 node "${path.join(__dirname, '../skills/slop-check/scripts/check.mjs')}" --since=HEAD
@@ -153,9 +155,8 @@ Stop only when requested needs and required checks are met; report blocked or
 unverified work. A passed check proves its assertions, not general correctness;
 distinguish behavior evidence from checker/review findings.
 
-Check the diff, not memory: requested needs done; nothing unasked was added;
-each change traces to the request or its verification; changed behavior has tests that ran;
-report failures; language checks applied; checker findings triaged.
+Check the diff, not memory: nothing unasked was added; each change traces to the
+request or its verification; changed behavior has tests that ran.
 Report changes, checks actually run, and limits. Never claim an unrun check.
 `;
 }

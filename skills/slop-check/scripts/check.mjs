@@ -3131,6 +3131,8 @@ const STANDALONE_RULE_IDS = [
 ];
 
 export const RULE_IDS = new Set([...LINE_RULES.map((rule) => rule.name), ...STANDALONE_RULE_IDS]);
+const RULE_ALIASES = new Map([["type-assertion-review", "require-safety-comment-for-type-assertion"]]);
+const canonicalRule = (id) => RULE_ALIASES.get(id) ?? id;
 export { RULE_EXPLANATIONS };
 
 function explainRule(id) {
@@ -3466,6 +3468,7 @@ function printUsage() {
 Options:
   --json             Print findings as JSON.
   --summary          Replace findings with a rule tally; keep the run summary.
+  --source-only      Skip test files and fixtures; the summary counts them.
   --since=<ref>      Scan only lines added since <ref>.
   --exclude-file=<path>  Skip one exact existing file; repeat for multiple files.
   --disable=<ids>    Disable comma-separated rule IDs.
@@ -3485,15 +3488,17 @@ function main() {
   const optionArgs = endOfOptions === -1 ? args : args.slice(0, endOfOptions);
   const json = optionArgs.includes("--json");
   const summaryOnly = optionArgs.includes("--summary");
+  const sourceOnly = optionArgs.includes("--source-only");
   const since = optionArgs.find((arg) => arg.startsWith("--since="))?.slice("--since=".length);
   const exclusionPaths = optionArgs.filter((arg) => arg.startsWith("--exclude-file="))
     .map((arg) => arg.slice("--exclude-file=".length));
   const explainArgs = optionArgs.filter((arg) => arg.startsWith("--explain="));
-  const explain = explainArgs[0]?.slice("--explain=".length);
+  const explainArg = explainArgs[0]?.slice("--explain=".length);
+  const explain = explainArg === undefined ? undefined : canonicalRule(explainArg);
   const disabled = new Set(
     optionArgs.filter((arg) => arg.startsWith("--disable="))
       .flatMap((arg) => arg.slice("--disable=".length).split(","))
-      .map((id) => id.trim())
+      .map((id) => canonicalRule(id.trim()))
       .filter(Boolean),
   );
   const targets = [
@@ -3504,7 +3509,7 @@ function main() {
   // point of the code is that a scan which skipped something never reports
   // clean. 0 = clean, 1 = findings, 2 = scan failed.
   const unknown = optionArgs.filter(
-    (arg) => arg.startsWith("-") && !["--json", "--summary", "-h", "--help"].includes(arg)
+    (arg) => arg.startsWith("-") && !["--json", "--summary", "--source-only", "-h", "--help"].includes(arg)
       && !arg.startsWith("--since=") && !arg.startsWith("--disable=") && !arg.startsWith("--explain=")
       && !arg.startsWith("--exclude-file="),
   );
@@ -3519,7 +3524,7 @@ function main() {
     return;
   }
   if (explain !== undefined && !RULE_IDS.has(explain)) {
-    console.error(`slop-check: --explain names ${explain}, which is not a rule id (rule ids: ${[...RULE_IDS].sort().join(", ")})`);
+    console.error(`slop-check: --explain names ${explainArg}, which is not a rule id (rule ids: ${[...RULE_IDS].sort().join(", ")})`);
     process.exitCode = 2;
     return;
   }
@@ -3592,6 +3597,7 @@ function main() {
   // away under ignores has not been cleaned, and the summary is where that shows.
   let suppressed = 0;
   let excludedCount = 0;
+  let skippedTests = 0;
   const scannedSources = new Map();
   for (const [key, file] of files) {
     // realpath, not resolve: addedLines() keys every change by its path under
@@ -3603,6 +3609,10 @@ function main() {
     if (added && !changed) continue;
     if (excluded.has(key)) {
       excludedCount += 1;
+      continue;
+    }
+    if (sourceOnly && TEST_FILE_PATTERN.test(displayPath(file))) {
+      skippedTests += 1;
       continue;
     }
     let source;
@@ -3660,8 +3670,11 @@ function main() {
   // Appended rather than folded into each branch: "clean" earned under 40
   // ignores is a different sentence from "clean", and every branch needs to say
   // so, including the one that reports a failed scan.
+  const testFindings = findings.filter((finding) => TEST_FILE_PATTERN.test(finding.path)).length;
   const silenced = (suppressed > 0 ? `, ${suppressed} suppressed` : "")
-    + (excludedCount > 0 ? `, ${excludedCount} excluded` : "");
+    + (excludedCount > 0 ? `, ${excludedCount} excluded` : "")
+    + (skippedTests > 0 ? `, ${skippedTests} test file${skippedTests === 1 ? "" : "s"} skipped` : "")
+    + (testFindings > 0 ? `, ${testFindings} in test files` : "");
   const summary = scan.unreadable > 0
     ? `slop-check: scan incomplete (${scan.unreadable} path${scan.unreadable === 1 ? "" : "s"} unreadable, ${scanned} file${scanned === 1 ? "" : "s"} checked, ${findings.length} finding${findings.length === 1 ? "" : "s"}${silenced})`
     : scanned === 0
