@@ -28,6 +28,21 @@ flowchart LR
     E --> F[Handoff with evidence]
 ```
 
+## Short prompts
+
+Give the agent the requested outcome and the command that verifies it. These
+follow-ups target two common sources of unnecessary code:
+
+> For each new guard, catch, or fallback, identify the reachable failure it
+> handles. Keep required validation and recovery; otherwise propagate the error.
+
+> Can this count or flag be derived from existing state? Remove redundant
+> synchronization, while preserving snapshots, required caches, and public behavior.
+
+These are judgment prompts, not a ban on `if` or `try/catch`. Fewer lines only
+help when the same contract remains correct. See the
+[research and verification notes](benchmarks/simplicity-guidance.md).
+
 ## Install
 
 Skills only, for any agent that reads a skills folder:

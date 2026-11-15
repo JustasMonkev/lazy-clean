@@ -196,7 +196,20 @@ ok("risk checks list inputs the request did not name", /inputs the request did n
 ok("risk checks reject masking a defect", /clamp or fallback that hides it is not a fix/iu.test(riskChecks));
 ok("risk checks keep relied-on behavior", /behavior callers or tests rely on is contract/iu.test(riskChecks));
 
+const COMPLEXITY_CONTRACT = [
+  ["grounds new defensive branches in reachable contract evidence", /guards\/catches\/fallbacks need contract\/caller\/documented-boundary evidence of reachability/iu],
+  ["requires a catch purpose and preserves original error propagation", /catch only for required recovery\/translation\/cleanup\/reporting; otherwise propagate original errors/iu],
+  ["retains validation at trust boundaries", /preserve trust-boundary validation|revalidate trust boundaries|revalidate after parsing[^.]*trust boundaries|validate external data at its boundary/iu],
+  ["requires evidence before removing existing guards", /guard(?:\/helper)? removal requires (?:caller\/lifetime )?redundancy evidence/iu],
+  ["derives cheap values instead of maintaining duplicate state", /derive cheap values from authoritative state/iu],
+  ["preserves independent state, snapshots, useful caches, and contracts", /retain independent state, intentional snapshots, required\/measured caches, public contracts/iu],
+];
+for (const file of BUILD_SURFACES)
+  for (const [description, pattern] of COMPLEXITY_CONTRACT)
+    ok(`${file} ${description}`, pattern.test(flat(read(file))));
+
 const DELIVERY_CONTRACT = [
+  ...COMPLEXITY_CONTRACT,
   ...FIRST_FIT_CONTRACT,
   ...HIDDEN_DEFECT_CONTRACT,
   ...SCANNER_SCOPE_CONTRACT,
@@ -255,7 +268,7 @@ try {
         const raw = damagedInstructions[builder](mode);
         const surface = `${builder}(${mode}) with ${skillState} SKILL.md`;
         ok(`${surface} uses the fallback`, raw === damagedInstructions.getFallbackInstructions(mode));
-        for (const [description, pattern] of [...FIRST_FIT_CONTRACT, ...SCANNER_SCOPE_CONTRACT, ...COMPLETION_CONTRACT])
+        for (const [description, pattern] of [...FIRST_FIT_CONTRACT, ...SCANNER_SCOPE_CONTRACT, ...COMPLETION_CONTRACT, ...COMPLEXITY_CONTRACT])
           ok(`${surface} ${description}`, pattern.test(flat(raw)));
         ok(`${surface} stays below 700 words`, raw.split(/\s+/u).length < 700);
       }
