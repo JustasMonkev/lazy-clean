@@ -14,6 +14,8 @@ const hardTabsMutants = {
   'index off by one': ['- ${index}: ', '- ${index + 1}: '],
   'marker removed': ["'(current) '", "''"],
   'marker on every tab': ['index === current ?', 'true ?'],
+  'title replaced': ['[${escape(tab.title)}]', '[${escape(tab.url)}]'],
+  'url replaced': ['(${tab.url})', '(${tab.title})'],
   'title escaping removed': ["text.replace(/[[\\]]/g, '\\\\$&')", 'text'],
   'only the first bracket escaped': ['/[[\\]]/g', '/[[\\]]/'],
   'empty-list message removed': ["'No open tabs.'", "''"],
@@ -108,7 +110,8 @@ const mutants = {
   'index off by one': ['- \${index}: ', '- \${index + 1}: '],
   'marker removed': ["'(current) '", "''"],
   'marker on every tab': ['index === current ?', 'true ?'],
-  'title and url swapped': ['[\${tab.title}] (\${tab.url})', '[\${tab.url}] (\${tab.title})'],
+  'title replaced': ['[\${tab.title}]', '[\${tab.url}]'],
+  'url replaced': ['(\${tab.url})', '(\${tab.title})'],
 };
 try {
   for (const [name, [from, to]] of Object.entries(mutants)) {

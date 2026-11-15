@@ -426,6 +426,26 @@ check("--source-only skips test files and reports how many it skipped", () => {
   assert.match(none.stdout, /no coverage \(0 files checked, 2 test files skipped\)/u);
 });
 
+check("--source-only ignores test-named directories above the scanned project", () => {
+  const project = join(mkdtempSync(join(root, "ancestor-")), "tests", "project");
+  mkdirSync(join(project, "tests"), { recursive: true });
+  writeFileSync(join(project, "app.ts"), SLOP);
+  writeFileSync(join(project, "tests", "helper.ts"), SLOP);
+  for (const target of [join(project, "app.ts"), project, "."]) {
+    const result = run([target, "--source-only"], project);
+    assert.equal(result.status, 1, `${target}: ${result.stdout}`);
+    assert.match(result.stdout, /app\.ts:1:22/u, target);
+    assert.doesNotMatch(result.stdout, /helper\.ts/u, target);
+  }
+  execFileSync("git", ["init", "-q"], { cwd: project });
+  writeFileSync(join(project, "README.md"), "fixture\n");
+  execFileSync("git", ["add", "README.md"], { cwd: project });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "base"], { cwd: project });
+  const since = run(["--since=HEAD", "--source-only"], project);
+  assert.equal(since.status, 1, since.stdout + since.stderr);
+  assert.match(since.stdout, /1 finding in 1 file, 1 test file skipped\n$/u);
+});
+
 check("--json on a clean file is an empty array", () => {
   const result = run(["clean.ts", "--json"]);
   assert.deepEqual(JSON.parse(result.stdout), []);

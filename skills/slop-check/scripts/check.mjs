@@ -16,9 +16,9 @@
  * false positives alone with a short justification instead of contorting the
  * code.
  */
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
-import { extname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"]);
@@ -3305,7 +3305,7 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
 // file — including a symlink loop — the same entry for free.
 const identity = (stats, target) => (stats.ino ? `${stats.dev}:${stats.ino}` : resolve(target));
 
-function collectFiles(entry, scan) {
+function collectFiles(entry, scan, root = entry) {
   let stats;
   try {
     stats = statSync(entry);
@@ -3330,7 +3330,7 @@ function collectFiles(entry, scan) {
     }
     for (const name of names) {
       if (SKIPPED_DIRECTORIES.has(name)) continue;
-      collectFiles(join(entry, name), scan);
+      collectFiles(join(entry, name), scan, root);
     }
     return;
   }
@@ -3345,6 +3345,23 @@ function collectFiles(entry, scan) {
   const key = identity(stats, entry);
   if (scan.files.has(key)) return;
   scan.files.set(key, entry);
+  scan.roots.set(key, root === entry ? dirname(entry) : root);
+}
+
+function repositoryRoot() {
+  const result = spawnSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  return result.status === 0 ? result.stdout.trim() : null;
+}
+
+function inside(base, file) {
+  const rel = relative(base, file);
+  return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel) ? rel : null;
+}
+
+function isTestFile(file, root, bases) {
+  const absolute = resolve(file);
+  const rel = bases.map((base) => inside(base, absolute)).find((path) => path !== null) ?? relative(resolve(root), absolute);
+  return TEST_FILE_PATTERN.test(rel);
 }
 
 // The path a change map is keyed by. Falls back to resolve() when the file is
@@ -3581,7 +3598,7 @@ function main() {
     const rel = relative(cwd, file);
     return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
   };
-  const scan = { files: new Map(), seenDirs: new Set(), unreadable: 0 };
+  const scan = { files: new Map(), roots: new Map(), seenDirs: new Set(), unreadable: 0 };
   for (const target of targets.length > 0 ? targets : added ? [...added.keys()].filter(underCwd) : ["."]) {
     collectFiles(target, scan);
   }
@@ -3598,6 +3615,8 @@ function main() {
   let suppressed = 0;
   let excludedCount = 0;
   let skippedTests = 0;
+  let testFindings = 0;
+  const bases = [repositoryRoot(), cwd].filter(Boolean);
   const scannedSources = new Map();
   for (const [key, file] of files) {
     // realpath, not resolve: addedLines() keys every change by its path under
@@ -3611,7 +3630,8 @@ function main() {
       excludedCount += 1;
       continue;
     }
-    if (sourceOnly && TEST_FILE_PATTERN.test(displayPath(file))) {
+    const testFile = isTestFile(file, scan.roots.get(key), bases);
+    if (sourceOnly && testFile) {
       skippedTests += 1;
       continue;
     }
@@ -3642,7 +3662,9 @@ function main() {
     // for an untouched ignore somebody else wrote years ago, which reads as this
     // change having silenced something.
     suppressed += (changed ? fileFindings.suppressed.filter(touched) : fileFindings.suppressed).length;
-    findings.push(...(changed ? fileFindings.filter(touched) : fileFindings));
+    const kept = changed ? fileFindings.filter(touched) : fileFindings;
+    if (testFile) testFindings += kept.length;
+    findings.push(...kept);
   }
 
   if (added) {
@@ -3670,7 +3692,6 @@ function main() {
   // Appended rather than folded into each branch: "clean" earned under 40
   // ignores is a different sentence from "clean", and every branch needs to say
   // so, including the one that reports a failed scan.
-  const testFindings = findings.filter((finding) => TEST_FILE_PATTERN.test(finding.path)).length;
   const silenced = (suppressed > 0 ? `, ${suppressed} suppressed` : "")
     + (excludedCount > 0 ? `, ${excludedCount} excluded` : "")
     + (skippedTests > 0 ? `, ${skippedTests} test file${skippedTests === 1 ? "" : "s"} skipped` : "")

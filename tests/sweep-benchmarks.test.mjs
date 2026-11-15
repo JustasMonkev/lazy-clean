@@ -63,6 +63,13 @@ const variants = {
   'test-oracle': {
     fixed: { 'test.cjs': strongTabsTest },
     bad: {
+      'ignores titles': { 'test.cjs': `const assert = require('node:assert/strict');
+const {renderTabs} = require('./tabs.cjs');
+const lines = renderTabs([{title: 'A', url: 'https://a.test'}, {title: 'B', url: 'https://b.test'}], 1).split('\\n');
+assert.equal(lines[0], '### Open tabs');
+assert.match(lines[1], /^- 0: \\[[^\\]]*\\] \\(https:\\/\\/a\\.test\\)$/);
+assert.match(lines[2], /^- 1: \\(current\\) \\[[^\\]]*\\] \\(https:\\/\\/b\\.test\\)$/);
+` },
       'checks only indexes': { 'test.cjs': strongTabsTest.replace(/assert\.equal[\s\S]*$/u,
         "const out = renderTabs([{title: 'A', url: 'u'}, {title: 'B', url: 'v'}], 1);\nassert.match(out, /- 0: /); assert.match(out, /- 1: /); assert.doesNotMatch(out, /- 2: /);\n") },
       'leaves a planted fault behind': { 'test.cjs': strongTabsTest,
@@ -129,7 +136,7 @@ try {
   const report = JSON.parse(readFileSync(join(output, 'results.json'), 'utf8'));
   assert.equal(report.config.taskSet, 'sweep');
   assert.deepEqual(report.results.map(result => [result.task, result.pass]), [['docs-contract', false], ['docs-contract', false]]);
-  console.log('sweep benchmarks: six failing baselines, reference fixes, eighteen bad variants, and selection passed');
+  console.log('sweep benchmarks: six failing baselines, reference fixes, nineteen bad variants, and selection passed');
 } finally {
   rmSync(root, { recursive: true, force: true });
 }

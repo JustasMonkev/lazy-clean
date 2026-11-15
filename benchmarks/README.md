@@ -212,7 +212,7 @@ A full run makes 36 calls (6 tasks × 3 trials × 2 arms).
 | docs-contract-hard | `--limit` must appear in `CLI.md` and the `--help` usage line, as `CONTRIBUTING.md` requires; README alone is not enough |
 | test-oracle-hard | The test must also catch faults in title bracket escaping (including the global flag) and the empty-list message |
 
-`npm test` validates the six failing baselines, reference fixes, and eighteen
+`npm test` validates the six failing baselines, reference fixes, and nineteen
 rejected variants without AI calls. Fixing the unrelated bug counts as a fail
 because the rules say to report it with a failing input instead.
 

@@ -85,3 +85,11 @@ is the same denied-heredoc false completion seen in round 1, in a Sonnet off run
   spread in the raw logs was the usage limit, not the tasks.
 - Measuring a pass-rate gain needs larger, multi-file fixtures than these
   single-function Node tasks.
+
+## Grading amendment
+
+Review of the PR found that `test-oracle` and `test-oracle-hard` swapped title
+and URL in one mutant, so a test that checked URLs but ignored titles still
+passed. The graders now plant title-only and URL-only faults. All 123 recorded
+passing runs of both tasks, across both rounds and every arm, were regraded
+with the amended grader; none changed, so the tables above stand.
