@@ -470,6 +470,9 @@ check("directory scans skip gitignored build output but scan it when named", () 
   assert.equal(named.status, 1, named.stdout);
   assert.match(named.stdout, /no-json-clone/u);
   assert.doesNotMatch(named.stdout, /gitignored/u);
+  const directory = run(["lib"], repo);
+  assert.equal(directory.status, 0, directory.stdout);
+  assert.match(directory.stdout, /no coverage \(0 files checked, 1 gitignored path skipped\)/u);
 });
 
 check("--json on a clean file is an empty array", () => {

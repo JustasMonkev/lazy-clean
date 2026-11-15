@@ -3315,6 +3315,10 @@ function collectFiles(entry, scan, root = entry) {
     scan.unreadable += 1;
     return;
   }
+  if ((stats.isDirectory() || entry !== root) && scan.ignored.has(resolve(entry))) {
+    scan.ignoredSkipped += 1;
+    return;
+  }
   if (stats.isDirectory()) {
     // `ln -s . dir/self` recursed until ELOOP, then reported the whole tree as
     // unreadable (exit 2) and counted the same files once per loop turn.
@@ -3331,12 +3335,7 @@ function collectFiles(entry, scan, root = entry) {
     }
     for (const name of names) {
       if (SKIPPED_DIRECTORIES.has(name)) continue;
-      const child = join(entry, name);
-      if (scan.ignored.has(resolve(child))) {
-        scan.ignoredSkipped += 1;
-        continue;
-      }
-      collectFiles(child, scan, root);
+      collectFiles(join(entry, name), scan, root);
     }
     return;
   }
