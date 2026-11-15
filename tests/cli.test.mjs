@@ -426,7 +426,7 @@ check("--source-only skips test files and reports how many it skipped", () => {
   assert.match(none.stdout, /no coverage \(0 files checked, 2 test files skipped\)/u);
 });
 
-check("--source-only ignores test-named directories above the scanned project", () => {
+check("test-file classification ignores test-named directories above the scanned project", () => {
   const project = join(mkdtempSync(join(root, "ancestor-")), "tests", "project");
   mkdirSync(join(project, "tests"), { recursive: true });
   writeFileSync(join(project, "app.ts"), SLOP);
@@ -437,6 +437,14 @@ check("--source-only ignores test-named directories above the scanned project", 
     assert.match(result.stdout, /app\.ts:1:22/u, target);
     assert.doesNotMatch(result.stdout, /helper\.ts/u, target);
   }
+  const mockComment = "// Mock response captured from the billing sandbox.\nexport const body = 1;\n";
+  writeFileSync(join(project, "billing.ts"), mockComment);
+  writeFileSync(join(project, "tests", "billing.ts"), mockComment);
+  const comments = run([join(project, "billing.ts"), join(project, "tests", "billing.ts")], project);
+  assert.match(comments.stdout, /^ {2}billing\.ts:1:1 no-filler-comments|\/project\/billing\.ts:1:1 no-filler-comments/mu, comments.stdout);
+  assert.doesNotMatch(comments.stdout, /tests\/billing\.ts:1:1/u, comments.stdout);
+  rmSync(join(project, "billing.ts"));
+  rmSync(join(project, "tests", "billing.ts"));
   execFileSync("git", ["init", "-q"], { cwd: project });
   writeFileSync(join(project, "README.md"), "fixture\n");
   execFileSync("git", ["add", "README.md"], { cwd: project });
@@ -444,6 +452,24 @@ check("--source-only ignores test-named directories above the scanned project", 
   const since = run(["--since=HEAD", "--source-only"], project);
   assert.equal(since.status, 1, since.stdout + since.stderr);
   assert.match(since.stdout, /1 finding in 1 file, 1 test file skipped\n$/u);
+});
+
+check("directory scans skip gitignored build output but scan it when named", () => {
+  const repo = mkdtempSync(join(root, "ignored-"));
+  mkdirSync(join(repo, "lib"));
+  writeFileSync(join(repo, ".gitignore"), "lib/\n");
+  writeFileSync(join(repo, "app.ts"), SLOP);
+  writeFileSync(join(repo, "lib", "app.js"), "const value = /** @type {User} */ (payload); const a = JSON.parse(JSON.stringify(value));\n");
+  execFileSync("git", ["init", "-q"], { cwd: repo });
+  const tree = run(["."], repo);
+  assert.equal(tree.status, 1, tree.stdout);
+  assert.match(tree.stdout, /app\.ts:1:22/u);
+  assert.doesNotMatch(tree.stdout, /lib[\\/]app\.js/u);
+  assert.match(tree.stdout, /1 finding in 1 file, 1 gitignored path skipped\n$/u);
+  const named = run([join("lib", "app.js")], repo);
+  assert.equal(named.status, 1, named.stdout);
+  assert.match(named.stdout, /no-json-clone/u);
+  assert.doesNotMatch(named.stdout, /gitignored/u);
 });
 
 check("--json on a clean file is an empty array", () => {

@@ -2732,7 +2732,7 @@ const TEST_FILE_PATTERN = /(?:^|[\\/])(?:__tests__|__mocks__|test|tests|fixtures
 
 function* iterateCommentFindings(ctx) {
   const { comments, lineStarts, maskedLines, isTypeScript } = ctx;
-  const inTestFile = TEST_FILE_PATTERN.test(ctx.path);
+  const inTestFile = ctx.testFile;
   for (const [index, comment] of comments.entries()) {
     const start = offsetToPosition(lineStarts, comment.start);
     const endLine = offsetToPosition(lineStarts, Math.max(comment.start, comment.end - 1)).line;
@@ -3221,7 +3221,7 @@ function collectSuppressions(comments, lineStarts) {
   return { forLine, forFile, findings };
 }
 
-export function lintSource(rawSource, filePath, { disabled } = {}) {
+export function lintSource(rawSource, filePath, { disabled, testFile = TEST_FILE_PATTERN.test(filePath) } = {}) {
   const extension = extname(filePath).toLowerCase();
   // A leading BOM is not part of line 1: it defeats the shebang skip and shifts
   // every column on that line by one.
@@ -3236,6 +3236,7 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
   const bindsAny = declaredNames.has("any") || PARAMETER_ANY.test(masked) || DESTRUCTURED_ANY.test(masked);
   const ctx = {
     path: filePath,
+    testFile,
     source,
     declaredNames,
     bindsAny,
@@ -3330,7 +3331,12 @@ function collectFiles(entry, scan, root = entry) {
     }
     for (const name of names) {
       if (SKIPPED_DIRECTORIES.has(name)) continue;
-      collectFiles(join(entry, name), scan, root);
+      const child = join(entry, name);
+      if (scan.ignored.has(resolve(child))) {
+        scan.ignoredSkipped += 1;
+        continue;
+      }
+      collectFiles(child, scan, root);
     }
     return;
   }
@@ -3351,6 +3357,14 @@ function collectFiles(entry, scan, root = entry) {
 function repositoryRoot() {
   const result = spawnSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
   return result.status === 0 ? result.stdout.trim() : null;
+}
+
+function ignoredPaths(root) {
+  if (!root) return new Set();
+  const result = spawnSync("git", ["-C", root, "ls-files", "--others", "--ignored", "--exclude-standard", "--directory", "-z"],
+    { encoding: "utf8", maxBuffer: 64e6, stdio: ["ignore", "pipe", "ignore"] });
+  if (result.status !== 0) return new Set();
+  return new Set(result.stdout.split("\0").filter(Boolean).map((path) => resolve(root, path)));
 }
 
 function inside(base, file) {
@@ -3598,7 +3612,8 @@ function main() {
     const rel = relative(cwd, file);
     return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
   };
-  const scan = { files: new Map(), roots: new Map(), seenDirs: new Set(), unreadable: 0 };
+  const repoRoot = repositoryRoot();
+  const scan = { files: new Map(), roots: new Map(), seenDirs: new Set(), unreadable: 0, ignored: ignoredPaths(repoRoot), ignoredSkipped: 0 };
   for (const target of targets.length > 0 ? targets : added ? [...added.keys()].filter(underCwd) : ["."]) {
     collectFiles(target, scan);
   }
@@ -3616,7 +3631,7 @@ function main() {
   let excludedCount = 0;
   let skippedTests = 0;
   let testFindings = 0;
-  const bases = [repositoryRoot(), cwd].filter(Boolean);
+  const bases = [repoRoot, cwd].filter(Boolean);
   const scannedSources = new Map();
   for (const [key, file] of files) {
     // realpath, not resolve: addedLines() keys every change by its path under
@@ -3648,7 +3663,7 @@ function main() {
     }
     if (added) scannedSources.set(file, source);
     linted += 1;
-    const fileFindings = lintSource(source, displayPath(file), { disabled });
+    const fileFindings = lintSource(source, displayPath(file), { disabled, testFile });
     // Evidence can precede the diagnostic anchor (a receiver) or follow it
     // (a reducer seed). Match the same evidence span as the PostToolUse hook.
     const touched = (finding) => {
@@ -3694,6 +3709,7 @@ function main() {
   // so, including the one that reports a failed scan.
   const silenced = (suppressed > 0 ? `, ${suppressed} suppressed` : "")
     + (excludedCount > 0 ? `, ${excludedCount} excluded` : "")
+    + (scan.ignoredSkipped > 0 ? `, ${scan.ignoredSkipped} gitignored path${scan.ignoredSkipped === 1 ? "" : "s"} skipped` : "")
     + (skippedTests > 0 ? `, ${skippedTests} test file${skippedTests === 1 ? "" : "s"} skipped` : "")
     + (testFindings > 0 ? `, ${testFindings} in test files` : "");
   const summary = scan.unreadable > 0

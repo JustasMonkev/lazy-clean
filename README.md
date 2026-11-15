@@ -189,6 +189,9 @@ node skills/slop-check/scripts/check.mjs [paths...] [--since=<ref>] [--summary] 
 | 1 | Findings |
 | 2 | A path could not be read |
 
+Directory scans skip paths the Git repository ignores and count them in the
+summary; a file named explicitly is still scanned.
+
 `--source-only` skips test files and fixtures and reports how many it skipped;
 every summary also counts findings in test files. On an existing repo, triage
 `--source-only --summary` first.
