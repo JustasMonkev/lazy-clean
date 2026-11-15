@@ -1,0 +1,3714 @@
+[
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "explicit-values",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 12621,
+  "costUsd": 0.0021152600000000003,
+  "tokens": 49303,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "explicit-values",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 20327,
+  "costUsd": 0.0047667199999999995,
+  "tokens": 135472,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "shared-cause",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 17593,
+  "costUsd": 0.0041286000000000005,
+  "tokens": 106249,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "shared-cause",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 10545,
+  "costUsd": 0.00192041,
+  "tokens": 48951,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "user-edits",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 9753,
+  "costUsd": 0.00169284,
+  "tokens": 48413,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "user-edits",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 20346,
+  "costUsd": 0.00467033,
+  "tokens": 122476,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "useful-helper",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 18384,
+  "costUsd": 0.004089730000000001,
+  "tokens": 104509,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "useful-helper",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 14127,
+  "costUsd": 0.0026883400000000004,
+  "tokens": 82789,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "input-compat",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 11172,
+  "costUsd": 0.0019099500000000003,
+  "tokens": 48828,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "input-compat",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 16554,
+  "costUsd": 0.00335687,
+  "tokens": 63501,
+  "permissionDenials": 0,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "requested-expiry",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 23046,
+  "costUsd": 0.00497593,
+  "tokens": 113791,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "requested-expiry",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 11521,
+  "costUsd": 0.0020785400000000002,
+  "tokens": 49483,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "existing-tests",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 10040,
+  "costUsd": 0.00210729,
+  "tokens": 50831,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "existing-tests",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 15905,
+  "costUsd": 0.0037193200000000004,
+  "tokens": 93406,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "trust-boundary",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 22070,
+  "costUsd": 0.00470377,
+  "tokens": 109846,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "trust-boundary",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 13485,
+  "costUsd": 0.00252865,
+  "tokens": 51427,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "partial-cleanup",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 9913,
+  "costUsd": 0.0017026699999999999,
+  "tokens": 39159,
+  "permissionDenials": 0,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "partial-cleanup",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 20505,
+  "costUsd": 0.00465615,
+  "tokens": 121903,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "new-file-errors",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 15901,
+  "costUsd": 0.00354431,
+  "tokens": 77587,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "new-file-errors",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 11831,
+  "costUsd": 0.00208152,
+  "tokens": 49525,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "dependency-duplication",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 21678,
+  "costUsd": 0.004269729999999999,
+  "tokens": 71095,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "dependency-duplication",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 47403,
+  "costUsd": 0.010313700000000002,
+  "tokens": 244509,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "collection-cleanup",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 57726,
+  "costUsd": 0.012511380000000002,
+  "tokens": 283875,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "collection-cleanup",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 25764,
+  "costUsd": 0.00502928,
+  "tokens": 84621,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "empty-error",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 11806,
+  "costUsd": 0.002182,
+  "tokens": 50241,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "empty-error",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 20434,
+  "costUsd": 0.00468654,
+  "tokens": 109919,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "necessary-guard",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 18474,
+  "costUsd": 0.00366159,
+  "tokens": 65224,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "necessary-guard",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 14390,
+  "costUsd": 0.00242094,
+  "tokens": 69970,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 13899,
+  "costUsd": 0.0026503900000000003,
+  "tokens": 51387,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 19022,
+  "costUsd": 0.00416603,
+  "tokens": 97144,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 2,
+  "arm": "on",
+  "pass": true,
+  "ms": 20287,
+  "costUsd": 0.003931319999999999,
+  "tokens": 95856,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 2,
+  "arm": "off",
+  "pass": true,
+  "ms": 15965,
+  "costUsd": 0.00287777,
+  "tokens": 67127,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 3,
+  "arm": "off",
+  "pass": true,
+  "ms": 15177,
+  "costUsd": 0.0028375699999999998,
+  "tokens": 62408,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 3,
+  "arm": "on",
+  "pass": true,
+  "ms": 20409,
+  "costUsd": 0.0037011599999999998,
+  "tokens": 107760,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 4,
+  "arm": "on",
+  "pass": true,
+  "ms": 18491,
+  "costUsd": 0.00352589,
+  "tokens": 93755,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 4,
+  "arm": "off",
+  "pass": true,
+  "ms": 15621,
+  "costUsd": 0.00277495,
+  "tokens": 61980,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 5,
+  "arm": "off",
+  "pass": true,
+  "ms": 10807,
+  "costUsd": 0.0018989,
+  "tokens": 39810,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 5,
+  "arm": "on",
+  "pass": true,
+  "ms": 13968,
+  "costUsd": 0.00247237,
+  "tokens": 63082,
+  "permissionDenials": 0,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 35077,
+  "costUsd": 0.007663930000000002,
+  "tokens": 223380,
+  "permissionDenials": 4,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 13910,
+  "costUsd": 0.00278437,
+  "tokens": 62630,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 2,
+  "arm": "off",
+  "pass": true,
+  "ms": 23844,
+  "costUsd": 0.0048738900000000005,
+  "tokens": 108150,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 2,
+  "arm": "on",
+  "pass": true,
+  "ms": 31562,
+  "costUsd": 0.0066885700000000005,
+  "tokens": 184930,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 3,
+  "arm": "on",
+  "pass": true,
+  "ms": 25068,
+  "costUsd": 0.00495145,
+  "tokens": 132736,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 3,
+  "arm": "off",
+  "pass": true,
+  "ms": 12934,
+  "costUsd": 0.0026168800000000002,
+  "tokens": 62519,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 4,
+  "arm": "off",
+  "pass": true,
+  "ms": 17132,
+  "costUsd": 0.0034893100000000007,
+  "tokens": 76298,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 4,
+  "arm": "on",
+  "pass": true,
+  "ms": 22005,
+  "costUsd": 0.0045321,
+  "tokens": 113406,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 5,
+  "arm": "on",
+  "pass": true,
+  "ms": 31593,
+  "costUsd": 0.006483510000000001,
+  "tokens": 164726,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 5,
+  "arm": "off",
+  "pass": true,
+  "ms": 19778,
+  "costUsd": 0.004108789999999999,
+  "tokens": 83006,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 17114,
+  "costUsd": 0.00305038,
+  "tokens": 77966,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 23728,
+  "costUsd": 0.0053097100000000005,
+  "tokens": 129178,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 2,
+  "arm": "on",
+  "pass": true,
+  "ms": 29359,
+  "costUsd": 0.00600888,
+  "tokens": 162615,
+  "permissionDenials": 4,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 2,
+  "arm": "off",
+  "pass": true,
+  "ms": 23815,
+  "costUsd": 0.0046237200000000004,
+  "tokens": 106002,
+  "permissionDenials": 4,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 3,
+  "arm": "off",
+  "pass": true,
+  "ms": 21089,
+  "costUsd": 0.0038407300000000005,
+  "tokens": 90869,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 3,
+  "arm": "on",
+  "pass": true,
+  "ms": 34435,
+  "costUsd": 0.007166840000000002,
+  "tokens": 177541,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 4,
+  "arm": "on",
+  "pass": true,
+  "ms": 21388,
+  "costUsd": 0.00381506,
+  "tokens": 95635,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 4,
+  "arm": "off",
+  "pass": true,
+  "ms": 23141,
+  "costUsd": 0.0044402700000000005,
+  "tokens": 82187,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 5,
+  "arm": "off",
+  "pass": true,
+  "ms": 27685,
+  "costUsd": 0.00567494,
+  "tokens": 115523,
+  "permissionDenials": 4,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 5,
+  "arm": "on",
+  "pass": true,
+  "ms": 28907,
+  "costUsd": 0.0057906400000000005,
+  "tokens": 178160,
+  "permissionDenials": 4,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "explicit-values",
+  "trial": 1,
+  "arm": "off",
+  "pass": false,
+  "ms": 11233,
+  "costUsd": 0.024333399999999998,
+  "tokens": 33104,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "explicit-values",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 18477,
+  "costUsd": 0.0502489,
+  "tokens": 78848,
+  "permissionDenials": 2,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "shared-cause",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 18098,
+  "costUsd": 0.0455096,
+  "tokens": 66203,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "shared-cause",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 10537,
+  "costUsd": 0.018611500000000003,
+  "tokens": 41355,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "user-edits",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 7380,
+  "costUsd": 0.0105983,
+  "tokens": 23870,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "user-edits",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 10558,
+  "costUsd": 0.029954699999999997,
+  "tokens": 41908,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "useful-helper",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 11273,
+  "costUsd": 0.030103300000000003,
+  "tokens": 41726,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "useful-helper",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 8988,
+  "costUsd": 0.014104,
+  "tokens": 32372,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "input-compat",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 12352,
+  "costUsd": 0.01884,
+  "tokens": 41867,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "input-compat",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 16725,
+  "costUsd": 0.041071800000000006,
+  "tokens": 65520,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "requested-expiry",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 40568,
+  "costUsd": 0.1025858,
+  "tokens": 187198,
+  "permissionDenials": 3,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "requested-expiry",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 20755,
+  "costUsd": 0.0364647,
+  "tokens": 53997,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "existing-tests",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 7415,
+  "costUsd": 0.011316300000000001,
+  "tokens": 24075,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "existing-tests",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 6894,
+  "costUsd": 0.0226865,
+  "tokens": 30554,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "trust-boundary",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 17141,
+  "costUsd": 0.046231,
+  "tokens": 66373,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "trust-boundary",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 18697,
+  "costUsd": 0.034243899999999994,
+  "tokens": 53485,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "partial-cleanup",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 10946,
+  "costUsd": 0.0180166,
+  "tokens": 33158,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "partial-cleanup",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 14709,
+  "costUsd": 0.0439007,
+  "tokens": 54412,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "new-file-errors",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 28759,
+  "costUsd": 0.0796163,
+  "tokens": 121689,
+  "permissionDenials": 3,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "new-file-errors",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 14606,
+  "costUsd": 0.026848800000000003,
+  "tokens": 51291,
+  "permissionDenials": 2,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "dependency-duplication",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 13595,
+  "costUsd": 0.0216856,
+  "tokens": 42297,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "dependency-duplication",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 15340,
+  "costUsd": 0.0377263,
+  "tokens": 53775,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "collection-cleanup",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 21329,
+  "costUsd": 0.0541337,
+  "tokens": 56536,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "collection-cleanup",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 12158,
+  "costUsd": 0.0172263,
+  "tokens": 33133,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "empty-error",
+  "trial": 1,
+  "arm": "off",
+  "pass": false,
+  "ms": 11026,
+  "costUsd": 0.016693200000000002,
+  "tokens": 32947,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "empty-error",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 17438,
+  "costUsd": 0.0415762,
+  "tokens": 65095,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "necessary-guard",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 11297,
+  "costUsd": 0.0294548,
+  "tokens": 42036,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "necessary-guard",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 10055,
+  "costUsd": 0.0179126,
+  "tokens": 33789,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 10673,
+  "costUsd": 0.0210262,
+  "tokens": 25189,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 10458,
+  "costUsd": 0.0277926,
+  "tokens": 31842,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 2,
+  "arm": "on",
+  "pass": true,
+  "ms": 9830,
+  "costUsd": 0.0166062,
+  "tokens": 31854,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 2,
+  "arm": "off",
+  "pass": true,
+  "ms": 8130,
+  "costUsd": 0.0149667,
+  "tokens": 25203,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 3,
+  "arm": "off",
+  "pass": true,
+  "ms": 9311,
+  "costUsd": 0.0156761,
+  "tokens": 25280,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 3,
+  "arm": "on",
+  "pass": true,
+  "ms": 9533,
+  "costUsd": 0.016249,
+  "tokens": 31792,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 4,
+  "arm": "on",
+  "pass": true,
+  "ms": 9296,
+  "costUsd": 0.0161869,
+  "tokens": 31783,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 4,
+  "arm": "off",
+  "pass": true,
+  "ms": 9510,
+  "costUsd": 0.0160309,
+  "tokens": 25336,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 5,
+  "arm": "off",
+  "pass": true,
+  "ms": 8961,
+  "costUsd": 0.0158167,
+  "tokens": 25306,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 5,
+  "arm": "on",
+  "pass": true,
+  "ms": 9921,
+  "costUsd": 0.0166421,
+  "tokens": 31850,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 32605,
+  "costUsd": 0.0910327,
+  "tokens": 129746,
+  "permissionDenials": 4,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 16385,
+  "costUsd": 0.038676999999999996,
+  "tokens": 54370,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 2,
+  "arm": "off",
+  "pass": true,
+  "ms": 16999,
+  "costUsd": 0.0382965,
+  "tokens": 55770,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 2,
+  "arm": "on",
+  "pass": true,
+  "ms": 25959,
+  "costUsd": 0.0625967,
+  "tokens": 85410,
+  "permissionDenials": 2,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 3,
+  "arm": "on",
+  "pass": true,
+  "ms": 23554,
+  "costUsd": 0.057405399999999995,
+  "tokens": 83747,
+  "permissionDenials": 2,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 3,
+  "arm": "off",
+  "pass": true,
+  "ms": 17036,
+  "costUsd": 0.0361826,
+  "tokens": 54431,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 4,
+  "arm": "off",
+  "pass": true,
+  "ms": 16295,
+  "costUsd": 0.035280900000000004,
+  "tokens": 54249,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 4,
+  "arm": "on",
+  "pass": true,
+  "ms": 22042,
+  "costUsd": 0.049797900000000006,
+  "tokens": 70755,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 5,
+  "arm": "on",
+  "pass": true,
+  "ms": 20886,
+  "costUsd": 0.049208800000000004,
+  "tokens": 70624,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 5,
+  "arm": "off",
+  "pass": true,
+  "ms": 16278,
+  "costUsd": 0.0355918,
+  "tokens": 54322,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 1,
+  "arm": "off",
+  "pass": false,
+  "ms": 15391,
+  "costUsd": 0.033443799999999996,
+  "tokens": 35615,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 13667,
+  "costUsd": 0.039524000000000004,
+  "tokens": 43716,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 2,
+  "arm": "on",
+  "pass": true,
+  "ms": 19977,
+  "costUsd": 0.041396699999999995,
+  "tokens": 57008,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 2,
+  "arm": "off",
+  "pass": true,
+  "ms": 16487,
+  "costUsd": 0.03346790000000001,
+  "tokens": 36081,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 3,
+  "arm": "off",
+  "pass": true,
+  "ms": 16672,
+  "costUsd": 0.032933399999999995,
+  "tokens": 36019,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 3,
+  "arm": "on",
+  "pass": true,
+  "ms": 12481,
+  "costUsd": 0.0277808,
+  "tokens": 43629,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 4,
+  "arm": "on",
+  "pass": true,
+  "ms": 12972,
+  "costUsd": 0.0272301,
+  "tokens": 43498,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 4,
+  "arm": "off",
+  "pass": false,
+  "ms": 17281,
+  "costUsd": 0.0323939,
+  "tokens": 35886,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 5,
+  "arm": "off",
+  "pass": true,
+  "ms": 17776,
+  "costUsd": 0.0326702,
+  "tokens": 35940,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "candidate",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 5,
+  "arm": "on",
+  "pass": false,
+  "ms": 13491,
+  "costUsd": 0.028175199999999997,
+  "tokens": 43706,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "explicit-values",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 11944,
+  "costUsd": 0.00210791,
+  "tokens": 49080,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "explicit-values",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 14287,
+  "costUsd": 0.00301677,
+  "tokens": 62320,
+  "permissionDenials": 0,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "shared-cause",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 13157,
+  "costUsd": 0.0029281000000000003,
+  "tokens": 61459,
+  "permissionDenials": 0,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "shared-cause",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 11752,
+  "costUsd": 0.00220513,
+  "tokens": 59191,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "user-edits",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 10901,
+  "costUsd": 0.0022677400000000003,
+  "tokens": 70350,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "user-edits",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 13806,
+  "costUsd": 0.00317595,
+  "tokens": 75612,
+  "permissionDenials": 0,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "useful-helper",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 20268,
+  "costUsd": 0.004343980000000001,
+  "tokens": 107401,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "useful-helper",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 11058,
+  "costUsd": 0.00206865,
+  "tokens": 58982,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "input-compat",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 12188,
+  "costUsd": 0.0020131000000000003,
+  "tokens": 48626,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "input-compat",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 20189,
+  "costUsd": 0.00434529,
+  "tokens": 97103,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "requested-expiry",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 18600,
+  "costUsd": 0.00400126,
+  "tokens": 93193,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "requested-expiry",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 14082,
+  "costUsd": 0.0028456,
+  "tokens": 51848,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "existing-tests",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 10270,
+  "costUsd": 0.00200334,
+  "tokens": 39796,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "existing-tests",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 13225,
+  "costUsd": 0.00322583,
+  "tokens": 77362,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "trust-boundary",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 26554,
+  "costUsd": 0.0057409,
+  "tokens": 117226,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "trust-boundary",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 15573,
+  "costUsd": 0.0026479500000000005,
+  "tokens": 51186,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "partial-cleanup",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 17880,
+  "costUsd": 0.00354417,
+  "tokens": 86021,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "partial-cleanup",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 15859,
+  "costUsd": 0.00330074,
+  "tokens": 63043,
+  "permissionDenials": 0,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "new-file-errors",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 18552,
+  "costUsd": 0.00393891,
+  "tokens": 92239,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "new-file-errors",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 13998,
+  "costUsd": 0.0029615200000000005,
+  "tokens": 64129,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "dependency-duplication",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 21394,
+  "costUsd": 0.00461525,
+  "tokens": 94399,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "dependency-duplication",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 47926,
+  "costUsd": 0.010790019999999999,
+  "tokens": 256850,
+  "permissionDenials": 7,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "collection-cleanup",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 42125,
+  "costUsd": 0.008905490000000002,
+  "tokens": 202933,
+  "permissionDenials": 4,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "collection-cleanup",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 34247,
+  "costUsd": 0.005665159999999999,
+  "tokens": 63130,
+  "permissionDenials": 0,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "empty-error",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 12414,
+  "costUsd": 0.00240328,
+  "tokens": 50380,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "empty-error",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 22532,
+  "costUsd": 0.00482341,
+  "tokens": 110175,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "necessary-guard",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 22210,
+  "costUsd": 0.0042232599999999995,
+  "tokens": 89939,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "core",
+  "task": "necessary-guard",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 16381,
+  "costUsd": 0.00291866,
+  "tokens": 62871,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 14914,
+  "costUsd": 0.00285831,
+  "tokens": 66578,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 15038,
+  "costUsd": 0.0032542,
+  "tokens": 65033,
+  "permissionDenials": 0,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 2,
+  "arm": "on",
+  "pass": true,
+  "ms": 15000,
+  "costUsd": 0.0026617200000000002,
+  "tokens": 64878,
+  "permissionDenials": 0,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 2,
+  "arm": "off",
+  "pass": true,
+  "ms": 11508,
+  "costUsd": 0.00205841,
+  "tokens": 50584,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 3,
+  "arm": "off",
+  "pass": true,
+  "ms": 13248,
+  "costUsd": 0.00255562,
+  "tokens": 53709,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 3,
+  "arm": "on",
+  "pass": true,
+  "ms": 21850,
+  "costUsd": 0.00411889,
+  "tokens": 111003,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 4,
+  "arm": "on",
+  "pass": true,
+  "ms": 16008,
+  "costUsd": 0.00284522,
+  "tokens": 65531,
+  "permissionDenials": 0,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 4,
+  "arm": "off",
+  "pass": true,
+  "ms": 14554,
+  "costUsd": 0.0027570900000000002,
+  "tokens": 75704,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 5,
+  "arm": "off",
+  "pass": true,
+  "ms": 10734,
+  "costUsd": 0.00181645,
+  "tokens": 39610,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 5,
+  "arm": "on",
+  "pass": true,
+  "ms": 17357,
+  "costUsd": 0.0032606900000000005,
+  "tokens": 80941,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 24109,
+  "costUsd": 0.0051453,
+  "tokens": 112456,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 20977,
+  "costUsd": 0.00445859,
+  "tokens": 129053,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 2,
+  "arm": "off",
+  "pass": true,
+  "ms": 15295,
+  "costUsd": 0.00303383,
+  "tokens": 64292,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 2,
+  "arm": "on",
+  "pass": true,
+  "ms": 25716,
+  "costUsd": 0.00516699,
+  "tokens": 117437,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 3,
+  "arm": "on",
+  "pass": true,
+  "ms": 23984,
+  "costUsd": 0.004718559999999999,
+  "tokens": 128498,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 3,
+  "arm": "off",
+  "pass": true,
+  "ms": 18642,
+  "costUsd": 0.0038924100000000002,
+  "tokens": 91013,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 4,
+  "arm": "off",
+  "pass": true,
+  "ms": 12874,
+  "costUsd": 0.00248827,
+  "tokens": 52430,
+  "permissionDenials": 0,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 4,
+  "arm": "on",
+  "pass": true,
+  "ms": 23387,
+  "costUsd": 0.0046718,
+  "tokens": 126519,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 5,
+  "arm": "on",
+  "pass": true,
+  "ms": 34564,
+  "costUsd": 0.0073712399999999985,
+  "tokens": 200055,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 5,
+  "arm": "off",
+  "pass": true,
+  "ms": 21111,
+  "costUsd": 0.00430594,
+  "tokens": 102704,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 20681,
+  "costUsd": 0.0042357,
+  "tokens": 91336,
+  "permissionDenials": 5,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 28037,
+  "costUsd": 0.006001800000000002,
+  "tokens": 147284,
+  "permissionDenials": 6,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 2,
+  "arm": "on",
+  "pass": true,
+  "ms": 39839,
+  "costUsd": 0.00865016,
+  "tokens": 279861,
+  "permissionDenials": 7,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 2,
+  "arm": "off",
+  "pass": true,
+  "ms": 20950,
+  "costUsd": 0.00371353,
+  "tokens": 69011,
+  "permissionDenials": 2,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 3,
+  "arm": "off",
+  "pass": true,
+  "ms": 13039,
+  "costUsd": 0.00227537,
+  "tokens": 40799,
+  "permissionDenials": 1,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 3,
+  "arm": "on",
+  "pass": true,
+  "ms": 27144,
+  "costUsd": 0.00564602,
+  "tokens": 174801,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 4,
+  "arm": "on",
+  "pass": true,
+  "ms": 29815,
+  "costUsd": 0.00594714,
+  "tokens": 148555,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 4,
+  "arm": "off",
+  "pass": true,
+  "ms": 21804,
+  "costUsd": 0.004329609999999999,
+  "tokens": 91923,
+  "permissionDenials": 4,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 5,
+  "arm": "off",
+  "pass": true,
+  "ms": 31190,
+  "costUsd": 0.00570573,
+  "tokens": 118628,
+  "permissionDenials": 3,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-haiku-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 5,
+  "arm": "on",
+  "pass": true,
+  "ms": 33679,
+  "costUsd": 0.00686207,
+  "tokens": 174845,
+  "permissionDenials": 5,
+  "models": [
+   "claude-haiku-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "explicit-values",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 11540,
+  "costUsd": 0.0234587,
+  "tokens": 32958,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "explicit-values",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 14890,
+  "costUsd": 0.0422912,
+  "tokens": 65147,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "shared-cause",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 17423,
+  "costUsd": 0.045909099999999994,
+  "tokens": 66355,
+  "permissionDenials": 2,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "shared-cause",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 8286,
+  "costUsd": 0.0139099,
+  "tokens": 24019,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "user-edits",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 6975,
+  "costUsd": 0.0129996,
+  "tokens": 23856,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "user-edits",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 13291,
+  "costUsd": 0.0351699,
+  "tokens": 53027,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "useful-helper",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 13919,
+  "costUsd": 0.0356919,
+  "tokens": 42853,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "useful-helper",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 8647,
+  "costUsd": 0.016892900000000002,
+  "tokens": 32370,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "input-compat",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 12506,
+  "costUsd": 0.027107899999999997,
+  "tokens": 43120,
+  "permissionDenials": 2,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "input-compat",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 14940,
+  "costUsd": 0.041377500000000005,
+  "tokens": 65496,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "requested-expiry",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 24326,
+  "costUsd": 0.06094560000000001,
+  "tokens": 93485,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "requested-expiry",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 17663,
+  "costUsd": 0.034716800000000006,
+  "tokens": 43594,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "existing-tests",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 7963,
+  "costUsd": 0.0137561,
+  "tokens": 24053,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "existing-tests",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 7227,
+  "costUsd": 0.0229937,
+  "tokens": 30569,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "trust-boundary",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 16493,
+  "costUsd": 0.04637469999999999,
+  "tokens": 66412,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "trust-boundary",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 16028,
+  "costUsd": 0.0364738,
+  "tokens": 53341,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "partial-cleanup",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 11499,
+  "costUsd": 0.0205619,
+  "tokens": 33159,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "partial-cleanup",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 15942,
+  "costUsd": 0.0456245,
+  "tokens": 66191,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "new-file-errors",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 16117,
+  "costUsd": 0.046802,
+  "tokens": 66413,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "new-file-errors",
+  "trial": 1,
+  "arm": "off",
+  "pass": false,
+  "ms": 9637,
+  "costUsd": 0.019566700000000003,
+  "tokens": 32954,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "dependency-duplication",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 12582,
+  "costUsd": 0.0211671,
+  "tokens": 33487,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "dependency-duplication",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 21357,
+  "costUsd": 0.0504987,
+  "tokens": 68517,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "collection-cleanup",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 20310,
+  "costUsd": 0.053240499999999996,
+  "tokens": 56379,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "collection-cleanup",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 13362,
+  "costUsd": 0.0231689,
+  "tokens": 33561,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "empty-error",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 10554,
+  "costUsd": 0.0193478,
+  "tokens": 32889,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "empty-error",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 17076,
+  "costUsd": 0.042028600000000006,
+  "tokens": 65200,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "necessary-guard",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 13390,
+  "costUsd": 0.0325378,
+  "tokens": 42683,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "core",
+  "task": "necessary-guard",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 9648,
+  "costUsd": 0.0163566,
+  "tokens": 24690,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 10784,
+  "costUsd": 0.0213632,
+  "tokens": 25214,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 14316,
+  "costUsd": 0.040859900000000005,
+  "tokens": 56089,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 2,
+  "arm": "on",
+  "pass": true,
+  "ms": 10649,
+  "costUsd": 0.017286999999999997,
+  "tokens": 31879,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 2,
+  "arm": "off",
+  "pass": true,
+  "ms": 9492,
+  "costUsd": 0.01573,
+  "tokens": 25291,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 3,
+  "arm": "off",
+  "pass": true,
+  "ms": 9923,
+  "costUsd": 0.0158615,
+  "tokens": 25301,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 3,
+  "arm": "on",
+  "pass": true,
+  "ms": 10060,
+  "costUsd": 0.0173817,
+  "tokens": 31926,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 4,
+  "arm": "on",
+  "pass": true,
+  "ms": 10415,
+  "costUsd": 0.0163824,
+  "tokens": 31800,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 4,
+  "arm": "off",
+  "pass": true,
+  "ms": 9394,
+  "costUsd": 0.015283999999999999,
+  "tokens": 25238,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 5,
+  "arm": "off",
+  "pass": true,
+  "ms": 8669,
+  "costUsd": 0.0152859,
+  "tokens": 25233,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "preexisting-failure",
+  "trial": 5,
+  "arm": "on",
+  "pass": true,
+  "ms": 8887,
+  "costUsd": 0.016881100000000003,
+  "tokens": 31840,
+  "permissionDenials": 0,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 31873,
+  "costUsd": 0.0920832,
+  "tokens": 120387,
+  "permissionDenials": 3,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 15998,
+  "costUsd": 0.0369189,
+  "tokens": 45440,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 2,
+  "arm": "off",
+  "pass": true,
+  "ms": 16399,
+  "costUsd": 0.0354416,
+  "tokens": 54230,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 2,
+  "arm": "on",
+  "pass": true,
+  "ms": 18733,
+  "costUsd": 0.043952599999999994,
+  "tokens": 56848,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 3,
+  "arm": "on",
+  "pass": true,
+  "ms": 19943,
+  "costUsd": 0.0501601,
+  "tokens": 71809,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 3,
+  "arm": "off",
+  "pass": true,
+  "ms": 14787,
+  "costUsd": 0.034477799999999996,
+  "tokens": 44456,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 4,
+  "arm": "off",
+  "pass": true,
+  "ms": 17361,
+  "costUsd": 0.0365794,
+  "tokens": 54352,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 4,
+  "arm": "on",
+  "pass": true,
+  "ms": 20146,
+  "costUsd": 0.046556600000000004,
+  "tokens": 57235,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 5,
+  "arm": "on",
+  "pass": true,
+  "ms": 23297,
+  "costUsd": 0.0530999,
+  "tokens": 84309,
+  "permissionDenials": 2,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "docs-contract",
+  "trial": 5,
+  "arm": "off",
+  "pass": true,
+  "ms": 25309,
+  "costUsd": 0.0561062,
+  "tokens": 68841,
+  "permissionDenials": 2,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 1,
+  "arm": "off",
+  "pass": true,
+  "ms": 14818,
+  "costUsd": 0.029574200000000002,
+  "tokens": 35376,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 1,
+  "arm": "on",
+  "pass": true,
+  "ms": 13575,
+  "costUsd": 0.0390903,
+  "tokens": 43636,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 2,
+  "arm": "on",
+  "pass": true,
+  "ms": 12455,
+  "costUsd": 0.027049600000000004,
+  "tokens": 43487,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 2,
+  "arm": "off",
+  "pass": false,
+  "ms": 14552,
+  "costUsd": 0.029834,
+  "tokens": 35460,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 3,
+  "arm": "off",
+  "pass": true,
+  "ms": 14795,
+  "costUsd": 0.029586599999999998,
+  "tokens": 35374,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 3,
+  "arm": "on",
+  "pass": true,
+  "ms": 12332,
+  "costUsd": 0.025759300000000002,
+  "tokens": 43277,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 4,
+  "arm": "on",
+  "pass": true,
+  "ms": 12907,
+  "costUsd": 0.028114600000000003,
+  "tokens": 43679,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 4,
+  "arm": "off",
+  "pass": true,
+  "ms": 16849,
+  "costUsd": 0.034825300000000003,
+  "tokens": 36311,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 5,
+  "arm": "off",
+  "pass": true,
+  "ms": 16890,
+  "costUsd": 0.034592899999999996,
+  "tokens": 36294,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ },
+ {
+  "rules": "current",
+  "model": "claude-sonnet-5-5",
+  "taskSet": "sweep",
+  "task": "test-oracle",
+  "trial": 5,
+  "arm": "on",
+  "pass": true,
+  "ms": 12539,
+  "costUsd": 0.025660600000000002,
+  "tokens": 43199,
+  "permissionDenials": 1,
+  "models": [
+   "claude-sonnet-5-5"
+  ]
+ }
+]
