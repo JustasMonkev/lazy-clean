@@ -99,6 +99,12 @@ assert.match(lines[2], /^- 1: \\(current\\) \\[[^\\]]*\\] \\(https:\\/\\/b\\.tes
     fixed: { 'test.cjs': strongHardTabsTest },
     bad: {
       'checks only the happy path': { 'test.cjs': strongTabsTest },
+      'drops the heading': { 'test.cjs': `const assert = require('node:assert/strict');
+const {renderTabs} = require('./tabs.cjs');
+assert.equal(renderTabs([], 0), 'No open tabs.');
+assert.deepEqual(renderTabs([{title: 'A [x] ]', url: 'u'}, {title: 'B', url: 'v'}], 1).split('\\n').slice(1),
+  ['- 0: [A \\\\[x\\\\] \\\\]] (u)', '- 1: (current) [B] (v)']);
+` },
       'skips the empty list': { 'test.cjs': strongHardTabsTest.replace("assert.equal(renderTabs([], 0), 'No open tabs.');\n", '') },
     },
   },
@@ -136,7 +142,7 @@ try {
   const report = JSON.parse(readFileSync(join(output, 'results.json'), 'utf8'));
   assert.equal(report.config.taskSet, 'sweep');
   assert.deepEqual(report.results.map(result => [result.task, result.pass]), [['docs-contract', false], ['docs-contract', false]]);
-  console.log('sweep benchmarks: six failing baselines, reference fixes, nineteen bad variants, and selection passed');
+  console.log('sweep benchmarks: six failing baselines, reference fixes, twenty bad variants, and selection passed');
 } finally {
   rmSync(root, { recursive: true, force: true });
 }

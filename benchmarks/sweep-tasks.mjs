@@ -11,6 +11,7 @@ const hardTabsSource = [
   '',
 ].join('\n');
 const hardTabsMutants = {
+  'heading changed': ["'### Open tabs'", "'### Tabs'"],
   'index off by one': ['- ${index}: ', '- ${index + 1}: '],
   'marker removed': ["'(current) '", "''"],
   'marker on every tab': ['index === current ?', 'true ?'],
@@ -107,6 +108,7 @@ assert.equal(JSON.parse(fs.readFileSync('package.json', 'utf8')).scripts.test, '
 const passing = runTests();
 assert.equal(passing.status, 0, 'tests fail on the real code: ' + passing.stderr);
 const mutants = {
+  'heading changed': ["'### Open tabs'", "'### Tabs'"],
   'index off by one': ['- \${index}: ', '- \${index + 1}: '],
   'marker removed': ["'(current) '", "''"],
   'marker on every tab': ['index === current ?', 'true ?'],

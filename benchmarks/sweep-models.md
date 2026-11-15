@@ -90,6 +90,8 @@ is the same denied-heredoc false completion seen in round 1, in a Sonnet off run
 
 Review of the PR found that `test-oracle` and `test-oracle-hard` swapped title
 and URL in one mutant, so a test that checked URLs but ignored titles still
-passed. The graders now plant title-only and URL-only faults. All 123 recorded
-passing runs of both tasks, across both rounds and every arm, were regraded
-with the amended grader; none changed, so the tables above stand.
+passed. A second review found no mutant changed the `### Open tabs` heading, so
+a test that dropped the original heading check still passed. The graders now
+plant title-only, URL-only, and heading-only faults. After each amendment, all
+123 recorded passing runs of both tasks, across both rounds and every arm, were
+regraded; none changed, so the tables above stand.
