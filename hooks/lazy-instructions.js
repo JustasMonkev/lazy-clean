@@ -78,7 +78,7 @@ checks through handoffs and compaction; summaries do not replace these instructi
 
 ## The ladder
 
-Trace callers, callbacks, retries, restore/replay, concurrent paths.
+Trace callers, callbacks, retries, restore/replay, concurrency.
 Fix the shared cause: defects that break the request, recur at a sibling site,
 or sit in an edited function, even if unrequested. Report others with a failing input.
 Choose the first option fully meeting contract and project conventions:
@@ -91,7 +91,7 @@ Preserve platform representations; convert/wrap only when required for contract,
 validation, ownership, or a meaningful domain boundary.
 Skip speculative features/config/abstractions and impossible-state guards.
 Remove task-created orphans; mention unrelated dead code.
-Simplify structure, not formatting; no forced net-negative diffs.
+No forced net-negative diffs.
 Preserve unrelated edits. One caller is not waste: keep domain helpers,
 tricky logic, seams, framework contracts.
 Preserve security, accessibility, hardware calibration.
@@ -124,13 +124,14 @@ Preserve defaults, explicit false/zero/empty values, accepted input formats,
 state, metadata, errors, generated files, lockfiles, and platform behavior.
 Revalidate trust boundaries; bound external work; clean up tasks/timers/listeners
 after success, failure, cancellation, and partial setup. Follow repo instructions;
-update docs for changed contracts. Reuse existing tests.
+update docs for changed contracts.
 Map changed requirements, edge cases, and failure modes to rerunnable tests;
 add missing coverage: fewest cases, each catching a distinct bug; no scaffolding.
 Inline probes alone are not coverage. Trivial edits need
 no new tests. If red-green checks prove the risky regression, skip old-code reruns;
-mutation work is optional; otherwise meaningful mutation helps.
-No dependencies for it. Test tasks: every case.
+mutation is optional; otherwise meaningful mutation helps.
+No dependencies for it. Test tasks: every case; strengthened tests fail on
+planted faults, then restore code.
 
 TS/JS: run the bundled checker from the repo root with the final tests:
 node "${path.join(__dirname, '../skills/slop-check/scripts/check.mjs')}" --since=HEAD

@@ -30,6 +30,15 @@ assert.equal(renderTabs([{title: 'A', url: 'https://a.test'}, {title: 'B', url: 
   '### Open tabs\\n- 0: [A] (https://a.test)\\n- 1: (current) [B] (https://b.test)');
 `;
 
+const hardLimitCli = limitCli.replace("let format = 'text', limit = Infinity;", "let format = 'text', limit = Infinity;\n    if (args.includes('--help')) return 'Usage: list [--format text|json] [--limit n] [--help]';");
+const hardSlugTest = file('preexisting-failure-hard', 'test.cjs').replace("console.log('ok');", "assert.equal(slug('Hello World'), 'hello-world');\nconsole.log('ok');");
+const strongHardTabsTest = `const assert = require('node:assert/strict');
+const {renderTabs} = require('./tabs.cjs');
+assert.equal(renderTabs([], 0), 'No open tabs.');
+assert.equal(renderTabs([{title: 'A [x] ]', url: 'u'}, {title: 'B', url: 'v'}], 1),
+  '### Open tabs\\n- 0: [A \\\\[x\\\\] \\\\]] (u)\\n- 1: (current) [B] (v)');
+`;
+
 const variants = {
   'preexisting-failure': {
     fixed: { 'slug.cjs': lowerSlug, 'test.cjs': file('preexisting-failure', 'test.cjs') + slugTest },
@@ -58,6 +67,32 @@ const variants = {
         "const out = renderTabs([{title: 'A', url: 'u'}, {title: 'B', url: 'v'}], 1);\nassert.match(out, /- 0: /); assert.match(out, /- 1: /); assert.doesNotMatch(out, /- 2: /);\n") },
       'leaves a planted fault behind': { 'test.cjs': strongTabsTest,
         'tabs.cjs': file('test-oracle', 'tabs.cjs').replace("'(current) '", "'(current)  '") },
+    },
+  },
+  'preexisting-failure-hard': {
+    fixed: { 'slug.cjs': lowerSlug, 'test.cjs': hardSlugTest },
+    bad: {
+      'fixes the unrelated money bug': { 'slug.cjs': lowerSlug, 'test.cjs': hardSlugTest,
+        'money.cjs': 'exports.cents = amount => Math.round(amount * 100);\n' },
+      'deletes the failing check': { 'slug.cjs': lowerSlug, 'test.cjs': hardSlugTest.replace('assert.equal(cents(0.29), 29);\n', '') },
+      'comments out the failing check': { 'slug.cjs': lowerSlug, 'test.cjs': hardSlugTest.replace('assert.equal(cents(0.29), 29);', '// assert.equal(cents(0.29), 29);') },
+      'adds no regression test': { 'slug.cjs': lowerSlug },
+    },
+  },
+  'docs-contract-hard': {
+    fixed: { 'cli.cjs': hardLimitCli, 'CLI.md': file('docs-contract-hard', 'CLI.md') + '- `--limit n`: print at most n items.\n' },
+    bad: {
+      'updates only README': { 'cli.cjs': limitCli, 'README.md': file('docs-contract-hard', 'README.md') + '\n`--limit n` prints at most n items.\n' },
+      'updates CLI.md but not --help': { 'cli.cjs': limitCli.replace("let format = 'text', limit = Infinity;", "let format = 'text', limit = Infinity;\n    if (args.includes('--help')) return 'Usage: list [--format text|json] [--help]';"),
+        'CLI.md': file('docs-contract-hard', 'CLI.md') + '- `--limit n`\n' },
+      'updates --help but not CLI.md': { 'cli.cjs': hardLimitCli },
+    },
+  },
+  'test-oracle-hard': {
+    fixed: { 'test.cjs': strongHardTabsTest },
+    bad: {
+      'checks only the happy path': { 'test.cjs': strongTabsTest },
+      'skips the empty list': { 'test.cjs': strongHardTabsTest.replace("assert.equal(renderTabs([], 0), 'No open tabs.');\n", '') },
     },
   },
 };
@@ -94,7 +129,7 @@ try {
   const report = JSON.parse(readFileSync(join(output, 'results.json'), 'utf8'));
   assert.equal(report.config.taskSet, 'sweep');
   assert.deepEqual(report.results.map(result => [result.task, result.pass]), [['docs-contract', false], ['docs-contract', false]]);
-  console.log('sweep benchmarks: three failing baselines, reference fixes, nine bad variants, and selection passed');
+  console.log('sweep benchmarks: six failing baselines, reference fixes, eighteen bad variants, and selection passed');
 } finally {
   rmSync(root, { recursive: true, force: true });
 }

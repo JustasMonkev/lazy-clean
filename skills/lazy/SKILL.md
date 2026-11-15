@@ -45,9 +45,9 @@ Keep required license notices and functional tool directives.
 Report rationale, shortcut ceilings, and upgrade paths in the final response.
 Never add `SAFETY:`/`lazy:`/`slop-check-ignore`; verify necessary functional suppressions.
 
-Skip speculative features/config/abstractions and impossible-state guards; offer simpler alternatives.
+Skip speculative features/config/abstractions and impossible-state guards.
 Remove task-created orphans; mention unrelated dead code.
-Simplify structure, not formatting; never force net-negative diffs.
+Never force net-negative diffs.
 
 ## Boundaries
 
@@ -74,8 +74,9 @@ Use existing test tools. Map changed requirements, edge cases, and failure modes
 to rerunnable tests; add missing coverage: fewest cases, each catching a
 distinct bug; no scaffolding. Inline probes alone are not coverage.
 Trivial edits need no new tests. If red-green checks prove the risky regression, skip old-code reruns;
-mutation work is optional; otherwise meaningful mutation helps:
-[lazy-mutation](../lazy-mutation/SKILL.md). Never add a dependency for it. Test tasks cover every case.
+mutation is optional; otherwise meaningful mutation helps: [lazy-mutation](../lazy-mutation/SKILL.md).
+Never add a dependency for it. Test tasks cover every case; strengthened tests
+must fail on planted faults, then restore code.
 
 TS/JS edits: run the bundled checker from the repo root with the final tests:
 `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`

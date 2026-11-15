@@ -60,7 +60,8 @@ the fewest cases that each catch a distinct bug; no test scaffolding.
 If existing red-green checks already prove the risky regression, mutation work
 is optional; otherwise a small meaningful mutation can provide evidence. Never
 add a dependency for it. When writing tests is the task, cover the full case
-list. Trivial edits need no new test.
+list. Trivial edits need no new test. A strengthened test must fail on a
+planted fault before you restore the code exactly.
 
 TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect only languages in use.
 Read each pinned or installed version from its toolchain file, manifest, lockfile,
