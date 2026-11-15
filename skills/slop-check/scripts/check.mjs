@@ -3315,7 +3315,7 @@ function collectFiles(entry, scan, root = entry) {
     scan.unreadable += 1;
     return;
   }
-  if ((stats.isDirectory() || entry !== root) && scan.ignored.has(resolve(entry))) {
+  if ((stats.isDirectory() || entry !== root) && isIgnored(resolve(entry), scan)) {
     scan.ignoredSkipped += 1;
     return;
   }
@@ -3364,6 +3364,13 @@ function ignoredPaths(root) {
     { encoding: "utf8", maxBuffer: 64e6, stdio: ["ignore", "pipe", "ignore"] });
   if (result.status !== 0) return new Set();
   return new Set(result.stdout.split("\0").filter(Boolean).map((path) => resolve(root, path)));
+}
+
+function isIgnored(path, scan) {
+  for (let current = path; scan.repoRoot && inside(scan.repoRoot, current) !== null; current = dirname(current)) {
+    if (scan.ignored.has(current)) return true;
+  }
+  return false;
 }
 
 function inside(base, file) {
@@ -3612,7 +3619,7 @@ function main() {
     return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
   };
   const repoRoot = repositoryRoot();
-  const scan = { files: new Map(), roots: new Map(), seenDirs: new Set(), unreadable: 0, ignored: ignoredPaths(repoRoot), ignoredSkipped: 0 };
+  const scan = { files: new Map(), roots: new Map(), seenDirs: new Set(), unreadable: 0, repoRoot, ignored: ignoredPaths(repoRoot), ignoredSkipped: 0 };
   for (const target of targets.length > 0 ? targets : added ? [...added.keys()].filter(underCwd) : ["."]) {
     collectFiles(target, scan);
   }

@@ -473,6 +473,14 @@ check("directory scans skip gitignored build output but scan it when named", () 
   const directory = run(["lib"], repo);
   assert.equal(directory.status, 0, directory.stdout);
   assert.match(directory.stdout, /no coverage \(0 files checked, 1 gitignored path skipped\)/u);
+  mkdirSync(join(repo, "lib", "nested"));
+  writeFileSync(join(repo, "lib", "nested", "deep.ts"), SLOP);
+  const nested = run([join("lib", "nested")], repo);
+  assert.equal(nested.status, 0, nested.stdout);
+  assert.match(nested.stdout, /no coverage \(0 files checked, 1 gitignored path skipped\)/u);
+  const nestedFile = run([join("lib", "nested", "deep.ts")], repo);
+  assert.equal(nestedFile.status, 1, nestedFile.stdout);
+  assert.match(nestedFile.stdout, /deep\.ts:1:22/u);
 });
 
 check("--json on a clean file is an empty array", () => {
