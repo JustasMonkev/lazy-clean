@@ -31,6 +31,12 @@ Fix the shared cause: a defect that breaks the request, recurs at a sibling site
 or sits in a function you edit, even if unrequested. Report other defects with a
 failing input instead of fixing them.
 
+New guards/catches/fallbacks need contract/caller/documented-boundary evidence of reachability.
+Catch only for required recovery/translation/cleanup/reporting; otherwise propagate original errors.
+Guard removal requires redundancy evidence.
+Derive cheap values from authoritative state; retain independent state, intentional
+snapshots, required/measured caches, public contracts.
+
 Keep independent mutable state separate; assign one writer when sharing is
 necessary. Validate external data at its boundary and revalidate after parsing,
 persistence, redirects, or replay when trust changes. Preserve explicit false/zero/empty

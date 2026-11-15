@@ -138,7 +138,7 @@ protocol, with shared host instructions and six tasks per agent.
 ## Implementation-choice task set
 
 Set `"taskSet": "implementation"` in the same config. The default core/off-on
-protocol is unchanged. This set makes 30 calls at three trials:
+protocol is unchanged. These seven tasks make 42 calls at three trials:
 
 | Task | Behavior checked | Separate manual implementation observation |
 | --- | --- | --- |
@@ -146,17 +146,25 @@ protocol is unchanged. This set makes 30 calls at three trials:
 | existing-component | Escaping in text/attributes, explicit empty values, conversion errors, existing preview and component exports | Existing component reuse or duplicate rendering |
 | shared-cause (existing core task) | Button and restore normalization | Shared helper or caller-specific repair |
 | trust-boundary (existing core task) | Parsed numeric values without coercion | Preserved validation or unsafe shortening |
+| optional-config | Defaults only for a missing read; original read, JSON, and conversion failures; falsy values | Narrow recovery or speculative catch/fallback |
+| collection-count | Duplicate/missing IDs, add/remove/reset, independent instances, owned arrays, fixed initial snapshot | Derived current count or synchronized redundant state |
 | already-minimal | Fresh output, first-seen order, case-sensitive deduplication, empty strings | Unchanged, justified edit, or unnecessary churn |
 
-The first, second, and last tasks are new; the middle two reuse frozen core
-contracts rather than duplicate them. `implementation-tasks.mjs` holds the
+Five tasks are implementation-specific; shared-cause and trust-boundary reuse
+frozen core contracts rather than duplicate them. `implementation-tasks.mjs` holds the
 manual `design` rubrics outside worker prompts. Behavioral grading accepts
 correct alternative implementations: a handwritten encoder can pass while
 still missing the native-reuse objective. Do not combine these judgments into
 one automatic score or reward a change merely for being an edit.
 
-`npm test` validates the initial fixtures, reference fixes, fourteen deliberately
-broken variants, and a fake-client no-change run. These are grader/harness
+`npm test` validates seven initial fixtures, reference fixes, thirty-two
+deliberately broken variants, restored references, a correct synchronized-count
+alternative, and a fake-client no-change run. The optional-config fixture uses
+an ordinary read parameter, including synchronous throws and asynchronous
+rejections; an ENOENT-shaped conversion failure must not receive the missing-file
+default. The collection fixture preserves the intentional initialCount snapshot
+while allowing either derived or correctly synchronized current counts to pass.
+These are grader/harness
 checks, **not model-performance results**. Keep graders, references, and mutants
 fixed before collecting worker outcomes. Do not tune them against a particular
 arm's answer without declaring an amendment and regrading every arm uniformly.

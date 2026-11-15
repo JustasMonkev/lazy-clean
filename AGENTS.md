@@ -31,6 +31,12 @@ checked invariants, shortcut ceilings, and revisit triggers in the final
 response; never add `SAFETY:`, `lazy:`, or suppression comments to silence a
 checker.
 
+New guards/catches/fallbacks need contract/caller/documented-boundary evidence of reachability.
+Catch only for required recovery/translation/cleanup/reporting; otherwise propagate original errors.
+Guard removal requires redundancy evidence.
+Derive cheap values from authoritative state; retain independent state, intentional
+snapshots, required/measured caches, public contracts.
+
 Match existing style. Do not add speculative features/config, needless
 single-use abstractions, or impossible-state guards. Push back on unneeded scope
 and offer a simpler alternative. Review the task-owned diff for removable
