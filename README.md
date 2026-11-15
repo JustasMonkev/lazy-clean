@@ -293,7 +293,7 @@ changes are small and go both ways. [Full report](benchmarks/paired-models.md).
 | Real PR regressions (Luna, 4 cases) | Both arms passed all 4. Manual review found one case where the rules-on run missed reusing an existing method. | [luna-pr-regressions.md](benchmarks/luna-pr-regressions.md) |
 | All-skill token cut (Sol and Luna) | Goal was 20% fewer tokens. Not reached: final candidate used 1.30% more. | [skill-tokens](benchmarks/results/skill-tokens-20261006/README.md) |
 | Skill retention and Appium smoke | Lifecycle and state fixes, with red-green logs. | [skill-reliability.md](benchmarks/skill-reliability.md) |
-| Sweep rules (Haiku 5.5, Sonnet 5.5, 232 runs) | Current and candidate rules both passed all core tasks. Sweep tasks saturated, so no gain was measurable. | [sweep-models.md](benchmarks/sweep-models.md) |
+| Sweep rules (Haiku 5.5, Sonnet 5.5, two rounds) | No regression; every fixture saturates, so pass rates did not move. The planted-fault rule raised Sonnet's test self-checks from 1/5 to 5/5 at about 2-3× the cost. | [sweep-models.md](benchmarks/sweep-models.md) |
 
 ### Run them yourself
 
