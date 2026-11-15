@@ -5,18 +5,13 @@ argument-hint: "[lite|full|ultra]"
 license: MIT
 ---
 
-# Lazy
+Correctness and scope before size.
 
-Correctness and scope precede code size.
-
-Before coding, state material assumptions, interpretations, tradeoffs; ask only when blocked.
-Multi-step: step → check plan and verifiable
-finish: bugs go red → green; refactors get before/after checks. Carry unfinished
+State material assumptions, interpretations, tradeoffs before coding; ask only when blocked.
+Multi-step: step → check plan; verifiable finish: bugs red → green; refactors before/after checks. Carry unfinished
 checks through handoffs and compaction; summaries do not replace these instructions.
 
-## Persistence
-
-Keep level until `/lazy off`, "stop lazy", or "normal mode".
+Keep until `/lazy off`, "stop lazy", or "normal mode".
 Switch: `/lazy lite|full|ultra`; bare `/lazy` reports.
 Do not announce the mode during ordinary work.
 
@@ -36,18 +31,22 @@ for closest implementation; reuse/extend if suitable.
 Preserve platform representations; convert/wrap only when required for contract,
 validation, ownership, or a meaningful domain boundary.
 
-Preserve unrelated edits. One caller is not waste: keep domain names, tricky
+Preserve unrelated edits. One caller: keep domain names, tricky
 logic, side effects, test seams, readability, and framework contracts.
 Do not add code comments; remove nonessential comments.
 Keep required license notices and functional tool directives.
 Report rationale, checked invariants, shortcut ceilings, and upgrade paths in the final response.
 Never add `SAFETY:`/`lazy:`/`slop-check-ignore`; verify necessary functional suppressions.
 
-Skip speculative features/config/abstractions and impossible-state guards; offer simpler alternatives.
+New guards/catches/fallbacks need contract/caller/documented-boundary evidence of reachability.
+Catch only for required recovery/translation/cleanup/reporting; otherwise propagate original errors.
+Guard removal requires redundancy evidence.
+Derive cheap values from authoritative state; retain independent state, intentional
+snapshots, required/measured caches, public contracts.
+
+Skip speculative features/config/abstractions; offer simpler alternatives.
 Remove task-created orphans; mention unrelated dead code.
 Simplify structure, not formatting; never force net-negative diffs.
-
-## Boundaries
 
 Group behavior by reason to change; keep policy independent
 of external details through ordinary parameters; give callers only needed
@@ -56,15 +55,13 @@ and lifecycle.
 Boundary changes: read [design checks](references/design-checks.md).
 One implementation alone is not waste; judge behavior and design separately.
 
-## Checks
-
 Preserve defaults, explicit false/zero/empty values, accepted input formats,
 state, errors, metadata, generated files, lockfiles, and platform behavior unless
 requested. Keep security, accessibility, and real-hardware calibration.
 Revalidate trust boundaries. Bound external work; clean up timers/listeners/tasks.
 
 Read [TS/JS and tsconfig](references/simplification-checks.md)
-or [Python](references/python-checks.md) checks for changed languages;
+or [Python](references/python-checks.md) for changed languages;
 [risk checks](references/risk-checks.md) for non-trivial code.
 
 Use existing test tools. Map changed requirements, edge cases, and failure modes
@@ -72,34 +69,32 @@ to rerunnable tests; add missing coverage: fewest cases, each catching a
 distinct bug; no scaffolding. Inline probes alone are not coverage.
 Trivial edits need no new tests. If red-green checks prove the risky regression, skip old-code reruns;
 mutation work is optional; otherwise meaningful mutation helps:
-[lazy-mutation](../lazy-mutation/SKILL.md). Never add a dependency for it. Test tasks cover every case.
+[lazy-mutation](../lazy-mutation/SKILL.md). Never add a dependency. Test tasks: every case.
 
-TS/JS edits: run the bundled checker from the repo root with the final tests:
+TS/JS: run bundled checker from the repo root with the final tests:
 `node "<skills-dir>/slop-check/scripts/check.mjs" --since=HEAD`
 (task-base ref for commits; quoted changed paths without Git).
 Triage only task-owned findings; do not alter pre-existing work. Failed scans
 are not clean; never weaken checks.
 
-TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect languages used;
-read toolchain file, manifest, lockfile, or runtime versions. Match installed version;
-if unavailable, say so; do not guess. Research latest only when asked.
+TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect usage;
+read toolchain file, manifest, lockfile, or runtime. Match installed version;
+unavailable: report; do not guess. Research latest only when asked.
 
 ## Intensity
 
 <!-- Mode-keyed rows and quoted examples are filtered by lazy-instructions.js. -->
 
-| Level | What changes |
+| Level | Guidance |
 |-------|------------|
 | **lite** | Complete tasks; suggest simpler options. |
-| **full** | Use the ladder; smallest diff. Default. |
+| **full** | Default: smallest complete diff. |
 | **ultra** | Cut unasked extras, never requested behavior/checks. |
 
-Example: "60-second expiry."
-- lite: "Keep expiry; suggest the existing helper."
-- full: "Reuse the helper with 60-second expiry."
-- ultra: "Keep expiry; skip unasked metrics/config."
-
-## Completion
+"60-second expiry."
+- lite: "Suggest reuse."
+- full: "Reuse; preserve expiry."
+- ultra: "Preserve expiry."
 
 Keep in working context: requested deliverable, task-owned scope, required checks,
 and action limits; no mandatory planning file.

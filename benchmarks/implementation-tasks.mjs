@@ -49,6 +49,100 @@ assert.equal(panel.renderPreview('<draft>'), '<span class="badge badge-preview">
   core.find(task => task.id === 'shared-cause'),
   core.find(task => task.id === 'trust-boundary'),
   {
+    id: 'optional-config',
+    prompt: 'Fix loadConfig(path, read, defaults) in config.cjs. Call read(path, "utf8") once and return its JSON.parse result without changing valid JSON values. read may return or resolve any JSON.parse-compatible value, or throw/reject. Return the supplied defaults only when read fails with code ENOENT. Propagate every other original read failure, including falsy values, and all parse/conversion failures even if they have code ENOENT. Do not retry or add validation.',
+    files: {
+      'config.cjs': `exports.loadConfig = async (path, read, defaults) => {
+  try { return JSON.parse(await read(path, 'utf8')); }
+  catch { return defaults; }
+};
+`,
+    },
+    check: `const {loadConfig} = require('./config.cjs');
+process.exitCode = 1;
+(async () => {
+  const defaults = {enabled: true};
+  for (const [raw, expected] of [['{"enabled":false,"limit":0,"label":""}', {enabled: false, limit: 0, label: ''}], ['null', null], ['false', false], ['0', 0], ['""', ''], ['[]', []], [null, null], [false, false], [0, 0], [{toString() {return '{"coerced":true}';}}, {coerced: true}]]) {
+    for (const asynchronous of [false, true]) {
+      const calls = [];
+      assert.deepEqual(await loadConfig('settings.json', (...args) => {calls.push(args); return asynchronous ? Promise.resolve(raw) : raw;}, defaults), expected);
+      assert.deepEqual(calls, [['settings.json', 'utf8']]);
+    }
+  }
+  for (const asynchronous of [false, true]) {
+    const missing = Object.assign(new Error('missing'), {code: 'ENOENT'});
+    for (const original of [missing, Object.assign(new Error('denied'), {code: 'EACCES'}), new Error('broken'), false, 0, '', null, undefined]) {
+      let calls = 0;
+      const read = (path, encoding) => {
+        calls++;
+        assert.equal(path, 'settings.json'); assert.equal(encoding, 'utf8');
+        if (asynchronous) return Promise.reject(original);
+        throw original;
+      };
+      if (original === missing) assert.equal(await loadConfig('settings.json', read, defaults), defaults);
+      else await assert.rejects(loadConfig('settings.json', read, defaults), error => Object.is(error, original));
+      assert.equal(calls, 1);
+    }
+  }
+  await assert.rejects(loadConfig('settings.json', () => '{', defaults), SyntaxError);
+  const original = Object.assign(new Error('conversion failed'), {code: 'ENOENT'});
+  await assert.rejects(loadConfig('settings.json', () => ({toString() {throw original;}}), defaults), error => error === original);
+  assert.deepEqual(defaults, {enabled: true});
+  process.exitCode = 0;
+})().catch(error => { console.error(error); });`,
+    design: 'Record recovery limited to the read boundary versus a broad catch/fallback, retries, or speculative validation. ENOENT recovery is required; deleting it is not simplification. Runtime behavior accepts equivalent implementations and preserves original failures.',
+  },
+  {
+    id: 'collection-count',
+    prompt: 'Fix createCollection(initialIds = []) in collection.cjs. IDs are strings. add(id), remove(id), and reset(ids = []) maintain distinct IDs in insertion order; duplicate additions and missing removals have no effect. count is the current number of IDs. initialCount is an intentional snapshot of the distinct initial IDs and never changes. snapshot() returns a fresh array; changing input or returned arrays must not affect membership. Instances are independent. Preserve this API; mutation methods have no specified return value.',
+    files: {
+      'collection.cjs': `exports.createCollection = (initialIds = []) => {
+  let ids = new Set(initialIds);
+  let count = ids.size;
+  const initialCount = ids.size;
+  return {
+    get count() { return count; },
+    initialCount,
+    add(id) { ids.add(id); count++; },
+    remove(id) { ids.delete(id); count--; },
+    reset(next = []) { ids = new Set(next); },
+    snapshot() { return [...ids]; },
+  };
+};
+`,
+    },
+    check: `const {createCollection} = require('./collection.cjs');
+const initial = ['a', '', 'a'];
+const collection = createCollection(initial);
+const other = createCollection();
+initial.push('outside');
+assert.equal(collection.count, 2); assert.equal(collection.initialCount, 2);
+assert.deepEqual(collection.snapshot(), ['a', '']);
+collection.add('a'); assert.equal(collection.count, 2);
+collection.add('b'); assert.equal(collection.count, 3);
+collection.remove('missing'); assert.equal(collection.count, 3);
+const previous = collection.snapshot();
+collection.remove('a'); assert.equal(collection.count, 2);
+collection.remove('a'); assert.equal(collection.count, 2);
+collection.add('a'); assert.equal(collection.count, 3);
+assert.deepEqual(collection.snapshot(), ['', 'b', 'a']);
+assert.deepEqual(previous, ['a', '', 'b']);
+previous.push('outside'); assert.deepEqual(collection.snapshot(), ['', 'b', 'a']);
+const replacement = ['z', 'z'];
+collection.reset(replacement); replacement.push('outside');
+assert.equal(collection.count, 1); assert.deepEqual(collection.snapshot(), ['z']);
+assert.equal(collection.initialCount, 2);
+assert.equal(other.count, 0); assert.equal(other.initialCount, 0); assert.deepEqual(other.snapshot(), []);
+other.add('independent'); assert.equal(other.count, 1); assert.equal(other.initialCount, 0);
+assert.deepEqual(collection.snapshot(), ['z']);
+collection.reset(); assert.equal(collection.count, 0); assert.equal(collection.initialCount, 2);
+collection.remove('missing'); assert.equal(collection.count, 0);
+collection.add(''); assert.equal(collection.count, 1); assert.deepEqual(collection.snapshot(), ['']);
+collection.remove(''); assert.equal(collection.count, 0); assert.deepEqual(collection.snapshot(), []);
+assert.notEqual(collection.snapshot(), collection.snapshot());`,
+    design: 'Record deriving current count from authoritative membership versus maintaining a synchronized count. Both may pass runtime checks; report design separately. Preserve initialCount as intentional historical state and fresh snapshot arrays as ownership boundaries, rather than replacing every stored value with a live derivation.',
+  },
+  {
     id: 'already-minimal',
     prompt: 'Review tags.cjs for simplification and change it only if justified. tags(labels) takes an array of strings and returns a fresh array containing distinct labels in first-seen order, including empty strings. Inputs must not be mutated. Preserve its public API and case-sensitive equality. Do not add new features.',
     files: {

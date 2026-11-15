@@ -58,21 +58,20 @@ function markdownLinkTarget(filePath) {
 }
 
 const INTENSITY = {
-  lite: 'Complete tasks; suggest simpler options.',
-  full: 'Use the ladder; smallest diff; verify completion.',
-  ultra: 'Cut unasked extras, never requested behavior/checks.',
+  lite: 'Complete tasks; suggest simplifications.',
+  full: 'Smallest complete diff; verify.',
+  ultra: 'Cut extras; preserve requests/checks.',
 };
 
 function getFallbackInstructions(mode) {
   return `LAZY MODE ACTIVE — level: ${mode}
 
 ${INTENSITY[mode] || INTENSITY.full}
-Keep until /lazy off, "stop lazy", or "normal mode".
-Do not announce the mode during ordinary work.
+Keep until /lazy off, "stop lazy", or "normal mode"; announce only on request.
 
-Before coding, state material assumptions, interpretations, tradeoffs; ask only when blocked.
+State material assumptions, interpretations, tradeoffs before coding; ask only when blocked.
 Multi-step: step → check plan; verifiable finish:
-bugs go red → green; refactors get before/after checks. Carry unfinished checks through
+bugs red → green; refactors before/after checks. Carry unfinished checks through
 handoffs and compaction; summaries do not replace these instructions.
 
 ## The ladder
@@ -88,10 +87,15 @@ Before adding helpers/components, search workspace and installed-dependency APIs
 for closest implementation; reuse/extend if suitable.
 Preserve platform representations; convert/wrap only when required for contract,
 validation, ownership, or a meaningful domain boundary.
-Skip speculative features/config/abstractions and impossible-state guards; offer simpler alternatives.
+New guards/catches/fallbacks need contract/caller/documented-boundary evidence of reachability.
+Catch only for required recovery/translation/cleanup/reporting; otherwise propagate original errors.
+Derive cheap values from authoritative state; retain independent state, intentional
+snapshots, required/measured caches, public contracts.
+
+Skip speculative features/config/abstractions; offer simpler alternatives.
 Remove task-created orphans; mention unrelated dead code.
 Simplify structure, not formatting; no forced net-negative diffs.
-Preserve unrelated edits. One caller is not waste: keep domain helpers,
+Preserve unrelated edits. One caller: keep domain helpers,
 tricky logic, side-effect boundaries, test seams, framework contracts.
 Preserve security, accessibility, hardware calibration.
 
@@ -108,19 +112,18 @@ and lifecycle.
 Boundary changes: read [design checks](${markdownLinkTarget(path.join(__dirname, "../skills/lazy/references/design-checks.md"))}).
 One implementation alone is not waste; judge behavior and design separately.
 
-Finally, infer obvious local types without any/unchecked casts;
+infer obvious local types without any/unchecked casts;
 normalize overloaded arguments once; avoid
-throwing only to catch them locally. Remove guards/helpers only with caller/lifetime evidence. Match error and
+throwing only to catch them locally. Guard/helper removal requires caller/lifetime redundancy evidence. Match error and
 cancellation semantics with native APIs. Preserve encoding and buffer ownership.
-TypeScript 7 (native tsc): avoid
-baseUrl, moduleResolution node/node10,
-target es5, outFile; keep API tools' TypeScript 6 alias.
+TypeScript 7 (native tsc): no
+baseUrl, node/node10 resolution, es5, outFile; preserve tools' TypeScript 6 alias.
 TS/JS/tsconfig: read [TS/JS checks](${markdownLinkTarget(path.join(__dirname, '../skills/lazy/references/simplification-checks.md'))}).
 Python: read [Python checks](${markdownLinkTarget(path.join(__dirname, '../skills/lazy/references/python-checks.md'))}):
-no mutable defaults, bare except, or \`if not x\` when 0/"" is valid.
+no mutable defaults, bare except, or truthiness discarding 0/"".
 
 Preserve defaults, explicit false/zero/empty values, accepted input formats,
-state, metadata, errors, generated files, lockfiles, and platform behavior.
+state, metadata, errors, generated files, lockfiles, platform behavior.
 Revalidate trust boundaries; bound external work; clean up tasks/timers/listeners
 after success, failure, cancellation, and partial setup. Reuse existing tests.
 Map changed requirements, edge cases, and failure modes to rerunnable tests;
@@ -128,17 +131,17 @@ add missing coverage: fewest cases, each catching a distinct bug; no scaffolding
 Inline probes alone are not coverage. Trivial edits need
 no new tests. If red-green checks prove the risky regression, skip old-code reruns;
 mutation work is optional; otherwise meaningful mutation helps.
-Never add dependencies for it. Test tasks: every case.
+No mutation dependencies. Test tasks: every case.
 
-TS/JS: run the bundled checker from the repo root with the final tests:
+TS/JS: run bundled checker from the repo root with the final tests:
 node "${path.join(__dirname, '../skills/slop-check/scripts/check.mjs')}" --since=HEAD
-Use task-base for commits; quote changed paths without Git.
+task-base for commits; quote changed paths without Git.
 Triage only task-owned findings; do not alter pre-existing work.
 Failed scans are not clean.
 
-TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect languages used;
-read toolchain file, manifest, lockfile, or runtime versions. Match installed version;
-if unavailable, say so; do not guess.
+TypeScript, JavaScript, Java, Python, Ruby, Rust, Go: detect usage;
+read toolchain file, manifest, lockfile, or runtime. Match installed version;
+unavailable: report; do not guess.
 
 Keep in working context: requested deliverable, task-owned scope, required checks,
 and action limits; no mandatory planning file.
