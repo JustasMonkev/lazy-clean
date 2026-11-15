@@ -397,6 +397,90 @@ check("assertion tallies use a neutral display name while retaining the legacy I
   const disabled = run(["slop.ts", "--summary", "--disable=require-safety-comment-for-type-assertion"]);
   assert.equal(disabled.status, 0);
   assert.match(disabled.stdout, /1 suppressed/u);
+  const alias = run(["slop.ts", "--summary", "--disable=type-assertion-review"]);
+  assert.equal(alias.status, 0, alias.stderr);
+  assert.equal(alias.stderr, "");
+  assert.match(alias.stdout, /1 suppressed/u);
+  const explained = run(["--explain=type-assertion-review"]);
+  assert.equal(explained.status, 0, explained.stderr);
+  assert.match(explained.stdout, /^slop-check: require-safety-comment-for-type-assertion\n/u);
+});
+
+check("--source-only skips test files and reports how many it skipped", () => {
+  const dir = mkdtempSync(join(root, "split-"));
+  writeFileSync(join(dir, "app.ts"), SLOP);
+  writeFileSync(join(dir, "app.test.ts"), SLOP);
+  mkdirSync(join(dir, "tests"));
+  writeFileSync(join(dir, "tests", "helper.ts"), SLOP);
+  const all = run([dir]);
+  assert.equal(all.status, 1);
+  assert.match(all.stdout, /3 findings in 3 files, 2 in test files\n$/u);
+  const source = run([dir, "--source-only"]);
+  assert.equal(source.status, 1);
+  assert.match(source.stdout, /app\.ts:1:22/u);
+  assert.doesNotMatch(source.stdout, /app\.test\.ts|helper\.ts/u);
+  assert.match(source.stdout, /1 finding in 1 file, 2 test files skipped\n$/u);
+  rmSync(join(dir, "app.ts"));
+  const none = run([dir, "--source-only"]);
+  assert.equal(none.status, 0);
+  assert.match(none.stdout, /no coverage \(0 files checked, 2 test files skipped\)/u);
+});
+
+check("test-file classification ignores test-named directories above the scanned project", () => {
+  const project = join(mkdtempSync(join(root, "ancestor-")), "tests", "project");
+  mkdirSync(join(project, "tests"), { recursive: true });
+  writeFileSync(join(project, "app.ts"), SLOP);
+  writeFileSync(join(project, "tests", "helper.ts"), SLOP);
+  for (const target of [join(project, "app.ts"), project, "."]) {
+    const result = run([target, "--source-only"], project);
+    assert.equal(result.status, 1, `${target}: ${result.stdout}`);
+    assert.match(result.stdout, /app\.ts:1:22/u, target);
+    assert.doesNotMatch(result.stdout, /helper\.ts/u, target);
+  }
+  const mockComment = "// Mock response captured from the billing sandbox.\nexport const body = 1;\n";
+  writeFileSync(join(project, "billing.ts"), mockComment);
+  writeFileSync(join(project, "tests", "billing.ts"), mockComment);
+  const comments = run([join(project, "billing.ts"), join(project, "tests", "billing.ts")], project);
+  assert.match(comments.stdout, /^ {2}billing\.ts:1:1 no-filler-comments|\/project\/billing\.ts:1:1 no-filler-comments/mu, comments.stdout);
+  assert.doesNotMatch(comments.stdout, /tests\/billing\.ts:1:1/u, comments.stdout);
+  rmSync(join(project, "billing.ts"));
+  rmSync(join(project, "tests", "billing.ts"));
+  execFileSync("git", ["init", "-q"], { cwd: project });
+  writeFileSync(join(project, "README.md"), "fixture\n");
+  execFileSync("git", ["add", "README.md"], { cwd: project });
+  execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "base"], { cwd: project });
+  const since = run(["--since=HEAD", "--source-only"], project);
+  assert.equal(since.status, 1, since.stdout + since.stderr);
+  assert.match(since.stdout, /1 finding in 1 file, 1 test file skipped\n$/u);
+});
+
+check("directory scans skip gitignored build output but scan it when named", () => {
+  const repo = mkdtempSync(join(root, "ignored-"));
+  mkdirSync(join(repo, "lib"));
+  writeFileSync(join(repo, ".gitignore"), "lib/\n");
+  writeFileSync(join(repo, "app.ts"), SLOP);
+  writeFileSync(join(repo, "lib", "app.js"), "const value = /** @type {User} */ (payload); const a = JSON.parse(JSON.stringify(value));\n");
+  execFileSync("git", ["init", "-q"], { cwd: repo });
+  const tree = run(["."], repo);
+  assert.equal(tree.status, 1, tree.stdout);
+  assert.match(tree.stdout, /app\.ts:1:22/u);
+  assert.doesNotMatch(tree.stdout, /lib[\\/]app\.js/u);
+  assert.match(tree.stdout, /1 finding in 1 file, 1 gitignored path skipped\n$/u);
+  const named = run([join("lib", "app.js")], repo);
+  assert.equal(named.status, 1, named.stdout);
+  assert.match(named.stdout, /no-json-clone/u);
+  assert.doesNotMatch(named.stdout, /gitignored/u);
+  const directory = run(["lib"], repo);
+  assert.equal(directory.status, 0, directory.stdout);
+  assert.match(directory.stdout, /no coverage \(0 files checked, 1 gitignored path skipped\)/u);
+  mkdirSync(join(repo, "lib", "nested"));
+  writeFileSync(join(repo, "lib", "nested", "deep.ts"), SLOP);
+  const nested = run([join("lib", "nested")], repo);
+  assert.equal(nested.status, 0, nested.stdout);
+  assert.match(nested.stdout, /no coverage \(0 files checked, 1 gitignored path skipped\)/u);
+  const nestedFile = run([join("lib", "nested", "deep.ts")], repo);
+  assert.equal(nestedFile.status, 1, nestedFile.stdout);
+  assert.match(nestedFile.stdout, /deep\.ts:1:22/u);
 });
 
 check("--json on a clean file is an empty array", () => {

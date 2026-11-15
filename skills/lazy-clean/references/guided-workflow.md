@@ -91,7 +91,7 @@ Assign these independent read-only jobs in parallel when resources permit:
 | Role | Required evidence |
 | --- | --- |
 | Verifier | Run relevant existing checks on the candidate; exercise the public workflow, edge cases, errors, and cleanup. Map results to the requirement record; identify missing rerunnable coverage and manual-only checks. |
-| Code reviewer | Inspect the task-owned diff and affected callers for correctness, boundary/lifecycle defects, regressions, and removable complexity. Return concrete counterexamples and locations, not scores. |
+| Code reviewer | Inspect the task-owned diff and affected callers for correctness, boundary/lifecycle defects, regressions, and removable complexity. Check that docs follow every changed contract as the repository's instruction files require. Return concrete counterexamples and locations, not scores. |
 | Test-quality reviewer | For added/changed tests, execute stage 1 of lazy-quality-review, with that skill and test-quality-review as instructions. Report what the assertions actually prove and retain useful coverage. |
 
 The coordinator owns [lazy-quality-review](../../lazy-quality-review/SKILL.md)'s

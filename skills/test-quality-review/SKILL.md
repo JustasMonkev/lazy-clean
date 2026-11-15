@@ -119,7 +119,10 @@ Keep recommendations proportional. Prefer focused cases for the missing
 behavior over blanket rewrites, more assertions for their own sake, or automatic
 test deletion. Run relevant tests or isolated probes when useful and within the
 authorized scope; production mutations and mutation-testing campaigns are not
-part of a read-only review. Report exactly what ran and what remains unverified.
+part of a read-only review. To demonstrate a top finding, plant one targeted
+fault only in a disposable copy, following [lazy-mutation](../lazy-mutation/SKILL.md)'s
+isolation rules, never in the reviewed checkout; confirm the checkout is unchanged
+afterwards. Report exactly what ran and what remains unverified.
 
 Apply these principles across languages, including Python's `assert`, unittest,
 pytest, and mock expectations. Use tools compatible with the actual language and

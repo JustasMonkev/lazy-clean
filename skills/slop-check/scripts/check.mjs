@@ -16,9 +16,9 @@
  * false positives alone with a short justification instead of contorting the
  * code.
  */
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
-import { extname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"]);
@@ -2732,7 +2732,7 @@ const TEST_FILE_PATTERN = /(?:^|[\\/])(?:__tests__|__mocks__|test|tests|fixtures
 
 function* iterateCommentFindings(ctx) {
   const { comments, lineStarts, maskedLines, isTypeScript } = ctx;
-  const inTestFile = TEST_FILE_PATTERN.test(ctx.path);
+  const inTestFile = ctx.testFile;
   for (const [index, comment] of comments.entries()) {
     const start = offsetToPosition(lineStarts, comment.start);
     const endLine = offsetToPosition(lineStarts, Math.max(comment.start, comment.end - 1)).line;
@@ -3131,6 +3131,8 @@ const STANDALONE_RULE_IDS = [
 ];
 
 export const RULE_IDS = new Set([...LINE_RULES.map((rule) => rule.name), ...STANDALONE_RULE_IDS]);
+const RULE_ALIASES = new Map([["type-assertion-review", "require-safety-comment-for-type-assertion"]]);
+const canonicalRule = (id) => RULE_ALIASES.get(id) ?? id;
 export { RULE_EXPLANATIONS };
 
 function explainRule(id) {
@@ -3219,7 +3221,7 @@ function collectSuppressions(comments, lineStarts) {
   return { forLine, forFile, findings };
 }
 
-export function lintSource(rawSource, filePath, { disabled } = {}) {
+export function lintSource(rawSource, filePath, { disabled, testFile = TEST_FILE_PATTERN.test(filePath) } = {}) {
   const extension = extname(filePath).toLowerCase();
   // A leading BOM is not part of line 1: it defeats the shebang skip and shifts
   // every column on that line by one.
@@ -3234,6 +3236,7 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
   const bindsAny = declaredNames.has("any") || PARAMETER_ANY.test(masked) || DESTRUCTURED_ANY.test(masked);
   const ctx = {
     path: filePath,
+    testFile,
     source,
     declaredNames,
     bindsAny,
@@ -3303,13 +3306,17 @@ export function lintSource(rawSource, filePath, { disabled } = {}) {
 // file — including a symlink loop — the same entry for free.
 const identity = (stats, target) => (stats.ino ? `${stats.dev}:${stats.ino}` : resolve(target));
 
-function collectFiles(entry, scan) {
+function collectFiles(entry, scan, root = entry) {
   let stats;
   try {
     stats = statSync(entry);
   } catch {
     console.error(`slop-check: cannot read ${entry}`);
     scan.unreadable += 1;
+    return;
+  }
+  if ((stats.isDirectory() || entry !== root) && isIgnored(resolve(entry), scan)) {
+    scan.ignoredSkipped += 1;
     return;
   }
   if (stats.isDirectory()) {
@@ -3328,7 +3335,7 @@ function collectFiles(entry, scan) {
     }
     for (const name of names) {
       if (SKIPPED_DIRECTORIES.has(name)) continue;
-      collectFiles(join(entry, name), scan);
+      collectFiles(join(entry, name), scan, root);
     }
     return;
   }
@@ -3343,6 +3350,38 @@ function collectFiles(entry, scan) {
   const key = identity(stats, entry);
   if (scan.files.has(key)) return;
   scan.files.set(key, entry);
+  scan.roots.set(key, root === entry ? dirname(entry) : root);
+}
+
+function repositoryRoot() {
+  const result = spawnSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  return result.status === 0 ? result.stdout.trim() : null;
+}
+
+function ignoredPaths(root) {
+  if (!root) return new Set();
+  const result = spawnSync("git", ["-C", root, "ls-files", "--others", "--ignored", "--exclude-standard", "--directory", "-z"],
+    { encoding: "utf8", maxBuffer: 64e6, stdio: ["ignore", "pipe", "ignore"] });
+  if (result.status !== 0) return new Set();
+  return new Set(result.stdout.split("\0").filter(Boolean).map((path) => resolve(root, path)));
+}
+
+function isIgnored(path, scan) {
+  for (let current = path; scan.repoRoot && inside(scan.repoRoot, current) !== null; current = dirname(current)) {
+    if (scan.ignored.has(current)) return true;
+  }
+  return false;
+}
+
+function inside(base, file) {
+  const rel = relative(base, file);
+  return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel) ? rel : null;
+}
+
+function isTestFile(file, root, bases) {
+  const absolute = resolve(file);
+  const rel = bases.map((base) => inside(base, absolute)).find((path) => path !== null) ?? relative(resolve(root), absolute);
+  return TEST_FILE_PATTERN.test(rel);
 }
 
 // The path a change map is keyed by. Falls back to resolve() when the file is
@@ -3466,6 +3505,7 @@ function printUsage() {
 Options:
   --json             Print findings as JSON.
   --summary          Replace findings with a rule tally; keep the run summary.
+  --source-only      Skip test files and fixtures; the summary counts them.
   --since=<ref>      Scan only lines added since <ref>.
   --exclude-file=<path>  Skip one exact existing file; repeat for multiple files.
   --disable=<ids>    Disable comma-separated rule IDs.
@@ -3485,15 +3525,17 @@ function main() {
   const optionArgs = endOfOptions === -1 ? args : args.slice(0, endOfOptions);
   const json = optionArgs.includes("--json");
   const summaryOnly = optionArgs.includes("--summary");
+  const sourceOnly = optionArgs.includes("--source-only");
   const since = optionArgs.find((arg) => arg.startsWith("--since="))?.slice("--since=".length);
   const exclusionPaths = optionArgs.filter((arg) => arg.startsWith("--exclude-file="))
     .map((arg) => arg.slice("--exclude-file=".length));
   const explainArgs = optionArgs.filter((arg) => arg.startsWith("--explain="));
-  const explain = explainArgs[0]?.slice("--explain=".length);
+  const explainArg = explainArgs[0]?.slice("--explain=".length);
+  const explain = explainArg === undefined ? undefined : canonicalRule(explainArg);
   const disabled = new Set(
     optionArgs.filter((arg) => arg.startsWith("--disable="))
       .flatMap((arg) => arg.slice("--disable=".length).split(","))
-      .map((id) => id.trim())
+      .map((id) => canonicalRule(id.trim()))
       .filter(Boolean),
   );
   const targets = [
@@ -3504,7 +3546,7 @@ function main() {
   // point of the code is that a scan which skipped something never reports
   // clean. 0 = clean, 1 = findings, 2 = scan failed.
   const unknown = optionArgs.filter(
-    (arg) => arg.startsWith("-") && !["--json", "--summary", "-h", "--help"].includes(arg)
+    (arg) => arg.startsWith("-") && !["--json", "--summary", "--source-only", "-h", "--help"].includes(arg)
       && !arg.startsWith("--since=") && !arg.startsWith("--disable=") && !arg.startsWith("--explain=")
       && !arg.startsWith("--exclude-file="),
   );
@@ -3519,7 +3561,7 @@ function main() {
     return;
   }
   if (explain !== undefined && !RULE_IDS.has(explain)) {
-    console.error(`slop-check: --explain names ${explain}, which is not a rule id (rule ids: ${[...RULE_IDS].sort().join(", ")})`);
+    console.error(`slop-check: --explain names ${explainArg}, which is not a rule id (rule ids: ${[...RULE_IDS].sort().join(", ")})`);
     process.exitCode = 2;
     return;
   }
@@ -3576,7 +3618,8 @@ function main() {
     const rel = relative(cwd, file);
     return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
   };
-  const scan = { files: new Map(), seenDirs: new Set(), unreadable: 0 };
+  const repoRoot = repositoryRoot();
+  const scan = { files: new Map(), roots: new Map(), seenDirs: new Set(), unreadable: 0, repoRoot, ignored: ignoredPaths(repoRoot), ignoredSkipped: 0 };
   for (const target of targets.length > 0 ? targets : added ? [...added.keys()].filter(underCwd) : ["."]) {
     collectFiles(target, scan);
   }
@@ -3592,6 +3635,9 @@ function main() {
   // away under ignores has not been cleaned, and the summary is where that shows.
   let suppressed = 0;
   let excludedCount = 0;
+  let skippedTests = 0;
+  let testFindings = 0;
+  const bases = [repoRoot, cwd].filter(Boolean);
   const scannedSources = new Map();
   for (const [key, file] of files) {
     // realpath, not resolve: addedLines() keys every change by its path under
@@ -3603,6 +3649,11 @@ function main() {
     if (added && !changed) continue;
     if (excluded.has(key)) {
       excludedCount += 1;
+      continue;
+    }
+    const testFile = isTestFile(file, scan.roots.get(key), bases);
+    if (sourceOnly && testFile) {
+      skippedTests += 1;
       continue;
     }
     let source;
@@ -3618,7 +3669,7 @@ function main() {
     }
     if (added) scannedSources.set(file, source);
     linted += 1;
-    const fileFindings = lintSource(source, displayPath(file), { disabled });
+    const fileFindings = lintSource(source, displayPath(file), { disabled, testFile });
     // Evidence can precede the diagnostic anchor (a receiver) or follow it
     // (a reducer seed). Match the same evidence span as the PostToolUse hook.
     const touched = (finding) => {
@@ -3632,7 +3683,9 @@ function main() {
     // for an untouched ignore somebody else wrote years ago, which reads as this
     // change having silenced something.
     suppressed += (changed ? fileFindings.suppressed.filter(touched) : fileFindings.suppressed).length;
-    findings.push(...(changed ? fileFindings.filter(touched) : fileFindings));
+    const kept = changed ? fileFindings.filter(touched) : fileFindings;
+    if (testFile) testFindings += kept.length;
+    findings.push(...kept);
   }
 
   if (added) {
@@ -3661,7 +3714,10 @@ function main() {
   // ignores is a different sentence from "clean", and every branch needs to say
   // so, including the one that reports a failed scan.
   const silenced = (suppressed > 0 ? `, ${suppressed} suppressed` : "")
-    + (excludedCount > 0 ? `, ${excludedCount} excluded` : "");
+    + (excludedCount > 0 ? `, ${excludedCount} excluded` : "")
+    + (scan.ignoredSkipped > 0 ? `, ${scan.ignoredSkipped} gitignored path${scan.ignoredSkipped === 1 ? "" : "s"} skipped` : "")
+    + (skippedTests > 0 ? `, ${skippedTests} test file${skippedTests === 1 ? "" : "s"} skipped` : "")
+    + (testFindings > 0 ? `, ${testFindings} in test files` : "");
   const summary = scan.unreadable > 0
     ? `slop-check: scan incomplete (${scan.unreadable} path${scan.unreadable === 1 ? "" : "s"} unreadable, ${scanned} file${scanned === 1 ? "" : "s"} checked, ${findings.length} finding${findings.length === 1 ? "" : "s"}${silenced})`
     : scanned === 0

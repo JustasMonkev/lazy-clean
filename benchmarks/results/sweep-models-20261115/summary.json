@@ -1,0 +1,251 @@
+{
+  "generated": "2026-11-15T09:34:32.705Z",
+  "runs": {
+    "sweep/claude-haiku-5-5": {
+      "tasks": {
+        "preexisting-failure": {
+          "off": "10/10",
+          "currentOn": "5/5",
+          "candidateOn": "5/5"
+        },
+        "docs-contract": {
+          "off": "10/10",
+          "currentOn": "5/5",
+          "candidateOn": "5/5"
+        },
+        "test-oracle": {
+          "off": "10/10",
+          "currentOn": "5/5",
+          "candidateOn": "5/5"
+        }
+      },
+      "totals": {
+        "off": "30/30",
+        "currentOn": "15/15",
+        "candidateOn": "15/15"
+      },
+      "cost": {
+        "off": 0.00303383,
+        "currentOn": 0.0051453,
+        "candidateOn": 0.00495145
+      },
+      "ms": {
+        "off": 15965,
+        "currentOn": 24109,
+        "candidateOn": 23728
+      }
+    },
+    "sweep/claude-sonnet-5-5": {
+      "tasks": {
+        "preexisting-failure": {
+          "off": "10/10",
+          "currentOn": "5/5",
+          "candidateOn": "5/5"
+        },
+        "docs-contract": {
+          "off": "10/10",
+          "currentOn": "5/5",
+          "candidateOn": "5/5"
+        },
+        "test-oracle": {
+          "off": "7/10",
+          "currentOn": "5/5",
+          "candidateOn": "4/5"
+        }
+      },
+      "totals": {
+        "off": "27/30",
+        "currentOn": "15/15",
+        "candidateOn": "14/15"
+      },
+      "cost": {
+        "off": 0.032933399999999995,
+        "currentOn": 0.028114600000000003,
+        "candidateOn": 0.0277926
+      },
+      "ms": {
+        "off": 15998,
+        "currentOn": 12907,
+        "candidateOn": 12972
+      }
+    },
+    "core/claude-haiku-5-5": {
+      "tasks": {
+        "explicit-values": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "shared-cause": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "user-edits": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "useful-helper": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "input-compat": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "requested-expiry": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "existing-tests": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "trust-boundary": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "partial-cleanup": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "new-file-errors": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "dependency-duplication": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "collection-cleanup": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "empty-error": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "necessary-guard": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        }
+      },
+      "totals": {
+        "off": "28/28",
+        "currentOn": "14/14",
+        "candidateOn": "14/14"
+      },
+      "cost": {
+        "off": 0.00220513,
+        "currentOn": 0.00400126,
+        "candidateOn": 0.00465615
+      },
+      "ms": {
+        "off": 12188,
+        "currentOn": 18600,
+        "candidateOn": 20327
+      }
+    },
+    "core/claude-sonnet-5-5": {
+      "tasks": {
+        "explicit-values": {
+          "off": "1/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "shared-cause": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "user-edits": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "useful-helper": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "input-compat": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "requested-expiry": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "existing-tests": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "trust-boundary": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "partial-cleanup": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "new-file-errors": {
+          "off": "1/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "dependency-duplication": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "collection-cleanup": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "empty-error": {
+          "off": "1/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        },
+        "necessary-guard": {
+          "off": "2/2",
+          "currentOn": "1/1",
+          "candidateOn": "1/1"
+        }
+      },
+      "totals": {
+        "off": "25/28",
+        "currentOn": "14/14",
+        "candidateOn": "14/14"
+      },
+      "cost": {
+        "off": 0.01884,
+        "currentOn": 0.0422912,
+        "candidateOn": 0.0415762
+      },
+      "ms": {
+        "off": 11499,
+        "currentOn": 15942,
+        "candidateOn": 16725
+      }
+    }
+  }
+}

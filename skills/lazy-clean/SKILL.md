@@ -116,6 +116,9 @@ create draft PRs only. Never create a ready-for-review PR, mark one ready, merge
 a PR, or push directly to main/the default branch. This applies to every worker;
 if draft creation is unavailable, report the blocker rather than open a normal PR.
 
+To run the lazy audits over an existing repository and fix what they find, read
+[repository sweep](references/repo-sweep.md) for scan scope, baseline, ownership, and verification.
+
 For upstream comparisons or ports, also read [upstream updates](references/upstream-updates.md)
 and the repository's `UPSTREAM.md` when present; preserve local behavior and record partial adaptations.
 
