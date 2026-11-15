@@ -1,0 +1,6 @@
+simplicity projects B: three initial verdicts, references, alternatives, fourteen mutants and restorations passed
+simplicity projects A: 3 failing baselines, 3 references, 3 alternatives, 19 behaviorally rejected mutants, 3 restorations passed
+report-review 1 off: PASS (53ms)
+report-review 1 on: PASS (53ms)
+Evidence: /tmp/simplicity-selection-TSU8jW/results/results.json. Compare correctness first; cost/time/size only for paired passing runs. No automatic improvement claim.
+simplicity project selection: six unique projects, paired routing, no-change metrics, and rubric isolation passed

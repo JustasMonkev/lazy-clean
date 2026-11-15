@@ -252,3 +252,13 @@ production-only size. For a source/test comparison, classify retained files
 manually and report production and test bytes separately with the classification;
 do not subtract guessed test sizes or label the aggregate as production savings.
 No model trials or savings are claimed by adding this task set.
+
+## Simple-project validation
+
+Set `"taskSet": "simplicity"` to run six small multi-file Node projects covering
+settings/CLI errors, basket state and snapshots, audit failures, required TTL
+caching, HTTP validation/Unicode, and an already-correct report. The normal
+runner compares rules off/on. The separately recorded
+[GPT-6.1-sol study](sol-simple-projects.md) compares previous/revised rules in
+24 fresh sessions and includes replayable submissions, independent reviews,
+results and limitations.

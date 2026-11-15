@@ -1,0 +1,312 @@
+[
+  {
+    "reviewer": "/root/sol_blind_review_one",
+    "model": "gpt-6.1-sol",
+    "method": "Fresh context, anonymous labels; rules version and grade withheld; static source review",
+    "mapping": [
+      {
+        "label": "33f61fc259",
+        "id": "r10"
+      },
+      {
+        "label": "4d4ec0c23b",
+        "id": "r17"
+      },
+      {
+        "label": "4e37648d48",
+        "id": "r13"
+      },
+      {
+        "label": "5b8c3a8064",
+        "id": "r11"
+      },
+      {
+        "label": "5deb934635",
+        "id": "r01"
+      },
+      {
+        "label": "6f3bb7be1d",
+        "id": "r18"
+      },
+      {
+        "label": "977b7e489d",
+        "id": "r04"
+      },
+      {
+        "label": "bb5dfee732",
+        "id": "r09"
+      },
+      {
+        "label": "c37219b5dc",
+        "id": "r07"
+      },
+      {
+        "label": "d7dbf3c57f",
+        "id": "r05"
+      },
+      {
+        "label": "dd09c7a5bb",
+        "id": "r12"
+      },
+      {
+        "label": "f07966787e",
+        "id": "r02"
+      }
+    ],
+    "reviews": [
+      {
+        "label": "33f61fc259",
+        "productionVerdict": "pass: no production defect found against the stated scope (static source and test review)",
+        "findings": [],
+        "testLimitations": [
+          {
+            "file": "test.cjs",
+            "line": 5,
+            "trigger": "Production later attempts to mutate a frozen row property, or a result later depends on mutable input.",
+            "detail": "The non-strict frozen fixture can silently ignore property assignments and there is no mutable-input-after-build snapshot case. Current production is correct. Optional test improvement: enable strict mode and add a small mutable-input snapshot assertion."
+          }
+        ],
+        "designSummary": "Production is deliberately unchanged and already meets the contract. Existing formatRow reuse preserves JavaScript conversion and both exports. Mapping and reducing create fresh result/lines without retaining or mutating input; no validation, cache, class, dependency, or compatibility scaffolding is added. Keeping this implementation is justified."
+      },
+      {
+        "label": "4d4ec0c23b",
+        "productionVerdict": "pass: no production defect found against the stated scope (static source and test review)",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "Production is deliberately unchanged and already meets the contract. Existing formatRow reuse preserves JavaScript conversion and both exports. Mapping and reducing create fresh result/lines without retaining or mutating input; no validation, cache, class, dependency, or compatibility scaffolding is added. Keeping this implementation is justified."
+      },
+      {
+        "label": "4e37648d48",
+        "productionVerdict": "pass: no production defect found against the stated scope (static source and test review)",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "Production is deliberately unchanged and already meets the contract. Existing formatRow reuse preserves JavaScript conversion and both exports. Mapping and reducing create fresh result/lines without retaining or mutating input; no validation, cache, class, dependency, or compatibility scaffolding is added. Keeping this implementation is justified."
+      },
+      {
+        "label": "5b8c3a8064",
+        "productionVerdict": "pass: no production defect found against the stated scope (static source and test review)",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "One instance-local Map stores the required value and expiry per string ID. The entry-object presence check correctly accepts falsy values; strict expiry is checked before reuse, and expiry is calculated after await load. Rejections propagate without insertion or stale fallback. Adapter and price boundaries remain unchanged. No speculative concurrency, eviction, redundant state, catches, or abstraction is added; retaining expired entries is permitted by the stated scope."
+      },
+      {
+        "label": "5deb934635",
+        "productionVerdict": "pass: no production defect found against the stated scope (static source and test review)",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "One instance-local Map stores the required value and expiry per string ID. The entry-object presence check correctly accepts falsy values; strict expiry is checked before reuse, and expiry is calculated after await load. Rejections propagate without insertion or stale fallback. Adapter and price boundaries remain unchanged. No speculative concurrency, eviction, redundant state, catches, or abstraction is added; retaining expired entries is permitted by the stated scope."
+      },
+      {
+        "label": "6f3bb7be1d",
+        "productionVerdict": "pass: no production defect found against the stated scope (static source and test review)",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "Production is deliberately unchanged and already meets the contract. Existing formatRow reuse preserves JavaScript conversion and both exports. Mapping and reducing create fresh result/lines without retaining or mutating input; no validation, cache, class, dependency, or compatibility scaffolding is added. Keeping this implementation is justified."
+      },
+      {
+        "label": "977b7e489d",
+        "productionVerdict": "pass: no production defect found against the stated scope (static source and test review)",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "One instance-local Map stores the required value and expiry per string ID. The entry-object presence check correctly accepts falsy values; strict expiry is checked before reuse, and expiry is calculated after await load. Rejections propagate without insertion or stale fallback. Adapter and price boundaries remain unchanged. No speculative concurrency, eviction, redundant state, catches, or abstraction is added; retaining expired entries is permitted by the stated scope."
+      },
+      {
+        "label": "bb5dfee732",
+        "productionVerdict": "pass: no production defect found against the stated scope (static source and test review)",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "The unstarted native HTTP server preserves app exports, exact routing, JSON content type and IDs. UTF-8 decoding is maintained across request chunks. JSON parsing and shape validation are required boundary checks; the separate save catch correctly distinguishes persistence failure. Text is captured before awaiting persistence and save is called once. No speculative transport handling, dependencies, classes, endpoints, or redundant wrappers are added. Compact versus expanded response formatting is optional style, not a production defect."
+      },
+      {
+        "label": "c37219b5dc",
+        "productionVerdict": "pass: no production defect found against the stated scope (static source and test review)",
+        "findings": [],
+        "testLimitations": [
+          {
+            "file": "test.cjs",
+            "line": 17,
+            "trigger": "The two Buffer fragments in the Unicode case are written synchronously before req.end().",
+            "detail": "TCP/HTTP may coalesce these writes before the server reads them, so the test can pass an implementation that decodes each incoming Buffer separately. Current req.setEncoding production code is correct. Smallest test improvement: delay the second write after the first is flushed; for deterministic chunk-boundary coverage use a controlled readable request in an additional test."
+          }
+        ],
+        "designSummary": "The unstarted native HTTP server preserves app exports, exact routing, JSON content type and IDs. UTF-8 decoding is maintained across request chunks. JSON parsing and shape validation are required boundary checks; the separate save catch correctly distinguishes persistence failure. Text is captured before awaiting persistence and save is called once. No speculative transport handling, dependencies, classes, endpoints, or redundant wrappers are added. Compact versus expanded response formatting is optional style, not a production defect."
+      },
+      {
+        "label": "d7dbf3c57f",
+        "productionVerdict": "pass: no production defect found against the stated scope (static source and test review)",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "The unstarted native HTTP server preserves app exports, exact routing, JSON content type and IDs. UTF-8 decoding is maintained across request chunks. JSON parsing and shape validation are required boundary checks; the separate save catch correctly distinguishes persistence failure. Text is captured before awaiting persistence and save is called once. No speculative transport handling, dependencies, classes, endpoints, or redundant wrappers are added. Compact versus expanded response formatting is optional style, not a production defect."
+      },
+      {
+        "label": "dd09c7a5bb",
+        "productionVerdict": "pass: no production defect found against the stated scope (static source and test review)",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "One instance-local Map stores the required value and expiry per string ID. The entry-object presence check correctly accepts falsy values; strict expiry is checked before reuse, and expiry is calculated after await load. Rejections propagate without insertion or stale fallback. Adapter and price boundaries remain unchanged. No speculative concurrency, eviction, redundant state, catches, or abstraction is added; retaining expired entries is permitted by the stated scope."
+      },
+      {
+        "label": "f07966787e",
+        "productionVerdict": "pass: no production defect found against the stated scope (static source and test review)",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "The unstarted native HTTP server preserves app exports, exact routing, JSON content type and IDs. UTF-8 decoding is maintained across request chunks. JSON parsing and shape validation are required boundary checks; the separate save catch correctly distinguishes persistence failure. Text is captured before awaiting persistence and save is called once. No speculative transport handling, dependencies, classes, endpoints, or redundant wrappers are added. Compact versus expanded response formatting is optional style, not a production defect."
+      }
+    ]
+  },
+  {
+    "reviewer": "/root/sol_blind_review_two",
+    "model": "gpt-6.1-sol",
+    "method": "Fresh context, anonymous labels; rules version and grade withheld; static source review",
+    "mapping": [
+      {
+        "label": "1d24314809",
+        "id": "r16"
+      },
+      {
+        "label": "311fca2f82",
+        "id": "r08"
+      },
+      {
+        "label": "850798fc30",
+        "id": "r21"
+      },
+      {
+        "label": "8a45914155",
+        "id": "r06"
+      },
+      {
+        "label": "9210b83632",
+        "id": "r03"
+      },
+      {
+        "label": "96b58b9230",
+        "id": "r15"
+      },
+      {
+        "label": "b54e9c831d",
+        "id": "r24"
+      },
+      {
+        "label": "d15e0a9276",
+        "id": "r23"
+      },
+      {
+        "label": "d17ebc896a",
+        "id": "r20"
+      },
+      {
+        "label": "e0ddfa5959",
+        "id": "r19"
+      },
+      {
+        "label": "e807e65a32",
+        "id": "r14"
+      },
+      {
+        "label": "e8116012a2",
+        "id": "r22"
+      }
+    ],
+    "reviews": [
+      {
+        "label": "1d24314809",
+        "productionVerdict": "pass",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "Conforms for the stated valid row inputs. Authoritative array rows preserve insertion order and replacement position; both totals are derived, avoiding synchronization state. Construction/reset and receipt copies preserve ownership, and receipt numbers and rows form fixed snapshots. The small count/total helpers are reused by getters and receipt and are justified. No unnecessary validation, catch, cache, or abstraction was added. No production remedy is needed."
+      },
+      {
+        "label": "311fca2f82",
+        "productionVerdict": "pass",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "Conforms for the stated valid row inputs. Authoritative array rows preserve insertion order and replacement position; both totals are derived, avoiding synchronization state. Construction/reset and receipt copies preserve ownership, and receipt numbers and rows form fixed snapshots. The small count/total helpers are reused by getters and receipt and are justified. No unnecessary validation, catch, cache, or abstraction was added. No production remedy is needed."
+      },
+      {
+        "label": "850798fc30",
+        "productionVerdict": "pass",
+        "findings": [],
+        "testLimitations": [
+          "CLI failure checks require nonempty stderr but do not assert that it is exactly the original error message plus newline; add that comparison to catch wrappers or extra output. Parse checks assert SyntaxError type rather than identity; an injected JSON.parse error would verify unchanged propagation."
+        ],
+        "designSummary": "Conforms for settings files containing JSON objects. The catch surrounds only the single platform read, recovers ENOENT specifically, and rethrows other values unchanged; parsing remains outside recovery. Destructuring defaults preserve explicit false, zero, null, and empty strings. CLI formatting and exit status remain at the CLI boundary. Optional chaining protects original non-Error rejection values and is appropriate here. No generalized loader or unnecessary dependency/state was introduced. No production remedy is needed."
+      },
+      {
+        "label": "8a45914155",
+        "productionVerdict": "pass",
+        "findings": [],
+        "testLimitations": [
+          "Store adapter coverage exercises a pending successful writeFile but does not explicitly check synchronous throws and rejected writeFile promises; add identity assertions for those cases if expanding adapter regression coverage."
+        ],
+        "designSummary": "Conforms for synchronous and asynchronous dependency outcomes. Only the write is inside the failed-event catch; saved-audit errors therefore cannot emit failed events. Both audit branches await exactly once, failed-audit failure takes precedence naturally, and successful calls return the store result unchanged. The result binding bridges the deliberately narrow catch and is justified. The store adapter remains intact and awaits serialization writes. No retry, unnecessary catch, or generalized abstraction was added. No production remedy is needed."
+      },
+      {
+        "label": "9210b83632",
+        "productionVerdict": "pass",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "Conforms for the stated valid row inputs. Authoritative array rows preserve insertion order and replacement position; both totals are derived, avoiding synchronization state. Construction/reset and receipt copies preserve ownership, and receipt numbers and rows form fixed snapshots. The small count/total helpers are reused by getters and receipt and are justified. No unnecessary validation, catch, cache, or abstraction was added. No production remedy is needed."
+      },
+      {
+        "label": "96b58b9230",
+        "productionVerdict": "pass",
+        "findings": [],
+        "testLimitations": [
+          "Store adapter coverage exercises a pending successful writeFile but does not explicitly check synchronous throws and rejected writeFile promises; add identity assertions for those cases if expanding adapter regression coverage."
+        ],
+        "designSummary": "Conforms for synchronous and asynchronous dependency outcomes. Only the write is inside the failed-event catch; saved-audit errors therefore cannot emit failed events. Both audit branches await exactly once, failed-audit failure takes precedence naturally, and successful calls return the store result unchanged. The result binding bridges the deliberately narrow catch and is justified. The store adapter remains intact and awaits serialization writes. No retry, unnecessary catch, or generalized abstraction was added. No production remedy is needed."
+      },
+      {
+        "label": "b54e9c831d",
+        "productionVerdict": "pass",
+        "findings": [],
+        "testLimitations": [
+          "The saveDraft awaiting tests hold audit pending while write returns or throws synchronously. They do not hold store.write pending and assert that no audit occurs before settlement; add one deferred write on each path to cover ordering explicitly."
+        ],
+        "designSummary": "Conforms for synchronous and asynchronous dependency outcomes. Only the write is inside the failed-event catch; saved-audit errors therefore cannot emit failed events. Both audit branches await exactly once, failed-audit failure takes precedence naturally, and successful calls return the store result unchanged. The result binding bridges the deliberately narrow catch and is justified. The store adapter remains intact and awaits serialization writes. No retry, unnecessary catch, or generalized abstraction was added. No production remedy is needed."
+      },
+      {
+        "label": "d15e0a9276",
+        "productionVerdict": "pass",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "Conforms for the stated valid row inputs. Authoritative array rows preserve insertion order and replacement position; both totals are derived, avoiding synchronization state. Construction/reset and receipt copies preserve ownership, and receipt numbers and rows form fixed snapshots. The small count/total helpers are reused by getters and receipt and are justified. No unnecessary validation, catch, cache, or abstraction was added. No production remedy is needed."
+      },
+      {
+        "label": "d17ebc896a",
+        "productionVerdict": "pass",
+        "findings": [],
+        "testLimitations": [
+          "CLI failure checks require nonempty stderr but do not assert that it is exactly the error message plus newline; compare against the API error message to catch wrappers or extra output."
+        ],
+        "designSummary": "Conforms for settings files containing JSON objects. The catch surrounds only the single platform read, recovers ENOENT specifically, and rethrows other values unchanged; parsing remains outside recovery. Destructuring defaults preserve explicit false, zero, null, and empty strings. CLI formatting and exit status remain at the CLI boundary. Optional chaining protects original non-Error rejection values and is appropriate here. No generalized loader or unnecessary dependency/state was introduced. No production remedy is needed."
+      },
+      {
+        "label": "e0ddfa5959",
+        "productionVerdict": "pass",
+        "findings": [],
+        "testLimitations": [],
+        "designSummary": "Conforms for settings files containing JSON objects. The catch surrounds only the single platform read, recovers ENOENT specifically, and rethrows other values unchanged; parsing remains outside recovery. Destructuring defaults preserve explicit false, zero, null, and empty strings. CLI formatting and exit status remain at the CLI boundary. Optional chaining protects original non-Error rejection values and is appropriate here. No generalized loader or unnecessary dependency/state was introduced. No production remedy is needed."
+      },
+      {
+        "label": "e807e65a32",
+        "productionVerdict": "pass",
+        "findings": [],
+        "testLimitations": [
+          "Store adapter coverage exercises a pending successful writeFile but does not explicitly check synchronous throws and rejected writeFile promises; add identity assertions for those cases if expanding adapter regression coverage."
+        ],
+        "designSummary": "Conforms for synchronous and asynchronous dependency outcomes. Only the write is inside the failed-event catch; saved-audit errors therefore cannot emit failed events. Both audit branches await exactly once, failed-audit failure takes precedence naturally, and successful calls return the store result unchanged. The result binding bridges the deliberately narrow catch and is justified. The store adapter remains intact and awaits serialization writes. No retry, unnecessary catch, or generalized abstraction was added. No production remedy is needed."
+      },
+      {
+        "label": "e8116012a2",
+        "productionVerdict": "pass",
+        "findings": [],
+        "testLimitations": [
+          "Parse checks assert SyntaxError type rather than original error identity. CLI failure checks use /JSON/ and /EISDIR/ rather than exact message-plus-newline comparisons. These are coverage limitations, not production defects."
+        ],
+        "designSummary": "Conforms for settings files containing JSON objects. The catch surrounds only the single platform read, recovers ENOENT specifically, and rethrows other values unchanged; parsing remains outside recovery. Destructuring defaults preserve explicit false, zero, null, and empty strings. CLI formatting and exit status remain at the CLI boundary. Optional chaining protects original non-Error rejection values and is appropriate here. No generalized loader or unnecessary dependency/state was introduced. No production remedy is needed."
+      }
+    ]
+  }
+]

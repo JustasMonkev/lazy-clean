@@ -1,0 +1,9 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> lazy-clean@1.0.0 slop-check
+> node tests/benchmark-controls.test.mjs && node skills/slop-check/scripts/check.mjs hooks .opencode skills benchmarks tests/benchmark-controls.test.mjs tests/cli.test.mjs tests/hooks.test.mjs tests/language-guidance.test.mjs tests/feedback.test.mjs tests/benchmarks.test.mjs tests/solid-benchmarks.test.mjs tests/implementation-benchmarks.test.mjs tests/simplicity-projects.test.mjs tests/simplicity-projects-a.test.mjs tests/simplicity-projects-b.test.mjs tests/hidden-benchmarks.test.mjs tests/verify.test.mjs tests/fixtures/verify --exclude-file=benchmarks/results/skill-tokens-20261006/grading/known-good-train.ts --exclude-file=benchmarks/results/skill-tokens-20261006/grading/known-good-heldout.ts && node tests/benchmark-controls.test.mjs
+
+Review (heuristic — "deliberate, leaving it" is a valid answer):
+  hooks/lazy-state.js:27:5 no-catch-fake-success — Returning a default from catch disguises failure as success. Propagate the error or return an explicit failure value.
+  benchmarks/run.mjs:196:5 no-catch-fake-success
+slop-check: 2 findings in 2 files, 2 excluded
