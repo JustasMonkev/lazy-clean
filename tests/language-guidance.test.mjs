@@ -195,6 +195,8 @@ const riskChecks = flat(read("skills/lazy/references/risk-checks.md"));
 ok("risk checks list inputs the request did not name", /inputs the request did not name:.*integer-like keys.*NaN.*reordered callbacks.*failure midway/iu.test(riskChecks));
 ok("risk checks reject masking a defect", /clamp or fallback that hides it is not a fix/iu.test(riskChecks));
 ok("risk checks keep relied-on behavior", /behavior callers or tests rely on is contract/iu.test(riskChecks));
+ok("risk checks move recurring mistakes into the strongest existing check", /recurring mistakes:.*API or type.*lint or static check.*runtime or property test.*prose last/iu.test(riskChecks));
+ok("risk checks list copyable old-pattern sites instead of editing them", /old-pattern sites.*next agent copies.*list them/iu.test(riskChecks));
 
 const COMPLEXITY_CONTRACT = [
   ["grounds new defensive branches in reachable contract evidence", /guards\/catches\/fallbacks need contract\/caller\/documented-boundary evidence of reachability/iu],
