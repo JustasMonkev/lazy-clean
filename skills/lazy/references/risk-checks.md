@@ -25,6 +25,13 @@ add infrastructure or harden unrelated code.
   edited, even if unrequested, and say so. Report any other defect with a
   failing input instead of fixing it. Fix the cause; a clamp or fallback that
   hides it is not a fix. Behavior callers or tests rely on is contract.
+- **Recurring mistakes:** when the task fixes a mistake the repo or review has
+  already seen before, guard it at the cheapest layer that stops the next
+  occurrence, in this order: an API or type that cannot express it, a lint or
+  static check whose message names the fix, a runtime or property test, prose last.
+  Extend the project's existing checker; ask before adding a new tool. Remaining
+  old-pattern sites outside the task are examples the next agent copies: list
+  them with locations instead of editing them.
 - **Evidence:** cover behavior, edges, and failure modes using the repo's tests
   with the fewest cases that each catch a distinct bug. No test scaffolding: no
   hand-rolled runner, single-use helper, success log, or case another already
@@ -48,5 +55,9 @@ add infrastructure or harden unrelated code.
 - A value that goes wrong upstream is fixed upstream. Rounding or defaulting it
   at the point of use makes the wrong value look valid.
 - A one-line fix needs its failing case and boundary, not a test harness.
+- Review keeps flagging raw `fetch` calls that skip the auth header. A shared
+  client that adds the header, or an existing lint rule banning raw `fetch`
+  with a message naming that client, stops the next one; another line in
+  `AGENTS.md` does not.
 - An input parser already accepts uppercase IDs. Keep that behavior unless
   the user asks to change it, even if the new task does not mention uppercase.
