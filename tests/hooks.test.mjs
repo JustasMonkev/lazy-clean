@@ -1083,7 +1083,7 @@ eq("edit-check exits 0 on findings", e.status, 0);
 const parsed = e.stdout ? JSON.parse(e.stdout) : null;
 ok("edit-check emits PostToolUse hookSpecificOutput", parsed && parsed.hookSpecificOutput.hookEventName === "PostToolUse");
 ok("edit-check surfaces findings as additionalContext",
-  parsed && parsed.hookSpecificOutput.additionalContext.startsWith("slop-check findings for the lines you just wrote"));
+  parsed && parsed.hookSpecificOutput.additionalContext.startsWith("slop-check findings for the file you just wrote"));
 ok("edit-check never blocks (no decision/permission field)",
   parsed && !("decision" in parsed) && !("permissionDecision" in parsed.hookSpecificOutput));
 
@@ -1247,6 +1247,23 @@ ok("an Edit does not report findings far from the edit", !scoped.includes("range
 ok("an Edit counts the rest of the file without claiming it predates the edit",
   /further findings? elsewhere in this file, not attributed to this edit/.test(scoped) &&
   !/predate|leave them alone/.test(scoped), scoped);
+
+for (const input of [
+  { old_string: "removed", new_string: "" },
+  { old_string: "removed", new_string: "not in file" },
+]) {
+  const context = contextOf(editCheck({tool_name:"Edit", tool_input:{file_path:ranges, ...input}}));
+  ok("unknown edit scope labels file-wide findings without attribution",
+    context.includes("edit scope unknown; not attributed to this edit") && !context.includes("lines you just wrote"), context);
+}
+{
+  const content = ["const bad: any = 2;", ...Array(30).fill(""), "const bad: any = 2;"].join("\n");
+  const file = write("preexisting-replacement.ts", content);
+  const context = contextOf(editCheck({tool_name:"Edit", tool_input:{file_path:file,
+    old_string:"const old = 1;", new_string:"const bad: any = 2;", replace_all:true}}));
+  ok("replace-all does not claim matching pre-existing text was just written",
+    context.includes("not proof these findings were introduced by this edit") && !context.includes("lines you just wrote"), context);
+}
 
 // D: block rules report at the `catch`, several lines above the line the edit
 // wrote. With one line of headroom the whole report was suppressed.
@@ -2314,6 +2331,7 @@ for (const entry of ["off", "ultra", "report", "default", "transform", "timeout"
     const legacy = stateModule.modeState(directory);
     legacy.setMode(entry === 'ultra' ? 'off' : 'ultra');
     fs.mkdirSync(claimDirectory);
+    fs.writeFileSync(path.join(claimDirectory, 'in-progress'), 'keep');
     const owner = entry === 'timeout' ? null : spawn(process.execPath, ['--input-type=module', '-e', \`
       import fs from 'node:fs';
       import {setTimeout} from 'node:timers/promises';
@@ -2322,6 +2340,7 @@ for (const entry of ["off", "ultra", "report", "default", "transform", "timeout"
         if (attempt === 500) throw new Error('contender never attempted migration');
         await setTimeout(10);
       }
+      fs.unlinkSync(reservation + '/in-progress');
       fs.renameSync(legacy, claim);
       fs.linkSync(claim, scoped);
       fs.unlinkSync(claim);
@@ -2371,6 +2390,68 @@ for (const entry of ["off", "ultra", "report", "default", "transform", "timeout"
     }
   `], {env:baseEnv(box.env), encoding:"utf8", timeout:10000});
   eq(`OpenCode handles reservation contention for ${entry}`, result.status, 0);
+  if (result.status !== 0) console.error(result.stderr);
+}
+
+for (const mode of ["off", "ultra"]) {
+  const box = freshHome(`opencode-abandoned-reservation-${mode}`);
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
+    import assert from 'node:assert/strict';
+    import fs from 'node:fs';
+    import path from 'node:path';
+    import stateModule from ${JSON.stringify(pathToFileURL(path.join(HOOKS, 'lazy-state.js')).href)};
+    import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, '.opencode/plugins/lazy.mjs')).href)};
+    const directory = path.join(process.env.XDG_CONFIG_HOME, 'opencode');
+    const state = stateModule.modeState(directory, 'A');
+    stateModule.modeState(directory).setMode(${JSON.stringify(mode)});
+    const reservation = path.join(directory, ${JSON.stringify(qoderStateFile('A') + '.migration')});
+    fs.mkdirSync(reservation);
+    const hooks = await plugin();
+    for (let turn = 0; turn < 2; turn++) {
+      const output = {system:[]};
+      await hooks['experimental.chat.system.transform']({sessionID:'A'}, output);
+      assert.equal(state.readMode(), ${JSON.stringify(mode)});
+      if (${mode === 'off'}) assert.deepEqual(output.system, []);
+      else assert.match(output.system.join(''), /level: ultra/);
+    }
+    assert.equal(fs.existsSync(reservation), false);
+    assert.equal(stateModule.modeState(directory).readMode(), null);
+  `], {env:baseEnv(box.env), encoding:"utf8", timeout:10000});
+  eq(`OpenCode recovers an empty abandoned reservation without losing ${mode}`, result.status, 0);
+  if (result.status !== 0) console.error(result.stderr);
+}
+
+{
+  const box = freshHome("opencode-reservation-reclaimed-before-rename");
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", `
+    import assert from 'node:assert/strict';
+    import fs from 'node:fs';
+    import path from 'node:path';
+    import stateModule from ${JSON.stringify(pathToFileURL(path.join(HOOKS, 'lazy-state.js')).href)};
+    import plugin from ${JSON.stringify(pathToFileURL(path.join(ROOT, '.opencode/plugins/lazy.mjs')).href)};
+    const directory = path.join(process.env.XDG_CONFIG_HOME, 'opencode');
+    const legacy = stateModule.modeState(directory);
+    legacy.setMode('ultra');
+    const rename = fs.renameSync;
+    let reclaimed = false;
+    fs.renameSync = (from, to) => {
+      if (!reclaimed && from === path.join(directory, '.lazy-active')) {
+        reclaimed = true;
+        fs.rmdirSync(path.dirname(to));
+      }
+      return rename(from, to);
+    };
+    const output = {system:[]};
+    try {
+      const hooks = await plugin();
+      await hooks['experimental.chat.system.transform']({sessionID:'A'}, output);
+    } finally { fs.renameSync = rename; }
+    assert.equal(reclaimed, true);
+    assert.equal(stateModule.modeState(directory, 'A').readMode(), 'ultra');
+    assert.equal(legacy.readMode(), null);
+    assert.match(output.system.join(''), /level: ultra/);
+  `], {env:baseEnv(box.env), encoding:"utf8", timeout:10000});
+  eq("OpenCode retries if a contender reclaims the reservation before rename", result.status, 0);
   if (result.status !== 0) console.error(result.stderr);
 }
 

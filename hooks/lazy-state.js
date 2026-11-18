@@ -61,14 +61,21 @@ function modeState(directory, sessionId) {
       try {
         fs.mkdirSync(claimDirectory, { mode: 0o700 });
       } catch (e) {
-        if (e.code === 'EEXIST') return false;
+        if (e.code === 'EEXIST') {
+          try { fs.rmdirSync(claimDirectory); } catch (error) {
+            if (!['ENOENT', 'ENOTEMPTY', 'EEXIST'].includes(error.code)) throw error;
+          }
+          return false;
+        }
         throw e;
       }
       try {
         fs.renameSync(legacyPath, claimPath);
       } catch (e) {
-        fs.rmdirSync(claimDirectory);
-        if (e.code === 'ENOENT') return;
+        try { fs.rmdirSync(claimDirectory); } catch (error) {
+          if (!['ENOENT', 'ENOTEMPTY', 'EEXIST'].includes(error.code)) throw error;
+        }
+        if (e.code === 'ENOENT') return false;
         throw e;
       }
       let migrated = false;
