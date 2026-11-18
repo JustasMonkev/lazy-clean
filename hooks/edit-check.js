@@ -19,10 +19,7 @@ const PAD_DOWN = 1;
 // still there to scan in full if the agent wants the rest.
 const MAX_REPORTED = 40;
 
-// Line ranges this tool call actually wrote. null means "the whole file": a
-// Write authored all of it, and an edit we cannot locate unambiguously has no
-// safe narrower answer.
-function writtenRanges(toolInput, content) {
+function matchingRanges(toolInput, content) {
   const edits = Array.isArray(toolInput.edits)
     ? toolInput.edits
     : typeof toolInput.new_string === 'string' ? [toolInput] : null;
@@ -107,12 +104,9 @@ function check(data) {
       || !['fix', 'review'].includes(f.severity))) throw new Error('invalid checker output');
     if (res.status === 0) return;
 
-    // Only report what this edit wrote. Handing back the whole file's findings
-    // invited edits outside the task — the opposite of the surgical-changes
-    // rule this package ships — and re-served the same ones after every edit.
     let ranges = null;
     try {
-      ranges = writtenRanges(toolInput, fs.readFileSync(file, 'utf8'));
+      ranges = matchingRanges(toolInput, fs.readFileSync(file, 'utf8'));
     } catch (e) {
       // Unreadable after the write: fall back to reporting everything.
     }
@@ -129,7 +123,12 @@ function check(data) {
     const truncated = mine.length - shown.length;
     const elsewhere = all.length - mine.length;
     const context =
-      'slop-check findings for the lines you just wrote (heuristic — triage per slop-check SKILL.md, do not blindly silence):\n' +
+      (ranges
+        ? 'slop-check findings near matching replacement text (not proof these findings were introduced by this edit)'
+        : data?.tool_name === 'Write'
+          ? 'slop-check findings for the file you just wrote'
+          : 'slop-check file-wide findings (edit scope unknown; not attributed to this edit)') +
+      ' (heuristic — triage per slop-check SKILL.md, do not blindly silence):\n' +
       render(shown) +
       (truncated > 0 ? `\n(${truncated} more on these lines, not listed.)` : '') +
       (elsewhere > 0
