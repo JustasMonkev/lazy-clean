@@ -454,6 +454,36 @@ check("test-file classification ignores test-named directories above the scanned
   assert.match(since.stdout, /1 finding in 1 file, 1 test file skipped\n$/u);
 });
 
+check("a linked project path preserves ignored and test-file scope without changing reported paths", () => {
+  const project = mkdtempSync(join(root, "linked-project-"));
+  const alias = join(root, "workspace-link");
+  try {
+    symlinkSync(project, alias, "dir");
+  } catch {
+    console.log("skip linked project (directory links unavailable)");
+    return;
+  }
+  execFileSync("git", ["init", "-q"], { cwd: project });
+  for (const name of ["tests", "generated"]) mkdirSync(join(project, name));
+  symlinkSync("tests", join(project, "aaa-tests-link"), "dir");
+  symlinkSync("generated", join(project, "aab-build-link"), "dir");
+  writeFileSync(join(project, ".gitignore"), "generated/\n");
+  for (const file of ["app.ts", "tests/helper.ts", "generated/output.ts"]) {
+    writeFileSync(join(project, file), SLOP);
+  }
+  for (const path of [project, alias]) {
+    const tree = run([path, "--source-only", "--json"], project);
+    assert.equal(tree.status, 1, tree.stderr);
+    assert.deepEqual(JSON.parse(tree.stdout).map(finding => finding.path), [join(path, "app.ts")]);
+    const test = run([join(path, "tests", "helper.ts"), "--source-only"], project);
+    assert.equal(test.status, 0, test.stdout);
+    assert.match(test.stdout, /1 test file skipped/u);
+    assert.equal(run([join(path, "generated", "output.ts")], project).status, 1);
+    assert.equal(run([join(path, "aaa-tests-link"), "--source-only"], project).status, 0);
+    assert.equal(run([join(path, "aab-build-link"), "--source-only"], project).status, 0);
+  }
+});
+
 check("directory scans skip gitignored build output but scan it when named", () => {
   const repo = mkdtempSync(join(root, "ignored-"));
   mkdirSync(join(repo, "lib"));

@@ -17,8 +17,8 @@
  * code.
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
-import { dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
+import { lstatSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { basename, dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"]);
@@ -3306,16 +3306,25 @@ export function lintSource(rawSource, filePath, { disabled, testFile = TEST_FILE
 // file — including a symlink loop — the same entry for free.
 const identity = (stats, target) => (stats.ino ? `${stats.dev}:${stats.ino}` : resolve(target));
 
-function collectFiles(entry, scan, root = entry) {
+function collectFiles(entry, scan, root = entry, scopePath) {
   let stats;
   try {
-    stats = statSync(entry);
+    stats = lstatSync(entry);
+    if (stats.isSymbolicLink()) {
+      scopePath = realPath(entry);
+      stats = statSync(entry);
+    }
   } catch {
     console.error(`slop-check: cannot read ${entry}`);
     scan.unreadable += 1;
     return;
   }
-  if ((stats.isDirectory() || entry !== root) && isIgnored(resolve(entry), scan)) {
+  const absolute = resolve(entry);
+  if (scopePath === undefined) {
+    const parent = dirname(absolute);
+    scopePath = parent === process.cwd() ? absolute : join(realPath(parent), basename(absolute));
+  }
+  if ((stats.isDirectory() || entry !== root) && (isIgnored(absolute, scan) || (absolute !== scopePath && isIgnored(scopePath, scan)))) {
     scan.ignoredSkipped += 1;
     return;
   }
@@ -3335,7 +3344,7 @@ function collectFiles(entry, scan, root = entry) {
     }
     for (const name of names) {
       if (SKIPPED_DIRECTORIES.has(name)) continue;
-      collectFiles(join(entry, name), scan, root);
+      collectFiles(join(entry, name), scan, root, join(scopePath, name));
     }
     return;
   }
@@ -3349,8 +3358,7 @@ function collectFiles(entry, scan, root = entry) {
   // directory); linting it twice would double every finding and the count.
   const key = identity(stats, entry);
   if (scan.files.has(key)) return;
-  scan.files.set(key, entry);
-  scan.roots.set(key, root === entry ? dirname(entry) : root);
+  scan.files.set(key, { file: entry, scopePath, root: root === entry ? dirname(entry) : root });
 }
 
 function repositoryRoot() {
@@ -3367,6 +3375,7 @@ function ignoredPaths(root) {
 }
 
 function isIgnored(path, scan) {
+  if (!scan.ignored.size) return false;
   for (let current = path; scan.repoRoot && inside(scan.repoRoot, current) !== null; current = dirname(current)) {
     if (scan.ignored.has(current)) return true;
   }
@@ -3378,9 +3387,10 @@ function inside(base, file) {
   return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel) ? rel : null;
 }
 
-function isTestFile(file, root, bases) {
+function isTestFile(file, scopePath, root, bases) {
+  const fromProject = target => bases.map(base => inside(base, target)).find(path => path !== null);
   const absolute = resolve(file);
-  const rel = bases.map((base) => inside(base, absolute)).find((path) => path !== null) ?? relative(resolve(root), absolute);
+  const rel = fromProject(scopePath) ?? fromProject(absolute) ?? relative(resolve(root), absolute);
   return TEST_FILE_PATTERN.test(rel);
 }
 
@@ -3619,7 +3629,7 @@ function main() {
     return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
   };
   const repoRoot = repositoryRoot();
-  const scan = { files: new Map(), roots: new Map(), seenDirs: new Set(), unreadable: 0, repoRoot, ignored: ignoredPaths(repoRoot), ignoredSkipped: 0 };
+  const scan = { files: new Map(), seenDirs: new Set(), unreadable: 0, repoRoot, ignored: ignoredPaths(repoRoot), ignoredSkipped: 0 };
   for (const target of targets.length > 0 ? targets : added ? [...added.keys()].filter(underCwd) : ["."]) {
     collectFiles(target, scan);
   }
@@ -3639,7 +3649,7 @@ function main() {
   let testFindings = 0;
   const bases = [repoRoot, cwd].filter(Boolean);
   const scannedSources = new Map();
-  for (const [key, file] of files) {
+  for (const [key, { file, scopePath, root }] of files) {
     // realpath, not resolve: addedLines() keys every change by its path under
     // the repository root, so an explicit target that is a SYMLINK to a tracked
     // directory looked up `alias/a.ts` and found nothing -- `--since=HEAD alias`
@@ -3651,7 +3661,7 @@ function main() {
       excludedCount += 1;
       continue;
     }
-    const testFile = isTestFile(file, scan.roots.get(key), bases);
+    const testFile = isTestFile(file, scopePath, root, bases);
     if (sourceOnly && testFile) {
       skippedTests += 1;
       continue;
