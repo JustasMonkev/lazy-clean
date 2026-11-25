@@ -64,6 +64,14 @@ try {
     const result = spawnSync(process.execPath, [link, 'invalid', '--format', 'json'], { cwd: target, encoding: 'utf8', timeout: 10000 });
     expected(result, 2, 'INVALID_INPUT');
   });
+  check('importing the verifier from stdin does not invoke the CLI', () => {
+    const result = spawnSync(process.execPath, ['--input-type=module', '-'], {
+      input: `import { bundleDigest } from ${JSON.stringify(pathToFileURL(cli).href)}; console.log(typeof bundleDigest);`,
+      cwd: target, encoding: 'utf8', timeout: 5000,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout.trim(), 'function');
+  });
   check('early CLI errors use only the explicit format flag', () => {
     const args = ['verify', '--profile', 'json', '--base', 'b', '--head', 'h'];
     const result = spawnSync(process.execPath, [cli, ...args], { cwd: target, encoding: 'utf8', timeout: 10000 });
@@ -182,7 +190,11 @@ try {
     });
     check('supporting suite blocks without erasing fix observation', () => {
       setup({ exitCode: 1, result: { gate: 'blocked', reasonCodes: ['SUITE_FAILED'], requiredChecks: [{ id: 'suite', status: 'failed' }] } });
-      const result = expected(verify(), 1);
+      const linkedInstall = join(scratch, 'linked verification skill');
+      symlinkSync(install, linkedInstall, 'junction');
+      const result = expected(spawnSync(process.execPath, [
+        '--preserve-symlinks-main', join(linkedInstall, 'scripts/verify.mjs'), ...verifyArgs(), '--format', 'json',
+      ], { cwd: target, encoding: 'utf8', timeout: 10000 }), 1, 'SUITE_FAILED');
       assert.equal(result.behavior, 'fixed_observed');
       const path = join(scratch, 'recorded.json');
       writeFileSync(path, JSON.stringify(result));
