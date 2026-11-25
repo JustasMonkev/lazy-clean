@@ -740,6 +740,34 @@ check("--since counts only suppressions on lines the diff added", () => {
   assert.doesNotMatch(since.stdout, /suppressed/u, "the untouched ignore is out of scope");
 });
 
+check("implicit diff discovery matches the directory scan while explicit paths still opt in", () => {
+  const repo = mkdtempSync(join(root, "discovery-"));
+  const git = (...args) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd: repo });
+  for (const dir of ["..drafts", "dist"]) mkdirSync(join(repo, dir));
+  const files = ["..drafts/edited.ts", "app.ts", "dist/bundle.ts"];
+  for (const file of files) writeFileSync(join(repo, file), "const value = 1;\n");
+  git("init", "-q");
+  git("add", ".");
+  git("commit", "-qm", "base");
+  for (const file of [...files, "dist/new.ts"]) writeFileSync(join(repo, file), SLOP);
+  const names = (args, cwd = repo) => {
+    const result = run(["--since=HEAD", "--json", ...args], cwd);
+    assert.equal(result.status, 1, result.stderr || result.stdout);
+    return JSON.parse(result.stdout).map(finding => basename(finding.path)).sort();
+  };
+  for (const args of [[], ["."]]) assert.deepEqual(names(args), ["app.ts", "edited.ts"]);
+  assert.deepEqual(names(["dist"]), ["bundle.ts", "new.ts"]);
+  assert.deepEqual(names(["dist/new.ts"]), ["new.ts"]);
+  assert.deepEqual(names([], join(repo, "dist")), ["bundle.ts", "new.ts"]);
+  try {
+    symlinkSync("dist", join(repo, "alias"), "dir");
+  } catch {
+    return;
+  }
+  for (const args of [[], ["."]]) assert.deepEqual(names(args), ["app.ts", "edited.ts"]);
+  assert.deepEqual(names(["alias"]), ["bundle.ts", "new.ts"]);
+});
+
 check("--since with no paths stays under the current directory", () => {
   // The changed-file map comes from the repository ROOT, so a run in packages/a
   // was handing back findings from a changed packages/b — work outside the

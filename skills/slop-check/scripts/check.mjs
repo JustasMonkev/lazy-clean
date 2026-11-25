@@ -3435,13 +3435,23 @@ function diffTargetPath(target) {
 // Stands in for the line set of a wholly new file: every line is an added line.
 const ALL_LINES = { has: () => true };
 
-// Line numbers the diff against `ref` added, per absolute path. Git already
-// stores the baseline, so adopting the checker on an existing repo needs no
-// baseline file to generate, refresh, or drift.
-function addedLines(ref) {
+function isDiscoveredFile(file, roots) {
+  for (let path = file; !roots.has(path); path = dirname(path)) {
+    if (path === dirname(path) || (path !== file && SKIPPED_DIRECTORIES.has(basename(path)))) return false;
+  }
+  return true;
+}
+
+function addedLines(ref, roots) {
   const git = (args) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 64e6 });
   const root = git(["rev-parse", "--show-toplevel"]).trim();
   const byFile = new Map();
+  const record = (name, lines) => {
+    const file = resolve(root, name);
+    if (!name.split("/").slice(0, -1).some(part => SKIPPED_DIRECTORIES.has(part)) || isDiscoveredFile(file, roots)) {
+      byFile.set(file, lines);
+    }
+  };
 
   // A file git has never seen is absent from the diff entirely, so a brand-new
   // source file — the likeliest place for fresh slop, and exactly what the
@@ -3455,11 +3465,7 @@ function addedLines(ref) {
     if (!name || name.endsWith("/")) continue;
     const base = name.slice(name.lastIndexOf("/") + 1).toLowerCase();
     if (!SOURCE_EXTENSIONS.has(extname(base)) || DECLARATION_FILE.test(base)) continue;
-    // A directory the recursive scan skips is skipped here too: --exclude-standard
-    // drops what .gitignore lists, but a repo that never ignored node_modules or
-    // dist would otherwise hand --since its whole vendor tree.
-    if (name.split("/").slice(0, -1).some((part) => SKIPPED_DIRECTORIES.has(part))) continue;
-    byFile.set(resolve(root, name), ALL_LINES);
+    record(name, ALL_LINES);
   }
 
   let lines = null;
@@ -3489,7 +3495,7 @@ function addedLines(ref) {
     if (wasHeader && isHeader(line, "+++", "b/")) {
       const target = line.slice(4);
       lines = target === "/dev/null" ? null : new Set();
-      if (lines) byFile.set(resolve(root, diffTargetPath(target)), lines);
+      if (lines) record(diffTargetPath(target), lines);
       continue;
     }
     const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/u.exec(line);
@@ -3612,9 +3618,10 @@ function main() {
   }
 
   let added = null;
+  const roots = since === undefined ? null : new Set((targets.length ? targets : ["."]).map(realPath));
   if (since !== undefined) {
     try {
-      added = addedLines(since);
+      added = addedLines(since, roots);
     } catch (error) {
       console.error(`slop-check: cannot diff against ${since} (${error.message.trim().split("\n")[0]})`);
       process.exitCode = 2;
@@ -3622,15 +3629,10 @@ function main() {
     }
   }
 
-  // `--since` with no paths still means "under here", the same as a bare run:
-  // the changed-file map comes from the repository root, so from packages/a it
-  // was handing back findings in packages/b. Filtering the map keeps the fast
-  // path (visit only changed files) while honouring the directory asked about.
   const cwd = resolve(process.cwd());
-  const underCwd = file => file === cwd || inside(cwd, file) !== null;
   const repoRoot = repositoryRoot();
   const scan = { files: new Map(), seenDirs: new Set(), unreadable: 0, repoRoot, ignored: ignoredPaths(repoRoot), ignoredSkipped: 0 };
-  for (const target of targets.length > 0 ? targets : added ? [...added.keys()].filter(underCwd) : ["."]) {
+  for (const target of targets.length > 0 ? targets : added ? [...added.keys()].filter(file => isDiscoveredFile(file, roots)) : ["."]) {
     collectFiles(target, scan);
   }
   const { files } = scan;
@@ -3700,7 +3702,7 @@ function main() {
 
   if (added) {
     try {
-      const current = addedLines(since);
+      const current = addedLines(since, roots);
       if (current.size !== added.size || [...added].some(([file, lines]) => {
         const now = current.get(file);
         return lines === ALL_LINES ? now !== ALL_LINES
