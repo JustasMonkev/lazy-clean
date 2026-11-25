@@ -3457,23 +3457,15 @@ function addedLines(ref) {
     "--text", "--no-ext-diff", "--no-textconv",
     "--src-prefix=a/", "--dst-prefix=b/", "--end-of-options", ref, "--",
   ]);
-  // A `+++ ` line is a header only where a header can appear: directly after the
-  // `--- ` source line. An added source line reading `++ x;` arrives as
-  // `+++ x;` and used to become a path that failed the whole scan.
-  // The prefixes are pinned above, so a real header always reads `a/`, `b/`
-  // (possibly inside git's quoting) or /dev/null. A removed line whose content
-  // begins `-- ` arrives as `--- …` and used to arm the header check; a
-  // following added `++ y` line then became a bogus path that failed the scan
-  // and swallowed the real file's findings.
-  const isHeader = (line, sigil, prefix) =>
-    line.startsWith(sigil + " " + prefix) ||
-    line.startsWith(sigil + ' "' + prefix) ||
-    line === sigil + " /dev/null";
-  let afterSourceHeader = false;
+  let inFileHeader = false;
   for (const line of diff.split("\n")) {
-    const wasHeader = afterSourceHeader;
-    afterSourceHeader = isHeader(line, "---", "a/");
-    if (wasHeader && isHeader(line, "+++", "b/")) {
+    if (line.startsWith("diff --git ")) {
+      inFileHeader = true;
+      lines = null;
+      continue;
+    }
+    if (inFileHeader && line.startsWith("+++ ")) {
+      inFileHeader = false;
       const target = line.slice(4);
       lines = target === "/dev/null" ? null : new Set();
       if (lines) byFile.set(resolve(root, diffTargetPath(target)), lines);
