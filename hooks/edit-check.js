@@ -72,6 +72,22 @@ function overlapsEdit(ranges, finding) {
   return low < ranges.length && ranges[low][0] <= end;
 }
 
+function selectFindings(findings) {
+  if (findings.length <= MAX_REPORTED) return findings;
+  const unseenRules = new Set(findings.map(f => f.rule));
+  let repeatSlots = MAX_REPORTED - unseenRules.size;
+  const shown = [];
+  for (const finding of findings) {
+    if (!unseenRules.delete(finding.rule)) {
+      if (repeatSlots <= 0) continue;
+      repeatSlots--;
+    }
+    shown.push(finding);
+    if (shown.length === MAX_REPORTED) break;
+  }
+  return shown;
+}
+
 function render(findings) {
   const groups = [
     ['fix', 'Fix (mechanical, one correct answer):'],
@@ -142,7 +158,7 @@ function check(data) {
       : all;
     if (mine.length === 0) return;
 
-    const shown = mine.slice(0, MAX_REPORTED);
+    const shown = selectFindings(mine);
     const truncated = mine.length - shown.length;
     const elsewhere = all.length - mine.length;
     const context =
