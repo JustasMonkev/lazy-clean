@@ -46,7 +46,30 @@ function matchingRanges(toolInput, content) {
       if (!edit.replace_all) break;
     }
   }
-  return ranges;
+  ranges.sort(([first], [second]) => first - second);
+  const merged = [];
+  for (const range of ranges) {
+    const previous = merged.at(-1);
+    if (previous && range[0] <= previous[1]) {
+      previous[1] = Math.max(previous[1], range[1]);
+    } else {
+      merged.push(range);
+    }
+  }
+  return merged;
+}
+
+function overlapsEdit(ranges, finding) {
+  const start = finding.startLine ?? finding.line;
+  const end = finding.endLine ?? finding.line;
+  let low = 0;
+  let high = ranges.length;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    if (ranges[mid][1] < start) low = mid + 1;
+    else high = mid;
+  }
+  return low < ranges.length && ranges[low][0] <= end;
 }
 
 function render(findings) {
@@ -115,7 +138,7 @@ function check(data) {
     // Comparing only the reported line dropped the finding the edit had just
     // created, and the hook then printed nothing at all.
     const mine = ranges
-      ? all.filter(f => ranges.some(([a, b]) => (f.endLine || f.line) >= a && (f.startLine ?? f.line) <= b))
+      ? all.filter(f => overlapsEdit(ranges, f))
       : all;
     if (mine.length === 0) return;
 

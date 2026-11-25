@@ -1242,6 +1242,26 @@ ok("an Edit does not report findings far from the edit", !scoped.includes("range
   ok("replace_all does not report lines between occurrences",
     ["replaced.ts:10:", "replaced.ts:30:", "replaced.ts:43:"].every((at) => !out.includes(at)), out);
 }
+{
+  const lines = Array.from({ length: 29 }, (_, i) => `const value${i + 1} = ${i + 1};`);
+  lines[11] = "const boundary: any = 1;";
+  lines[15] = "const outside: any = 1;";
+  lines[16] = "function load() {";
+  lines[17] = "  try { work();";
+  lines[18] = "  } catch (error) {";
+  lines.fill("", 19, 27);
+  lines[27] = "  return null;";
+  lines[28] = "  }\n}";
+  const file = write("nested-edits.ts", lines.join("\n"));
+  const edits = [lines[27], lines.slice(3, 11).join("\n"), lines[6]].map(
+    new_string => ({ old_string: "previous", new_string }),
+  );
+  const out = contextOf(editCheck({ tool_name: "MultiEdit", tool_input: { file_path: file, edits } }));
+  ok("a nested edit preserves the outer range's inclusive endpoint", out.includes("nested-edits.ts:12:"), out);
+  ok("disjoint edits do not report the gap between them", !out.includes("nested-edits.ts:16:"), out);
+  ok("an out-of-order edit intersects a finding anchored before its range",
+    out.includes("nested-edits.ts:19:") && out.includes("no-catch-fake-success"), out);
+}
 // The hook cannot prove pre-existence, so it must not tell the agent the rest
 // of the file predates the edit — that reads as "leave your own slop alone".
 ok("an Edit counts the rest of the file without claiming it predates the edit",
