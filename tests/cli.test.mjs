@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { execFileSync } from "node:child_process";
-import { chmodSync, linkSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, linkSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -124,12 +124,13 @@ check("ordinary scans do not resolve source realpaths without exclusions or --si
     writeFileSync(join(dir, "plain-source.ts"), "export const value = 1;\n");
     const preload = join(dir, "observe.cjs");
     writeFileSync(preload, `const fs = require('node:fs');
-const realpath = fs.realpathSync;
-fs.realpathSync = (file, ...args) => {
+const observe = realpath => (file, ...args) => {
   if (String(file).endsWith('plain-source.ts')) console.error('unexpected source realpath');
   return realpath(file, ...args);
 };
-fs.realpathSync.native = realpath.native;
+const realpath = fs.realpathSync;
+fs.realpathSync = observe(realpath);
+fs.realpathSync.native = observe(realpath.native);
 require('node:module').syncBuiltinESMExports();
 `);
     const result = spawnSync(process.execPath, ["--require", preload, CHECKER, "plain-source.ts"],
@@ -464,24 +465,31 @@ check("a linked project path preserves ignored and test-file scope without chang
     return;
   }
   execFileSync("git", ["init", "-q"], { cwd: project });
-  for (const name of ["tests", "generated"]) mkdirSync(join(project, name));
-  symlinkSync("tests", join(project, "aaa-tests-link"), "dir");
-  symlinkSync("generated", join(project, "aab-build-link"), "dir");
-  writeFileSync(join(project, ".gitignore"), "generated/\n");
-  for (const file of ["app.ts", "tests/helper.ts", "generated/output.ts"]) {
+  mkdirSync(join(project, "..src", "tests"), { recursive: true });
+  mkdirSync(join(project, "..generated"));
+  const caseInsensitive = existsSync(join(project, "..SRC", "TESTS"));
+  symlinkSync(join("..src", caseInsensitive ? "TESTS" : "tests"), join(project, "aaa-tests-link"), "dir");
+  symlinkSync(caseInsensitive ? "..GENERATED" : "..generated", join(project, "aab-build-link"), "dir");
+  writeFileSync(join(project, ".gitignore"), "..generated/\n");
+  for (const file of ["app.ts", "..src/tests/helper.ts", "..generated/output.ts"]) {
     writeFileSync(join(project, file), SLOP);
   }
   for (const path of [project, alias]) {
     const tree = run([path, "--source-only", "--json"], project);
     assert.equal(tree.status, 1, tree.stderr);
     assert.deepEqual(JSON.parse(tree.stdout).map(finding => finding.path), [join(path, "app.ts")]);
-    const test = run([join(path, "tests", "helper.ts"), "--source-only"], project);
+    const test = run([join(path, "..src", "tests", "helper.ts"), "--source-only"], project);
     assert.equal(test.status, 0, test.stdout);
     assert.match(test.stdout, /1 test file skipped/u);
-    assert.equal(run([join(path, "generated", "output.ts")], project).status, 1);
+    assert.equal(run([join(path, "..generated", "output.ts")], project).status, 1);
     assert.equal(run([join(path, "aaa-tests-link"), "--source-only"], project).status, 0);
     assert.equal(run([join(path, "aab-build-link"), "--source-only"], project).status, 0);
   }
+  writeFileSync(join(project, "..src", "tests", "fixture"), SLOP);
+  symlinkSync(join("..src", "tests", "fixture"), join(project, "linked.ts"), "file");
+  const outside = run([alias, "--source-only", "--json"], join(root, "nested"));
+  assert.equal(outside.status, 1, outside.stderr);
+  assert.ok(!JSON.parse(outside.stdout).some(finding => finding.path === join(alias, "linked.ts")), outside.stdout);
 });
 
 check("directory scans skip gitignored build output but scan it when named", () => {

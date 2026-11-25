@@ -18,7 +18,7 @@
  */
 import { execFileSync, spawnSync } from "node:child_process";
 import { lstatSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
-import { basename, dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"]);
@@ -3306,7 +3306,7 @@ export function lintSource(rawSource, filePath, { disabled, testFile = TEST_FILE
 // file — including a symlink loop — the same entry for free.
 const identity = (stats, target) => (stats.ino ? `${stats.dev}:${stats.ino}` : resolve(target));
 
-function collectFiles(entry, scan, root = entry, scopePath) {
+function collectFiles(entry, scan, root, scopePath) {
   let stats;
   try {
     stats = lstatSync(entry);
@@ -3320,11 +3320,12 @@ function collectFiles(entry, scan, root = entry, scopePath) {
     return;
   }
   const absolute = resolve(entry);
+  if (scopePath === undefined && stats.isDirectory()) scopePath = realPath(entry);
   if (scopePath === undefined) {
     const parent = dirname(absolute);
     scopePath = parent === process.cwd() ? absolute : join(realPath(parent), basename(absolute));
   }
-  if ((stats.isDirectory() || entry !== root) && (isIgnored(absolute, scan) || (absolute !== scopePath && isIgnored(scopePath, scan)))) {
+  if ((stats.isDirectory() || root) && (isIgnored(absolute, scan) || (absolute !== scopePath && isIgnored(scopePath, scan)))) {
     scan.ignoredSkipped += 1;
     return;
   }
@@ -3342,6 +3343,7 @@ function collectFiles(entry, scan, root = entry, scopePath) {
       scan.unreadable += 1;
       return;
     }
+    root ??= { path: absolute, scopePath };
     for (const name of names) {
       if (SKIPPED_DIRECTORIES.has(name)) continue;
       collectFiles(join(entry, name), scan, root, join(scopePath, name));
@@ -3358,7 +3360,7 @@ function collectFiles(entry, scan, root = entry, scopePath) {
   // directory); linting it twice would double every finding and the count.
   const key = identity(stats, entry);
   if (scan.files.has(key)) return;
-  scan.files.set(key, { file: entry, scopePath, root: root === entry ? dirname(entry) : root });
+  scan.files.set(key, { file: entry, scopePath, root });
 }
 
 function repositoryRoot() {
@@ -3384,13 +3386,14 @@ function isIgnored(path, scan) {
 
 function inside(base, file) {
   const rel = relative(base, file);
-  return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel) ? rel : null;
+  return rel !== "" && rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel) ? rel : null;
 }
 
 function isTestFile(file, scopePath, root, bases) {
   const fromProject = target => bases.map(base => inside(base, target)).find(path => path !== null);
   const absolute = resolve(file);
-  const rel = fromProject(scopePath) ?? fromProject(absolute) ?? relative(resolve(root), absolute);
+  const rel = fromProject(scopePath) ?? (root && inside(root.scopePath, scopePath))
+    ?? fromProject(absolute) ?? (root ? relative(root.path, absolute) : basename(scopePath));
   return TEST_FILE_PATTERN.test(rel);
 }
 
@@ -3399,7 +3402,7 @@ function isTestFile(file, scopePath, root, bases) {
 // below rather than a crash here.
 function realPath(file) {
   try {
-    return realpathSync(resolve(file));
+    return realpathSync.native(resolve(file));
   } catch {
     return resolve(file);
   }
@@ -3624,10 +3627,7 @@ function main() {
   // was handing back findings in packages/b. Filtering the map keeps the fast
   // path (visit only changed files) while honouring the directory asked about.
   const cwd = resolve(process.cwd());
-  const underCwd = (file) => {
-    const rel = relative(cwd, file);
-    return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
-  };
+  const underCwd = file => file === cwd || inside(cwd, file) !== null;
   const repoRoot = repositoryRoot();
   const scan = { files: new Map(), seenDirs: new Set(), unreadable: 0, repoRoot, ignored: ignoredPaths(repoRoot), ignoredSkipped: 0 };
   for (const target of targets.length > 0 ? targets : added ? [...added.keys()].filter(underCwd) : ["."]) {
