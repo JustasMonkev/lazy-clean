@@ -43,7 +43,7 @@ write("notes.md", SLOP);
 write("types.d.ts", SLOP);
 write("node_modules/pkg/index.ts", SLOP);
 write("nested/deep/slop.ts", SLOP);
-write("big.ts", `${SLOP}${"// filler\n".repeat(120_000)}`);
+write("big.ts", SLOP.padEnd(1_000_001));
 
 check("exit 1 and one finding for a sloppy file", () => {
   const result = run(["slop.ts"]);
@@ -343,11 +343,23 @@ check("a directory that cannot be listed is a failed scan, not a crash", () => {
   }
 });
 
-check("files over the size cap are skipped", () => {
-  const result = run(["big.ts"]);
+check("the size cap reports unscanned files without changing finding or exit contracts", () => {
+  const atCap = write("at-cap.ts", SLOP.padEnd(1_000_000));
+  const skipped = run(["big.ts"]);
+  assert.equal(skipped.status, 0);
+  assert.match(skipped.stdout, /no coverage \(0 files checked, skipped 1 file over 1000000 bytes\)/u);
+  const mixed = run(["--json", atCap, "big.ts", "big.ts"]);
+  assert.equal(mixed.status, 1);
+  assert.deepEqual(JSON.parse(mixed.stdout).map(f => f.path), [atCap]);
+  assert.match(mixed.stderr, /^slop-check: skipped 1 file over 1000000 bytes\s*$/u);
+});
+
+check("only oversized files included in the scan scope earn a size notice", () => {
+  const files = ["types.d.ts", "notes.md", "large.test.ts"].map(name => write("size-scope/" + name, SLOP.padEnd(1_000_001)));
+  const result = run(["--json", "--source-only", "--exclude-file=big.ts", "big.ts", ...files]);
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /no coverage \(0 files checked\)/u);
-  assert.doesNotMatch(result.stdout, /clean/u);
+  assert.deepEqual(JSON.parse(result.stdout), []);
+  assert.equal(result.stderr, "");
 });
 
 check("--json emits parseable findings and stays quiet otherwise", () => {
@@ -1078,13 +1090,14 @@ check("--since counts only the files it linted, not the files it collected", () 
   git("config", "user.name", "t");
   writeFileSync(join(repo, "src", "changed.ts"), "export const a = 1;\n");
   writeFileSync(join(repo, "src", "unchanged.ts"), "export const b = 2;\n");
+  writeFileSync(join(repo, "src", "generated.ts"), SLOP.padEnd(1_000_001));
   git("add", "-A");
   git("commit", "-qm", "base");
   writeFileSync(join(repo, "src", "changed.ts"), "export const a = 1;\nexport const c = 3;\n");
 
   assert.match(run(["--since=HEAD", "src"], repo).stdout, /clean \(1 file checked\)/u);
   // A plain scan still counts every file, so this is not "always report 1".
-  assert.match(run(["src"], repo).stdout, /clean \(2 files checked\)/u);
+  assert.match(run(["src"], repo).stdout, /no findings \(2 files checked, skipped 1 file over 1000000 bytes\)/u);
 
   git("add", "-A");
   git("commit", "-qm", "settle");

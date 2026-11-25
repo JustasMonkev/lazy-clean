@@ -200,13 +200,15 @@ node skills/slop-check/scripts/check.mjs [paths...] [--since=<ref>] [--summary] 
 
 | Exit | Meaning |
 | --- | --- |
-| 0 | Clean, or zero files checked (the summary then says `no coverage`) |
+| 0 | No findings in the files checked; `no coverage` if none were checked |
 | 1 | Findings |
 | 2 | A path could not be read |
 
 Directory scans skip paths the Git repository ignores, including an ignored
 directory (or one inside it) named as a target, and count them in the summary; a file named
-explicitly is still scanned.
+explicitly bypasses Git ignores. Source files over 1,000,000 bytes are not checked.
+The summary counts them, `--json` reports the skip on stderr without changing the
+findings array, and the edit hook tells the agent when its file exceeded the limit.
 
 `--source-only` skips test files and fixtures and reports how many it skipped;
 every summary also counts findings in test files. On an existing repo, triage

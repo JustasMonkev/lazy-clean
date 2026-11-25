@@ -3350,7 +3350,7 @@ function collectFiles(entry, scan, root, scopePath) {
     }
     return;
   }
-  if (!stats.isFile() || stats.size > MAX_FILE_BYTES) return;
+  if (!stats.isFile()) return;
   // Case-insensitive: on a case-insensitive filesystem the PostToolUse hook
   // accepts PROBE.TS and spawns the checker, which then silently scanned
   // nothing and reported clean.
@@ -3360,7 +3360,7 @@ function collectFiles(entry, scan, root, scopePath) {
   // directory); linting it twice would double every finding and the count.
   const key = identity(stats, entry);
   if (scan.files.has(key)) return;
-  scan.files.set(key, { file: entry, scopePath, root });
+  scan.files.set(key, { file: entry, scopePath, root, oversized: stats.size > MAX_FILE_BYTES });
 }
 
 function repositoryRoot() {
@@ -3648,10 +3648,11 @@ function main() {
   let suppressed = 0;
   let excludedCount = 0;
   let skippedTests = 0;
+  let skippedOversized = 0;
   let testFindings = 0;
   const bases = [repoRoot, cwd].filter(Boolean);
   const scannedSources = new Map();
-  for (const [key, { file, scopePath, root }] of files) {
+  for (const [key, { file, scopePath, root, oversized }] of files) {
     // realpath, not resolve: addedLines() keys every change by its path under
     // the repository root, so an explicit target that is a SYMLINK to a tracked
     // directory looked up `alias/a.ts` and found nothing -- `--since=HEAD alias`
@@ -3666,6 +3667,10 @@ function main() {
     const testFile = isTestFile(file, scopePath, root, bases);
     if (sourceOnly && testFile) {
       skippedTests += 1;
+      continue;
+    }
+    if (oversized) {
+      skippedOversized += 1;
       continue;
     }
     let source;
@@ -3725,20 +3730,24 @@ function main() {
   // Appended rather than folded into each branch: "clean" earned under 40
   // ignores is a different sentence from "clean", and every branch needs to say
   // so, including the one that reports a failed scan.
+  const sizeNotice = skippedOversized > 0
+    ? `skipped ${skippedOversized} file${skippedOversized === 1 ? "" : "s"} over ${MAX_FILE_BYTES} bytes` : "";
   const silenced = (suppressed > 0 ? `, ${suppressed} suppressed` : "")
     + (excludedCount > 0 ? `, ${excludedCount} excluded` : "")
     + (scan.ignoredSkipped > 0 ? `, ${scan.ignoredSkipped} gitignored path${scan.ignoredSkipped === 1 ? "" : "s"} skipped` : "")
     + (skippedTests > 0 ? `, ${skippedTests} test file${skippedTests === 1 ? "" : "s"} skipped` : "")
+    + (sizeNotice ? `, ${sizeNotice}` : "")
     + (testFindings > 0 ? `, ${testFindings} in test files` : "");
   const summary = scan.unreadable > 0
     ? `slop-check: scan incomplete (${scan.unreadable} path${scan.unreadable === 1 ? "" : "s"} unreadable, ${scanned} file${scanned === 1 ? "" : "s"} checked, ${findings.length} finding${findings.length === 1 ? "" : "s"}${silenced})`
     : scanned === 0
     ? `slop-check: no coverage (0 files checked${silenced})`
     : findings.length === 0
-    ? `slop-check: clean (${scanned} file${scanned === 1 ? "" : "s"} checked${silenced})`
+    ? `slop-check: ${sizeNotice ? "no findings" : "clean"} (${scanned} file${scanned === 1 ? "" : "s"} checked${silenced})`
     : `slop-check: ${findings.length} finding${findings.length === 1 ? "" : "s"} in ${new Set(findings.map((finding) => finding.path)).size} file${new Set(findings.map((finding) => finding.path)).size === 1 ? "" : "s"}${silenced}`;
 
   if (json) {
+    if (sizeNotice) console.error(`slop-check: ${sizeNotice}`);
     console.log(JSON.stringify(findings, null, 2));
   } else if (summaryOnly) {
     if (findings.length > 0) console.log(renderTally(findings));
