@@ -297,4 +297,16 @@ async function main(argv) {
   }
 }
 
-if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) await main(process.argv.slice(2));
+function isMainModule(entry) {
+  if (!entry) return false;
+  const modulePath = fileURLToPath(import.meta.url);
+  if (resolve(entry) === modulePath) return true;
+  try {
+    return realpathSync(entry) === modulePath;
+  } catch (error) {
+    if (error.code === 'ENOENT') return false;
+    throw error;
+  }
+}
+
+if (isMainModule(process.argv[1])) await main(process.argv.slice(2));
