@@ -936,26 +936,26 @@ check("--since does not read a removed/added line pair as a file header", () => 
   mkdirSync(repo, { recursive: true });
   const git = (...args) =>
     execFileSync("git", ["-c", "commit.gpgsign=false", ...args], { cwd: repo, encoding: "utf8" });
+  const content = "const patch = `\n-- a/decoy.ts\n`;\n\n";
   try {
     git("init", "-q");
     git("config", "user.email", "test@example.com");
     git("config", "user.name", "test");
-    writeFileSync(join(repo, "a.ts"), "let x = 0;\n-- x;\n");
+    writeFileSync(join(repo, "a.ts"), content + "const value = 0;\n");
+    writeFileSync(join(repo, "decoy.ts"), "\n".repeat(4) + SLOP);
     git("add", "-A");
     git("commit", "-qm", "base");
   } catch {
     console.log("skip --since minus header (git unavailable)");
     return;
   }
-  // A removed line reading `-- x;` arrives as `--- x;` and used to arm the
-  // header check; the following added `++ y;` (`+++ y;`) then became a bogus
-  // path that failed the scan and swallowed the real file's findings.
-  writeFileSync(join(repo, "a.ts"), `let x = 0;\n++ y;\n${SLOP}`);
+  writeFileSync(join(repo, "a.ts"), content.replace("-- a/decoy.ts", "++ b/decoy.ts") + SLOP);
   git("add", "-A");
   const result = run(["--since=HEAD"], repo);
   assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
   assert.doesNotMatch(result.stderr, /cannot read/u);
-  assert.match(result.stdout, /a\.ts:3:22 type assertion review/u);
+  assert.match(result.stdout, /a\.ts:5:22 type assertion review/u);
+  assert.doesNotMatch(result.stdout, /decoy\.ts:/u);
 });
 
 check("one file reached by two paths is linted once", () => {
