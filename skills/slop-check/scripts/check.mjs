@@ -17,8 +17,8 @@
  * code.
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
-import { dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
+import { lstatSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"]);
@@ -3306,16 +3306,26 @@ export function lintSource(rawSource, filePath, { disabled, testFile = TEST_FILE
 // file — including a symlink loop — the same entry for free.
 const identity = (stats, target) => (stats.ino ? `${stats.dev}:${stats.ino}` : resolve(target));
 
-function collectFiles(entry, scan, root = entry) {
+function collectFiles(entry, scan, root, scopePath) {
   let stats;
   try {
-    stats = statSync(entry);
+    stats = lstatSync(entry);
+    if (stats.isSymbolicLink()) {
+      scopePath = realPath(entry);
+      stats = statSync(entry);
+    }
   } catch {
     console.error(`slop-check: cannot read ${entry}`);
     scan.unreadable += 1;
     return;
   }
-  if ((stats.isDirectory() || entry !== root) && isIgnored(resolve(entry), scan)) {
+  const absolute = resolve(entry);
+  if (scopePath === undefined && stats.isDirectory()) scopePath = realPath(entry);
+  if (scopePath === undefined) {
+    const parent = dirname(absolute);
+    scopePath = parent === process.cwd() ? absolute : join(realPath(parent), basename(absolute));
+  }
+  if ((stats.isDirectory() || root) && (isIgnored(absolute, scan) || (absolute !== scopePath && isIgnored(scopePath, scan)))) {
     scan.ignoredSkipped += 1;
     return;
   }
@@ -3333,13 +3343,14 @@ function collectFiles(entry, scan, root = entry) {
       scan.unreadable += 1;
       return;
     }
+    root ??= { path: absolute, scopePath };
     for (const name of names) {
       if (SKIPPED_DIRECTORIES.has(name)) continue;
-      collectFiles(join(entry, name), scan, root);
+      collectFiles(join(entry, name), scan, root, join(scopePath, name));
     }
     return;
   }
-  if (!stats.isFile() || stats.size > MAX_FILE_BYTES) return;
+  if (!stats.isFile()) return;
   // Case-insensitive: on a case-insensitive filesystem the PostToolUse hook
   // accepts PROBE.TS and spawns the checker, which then silently scanned
   // nothing and reported clean.
@@ -3349,8 +3360,7 @@ function collectFiles(entry, scan, root = entry) {
   // directory); linting it twice would double every finding and the count.
   const key = identity(stats, entry);
   if (scan.files.has(key)) return;
-  scan.files.set(key, entry);
-  scan.roots.set(key, root === entry ? dirname(entry) : root);
+  scan.files.set(key, { file: entry, scopePath, root, oversized: stats.size > MAX_FILE_BYTES });
 }
 
 function repositoryRoot() {
@@ -3367,6 +3377,7 @@ function ignoredPaths(root) {
 }
 
 function isIgnored(path, scan) {
+  if (!scan.ignored.size) return false;
   for (let current = path; scan.repoRoot && inside(scan.repoRoot, current) !== null; current = dirname(current)) {
     if (scan.ignored.has(current)) return true;
   }
@@ -3375,12 +3386,14 @@ function isIgnored(path, scan) {
 
 function inside(base, file) {
   const rel = relative(base, file);
-  return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel) ? rel : null;
+  return rel !== "" && rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel) ? rel : null;
 }
 
-function isTestFile(file, root, bases) {
+function isTestFile(file, scopePath, root, bases) {
+  const fromProject = target => bases.map(base => inside(base, target)).find(path => path !== null);
   const absolute = resolve(file);
-  const rel = bases.map((base) => inside(base, absolute)).find((path) => path !== null) ?? relative(resolve(root), absolute);
+  const rel = fromProject(scopePath) ?? (root && inside(root.scopePath, scopePath))
+    ?? fromProject(absolute) ?? (root ? relative(root.path, absolute) : basename(scopePath));
   return TEST_FILE_PATTERN.test(rel);
 }
 
@@ -3389,7 +3402,7 @@ function isTestFile(file, root, bases) {
 // below rather than a crash here.
 function realPath(file) {
   try {
-    return realpathSync(resolve(file));
+    return realpathSync.native(resolve(file));
   } catch {
     return resolve(file);
   }
@@ -3422,13 +3435,23 @@ function diffTargetPath(target) {
 // Stands in for the line set of a wholly new file: every line is an added line.
 const ALL_LINES = { has: () => true };
 
-// Line numbers the diff against `ref` added, per absolute path. Git already
-// stores the baseline, so adopting the checker on an existing repo needs no
-// baseline file to generate, refresh, or drift.
-function addedLines(ref) {
+function isDiscoveredFile(file, roots) {
+  for (let path = file; !roots.has(path); path = dirname(path)) {
+    if (path === dirname(path) || (path !== file && SKIPPED_DIRECTORIES.has(basename(path)))) return false;
+  }
+  return true;
+}
+
+function addedLines(ref, roots) {
   const git = (args) => execFileSync("git", args, { encoding: "utf8", maxBuffer: 64e6 });
   const root = git(["rev-parse", "--show-toplevel"]).trim();
   const byFile = new Map();
+  const record = (name, lines) => {
+    const file = resolve(root, name);
+    if (!name.split("/").slice(0, -1).some(part => SKIPPED_DIRECTORIES.has(part)) || isDiscoveredFile(file, roots)) {
+      byFile.set(file, lines);
+    }
+  };
 
   // A file git has never seen is absent from the diff entirely, so a brand-new
   // source file — the likeliest place for fresh slop, and exactly what the
@@ -3442,11 +3465,7 @@ function addedLines(ref) {
     if (!name || name.endsWith("/")) continue;
     const base = name.slice(name.lastIndexOf("/") + 1).toLowerCase();
     if (!SOURCE_EXTENSIONS.has(extname(base)) || DECLARATION_FILE.test(base)) continue;
-    // A directory the recursive scan skips is skipped here too: --exclude-standard
-    // drops what .gitignore lists, but a repo that never ignored node_modules or
-    // dist would otherwise hand --since its whole vendor tree.
-    if (name.split("/").slice(0, -1).some((part) => SKIPPED_DIRECTORIES.has(part))) continue;
-    byFile.set(resolve(root, name), ALL_LINES);
+    record(name, ALL_LINES);
   }
 
   let lines = null;
@@ -3476,7 +3495,7 @@ function addedLines(ref) {
     if (wasHeader && isHeader(line, "+++", "b/")) {
       const target = line.slice(4);
       lines = target === "/dev/null" ? null : new Set();
-      if (lines) byFile.set(resolve(root, diffTargetPath(target)), lines);
+      if (lines) record(diffTargetPath(target), lines);
       continue;
     }
     const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/u.exec(line);
@@ -3599,9 +3618,10 @@ function main() {
   }
 
   let added = null;
+  const roots = since === undefined ? null : new Set((targets.length ? targets : ["."]).map(realPath));
   if (since !== undefined) {
     try {
-      added = addedLines(since);
+      added = addedLines(since, roots);
     } catch (error) {
       console.error(`slop-check: cannot diff against ${since} (${error.message.trim().split("\n")[0]})`);
       process.exitCode = 2;
@@ -3609,18 +3629,10 @@ function main() {
     }
   }
 
-  // `--since` with no paths still means "under here", the same as a bare run:
-  // the changed-file map comes from the repository root, so from packages/a it
-  // was handing back findings in packages/b. Filtering the map keeps the fast
-  // path (visit only changed files) while honouring the directory asked about.
   const cwd = resolve(process.cwd());
-  const underCwd = (file) => {
-    const rel = relative(cwd, file);
-    return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
-  };
   const repoRoot = repositoryRoot();
-  const scan = { files: new Map(), roots: new Map(), seenDirs: new Set(), unreadable: 0, repoRoot, ignored: ignoredPaths(repoRoot), ignoredSkipped: 0 };
-  for (const target of targets.length > 0 ? targets : added ? [...added.keys()].filter(underCwd) : ["."]) {
+  const scan = { files: new Map(), seenDirs: new Set(), unreadable: 0, repoRoot, ignored: ignoredPaths(repoRoot), ignoredSkipped: 0 };
+  for (const target of targets.length > 0 ? targets : added ? [...added.keys()].filter(file => isDiscoveredFile(file, roots)) : ["."]) {
     collectFiles(target, scan);
   }
   const { files } = scan;
@@ -3636,10 +3648,11 @@ function main() {
   let suppressed = 0;
   let excludedCount = 0;
   let skippedTests = 0;
+  let skippedOversized = 0;
   let testFindings = 0;
   const bases = [repoRoot, cwd].filter(Boolean);
   const scannedSources = new Map();
-  for (const [key, file] of files) {
+  for (const [key, { file, scopePath, root, oversized }] of files) {
     // realpath, not resolve: addedLines() keys every change by its path under
     // the repository root, so an explicit target that is a SYMLINK to a tracked
     // directory looked up `alias/a.ts` and found nothing -- `--since=HEAD alias`
@@ -3651,9 +3664,13 @@ function main() {
       excludedCount += 1;
       continue;
     }
-    const testFile = isTestFile(file, scan.roots.get(key), bases);
+    const testFile = isTestFile(file, scopePath, root, bases);
     if (sourceOnly && testFile) {
       skippedTests += 1;
+      continue;
+    }
+    if (oversized) {
+      skippedOversized += 1;
       continue;
     }
     let source;
@@ -3690,7 +3707,7 @@ function main() {
 
   if (added) {
     try {
-      const current = addedLines(since);
+      const current = addedLines(since, roots);
       if (current.size !== added.size || [...added].some(([file, lines]) => {
         const now = current.get(file);
         return lines === ALL_LINES ? now !== ALL_LINES
@@ -3713,20 +3730,24 @@ function main() {
   // Appended rather than folded into each branch: "clean" earned under 40
   // ignores is a different sentence from "clean", and every branch needs to say
   // so, including the one that reports a failed scan.
+  const sizeNotice = skippedOversized > 0
+    ? `skipped ${skippedOversized} file${skippedOversized === 1 ? "" : "s"} over ${MAX_FILE_BYTES} bytes` : "";
   const silenced = (suppressed > 0 ? `, ${suppressed} suppressed` : "")
     + (excludedCount > 0 ? `, ${excludedCount} excluded` : "")
     + (scan.ignoredSkipped > 0 ? `, ${scan.ignoredSkipped} gitignored path${scan.ignoredSkipped === 1 ? "" : "s"} skipped` : "")
     + (skippedTests > 0 ? `, ${skippedTests} test file${skippedTests === 1 ? "" : "s"} skipped` : "")
+    + (sizeNotice ? `, ${sizeNotice}` : "")
     + (testFindings > 0 ? `, ${testFindings} in test files` : "");
   const summary = scan.unreadable > 0
     ? `slop-check: scan incomplete (${scan.unreadable} path${scan.unreadable === 1 ? "" : "s"} unreadable, ${scanned} file${scanned === 1 ? "" : "s"} checked, ${findings.length} finding${findings.length === 1 ? "" : "s"}${silenced})`
     : scanned === 0
     ? `slop-check: no coverage (0 files checked${silenced})`
     : findings.length === 0
-    ? `slop-check: clean (${scanned} file${scanned === 1 ? "" : "s"} checked${silenced})`
+    ? `slop-check: ${sizeNotice ? "no findings" : "clean"} (${scanned} file${scanned === 1 ? "" : "s"} checked${silenced})`
     : `slop-check: ${findings.length} finding${findings.length === 1 ? "" : "s"} in ${new Set(findings.map((finding) => finding.path)).size} file${new Set(findings.map((finding) => finding.path)).size === 1 ? "" : "s"}${silenced}`;
 
   if (json) {
+    if (sizeNotice) console.error(`slop-check: ${sizeNotice}`);
     console.log(JSON.stringify(findings, null, 2));
   } else if (summaryOnly) {
     if (findings.length > 0) console.log(renderTally(findings));

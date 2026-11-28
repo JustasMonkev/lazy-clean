@@ -125,7 +125,11 @@ function check(data) {
       || f.endLine !== undefined && (!Number.isInteger(f.endLine) || f.endLine < f.line)
       || typeof f.rule !== 'string' || typeof f.message !== 'string'
       || !['fix', 'review'].includes(f.severity))) throw new Error('invalid checker output');
-    if (res.status === 0) return;
+    if (res.status === 0) {
+      const skipped = res.stderr.split('\n').find(line => line.startsWith('slop-check: skipped '));
+      if (skipped) report(`${skipped}; this edit was not verified.`);
+      return;
+    }
 
     let ranges = null;
     try {

@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { execFileSync } from "node:child_process";
-import { chmodSync, linkSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, linkSync, mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,7 +43,7 @@ write("notes.md", SLOP);
 write("types.d.ts", SLOP);
 write("node_modules/pkg/index.ts", SLOP);
 write("nested/deep/slop.ts", SLOP);
-write("big.ts", `${SLOP}${"// filler\n".repeat(120_000)}`);
+write("big.ts", SLOP.padEnd(1_000_001));
 
 check("exit 1 and one finding for a sloppy file", () => {
   const result = run(["slop.ts"]);
@@ -124,12 +124,13 @@ check("ordinary scans do not resolve source realpaths without exclusions or --si
     writeFileSync(join(dir, "plain-source.ts"), "export const value = 1;\n");
     const preload = join(dir, "observe.cjs");
     writeFileSync(preload, `const fs = require('node:fs');
-const realpath = fs.realpathSync;
-fs.realpathSync = (file, ...args) => {
+const observe = realpath => (file, ...args) => {
   if (String(file).endsWith('plain-source.ts')) console.error('unexpected source realpath');
   return realpath(file, ...args);
 };
-fs.realpathSync.native = realpath.native;
+const realpath = fs.realpathSync;
+fs.realpathSync = observe(realpath);
+fs.realpathSync.native = observe(realpath.native);
 require('node:module').syncBuiltinESMExports();
 `);
     const result = spawnSync(process.execPath, ["--require", preload, CHECKER, "plain-source.ts"],
@@ -342,11 +343,23 @@ check("a directory that cannot be listed is a failed scan, not a crash", () => {
   }
 });
 
-check("files over the size cap are skipped", () => {
-  const result = run(["big.ts"]);
+check("the size cap reports unscanned files without changing finding or exit contracts", () => {
+  const atCap = write("at-cap.ts", SLOP.padEnd(1_000_000));
+  const skipped = run(["big.ts"]);
+  assert.equal(skipped.status, 0);
+  assert.match(skipped.stdout, /no coverage \(0 files checked, skipped 1 file over 1000000 bytes\)/u);
+  const mixed = run(["--json", atCap, "big.ts", "big.ts"]);
+  assert.equal(mixed.status, 1);
+  assert.deepEqual(JSON.parse(mixed.stdout).map(f => f.path), [atCap]);
+  assert.match(mixed.stderr, /^slop-check: skipped 1 file over 1000000 bytes\s*$/u);
+});
+
+check("only oversized files included in the scan scope earn a size notice", () => {
+  const files = ["types.d.ts", "notes.md", "large.test.ts"].map(name => write("size-scope/" + name, SLOP.padEnd(1_000_001)));
+  const result = run(["--json", "--source-only", "--exclude-file=big.ts", "big.ts", ...files]);
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /no coverage \(0 files checked\)/u);
-  assert.doesNotMatch(result.stdout, /clean/u);
+  assert.deepEqual(JSON.parse(result.stdout), []);
+  assert.equal(result.stderr, "");
 });
 
 check("--json emits parseable findings and stays quiet otherwise", () => {
@@ -452,6 +465,43 @@ check("test-file classification ignores test-named directories above the scanned
   const since = run(["--since=HEAD", "--source-only"], project);
   assert.equal(since.status, 1, since.stdout + since.stderr);
   assert.match(since.stdout, /1 finding in 1 file, 1 test file skipped\n$/u);
+});
+
+check("a linked project path preserves ignored and test-file scope without changing reported paths", () => {
+  const project = mkdtempSync(join(root, "linked-project-"));
+  const alias = join(root, "workspace-link");
+  try {
+    symlinkSync(project, alias, "dir");
+  } catch {
+    console.log("skip linked project (directory links unavailable)");
+    return;
+  }
+  execFileSync("git", ["init", "-q"], { cwd: project });
+  mkdirSync(join(project, "..src", "tests"), { recursive: true });
+  mkdirSync(join(project, "..generated"));
+  const caseInsensitive = existsSync(join(project, "..SRC", "TESTS"));
+  symlinkSync(join("..src", caseInsensitive ? "TESTS" : "tests"), join(project, "aaa-tests-link"), "dir");
+  symlinkSync(caseInsensitive ? "..GENERATED" : "..generated", join(project, "aab-build-link"), "dir");
+  writeFileSync(join(project, ".gitignore"), "..generated/\n");
+  for (const file of ["app.ts", "..src/tests/helper.ts", "..generated/output.ts"]) {
+    writeFileSync(join(project, file), SLOP);
+  }
+  for (const path of [project, alias]) {
+    const tree = run([path, "--source-only", "--json"], project);
+    assert.equal(tree.status, 1, tree.stderr);
+    assert.deepEqual(JSON.parse(tree.stdout).map(finding => finding.path), [join(path, "app.ts")]);
+    const test = run([join(path, "..src", "tests", "helper.ts"), "--source-only"], project);
+    assert.equal(test.status, 0, test.stdout);
+    assert.match(test.stdout, /1 test file skipped/u);
+    assert.equal(run([join(path, "..generated", "output.ts")], project).status, 1);
+    assert.equal(run([join(path, "aaa-tests-link"), "--source-only"], project).status, 0);
+    assert.equal(run([join(path, "aab-build-link"), "--source-only"], project).status, 0);
+  }
+  writeFileSync(join(project, "..src", "tests", "fixture"), SLOP);
+  symlinkSync(join("..src", "tests", "fixture"), join(project, "linked.ts"), "file");
+  const outside = run([alias, "--source-only", "--json"], join(root, "nested"));
+  assert.equal(outside.status, 1, outside.stderr);
+  assert.ok(!JSON.parse(outside.stdout).some(finding => finding.path === join(alias, "linked.ts")), outside.stdout);
 });
 
 check("directory scans skip gitignored build output but scan it when named", () => {
@@ -700,6 +750,34 @@ check("--since counts only suppressions on lines the diff added", () => {
   const since = run(["--since=HEAD"], repo);
   assert.equal(since.status, 0, since.stdout);
   assert.doesNotMatch(since.stdout, /suppressed/u, "the untouched ignore is out of scope");
+});
+
+check("implicit diff discovery matches the directory scan while explicit paths still opt in", () => {
+  const repo = mkdtempSync(join(root, "discovery-"));
+  const git = (...args) => execFileSync("git", ["-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false", ...args], { cwd: repo });
+  for (const dir of ["..drafts", "dist"]) mkdirSync(join(repo, dir));
+  const files = ["..drafts/edited.ts", "app.ts", "dist/bundle.ts"];
+  for (const file of files) writeFileSync(join(repo, file), "const value = 1;\n");
+  git("init", "-q");
+  git("add", ".");
+  git("commit", "-qm", "base");
+  for (const file of [...files, "dist/new.ts"]) writeFileSync(join(repo, file), SLOP);
+  const names = (args, cwd = repo) => {
+    const result = run(["--since=HEAD", "--json", ...args], cwd);
+    assert.equal(result.status, 1, result.stderr || result.stdout);
+    return JSON.parse(result.stdout).map(finding => basename(finding.path)).sort();
+  };
+  for (const args of [[], ["."]]) assert.deepEqual(names(args), ["app.ts", "edited.ts"]);
+  assert.deepEqual(names(["dist"]), ["bundle.ts", "new.ts"]);
+  assert.deepEqual(names(["dist/new.ts"]), ["new.ts"]);
+  assert.deepEqual(names([], join(repo, "dist")), ["bundle.ts", "new.ts"]);
+  try {
+    symlinkSync("dist", join(repo, "alias"), "dir");
+  } catch {
+    return;
+  }
+  for (const args of [[], ["."]]) assert.deepEqual(names(args), ["app.ts", "edited.ts"]);
+  assert.deepEqual(names(["alias"]), ["bundle.ts", "new.ts"]);
 });
 
 check("--since with no paths stays under the current directory", () => {
@@ -1012,13 +1090,14 @@ check("--since counts only the files it linted, not the files it collected", () 
   git("config", "user.name", "t");
   writeFileSync(join(repo, "src", "changed.ts"), "export const a = 1;\n");
   writeFileSync(join(repo, "src", "unchanged.ts"), "export const b = 2;\n");
+  writeFileSync(join(repo, "src", "generated.ts"), SLOP.padEnd(1_000_001));
   git("add", "-A");
   git("commit", "-qm", "base");
   writeFileSync(join(repo, "src", "changed.ts"), "export const a = 1;\nexport const c = 3;\n");
 
   assert.match(run(["--since=HEAD", "src"], repo).stdout, /clean \(1 file checked\)/u);
   // A plain scan still counts every file, so this is not "always report 1".
-  assert.match(run(["src"], repo).stdout, /clean \(2 files checked\)/u);
+  assert.match(run(["src"], repo).stdout, /no findings \(2 files checked, skipped 1 file over 1000000 bytes\)/u);
 
   git("add", "-A");
   git("commit", "-qm", "settle");

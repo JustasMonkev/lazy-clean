@@ -1101,6 +1101,11 @@ for (const [name, payload] of [
   const res = editCheck(payload);
   eq(`edit-check stays silent + exit 0 on ${name}`, [res.status, res.stdout], [0, ""]);
 }
+const oversizedEdit = editCheck(toolPayload(write("generated.ts", TS_SLOP.padEnd(1_000_001))));
+eq("an oversized edit remains advisory", oversizedEdit.status, 0);
+ok("a size-limited edit reports why it was not verified",
+  /skipped 1 file over 1000000 bytes/u.test(oversizedEdit.stdout));
+
 const missingEdit = editCheck(toolPayload(path.join(files, "missing.ts")));
 eq("an unreadable file still exits 0", missingEdit.status, 0);
 ok("an unreadable file reports failed verification", contextOf(missingEdit).includes("check failed"));
