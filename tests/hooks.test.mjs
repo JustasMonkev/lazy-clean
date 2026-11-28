@@ -1340,6 +1340,15 @@ ok("the cap says how many findings it dropped",
 eq("a repeated message is stated once", contextOf(e).split("`any` disables the type system").length - 1, 1);
 ok("findings name the edited file without repeating its full path",
   contextOf(e).includes("  many.ts:2:") && !contextOf(e).includes(bigTs), contextOf(e).slice(0, 300));
+const typeFindings = Array.from({ length: 50 }, (_, i) => `const value${i}: any = ${i};`);
+const mixedRules = write("mixed-rules.ts", [...typeFindings, "const copy = JSON.parse(JSON.stringify(value0));"].join("\n"));
+e = editCheck(toolPayload(mixedRules));
+const mixedContext = contextOf(e);
+ok("a capped report keeps a location for a less frequent rule",
+  mixedContext.includes("mixed-rules.ts:51:") && mixedContext.includes("no-json-clone"), mixedContext);
+eq("a capped report keeps its location budget", mixedContext.split("  mixed-rules.ts:").length - 1, 40);
+ok("omitted duplicates are counted", mixedContext.includes("(11 more on these lines, not listed.)"), mixedContext);
+
 e = editCheck(toolPayload(write("names.ts", "const enhancedFetch = wrap(fetch);\nconst enhancedLoad = wrap(load);\n")));
 ok("a rule's different messages are each kept",
   contextOf(e).includes('"enhancedFetch" is named') && contextOf(e).includes('"enhancedLoad" is named'), contextOf(e));

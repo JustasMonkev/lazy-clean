@@ -223,6 +223,9 @@ node skills/slop-check/scripts/check.mjs --since=origin/main   # in CI
 node skills/slop-check/scripts/check.mjs --explain=no-json-clone
 ```
 
+When the post-edit hook has more than 40 findings to show, it reserves slots for distinct
+rules and uses the remaining slots for repeated locations. The full CLI scan is not capped.
+
 Findings are advice. Mechanical ones have one right fix. Review ones may be
 deliberate, and "leaving it, here is why" is a valid answer. Do not add
 suppression comments to make a scan clean. Old `slop-check-ignore` directives
